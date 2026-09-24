@@ -56,6 +56,10 @@ Administrador y creador supremo del servidor: Joselito (joselito3499 / Joselito 
   - Tienes OCR para leer texto y código dentro de imágenes.
   - Lees archivos de código (.py, .js, .json, .cpp, etc.) y documentos PDF adjuntos.
   - Lees y resumes el contenido de páginas web y enlaces (URLs) que compartan.
+- 📡 CONTEXTO EN TIEMPO REAL DEL SERVIDOR:
+  - En cada mensaje recibes datos en vivo inyectados: roles actuales exactos del autor, quién está en llamadas de voz en este segundo, y mensajes recientes leídos en directo de canales consultados (#anuncios, #cultura, etc.).
+  - Úsalos siempre para responder con datos frescos y exactos de este mismo instante.
+
 
 👥 RADIOGRAFÍA DE LOS MIEMBROS Y VIPS DEL SERVIDOR:
 - 👑 Joselito (joselito3499 / Joselito 🪦 RIP):
@@ -307,6 +311,58 @@ async def on_message(message: discord.Message):
                         "parts": [{"text": formatted}]
                     })
             
+            # 1. Metadatos en tiempo real del autor
+            author_roles = [r.name for r in getattr(message.author, "roles", []) if r.name != "@everyone"]
+            author_voice = ""
+            if getattr(message.author, "voice", None) and message.author.voice.channel:
+                author_voice = f" (conectado en voz en #{message.author.voice.channel.name})"
+            user_live_ctx = f"\n[DATOS EN VIVO DEL USUARIO]: {message.author.display_name} (@{message.author.name}) | Roles equipados: {', '.join(author_roles) or 'Sin roles'}{author_voice}"
+
+            # 2. Estado en vivo del servidor (llamadas activas y miembros)
+            server_live_ctx = ""
+            if message.guild:
+                active_voices = []
+                for vc in message.guild.voice_channels:
+                    if vc.members:
+                        names = [m.display_name for m in vc.members]
+                        active_voices.append(f"#{vc.name}: {', '.join(names)}")
+                voice_str = "; ".join(active_voices) if active_voices else "Nadie en llamada de voz ahora mismo"
+                server_live_ctx = f"\n[DATOS EN VIVO DEL SERVIDOR]: {message.guild.member_count} miembros | Canal actual: #{message.channel.name} | Llamadas activas ahora: {voice_str}"
+
+            # 3. Lectura dinámica de canales si se mencionan o se pregunta por ellos
+            channel_lookup_ctx = ""
+            if message.guild:
+                mentioned_cids = re.findall(r"<#(\d+)>", message.content)
+                channel_keywords = {
+                    "anuncio": "anuncios",
+                    "norma": "normas",
+                    "cultura": "cultura",
+                    "casino": "casino-y-apuestas",
+                    "tienda": "tienda-y-mercado",
+                    "regla": "normas"
+                }
+                target_channels = []
+                for cid in mentioned_cids:
+                    ch = message.guild.get_channel(int(cid))
+                    if ch and ch != message.channel and isinstance(ch, discord.TextChannel):
+                        target_channels.append(ch)
+                for kw, target_name in channel_keywords.items():
+                    if kw in clean_text.lower():
+                        ch = discord.utils.find(lambda c: target_name in c.name, message.guild.text_channels)
+                        if ch and ch != message.channel and ch not in target_channels:
+                            target_channels.append(ch)
+                for ch in target_channels[:2]:
+                    try:
+                        recent_msgs = []
+                        async for rm in ch.history(limit=3):
+                            if rm.content:
+                                recent_msgs.append(f"[{rm.author.display_name}]: {rm.content[:200]}")
+                        if recent_msgs:
+                            recent_msgs.reverse()
+                            channel_lookup_ctx += f"\n[ÚLTIMOS MENSAJES LEÍDOS EN VIVO DE #{ch.name}]:\n" + "\n".join(recent_msgs)
+                    except Exception:
+                        pass
+
             # Turno actual del usuario
             current_prompt_text = f"{message.author.display_name}: {clean_text}"
             if url_context:
@@ -316,7 +372,11 @@ async def on_message(message: discord.Message):
             elif not clean_text and not url_context and not attachment_parts:
                 current_prompt_text = f"{message.author.display_name}: Hola"
 
+            # Inyectar contexto en vivo
+            current_prompt_text += f"{user_live_ctx}{server_live_ctx}{channel_lookup_ctx}"
+
             current_turn_parts = [{"text": current_prompt_text}] + attachment_parts
+
             
             turns.append({
                 "role": "user",
