@@ -1,0 +1,6 @@
+.git
+__pycache__
+*.pyc
+CHAT_RAW.md
+HISTORIAL_CONVERSACION.md
+imagenes_contexto/

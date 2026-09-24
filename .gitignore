@@ -1,0 +1,17 @@
+# Ignorar archivos locales y confidenciales
+config_discord.json
+*.pdf
+*.png
+*.html
+*.ps1
+*.json
+!slots_data.json
+CHAT_RAW.md
+HISTORIAL_CONVERSACION.md
+INFO_SERVIDOR.md
+AGENTS.md
+node_modules/
+__pycache__/
+*.pyc
+imagenes_contexto/
+build_*.js
