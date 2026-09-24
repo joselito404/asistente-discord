@@ -108,7 +108,13 @@ bot = discord.Client(intents=intents)
 
 user_cooldowns = {}
 COOLDOWN_SECONDS = 3
-MODELS_PRIORITY = ["gemini-3-flash-preview", "gemini-3.5-flash-lite", "gemini-3.6-flash"]
+# Prioridad absoluta a modelos con mayor cuota diaria gratuita:
+# 1. gemini-3.5-flash-lite: 500 RPD y 15 RPM (bolsa masiva)
+# 2. gemini-3.5-flash: 20 RPD de respaldo
+# 3. gemini-3-flash-preview: 20 RPD de respaldo
+# 4. gemini-3.6-flash: 20 RPD de reserva final
+MODELS_PRIORITY = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3-flash-preview", "gemini-3.6-flash"]
+
 
 TEXT_EXTENSIONS = {
     ".txt", ".py", ".js", ".ts", ".json", ".csv", ".md", ".cpp", ".c", ".h",
@@ -206,15 +212,19 @@ def call_gemini_multiturn(turns: list) -> str:
                     if candidates and "content" in candidates[0]:
                         return candidates[0]["content"]["parts"][0]["text"].strip()
             except urllib.error.HTTPError as e:
-                if e.code in (503, 500, 429):
+                if e.code == 429:
+                    print(f"⚠️ Cuota agotada en {model_name} (HTTP 429). Saltando al siguiente modelo de respaldo...")
+                    break
+                if e.code in (503, 500):
                     time.sleep(1)
                     continue
                 break
-            except Exception:
+            except Exception as ex:
                 time.sleep(0.5)
                 continue
                 
-    return "⏳ La red de IA tuvo un micro-retraso puntual. Vuelve a mencionarme en unos segundos."
+    return "⏳ Cuota diaria de IA temporalmente saturada. Se restablece automáticamente de madrugada sin coste alguno."
+
 
 @bot.event
 async def on_ready():
