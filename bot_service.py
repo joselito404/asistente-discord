@@ -1,6 +1,7 @@
 """
 Servicio 24/7 de IA Multimodal para el Bot 'Asistente' en Discord.
 Capacidades:
+- Niveles Reales de Cakey Bot en Vivo: Lee en tiempo real el canal #bots para conocer el nivel exacto de cada miembro.
 - Búsqueda Web en Vivo: Consulta internet en tiempo real para datos de actualidad, anime, juegos y hardware con memoria conversacional (context-aware search).
 - Visión Multimodal: Lee y analiza imágenes, capturas, fotos y memes (OCR + visión).
 - Lectura de Enlaces Web: Descarga y lee páginas web y noticias compartidas en el chat.
@@ -58,22 +59,30 @@ Administrador y creador supremo del servidor: Joselito (joselito3499 / Joselito 
 - Tienes sentido del humor, eres cercano, vacilón y ocurrente (tono de colega del grupo), pero técnicamente riguroso e impecable cuando se habla de datos o configuraciones.
 - PUEDES Y DEBES RESPONDER A CUALQUIER TIPO DE PREGUNTA: anime, manhwas, videojuegos, hardware, programación, ciencia, dilemas, bromas, actualidad o salseo.
 
+📊 NIVELES REALES DE CAKEY BOT (EXTRAÍDOS EN DIRECTO DE #bots):
+- En cada mensaje recibes los niveles reales, confirmados y actualizados de los usuarios leídos directamente de las notificaciones oficiales de Cakey Bot en el canal #bots.
+- Joselito es el rey indiscutible y Top 1 absoluto: **Nivel 47**.
+- Lázaro es **Nivel 30** (Pendejo Veterano).
+- Omen2042 es **Nivel 30**.
+- racerwasp es **Nivel 25**.
+- carlitosmf es **Nivel 15**.
+- Vexus y Carmen son **Nivel 14**.
+- Alejandro es **Nivel 10**.
+- Danielo y miiguell_munozz son **Nivel 1**.
+- SIEMPRE usa estos niveles reales inyectados. NUNCA asumas niveles viejos ni dudes de que Joselito es Nivel 47.
+
 🌐 BÚSQUEDA WEB Y NOTICIAS EN VIVO:
 - En cada mensaje donde se requiera información externa o actualidad (anime, cine, videojuegos, hardware, noticias, fechas), recibes resultados frescos extraídos de internet en el bloque [BÚSQUEDA WEB EN VIVO].
 - ESE BLOQUE ES TU FUENTE DE VERDAD ABSOLUTA. NUNCA respondas con datos de corte o diciendo "no hay nada anunciado" si los resultados de búsqueda web indican que sí hay anuncios, secuelas, tráilers o ventanas de estreno oficiales.
-- Detalla los nombres exactos de las obras, estudios (ej. A-1 Pictures, Aniplex, Crunchyroll), ventanas de estreno y arcos adaptados basándote estrictamente en los snippets encontrados.
+- Detalla los nombres exactos de las obras, estudios (ej. A-1 Pictures, Aniplex, Crunchyroll), ventanas de estreno (ej. 'Solo Leveling: Beyond the System' para 2027 o Temporada 3 para 2027/2028).
 
-📡 CONTEXTO EN TIEMPO REAL DEL SERVIDOR:
-  - En cada mensaje recibes datos en vivo inyectados: roles del autor, llamadas de voz activas, lista de miembros con sus roles reales, fijados y mensajes recientes.
-  - SIEMPRE usa los datos inyectados en tiempo real. NUNCA inventes ni asumas niveles, XP, saldos, tiradas u otros datos cuantitativos que no aparezcan explícitamente en el contexto inyectado de este mensaje.
-  - Si no tienes el dato en el contexto en vivo, dilo honestamente: "no tengo ese dato actualizado, consulta Cakey Bot para XP/niveles o UnbelievaBoat para saldos del casino".
-
-👥 MIEMBROS CONOCIDOS DEL SERVIDOR (lore cultural permanente, sin datos numéricos):
-- Joselito (joselito3499): El Admin, dueño y jefe supremo. Fan de manhwas (Olympus Scanlation, Asura Scans). Su santuario es #cultura (donde tiene anclado su top 69 manhwas).
+👥 MIEMBROS CONOCIDOS DEL SERVIDOR (lore cultural):
+- Joselito (joselito3499): El Admin, dueño y jefe supremo. Top 1 absoluto (Nivel 47). Fan de manhwas (Olympus Scanlation, Asura Scans). Su santuario es #cultura (donde tiene anclado su top 69 manhwas).
 - Terreneiror (terreneiror): El LUDÓPATA OFICIAL del barrio. Historial épico de pérdidas en las tragaperras (/slots). El ejemplo vivo de la ruina.
-- Carlitosmf (carlitosmf__): La némesis de la banca. El único que ha conseguido sacarle beneficio neto a las slots del servidor.
-- Omen2042 (omen2042_38051): Organizador oficial de torneos y eventos comunitarios.
-- Racerwasp (racerwasp): Veterano que alcanzó la mítica CATEGORÍA PRO.
+- Carlitosmf (carlitosmf__): La némesis de la banca (Nivel 15). El único que le saca beneficio neto a las slots del servidor.
+- Omen2042 (omen2042_38051): Nivel 30. Organizador oficial de torneos y eventos comunitarios.
+- Lázaro: Nivel 30. Miembro veterano del servidor.
+- Racerwasp (racerwasp): Nivel 25. Veterano de la CATEGORÍA PRO.
 
 🗺️ MAPA DE CANALES Y LORE DEL SERVIDOR:
 - #cultura: El rincón de oro para mangas, manhwas, novelas ligeras, anime, cine y debates filosóficos de madrugada.
@@ -91,8 +100,8 @@ Administrador y creador supremo del servidor: Joselito (joselito3499 / Joselito 
   * /afk [motivo]: Activa modo ausente y avisa si alguien te menciona.
 - UnbelievaBoat (Casino & Economía de Porros):
   * /slots <apuesta>: Tragaperras de Brawl Stars con multiplicadores x2, x3, x5 y jackpot.
-  * /blackjack <apuesta> (o /bj): Blackjack contra el bot (gana quien se acerque más a 21 sin pasarse).
-  * /roulette <apuesta> <color/número>: Apuesta a rojo/negro (paga x2) o a número exacto (paga x36).
+  * /blackjack <apuesta> (o /bj): Blackjack contra el bot.
+  * /roulette <apuesta> <color/número>: Apuesta a rojo/negro o a número exacto.
   * /balance (o /bal): Consulta tus porros en mano y en cuenta bancaria.
   * /deposit all (o /dep all): Guarda todos tus porros en el banco para evitar que te los roben.
   * /withdraw <cantidad> (o /with): Saca porros del banco a mano.
@@ -133,6 +142,28 @@ TEXT_EXTENSIONS = {
 }
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 
+async def get_live_levels_dict(guild: discord.Guild) -> dict:
+    """Lee el canal #bots para extraer los niveles reales de Cakey Bot de cada usuario."""
+    if not guild:
+        return {}
+    bots_channel = discord.utils.find(lambda c: "bots" in c.name.lower(), guild.text_channels)
+    if not bots_channel:
+        return {}
+    levels = {}
+    try:
+        async for m in bots_channel.history(limit=120):
+            if m.author.bot and m.content:
+                # Patrón: ¡Enhorabuena <@ID>! Has alcanzado el nivel X o ¡Ascenso para <@ID>! Ya estás en nivel X
+                match = re.search(r"<@(\d+)>.*?nivel\s+(\d+)", m.content, re.IGNORECASE)
+                if match:
+                    uid = int(match.group(1))
+                    lvl = int(match.group(2))
+                    if uid not in levels or lvl > levels[uid]:
+                        levels[uid] = lvl
+    except Exception as e:
+        print(f"Aviso lectura niveles #bots: {e}")
+    return levels
+
 def search_web_lite(query: str, max_results: int = 5) -> str:
     """Busca en internet en tiempo real y devuelve los mejores resultados con título y snippet."""
     if not query or len(query.strip()) < 3:
@@ -169,18 +200,14 @@ def build_search_query(current_text: str, raw_msgs: list) -> str:
     
     words = clean_no_punct.split()
     
-    # Si la pregunta es una continuación breve (ej. "La segunda peli digo", "y la t3?", "cuándo sale?")
-    # extraer el sujeto o palabras clave de los mensajes previos
     if len(words) <= 7 and raw_msgs:
         for prev in reversed(raw_msgs):
             prev_content = re.sub(r"<@&?\d+>", "", prev.content).strip()
-            # Buscar menciones a obras o palabras sustantivas (ej. Solo Leveling, The Finals, etc.)
             title_match = re.search(r"\b([A-Z][a-zA-Z0-9_\-\s]{2,20})\b", prev_content)
             if title_match:
                 topic = title_match.group(1).strip()
                 if topic.lower() not in ["hola", "buenos", "gracias", "admin", "asistente"]:
                     return f"{topic} {clean_no_punct}".strip()
-            # Si no hay mayúsculas claras, tomar las 3 palabras clave del mensaje anterior del usuario
             if prev.author != bot.user and len(prev_content) > 3:
                 return f"{prev_content} {clean_no_punct}".strip()
                 
@@ -264,8 +291,8 @@ async def extract_attachments_parts(msg: discord.Message) -> list:
             
     return parts
 
-def get_live_members_ctx(guild: discord.Guild) -> str:
-    """Genera un snapshot en tiempo real de los miembros del servidor con sus roles actuales."""
+def get_live_members_ctx(guild: discord.Guild, levels: dict) -> str:
+    """Genera un snapshot en tiempo real de los miembros del servidor con sus roles y niveles reales."""
     if not guild:
         return ""
     lines = []
@@ -276,24 +303,27 @@ def get_live_members_ctx(guild: discord.Guild) -> str:
             roles = [r.name for r in member.roles if r.name != "@everyone"]
             nick = member.nick or member.display_name
             username = member.name
+            lvl_str = f" [Nivel {levels[member.id]}]" if member.id in levels else ""
             role_str = ", ".join(roles) if roles else "Sin roles"
-            lines.append(f"  - {nick} (@{username}) | Roles: {role_str}")
+            lines.append(f"  - {nick} (@{username}){lvl_str} | Roles: {role_str}")
         if lines:
-            return "\n[MIEMBROS ACTUALES DEL SERVIDOR (datos en vivo)]:\n" + "\n".join(lines[:30])
+            return "\n[MIEMBROS ACTUALES DEL SERVIDOR (datos en vivo con niveles de Cakey Bot)]:\n" + "\n".join(lines[:35])
     except Exception as e:
         return f"\n[Error obteniendo miembros: {e}]"
     return ""
 
-def get_member_dossier(member: discord.Member) -> str:
+def get_member_dossier(member: discord.Member, levels: dict) -> str:
     """Genera la ficha técnica en profundidad de un miembro."""
     created = member.created_at.strftime("%d/%m/%Y")
     joined = member.joined_at.strftime("%d/%m/%Y") if member.joined_at else "Desconocida"
     top_role = member.top_role.name if member.top_role else "Ninguno"
     roles = [r.name for r in member.roles if r.name != "@everyone"]
     voice = f"Conectado en voz en #{member.voice.channel.name}" if getattr(member, "voice", None) and member.voice.channel else "Fuera de llamada"
+    lvl_val = f"Nivel {levels[member.id]} (confirmado por Cakey Bot en #bots)" if member.id in levels else "No registrado recientemente en #bots"
     return (
         f"\n[FICHA TÉCNICA DETALLADA DE {member.display_name} (@{member.name})]:\n"
         f"  * Apodo / Nick en server: {member.display_name}\n"
+        f"  * Nivel de Cakey Bot en vivo: {lvl_val}\n"
         f"  * Cuenta creada en Discord: {created}\n"
         f"  * Fecha de unión al servidor: {joined}\n"
         f"  * Rol más alto (jerarquía): {top_role}\n"
@@ -357,7 +387,7 @@ def call_gemini_multiturn(turns: list) -> str:
 async def on_ready():
     print(f"Bot '{bot.user}' conectado y listo en Discord.")
     print(f"Motores de IA con respaldo: {MODELS_PRIORITY}")
-    print("Capacidades activas: Búsqueda Web Context-Aware, Pins, Visión, PDFs, Código y Calculadora de XP.")
+    print("Capacidades activas: Niveles Reales (#bots), Búsqueda Web Context-Aware, Pins, Visión, PDFs y Calculadora XP.")
     activity = discord.Activity(type=discord.ActivityType.listening, name="menciones y dudas (@Asistente)")
     await bot.change_presence(activity=activity)
 
@@ -388,7 +418,7 @@ async def on_message(message: discord.Message):
             clean_text = re.sub(r"<@&?\d+>", "", message.content).strip()
             lowered = clean_text.lower()
 
-            # 1. Historial reciente del canal PRIMERO (vital para continuidad y queries contextuales)
+            # 1. Historial reciente del canal PRIMERO
             raw_msgs = []
             try:
                 async for prev_msg in message.channel.history(limit=8, before=message):
@@ -404,8 +434,13 @@ async def on_message(message: discord.Message):
                 pass
                 
             raw_msgs.reverse()
+
+            # 2. Extraer niveles reales en directo desde el canal #bots
+            live_levels = {}
+            if message.guild:
+                live_levels = await get_live_levels_dict(message.guild)
             
-            # 2. Detectar si hay URLs directas para leer
+            # 3. Detectar si hay URLs directas para leer
             urls = re.findall(r"https?://[^\s<>\"']+", clean_text)
             url_context = ""
             if urls:
@@ -413,10 +448,9 @@ async def on_message(message: discord.Message):
                     fetched = await asyncio.to_thread(fetch_url_content, u)
                     url_context += fetched
             
-            # 3. Búsqueda Web en Vivo (Context-Aware)
+            # 4. Búsqueda Web en Vivo (Context-Aware)
             web_search_context = ""
-            # Comprobar si la consulta no es meramente sobre el servidor interno
-            server_internal_kw = ["rol", "roles", "casino", "porros", "pendejo", "norma", "tribunal", "admin", "quien esta en voz", "llamada"]
+            server_internal_kw = ["rol", "roles", "casino", "porros", "pendejo", "norma", "tribunal", "admin", "quien esta en voz", "llamada", "nivel", "xp"]
             is_internal_query = any(k in lowered for k in server_internal_kw) and not any(k in lowered for k in ["peli", "anime", "manga", "juego", "noticia", "precio", "estreno", "temporada"])
             
             search_intent_keywords = [
@@ -436,32 +470,40 @@ async def on_message(message: discord.Message):
                 if len(search_query) >= 3:
                     web_search_context = await asyncio.to_thread(search_web_lite, search_query)
             
-            # 4. Lector de mensajes fijados (pins)
+            # 5. Lector de mensajes fijados (pins)
             pins_context = ""
             if any(w in lowered for w in ["fijado", "pinned", "pins", "anclado", "recomendaciones", "top manhwas", "destacado"]) or message.channel.name == "cultura":
                 pins_context = await get_pins_context(message.channel)
             
-            # 5. Ficha técnica de miembros si se menciona a alguien
+            # 6. Ficha técnica de miembros si se menciona a alguien
             dossier_context = ""
             target_members = [m for m in message.mentions if m != bot.user]
             if target_members:
                 for tm in target_members[:2]:
-                    dossier_context += get_member_dossier(tm)
+                    dossier_context += get_member_dossier(tm, live_levels)
             else:
                 if message.guild:
                     for m in message.guild.members:
                         if not m.bot and (m.name.lower() in lowered or (m.nick and m.nick.lower() in lowered)):
                             if len(m.name) > 3 or (m.nick and len(m.nick) > 3):
-                                dossier_context += get_member_dossier(m)
+                                dossier_context += get_member_dossier(m, live_levels)
                                 break
 
-            # 6. Calculadora matemática de XP
+            # 7. Calculadora matemática de XP
             xp_calc_context = ""
+            author_lvl = live_levels.get(message.author.id, 1)
             xp_match = re.search(r"nivel\s+(\d+)\s+(?:al?|hasta)\s+(?:nivel\s+)?(\d+)", lowered)
             if xp_match:
                 s_lvl = int(xp_match.group(1))
                 t_lvl = int(xp_match.group(2))
                 xp_calc_context = calculate_xp_gap(s_lvl, t_lvl)
+            elif "cuanto me falta" in lowered or "cuánto me falta" in lowered:
+                # Si el autor pregunta cuánto le falta para un nivel objetivo usando su nivel real
+                target_match = re.search(r"(?:para|al?)\s+(?:nivel\s+)?(\d+)", lowered)
+                if target_match:
+                    t_lvl = int(target_match.group(1))
+                    if t_lvl > author_lvl:
+                        xp_calc_context = calculate_xp_gap(author_lvl, t_lvl)
 
             # Extraer imágenes, PDFs o archivos de código adjuntos
             attachment_parts = await extract_attachments_parts(message)
@@ -485,12 +527,13 @@ async def on_message(message: discord.Message):
                         "parts": [{"text": formatted}]
                     })
             
-            # Datos en tiempo real del autor
+            # Datos en tiempo real del autor (con su nivel real en vivo)
             author_roles = [r.name for r in getattr(message.author, "roles", []) if r.name != "@everyone"]
             author_voice = ""
             if getattr(message.author, "voice", None) and message.author.voice.channel:
                 author_voice = f" (conectado en voz en #{message.author.voice.channel.name})"
-            user_live_ctx = f"\n[DATOS EN VIVO DEL USUARIO]: {message.author.display_name} (@{message.author.name}) | Roles equipados: {', '.join(author_roles) or 'Sin roles'}{author_voice}"
+            author_lvl_str = f" | Nivel real Cakey Bot: Nivel {author_lvl}" if message.author.id in live_levels else ""
+            user_live_ctx = f"\n[DATOS EN VIVO DEL USUARIO]: {message.author.display_name} (@{message.author.name}){author_lvl_str} | Roles equipados: {', '.join(author_roles) or 'Sin roles'}{author_voice}"
 
             # Estado en vivo del servidor
             server_live_ctx = ""
@@ -503,8 +546,8 @@ async def on_message(message: discord.Message):
                 voice_str = "; ".join(active_voices) if active_voices else "Nadie en llamada de voz ahora mismo"
                 server_live_ctx = f"\n[DATOS EN VIVO DEL SERVIDOR]: {message.guild.member_count} miembros | Canal actual: #{message.channel.name} | Llamadas activas ahora: {voice_str}"
 
-            # Snapshot de miembros reales del servidor
-            members_ctx = get_live_members_ctx(message.guild)
+            # Snapshot de miembros reales del servidor (con niveles de #bots)
+            members_ctx = get_live_members_ctx(message.guild, live_levels)
 
             # Lectura dinámica de canales si se mencionan
             channel_lookup_ctx = ""
@@ -516,7 +559,8 @@ async def on_message(message: discord.Message):
                     "cultura": "cultura",
                     "casino": "casino-y-apuestas",
                     "tienda": "tienda-y-mercado",
-                    "regla": "normas"
+                    "regla": "normas",
+                    "comandos": "comandos"
                 }
                 target_channels = []
                 for cid in mentioned_cids:
