@@ -409,7 +409,12 @@ async def on_ready():
 async def on_message(message: discord.Message):
     if message.author.bot:
         return
-    
+    try:
+        await _handle_message_safe(message)
+    except Exception as e:
+        print(f"Error procesando mensaje: {e}")
+
+async def _handle_message_safe(message: discord.Message):
     is_mentioned = (
         bot.user in message.mentions
         or any(r.id == 1549789822191935561 or r.name.lower() == "asistente" for r in message.role_mentions)
@@ -645,23 +650,46 @@ import http.server
 import socketserver
 import threading
 
+class ReusableTCPServer(socketserver.TCPServer):
+    allow_reuse_address = True
+
 def run_health_check_server():
     port = int(os.getenv("PORT", 10000))
     class HealthHandler(http.server.SimpleHTTPRequestHandler):
         def do_GET(self):
+            status = "OK - Asistente Bot Activo (Discord: Conectado)" if bot.is_ready() else "OK - Asistente Bot Activo (Discord: Conectando...)"
             self.send_response(200)
-            self.send_header("Content-type", "text/plain")
+            self.send_header("Content-type", "text/plain; charset=utf-8")
             self.end_headers()
-            self.wfile.write(b"OK - Asistente Bot Activo")
+            self.wfile.write(status.encode("utf-8"))
+        def do_HEAD(self):
+            self.send_response(200)
+            self.end_headers()
         def log_message(self, format, *args):
             pass
     try:
-        with socketserver.TCPServer(("", port), HealthHandler) as httpd:
+        with ReusableTCPServer(("", port), HealthHandler) as httpd:
             print(f"Servidor de salud activo en puerto {port} para Render")
             httpd.serve_forever()
     except Exception as e:
         print(f"Aviso servidor salud: {e}")
 
+def start_bot_persistent():
+    """Bucle supervisor persistente para mantener el bot conectado 24/7 sin caídas."""
+    while True:
+        try:
+            print("Iniciando conexión del bot con Discord...")
+            bot.run(TOKEN)
+        except (KeyboardInterrupt, SystemExit):
+            print("Cierre manual solicitado.")
+            break
+        except Exception as e:
+            print(f"Excepción en bot.run(): {e}. Reintentando en 5 segundos...")
+            time.sleep(5)
+        print("bot.run() finalizó. Reanudando en 5 segundos...")
+        time.sleep(5)
+
 if __name__ == "__main__":
-    threading.Thread(target=run_health_check_server, daemon=True).start()
-    bot.run(TOKEN)
+    t = threading.Thread(target=run_health_check_server, daemon=True)
+    t.start()
+    start_bot_persistent()
