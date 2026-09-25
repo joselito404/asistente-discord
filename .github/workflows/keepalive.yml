@@ -1,0 +1,15 @@
+name: Keep-Alive Bot Render
+
+on:
+  schedule:
+    # Ejecuta cada 10 minutos para evitar que Render Free Tier hiberne (spin down a los 15m)
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render Web Service
+        run: |
+          curl -s -f -m 30 https://asistente-discord-sj3k.onrender.com || true
