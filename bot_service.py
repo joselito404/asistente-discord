@@ -63,16 +63,17 @@ Administrador y creador supremo del servidor: Joselito (joselito3499 / Joselito 
 - Escala oficial real de rangos por nivel configurada en Cakey Bot:
   * Nivel 0: 🌱Pendejos🌱 (Rol inicial base)
   * Nivel 5: 🟢Pendejo Conocido🟢
-  * Nivel 10: 🔷Pendejo de Rango Medio🔷 (+10% XP Boost)
+  * Nivel 10: 🔷Pendejo de Rango Medio🔷
   * Nivel 20: 🔮Pendejo Veterano🔮 (Acceso exclusivo a CATEGORÍA PRO)
-  * Nivel 30: 🌸Pendejo Experimentado🌸 (+20% XP Boost)
+  * Nivel 30: 🌸Pendejo Experimentado🌸
   * Nivel 40: 🔥Pendejo de Alto Rango🔥
-  * Nivel 50: ⚔️Pendejo de Élite⚔️ (+25% XP Boost)
+  * Nivel 50: ⚔️Pendejo de Élite⚔️
   * Nivel 60: ⚡Pendejo Maestro⚡
-  * Nivel 70: 🌟Pendejo Legendario🌟 (+30% XP Boost)
-  * Nivel 80: 👑Pendejo Mítico👑 (+40% XP Boost)
-  * Nivel 90: 🔱 Pendejo Ancestral🔱 (+25.000 XP bono)
+  * Nivel 70: 🌟Pendejo Legendario🌟
+  * Nivel 80: 👑Pendejo Mítico👑
+  * Nivel 90: 🔱 Pendejo Ancestral🔱
   * Nivel 100: 💠Pendejo Supremo💠 (Máximo rango)
+- ⚠️ IMPORTANTE SOBRE XP VS ECONOMÍA: Los roles de nivel NO otorgan multiplicadores de XP. Los multiplicadores de rol (+10%, +20%, +25%, +30%, +40%) aplican exclusivamente a la ECONOMÍA de porros (ganancias en /work, /crime, etc.).
 - Estado real de los miembros leído en directo de #bots y roles:
   * Joselito: Top 1 indiscutible (**Nivel 47**, ostenta **🔥Pendejo de Alto Rango🔥** por superar Nivel 40).
   * Lázaro y Omen2042: **Nivel 30** (ambos desbloquearon **🌸Pendejo Experimentado🌸**).
@@ -111,21 +112,22 @@ Administrador y creador supremo del servidor: Joselito (joselito3499 / Joselito 
   * /leaderboard: Abre la clasificación general del servidor.
   * /afk [motivo]: Activa modo ausente y avisa si alguien te menciona.
 - UnbelievaBoat (Casino & Economía de Porros):
+  * Multiplicadores por Rango: Los rangos otorgan bonus en ganancias de porros en /work y /crime (Rango Medio +10%, Experimentado +20%, Élite +25%, Legendario +30%, Mítico +40%).
   * /slots <apuesta>: Tragaperras de Brawl Stars con multiplicadores x2, x3, x5 y jackpot.
   * /blackjack <apuesta> (o /bj): Blackjack contra el bot.
   * /roulette <apuesta> <color/número>: Apuesta a rojo/negro o a número exacto.
   * /balance (o /bal): Consulta tus porros en mano y en cuenta bancaria.
   * /deposit all (o /dep all): Guarda todos tus porros en el banco para evitar que te los roben.
   * /withdraw <cantidad> (o /with): Saca porros del banco a mano.
-  * /work: Trabajar para ganar un jornal limpio de porros.
-  * /crime: Delinquir con riesgo de multa pero recompensa alta.
+  * /work: Trabajar para ganar un jornal limpio de porros (con bonus según tu rango).
+  * /crime: Delinquir con riesgo de multa pero recompensa alta (con bonus según tu rango).
   * /rob <usuario>: Intentar robarle porros en mano a otro usuario.
 - Drops de XP en #bots:
   * Cajas sorpresa aleatorias cada 4-8h (225 a 1.100 XP) con botón para reclamar primero.
 
 📐 CALCULADORA MATEMÁTICA DE XP (CAKEY BOT):
 - Fórmula oficial activa cuadrática: XP para pasar de nivel N a N+1 = 5*(N^2) + 50*N + 100
-- Multiplicadores de rol (solo aplica el mayor): Rango Medio (+10%), Experimentado (+20%), Élite (+25%), Legendario (+30%), Mítico (+40%).
+- REGLA CLAVE: Ningún rol otorga XP extra. La XP depende únicamente de la actividad y canales con boost.
 - Tasas de farmeo: Texto (200-250 XP/min), Voz (17-33 XP/min = ~1.500 XP/h), Bonus foto (+100 a +200 XP), Bonus vídeo (+150 a +300 XP).
 - Canales con boost de XP: #recomendaciones-gaming (+15%), #la-shit-de-todos-los-dias (+10%), #gaming-general (+10%), #shit-post (+5%).
 
