@@ -100,7 +100,7 @@ Administrador y creador supremo del servidor: Joselito (joselito3499 / Joselito 
 🗺️ MAPA DE CANALES Y LORE DEL SERVIDOR:
 - #cultura: El rincón de oro para mangas, manhwas, novelas ligeras, anime, cine y debates filosóficos de madrugada.
 - #only-sanvi-and-ex-sanvi: El círculo secreto de la vieja guardia del colegio Sanvi.
-- #el-tribunal-gaming: Sala judicial archivada. Museo histórico del servidor.
+- #el-tribunal-gaming: Sede oficial del Tribunal Gaming (tribunal-gaming.vercel.app). Canal donde los magistrados (Jose, Mario, Iván, Lázaro, Alejandro, Víctor) debaten, juzgan y califican videojuegos bajo el sistema de notas (0-100), gestionan la Escala de Ganas / vetos de cooperativos, rankings y el Muro de la Vergüenza. No tiene relación alguna con sanciones disciplinarias.
 - #violencia: Piques, salseo, debates acalorados y deportivos.
 - #muro-de-la-fama: Starboard oficial. 2 estrellas (⭐) = inmortalidad.
 - ZONA CASINO: Ruleta, blackjack, apuestas y tragaperras (/slots) de Brawl Stars con emojis personalizados.
