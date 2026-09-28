@@ -373,17 +373,20 @@ def generate_image_flux(prompt: str, width: int = 1024, height: int = 1024) -> b
     with urllib.request.urlopen(req, timeout=35) as resp:
         return resp.read()
 
-def enhance_image_prompt(user_text: str) -> str:
+def enhance_image_prompt(user_text: str, author_name: str = "") -> str:
     """Traduce y optimiza el prompt del usuario al inglés con detalles visuales cinematográficos."""
-    clean = re.sub(r"<@&?\d+>", "", user_text).strip()
-    clean = re.sub(r"\b(crea|genera|hazme|haz|dibuja|dibújame|dibujame|puedes|una|un|imagen|foto|dibujo|de|porfa|oye|asistente)\b", "", clean, flags=re.IGNORECASE).strip()
+    clean = re.sub(r"\b(crea|genera|hazme|haz|dibuja|dibújame|dibujame|puedes|una|un|imagen|foto|dibujo|de|porfa|oye|asistente)\b", "", user_text, flags=re.IGNORECASE).strip()
     if not clean:
         clean = "cyberpunk anime warrior"
     
+    if author_name:
+        clean = re.sub(r"\b(yo|mí|mi)\b", author_name, clean, flags=re.IGNORECASE)
+    
     prompt_enhancer = (
         f"You are an expert prompt engineer for FLUX.1 and Stable Diffusion image generation. "
-        f"Convert this user concept into a single, detailed, visually stunning English prompt (maximum 35 words). "
-        f"Include art style, lighting, atmosphere, and composition. Return ONLY the final prompt text without quotes or explanations.\n"
+        f"Convert this concept into a single, detailed, visually stunning English prompt (maximum 35 words). "
+        f"Include art style, lighting, atmosphere, characters, actions and composition. "
+        f"Return ONLY the final prompt text without quotes or explanations.\n"
         f"Concept: {clean}"
     )
     payload = {
@@ -395,7 +398,7 @@ def enhance_image_prompt(user_text: str) -> str:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_KEY}"
         try:
             req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-            with urllib.request.urlopen(req, timeout=8) as resp:
+            with urllib.request.urlopen(req, timeout=6) as resp:
                 res = json.loads(resp.read().decode("utf-8"))
                 candidates = res.get("candidates", [])
                 if candidates and "content" in candidates[0]:
@@ -404,7 +407,10 @@ def enhance_image_prompt(user_text: str) -> str:
                         return enhanced
         except Exception:
             continue
-    return f"{clean}, high quality digital art, detailed, cinematic lighting"
+            
+    if "vs" in clean.lower() or "contra" in clean.lower():
+        return f"An epic 1v1 battle, {clean}, intense clash, glowing energy aura, dynamic action angle, detailed digital art, cinematic lighting"
+    return f"{clean}, high quality digital art, detailed, dramatic lighting, cinematic 8k wallpaper"
 
 def call_gemini_multiturn(turns: list) -> str:
     payload = {
@@ -480,8 +486,19 @@ async def _handle_message_safe(message: discord.Message):
         user_cooldowns[uid] = now
         
         async with message.channel.typing():
-            # Limpiar menciones del texto
-            clean_text = re.sub(r"<@&?\d+>", "", message.content).strip()
+            # 1. Resolver menciones de otros miembros a sus nombres reales antes de limpiar
+            resolved_text = message.content
+            for m in message.mentions:
+                if m != bot.user:
+                    resolved_text = re.sub(f"<@!?{m.id}>", m.display_name, resolved_text)
+            for r in message.role_mentions:
+                if r.id != 1549789822191935561 and r.name.lower() != "asistente":
+                    resolved_text = re.sub(f"<@&{r.id}>", f"@{r.name}", resolved_text)
+            
+            # Limpiar mención al bot o al rol asistente
+            clean_text = re.sub(f"<@!?{bot.user.id}>", "", resolved_text)
+            clean_text = re.sub(r"<@&1549789822191935561>", "", clean_text).strip()
+            clean_text = re.sub(r"<@&?\d+>", "", clean_text).strip()
             lowered = clean_text.lower()
 
             # Detección de petición de generación de imagen
@@ -502,13 +519,15 @@ async def _handle_message_safe(message: discord.Message):
             
             if is_image_request:
                 try:
-                    enhanced_prompt = await asyncio.to_thread(enhance_image_prompt, clean_text)
-                    print(f"[IMAGEN] Prompt original: '{clean_text}' -> Mejorado: '{enhanced_prompt}'")
+                    author_name = message.author.display_name
+                    enhanced_prompt = await asyncio.to_thread(enhance_image_prompt, clean_text, author_name)
+                    print(f"[IMAGEN] Prompt original: '{clean_text}' (autor: {author_name}) -> Mejorado: '{enhanced_prompt}'")
                     img_bytes = await asyncio.to_thread(generate_image_flux, enhanced_prompt)
                     file = discord.File(io.BytesIO(img_bytes), filename="creacion_ia.png")
                     concept = re.sub(r"\b(crea|genera|hazme|haz|dibuja|dibújame|dibujame|una|un|imagen|foto|dibujo|de|porfa|oye|asistente)\b", "", clean_text, flags=re.IGNORECASE).strip() or clean_text
+                    concept_display = re.sub(r"\byo\b", author_name, concept, flags=re.IGNORECASE)
                     await message.reply(
-                        content=f"🎨 **Aquí tienes tu creación, {message.author.display_name}:**\n> *\"{concept}\"*",
+                        content=f"🎨 **Aquí tienes tu creación, {author_name}:**\n> *\"{concept_display}\"*",
                         file=file
                     )
                     return
