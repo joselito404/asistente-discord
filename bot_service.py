@@ -29,6 +29,7 @@ import urllib.error
 import discord
 from discord import app_commands
 import io
+import random
 from datetime import datetime, timezone, timedelta
 
 if sys.platform == "win32":
@@ -199,7 +200,21 @@ def get_steam_query_ctx(text: str) -> str:
 
 user_cooldowns = {}
 COOLDOWN_SECONDS = 3
-MODELS_PRIORITY = ["gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-3.5-flash"]
+
+# Modelos en orden de respuesta y cuota gratuita (3.5-flash-lite líder absoluto en velocidad y límites)
+MODELS_PRIORITY = ["gemini-3.5-flash-lite", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.7-flash"]
+model_cooldowns = {}
+
+def get_available_models():
+    """Devuelve los modelos disponibles que no están en cooldown por error 429/503."""
+    now = time.time()
+    available = [m for m in MODELS_PRIORITY if now >= model_cooldowns.get(m, 0)]
+    return available if available else MODELS_PRIORITY
+
+def mark_model_cooldown(model_name: str, duration_sec: int = 60):
+    """Aplica cooldown temporal a un modelo saturado para conmutar sin latencia."""
+    model_cooldowns[model_name] = time.time() + duration_sec
+    print(f"⚡ [Circuit Breaker] Modelo '{model_name}' en cooldown por {duration_sec}s.")
 
 TEXT_EXTENSIONS = {
     ".txt", ".py", ".js", ".ts", ".json", ".csv", ".md", ".cpp", ".c", ".h",
@@ -442,17 +457,21 @@ def enhance_image_prompt(user_text: str, author_name: str = "") -> str:
         "generationConfig": {"temperature": 0.7, "maxOutputTokens": 100}
     }
     data = json.dumps(payload).encode("utf-8")
-    for model_name in MODELS_PRIORITY:
+    for model_name in get_available_models():
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_KEY}"
         try:
             req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-            with urllib.request.urlopen(req, timeout=6) as resp:
+            with urllib.request.urlopen(req, timeout=5) as resp:
                 res = json.loads(resp.read().decode("utf-8"))
                 candidates = res.get("candidates", [])
                 if candidates and "content" in candidates[0]:
                     enhanced = candidates[0]["content"]["parts"][0]["text"].strip()
                     if enhanced and len(enhanced) > 5:
                         return enhanced
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 503):
+                mark_model_cooldown(model_name, 60)
+            continue
         except Exception:
             continue
             
@@ -473,30 +492,88 @@ def call_gemini_multiturn(turns: list) -> str:
     }
     
     data = json.dumps(payload).encode("utf-8")
+    models_to_try = get_available_models()
     
-    for model_name in MODELS_PRIORITY:
+    for model_name in models_to_try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_KEY}"
         for attempt in range(2):
             req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
             try:
-                with urllib.request.urlopen(req, timeout=25) as resp:
+                with urllib.request.urlopen(req, timeout=14) as resp:
                     res = json.loads(resp.read().decode("utf-8"))
                     candidates = res.get("candidates", [])
                     if candidates and "content" in candidates[0]:
                         return candidates[0]["content"]["parts"][0]["text"].strip()
             except urllib.error.HTTPError as e:
-                if e.code == 429:
-                    print(f"Cuota agotada en {model_name} (HTTP 429). Saltando al siguiente modelo de respaldo...")
-                    break
-                if e.code in (503, 500):
-                    print(f"Modelo {model_name} con alta demanda ({e.code}). Saltando a respaldo...")
+                if e.code in (429, 503, 500):
+                    print(f"Cuota/Sobrecarga en {model_name} (HTTP {e.code}). Activando Circuit Breaker...")
+                    mark_model_cooldown(model_name, 60)
                     break
                 break
             except Exception as ex:
-                time.sleep(0.5)
-                continue
+                mark_model_cooldown(model_name, 45)
+                break
                 
-    return "Cuota diaria de IA temporalmente saturada. Se restablece automáticamente de madrugada sin coste alguno."
+    return "Cuota de IA temporalmente saturada. Se restablece en unos momentos automáticamente."
+
+# ==========================================
+# COMPONENTES INTERACTIVOS (discord.ui)
+# ==========================================
+
+class ImageActionView(discord.ui.View):
+    """Botonera interactiva para creaciones de imágenes con FLUX.1."""
+    def __init__(self, prompt: str, author_id: int):
+        super().__init__(timeout=300)
+        self.prompt = prompt
+        self.author_id = author_id
+
+    @discord.ui.button(label="Re-roll", style=discord.ButtonStyle.primary, emoji="🔄")
+    async def reroll_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer(thinking=True)
+        try:
+            img_bytes = await asyncio.to_thread(generate_image_flux, self.prompt)
+            file = discord.File(io.BytesIO(img_bytes), filename="reroll_flux.png")
+            new_view = ImageActionView(self.prompt, self.author_id)
+            await interaction.followup.send(
+                content=f"🔄 **Nueva versión (Re-roll) para {interaction.user.display_name}:**\n> *\"{self.prompt[:120]}\"*",
+                file=file,
+                view=new_view
+            )
+        except Exception as e:
+            await interaction.followup.send(f"⚠️ Error generando re-roll: {e}", ephemeral=True)
+
+class SteamView(discord.ui.View):
+    """Botones oficiales de acceso directo a Steam Store y Comunidad."""
+    def __init__(self, app_id: int or str):
+        super().__init__(timeout=None)
+        if app_id:
+            self.add_item(discord.ui.Button(label="Abrir en Steam", url=f"https://store.steampowered.com/app/{app_id}/", emoji="🛒"))
+            self.add_item(discord.ui.Button(label="Comunidad & Guías", url=f"https://steamcommunity.com/app/{app_id}/", emoji="👥"))
+
+class TribunalView(discord.ui.View):
+    """Botones interactivos para El Tribunal Gaming."""
+    def __init__(self):
+        super().__init__(timeout=300)
+        self.add_item(discord.ui.Button(label="Ver en Web", url="https://tribunal-gaming.vercel.app", emoji="🌐"))
+
+    @discord.ui.button(label="Juego Aleatorio", style=discord.ButtonStyle.secondary, emoji="🎲")
+    async def random_game_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        pool = tribunal_data.get("single", []) + tribunal_data.get("coop", [])
+        if not pool:
+            await interaction.response.send_message("No hay juegos en la base de datos.", ephemeral=True)
+            return
+        g = random.choice(pool)
+        title = g.get("title", "Juego")
+        if "metacritic" in g:
+            meta = g.get("metacritic", "N/D")
+            desc = g.get("description", "")[:180]
+            hltb = g.get("hltb", {}).get("main", "N/D")
+            msg = f"🎲 **Recomendación Aleatoria:** **{title}**\n⭐ Metacritic: **{meta}** | ⏱️ Historia: **{hltb}**\n_{desc}..._"
+        else:
+            cat = g.get("category", "Coop")
+            perf = g.get("perf", "Sin notas")
+            msg = f"🎲 **Cooperativo Aleatorio:** **{title}** ({cat})\n⚙️ Rendimiento: {perf}"
+        await interaction.response.send_message(msg, ephemeral=False)
 
 # ==========================================
 # COMANDOS SLASH NATIVOS (discord.app_commands)
@@ -524,9 +601,11 @@ async def cmd_dibuja(interaction: discord.Interaction, prompt: str, estilo: app_
     try:
         img_bytes = await asyncio.to_thread(generate_image_flux, enhanced)
         file = discord.File(io.BytesIO(img_bytes), filename="creacion_flux.png")
+        view = ImageActionView(enhanced, interaction.user.id)
         await interaction.followup.send(
             content=f"🎨 **Aquí tienes tu creación, {author_name}:**\n> *\"{prompt}\"*",
-            file=file
+            file=file,
+            view=view
         )
     except Exception as e:
         await interaction.followup.send(f"⚠️ Error generando la imagen: {e}. Inténtalo de nuevo en unos momentos.")
@@ -584,7 +663,8 @@ async def cmd_steam(interaction: discord.Interaction, juego: str):
     embed.add_field(name="📅 Lanzamiento", value=release, inline=True)
     embed.set_footer(text="Steam Store API España • Datos oficiales en tiempo real", icon_url="https://store.steampowered.com/favicon.ico")
 
-    await interaction.followup.send(embed=embed)
+    view = SteamView(app_id)
+    await interaction.followup.send(embed=embed, view=view)
 
 @tree.command(name="tribunal", description="Consulta las notas, juegos cooperativos y veredictos de El Tribunal Gaming")
 @app_commands.describe(
@@ -628,7 +708,8 @@ async def cmd_tribunal(interaction: discord.Interaction, accion: app_commands.Ch
             genres = ", ".join(g.get("genres", [])[:4]) or "Varios"
             embed.add_field(name="🏷️ Géneros", value=genres, inline=False)
             embed.set_footer(text="tribunal-gaming.vercel.app • Evaluaciones de los Magistrados")
-            await interaction.followup.send(embed=embed)
+            view = TribunalView()
+            await interaction.followup.send(embed=embed, view=view)
             return
         
         if found_coop:
@@ -643,7 +724,8 @@ async def cmd_tribunal(interaction: discord.Interaction, accion: app_commands.Ch
             embed.add_field(name="💾 Tamaño", value=g.get("size", "N/D"), inline=True)
             embed.add_field(name="⚙️ Rendimiento", value=g.get("perf", "Sin notas específicas"), inline=False)
             embed.set_footer(text="tribunal-gaming.vercel.app • Cooperativos evaluados")
-            await interaction.followup.send(embed=embed)
+            view = TribunalView()
+            await interaction.followup.send(embed=embed, view=view)
             return
 
     elif val == "muro":
@@ -658,7 +740,8 @@ async def cmd_tribunal(interaction: discord.Interaction, accion: app_commands.Ch
         lines = [f"• **{g['title']}** ({g.get('category', 'Coop')}) - {g.get('perf', 'Vetado / No disponible')[:75]}" for g in sample]
         embed.add_field(name=f"Juegos en el Limbo ({len(unavail)} totales)", value="\n".join(lines) or "Sin juegos registrados actualmente.", inline=False)
         embed.set_footer(text="tribunal-gaming.vercel.app • El Muro de la Vergüenza")
-        await interaction.followup.send(embed=embed)
+        view = TribunalView()
+        await interaction.followup.send(embed=embed, view=view)
 
     elif val == "top":
         sp = sorted(tribunal_data.get("single", []), key=lambda x: x.get("metacritic") or 0, reverse=True)
@@ -673,7 +756,8 @@ async def cmd_tribunal(interaction: discord.Interaction, accion: app_commands.Ch
             lines.append(f"**#{i}** **{g['title']}** - ⭐ **{g.get('metacritic')}** | ⏱️ {g.get('hltb', {}).get('main', 'N/D')}")
         embed.add_field(name="Top Obras Maestras", value="\n".join(lines), inline=False)
         embed.set_footer(text="tribunal-gaming.vercel.app • Rankings Oficiales")
-        await interaction.followup.send(embed=embed)
+        view = TribunalView()
+        await interaction.followup.send(embed=embed, view=view)
 
     elif val == "coop":
         cats = {}
@@ -688,7 +772,8 @@ async def cmd_tribunal(interaction: discord.Interaction, accion: app_commands.Ch
             color=0x10b981
         )
         embed.set_footer(text="tribunal-gaming.vercel.app • Filtro Cooperativo")
-        await interaction.followup.send(embed=embed)
+        view = TribunalView()
+        await interaction.followup.send(embed=embed, view=view)
 
 @tree.command(name="perfil", description="Muestra la ficha técnica, rango de Cakey Bot y roles de un miembro")
 @app_commands.describe(usuario="El miembro del que quieres consultar la ficha (por defecto tú)")
@@ -736,7 +821,8 @@ async def cmd_pregunta(interaction: discord.Interaction, duda: str):
         try:
             img_bytes = await asyncio.to_thread(generate_image_flux, prompt_flux)
             file = discord.File(io.BytesIO(img_bytes), filename="creacion_flux.png")
-            await interaction.followup.send(content=clean_response or None, file=file)
+            view = ImageActionView(prompt_flux, interaction.user.id)
+            await interaction.followup.send(content=clean_response or None, file=file, view=view)
             return
         except Exception:
             pass
@@ -876,9 +962,9 @@ async def _handle_message_safe(message: discord.Message):
                 if len(search_query) >= 3:
                     web_search_context = await asyncio.to_thread(search_web_lite, search_query)
             
-            # 5. Lector de mensajes fijados (pins)
+            # 5. Lector de mensajes fijados (pins) - Selectivo para ahorrar tokens
             pins_context = ""
-            if any(w in lowered for w in ["fijado", "pinned", "pins", "anclado", "recomendaciones", "top manhwas", "destacado"]) or message.channel.name == "cultura":
+            if any(w in lowered for w in ["fijado", "pinned", "pins", "anclado", "destacado"]) or (message.channel.name == "cultura" and any(w in lowered for w in ["top", "recomendacion", "recomendación", "recomienda", "manhwa", "manga", "lista", "que leo", "qué leo"])):
                 pins_context = await get_pins_context(message.channel)
             
             # 6. Ficha técnica de miembros si se menciona a alguien
@@ -953,8 +1039,11 @@ async def _handle_message_safe(message: discord.Message):
                 voice_str = "; ".join(active_voices) if active_voices else "Nadie en llamada de voz ahora mismo"
                 server_live_ctx = f"\n[ESTADO EN VIVO DEL SERVIDOR]: Fecha y hora actual: {spain_time_str} | Servidor: {message.guild.name} ({message.guild.member_count} miembros) | Canal: #{message.channel.name} | Llamadas activas: {voice_str}"
 
-            # Snapshot de miembros reales del servidor (con roles y niveles)
-            members_ctx = get_live_members_ctx(message.guild, live_levels)
+            # Snapshot de miembros reales del servidor (con roles y niveles) - Inyección selectiva para ahorrar tokens
+            members_ctx = ""
+            members_keywords = ["quien", "quién", "miembros", "roles", "rol", "staff", "admin", "gente", "usuarios", "lista de", "cuantos somos", "cuántos somos", "quienes estan", "quiénes están"]
+            if any(k in lowered for k in members_keywords):
+                members_ctx = get_live_members_ctx(message.guild, live_levels)
 
             # Lectura dinámica de canales si se mencionan
             channel_lookup_ctx = ""
@@ -1042,10 +1131,11 @@ async def _handle_message_safe(message: discord.Message):
                     print(f"[FLUX.1] Generando imagen para prompt: '{prompt_flux}'")
                     img_bytes = await asyncio.to_thread(generate_image_flux, prompt_flux)
                     file = discord.File(io.BytesIO(img_bytes), filename="creacion_asistente.png")
+                    view = ImageActionView(prompt_flux, message.author.id)
                     if clean_response:
-                        await message.reply(content=clean_response, file=file)
+                        await message.reply(content=clean_response, file=file, view=view)
                     else:
-                        await message.reply(file=file)
+                        await message.reply(file=file, view=view)
                     return
                 except Exception as img_err:
                     print(f"Error generando imagen FLUX: {img_err}")
@@ -1061,8 +1151,9 @@ async def _handle_message_safe(message: discord.Message):
                     print(f"[FLUX.1 Fallback] Generando imagen para: '{enhanced}'")
                     img_bytes = await asyncio.to_thread(generate_image_flux, enhanced)
                     file = discord.File(io.BytesIO(img_bytes), filename="creacion_asistente.png")
+                    view = ImageActionView(enhanced, message.author.id)
                     reply_txt = response_text if response_text and not any(bad in response_text.lower() for bad in ["aquí tienes", "aqui tienes", "he creado", "la imagen"]) else f"🎨 **Aquí tienes tu creación, {message.author.display_name}:**"
-                    await message.reply(content=reply_txt, file=file)
+                    await message.reply(content=reply_txt, file=file, view=view)
                     return
                 except Exception as e:
                     print(f"Error en fallback directo de dibujo: {e}")
