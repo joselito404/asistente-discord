@@ -1,0 +1,4391 @@
+{
+  "coop": [
+    {
+      "id": "g1",
+      "title": "Buckshot Roulette",
+      "category": "Salvavidas",
+      "steamId": "2835570",
+      "size": "~500 MB",
+      "availability": "available",
+      "perf": "🟢 Excelente. Tensión pura, la actualización multijugador es súper ligera. La Vega 8 ni sudará.",
+      "desc": "Un tenso duelo de ruleta rusa con escopeta donde la suerte y la lectura del rival lo son todo. Tendréis que usar objetos tácticos como lupas, esposas y cigarros curativos para ganar ventaja. La actualización multijugador lo convierte en un caos de faroles y traiciones."
+    },
+    {
+      "id": "g2",
+      "title": "Among Us",
+      "category": "Salvavidas",
+      "steamId": "945360",
+      "size": "~600 MB",
+      "availability": "available",
+      "perf": "🟢 Excelente.",
+      "desc": "El rey de la deducción social y la supervivencia espacial. Los tripulantes deben completar minijuegos de mantenimiento por toda la nave mientras los impostores sabotean sistemas y asesinan en las sombras. Las reuniones de emergencia son puros debates de engaños y paranoia."
+    },
+    {
+      "id": "g4",
+      "title": "Lethal Company",
+      "category": "Salvavidas",
+      "steamId": "1966720",
+      "size": "~1 GB",
+      "availability": "available",
+      "perf": "🟢 Excelente.",
+      "desc": "Survival horror cooperativo extremadamente viral y tenso. Sois chatarreros espaciales que deben aterrizar en lunas abandonadas y laberínticas para recolectar chatarra y cumplir la cuota de una corporación siniestra. El chat de proximidad y los monstruos procedurales generan puro pánico."
+    },
+    {
+      "id": "g5",
+      "title": "Keep Talking and Nobody Explodes",
+      "category": "Salvavidas",
+      "steamId": "341800",
+      "size": "~1 GB",
+      "availability": "available",
+      "perf": "🟢 Excelente. Uno desactiva la bomba en el PC y el resto lee el manual. Funciona literalmente hasta en una tostadora.",
+      "desc": "Puzle asimétrico que pondrá a prueba vuestra comunicación bajo presión extrema. Un jugador está frente a una bomba de relojería y el resto tiene el manual para desactivarla, pero no pueden ver la bomba. La coordinación milimétrica es la única forma de evitar volar por los aires."
+    },
+    {
+      "id": "g6",
+      "title": "Pico Park 2",
+      "category": "Salvavidas",
+      "steamId": "2644470",
+      "size": "~1 GB",
+      "availability": "available",
+      "perf": "🟢 Excelente.",
+      "desc": "Caótico plataformas y puzles en 2D donde la cooperación es obligatoria, no opcional. Vosotros seréis pequeños gatos que deben apilarse, empujar bloques y superar abismos juntos. Si un solo jugador falla o se descoordina, el nivel entero se reinicia."
+    },
+    {
+      "id": "g7",
+      "title": "Ultimate Chicken Horse",
+      "category": "Salvavidas",
+      "steamId": "386940",
+      "size": "~2 GB",
+      "availability": "available",
+      "perf": "🟢 Excelente.",
+      "desc": "Competitivo de plataformas donde los propios jugadores construyen el nivel ronda tras ronda. El objetivo es colocar trampas, ballestas y plataformas de hielo para que sea demasiado difícil para tus amigos, pero lo suficientemente fácil para que tú llegues a la meta."
+    },
+    {
+      "id": "g8",
+      "title": "Ultimate Sheep Raccoon",
+      "category": "Salvavidas",
+      "steamId": "2923350",
+      "size": "~2 GB",
+      "availability": "available",
+      "customImage": "https://cdn.akamai.steamstatic.com/steam/apps/2923350/header.jpg",
+      "perf": "Iván: 🟢 Excelente",
+      "desc": "Carreras multijugador con físicas desternillantes donde controláis animales torpes en bicicletas. Podréis diseñar el circuito con rampas y trampas mortales antes de correr. Las físicas ragdoll y el caos en la pista os darán horas de risas."
+    },
+    {
+      "id": "g9",
+      "title": "Human: Fall Flat",
+      "category": "Salvavidas",
+      "steamId": "477160",
+      "size": "~2 GB",
+      "availability": "available",
+      "perf": "🟢 Excelente. Puzles y parkour con físicas locas estilo Gang Beasts . Le irá perfecto a 1080p.",
+      "desc": "Aventura de exploración y puzles en paisajes oníricos flotantes. Su principal atractivo son las físicas intencionadamente torpes de los personajes de arcilla. Tendréis que cooperar para trepar, balancearos y catapultaros, aunque normalmente acabaréis tirándoos al vacío por accidente."
+    },
+    {
+      "id": "g10",
+      "title": "R.E.P.O",
+      "category": "Salvavidas",
+      "steamId": "3241660",
+      "size": "~2 GB",
+      "availability": "available",
+      "customImage": "https://cdn.akamai.steamstatic.com/steam/apps/3241660/header.jpg",
+      "owned": {
+        "status": "copies",
+        "count": 3,
+        "label": "3 Copias Compradas"
+      },
+      "perf": "🟢 Muy Bueno (Ajustando sombras).",
+      "desc": "Extraction horror cooperativo en la línea de Lethal Company. Vuestra misión es infiltraros en instalaciones abandonadas para recuperar artefactos valiosos y cumplir la cuota. Destaca por su iluminación oscura y entidades terroríficas invisibles."
+    },
+    {
+      "id": "g11",
+      "title": "Schedule",
+      "category": "Salvavidas",
+      "steamId": "3164500",
+      "size": "~2.2 GB",
+      "availability": "available",
+      "customImage": "https://cdn.akamai.steamstatic.com/steam/apps/3164500/header.jpg",
+      "owned": {
+        "status": "pirate",
+        "label": "Jugado (🏴‍☠️)"
+      },
+      "perf": "🟢 Excelente.",
+      "desc": "Un frenético juego de gestión de tiempo y micro-tareas (estilo Overcooked). Debéis organizaros milimétricamente para completar secuencias complejas bajo la presión de un reloj implacable. La coordinación de roles es esencial para no hundir la producción."
+    },
+    {
+      "id": "g12",
+      "title": "Gang Beasts",
+      "category": "Salvavidas",
+      "steamId": "285900",
+      "size": "~2 GB",
+      "availability": "available",
+      "perf": "🟢 Excelente.",
+      "desc": "Brawler multijugador absurdamente divertido basado en físicas gelatinosas. Las peleas se desarrollan en escenarios móviles y peligrosos. El objetivo es agarrar a vuestros amigos a base de puñetazos y lanzarlos sin piedad fuera del mapa."
+    },
+    {
+      "id": "g13",
+      "title": "RV There Yet?",
+      "category": "Salvavidas",
+      "steamId": "3949040",
+      "size": "~3 GB",
+      "availability": "available",
+      "customImage": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3949040/cae24b4ed7f4531be51f0d63f785b7d253f92dc3/header.jpg",
+      "owned": {
+        "status": "pirate",
+        "label": "Jugado (🏴‍☠️)"
+      },
+      "perf": "🟢 Excelente.",
+      "desc": "Simulador de supervivencia en carretera a bordo de una autocaravana ruinosa. Tendréis que dividiros las tareas: uno conduce, otro repara el motor en marcha y otro gestiona los recursos. Un viaje caótico donde la comunicación evitará que os quedéis tirados."
+    },
+    {
+      "id": "g14",
+      "title": "Deep Rock Galactic",
+      "category": "Salvavidas",
+      "steamId": "548430",
+      "size": "~3 GB",
+      "availability": "available",
+      "perf": "🟢 Muy Bueno (1080p / Medio).",
+      "desc": "Looter-shooter cooperativo de extracción. Sois enanos espaciales descendiendo a cuevas 100% destructibles para picar minerales raros. Tendréis que combinar las habilidades de vuestras clases para sobrevivir a oleadas alienígenas masivas."
+    },
+    {
+      "id": "g15",
+      "title": "Liar’s Bar",
+      "category": "Salvavidas",
+      "steamId": "3097560",
+      "size": "~2 GB",
+      "availability": "available",
+      "perf": "Iván: 🟢 Excelente",
+      "desc": "Juego oscuro de deducción y apuestas en un bar frecuentado por animales turbios. Jugaréis a la ruleta del mentiroso o a los dados trucados, faroleando sin piedad. Si os pillan mintiendo, las consecuencias serán letales y rápidas."
+    },
+    {
+      "id": "g16",
+      "title": "Mimesis",
+      "category": "Salvavidas",
+      "steamId": "2827200",
+      "size": "~4 GB",
+      "availability": "available",
+      "customImage": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2827200/825cac843c69f16866fdf3bb649eb4d7e666cb2b/header_alt_assets_0.jpg",
+      "perf": "🟢 Excelente.",
+      "desc": "Terror asimétrico (estilo Prop Hunt macabro). Un jugador asume el papel de un ente cazador implacable, mientras los supervivientes adoptan la forma de objetos cotidianos. La tensión de jugar al escondite mientras el monstruo respira a tu lado es asfixiante."
+    },
+    {
+      "id": "g17",
+      "title": "Content Warning",
+      "category": "Salvavidas",
+      "steamId": "2881650",
+      "size": "~4 GB",
+      "availability": "available",
+      "perf": "🟢 Bueno (1080p / Bajo-Medio).",
+      "desc": "Terror cooperativo viral. Equipados con trajes de buceo y una cámara de vídeo, descenderéis al \"Viejo Mundo\" para grabar a monstruos espeluznantes. Vuestro objetivo es subir el metraje a SpöökTube y haceros famosos antes de morir."
+    },
+    {
+      "id": "g18",
+      "title": "Golf IT",
+      "category": "Salvavidas",
+      "steamId": "571740",
+      "size": "~12 GB",
+      "availability": "available",
+      "perf": "🟢 Muy Bueno.",
+      "desc": "Minigolf multijugador centrado en físicas realistas y en una inmensa cantidad de mapas creados por la comunidad. Cuenta con circuitos demenciales llenos de rampas y trampas, diseñados específicamente para arruinar amistades en el último hoyo."
+    },
+    {
+      "id": "g19",
+      "title": "A Way Out",
+      "category": "Salvavidas",
+      "steamId": "1222700",
+      "size": "~25 GB",
+      "availability": "available",
+      "perf": "🟢 Bueno (1080p / Bajo o 900p / Medio).",
+      "desc": "Obra maestra narrativa de acción diseñada estrictamente para pantalla dividida. Encarnaréis a dos reclusos colaborando en todo momento. Mezcla sigilo, resolución de puzles, conducción y tiroteos en una fuga de prisión con giros espectaculares."
+    },
+    {
+      "id": "g20",
+      "title": "Helldivers 1",
+      "category": "Salvavidas",
+      "steamId": "394510",
+      "size": "~7 GB",
+      "availability": "available",
+      "perf": "🟢 Excelente. Volará a 60 FPS estables en 1080p.",
+      "desc": "Shooter táctico cenital \"twin-stick\" implacable. El fuego amigo siempre está activado, por lo que la coordinación es vital. Deberéis introducir códigos rápidos para invocar estratagemas orbitales y diezmar a las fuerzas alienígenas por la Supertierra."
+    },
+    {
+      "id": "g21",
+      "title": "Slay the Spire 2",
+      "category": "Salvavidas",
+      "steamId": "2868840",
+      "size": "~2 GB",
+      "availability": "available",
+      "owned": {
+        "status": "pirate",
+        "label": "Jugado (🏴‍☠️)"
+      },
+      "perf": "🟢 Excelente. Al ser un juego de cartas con arte 2D, es extremadamente ligero. Iván podrá jugarlo a 1080p con total fluidez mientras planeáis vuestros mazos.",
+      "desc": "La secuela del aclamado roguelike de construcción de mazos (Deckbuilder), ahora con modo cooperativo. Elegiréis entre diferentes clases y crearéis sinergias de cartas devastadoras para ascender por una torre mutante enfrentando enemigos por turnos."
+    },
+    {
+      "id": "g22",
+      "title": "YAPYAP",
+      "category": "Salvavidas",
+      "steamId": "3834090",
+      "size": "~2 GB",
+      "availability": "available",
+      "customImage": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3834090/399b7aa5bd9ea359e6d77cec3032758ea27c597b/header.jpg",
+      "owned": {
+        "status": "pirate",
+        "label": "Jugado (🏴‍☠️)"
+      },
+      "perf": "🟢 Excelente. Es un juego indie con gráficos intencionadamente retro (estilo PS1). La gráfica Vega 8 lo moverá a 60 FPS sin despeinarse.",
+      "desc": "Aventura cooperativa caótica de terror mágico con estética retro de PS1. Sois secuaces invocados para causar el caos usando hechizos variados. Mezcla humor absurdo, físicas intencionadamente rotas y situaciones ridículas para desconectar."
+    },
+    {
+      "id": "g23",
+      "title": "Mage Arena",
+      "category": "Salvavidas",
+      "steamId": "3716600",
+      "size": "~1 GB",
+      "availability": "available",
+      "customImage": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3716600/e09e178465c67642c1214736e29d64846d966e52/header.jpg",
+      "perf": "🟢 Excelente. Otro título con modelados muy sencillos y low-poly . No le dará ningún problema de rendimiento.",
+      "desc": "Batallas frenéticas de hechiceros en pequeñas arenas con gráficos low-poly. Podréis personalizar vuestros grimorios y luchar en enfrentamientos rápidos. Exige reflejos para esquivar proyectiles y astucia para desatar combos elementales."
+    },
+    {
+      "id": "g24",
+      "title": "Escape Simulator 2",
+      "category": "Salvavidas",
+      "steamId": "2879840",
+      "size": "~15 GB",
+      "availability": "available",
+      "perf": "🟢 Muy Bueno. Como ocurre en estos juegos de físicas controladas en habitaciones cerradas, la optimización suele ser fantástica. Le irá muy fluido a 1080p.",
+      "desc": "Escape Room virtual en primera persona con físicas avanzadas. Exploraréis habitaciones interactivas donde podéis manipular, lanzar y destrozar objetos para encontrar pistas ocultas y resolver complejos rompecabezas lógicos en equipo."
+    },
+    {
+      "id": "g55",
+      "title": "WEBFISHING",
+      "category": "Salvavidas",
+      "steamId": "3146520",
+      "size": "~500 MB",
+      "availability": "available",
+      "perf": "🟢 Excelente. Indie extremadamente ligero; volará a 1080p.",
+      "desc": "Simulador de pesca multijugador con estética retro y tono \"chill\". Atrapa peces raros, desbloquea cosméticos, toca la guitarra y relájate. No hay presión ni barras de vida; es puro confort y coleccionismo social."
+    },
+    {
+      "id": "g56",
+      "title": "Murky Divers",
+      "category": "Salvavidas",
+      "steamId": "2963880",
+      "size": "~2 GB",
+      "availability": "available",
+      "perf": "🟢 Muy Bueno. Estilo minimalista; muy fluido en integradas.",
+      "desc": "Extraction horror submarino con un oscuro sentido del humor. Bucearéis en laboratorios sumergidos para limpiar pruebas de experimentos corporativos ilegales gestionando el oxígeno y evitando ruidos que atraigan a entidades ciegas."
+    },
+    {
+      "id": "g57",
+      "title": "Bloons TD 6",
+      "category": "Salvavidas",
+      "steamId": "960090",
+      "size": "~2 GB",
+      "availability": "available",
+      "perf": "🟢 Excelente. Solo bajará de 60 FPS en rondas muy avanzadas.",
+      "desc": "El rey indiscutible de los Tower Defense. Colaboraréis colocando monos con diferentes árboles de habilidades para reventar interminables oleadas de globos. La estrategia y la economía se vuelven extremadamente complejas en niveles altos."
+    },
+    {
+      "id": "g63",
+      "title": "We Need to Go Deeper",
+      "category": "Salvavidas",
+      "steamId": "307110",
+      "size": "~2 GB",
+      "availability": "available",
+      "perf": "🟢 Excelente. Estilo artístico 2D muy ligero; vuela en cualquier PC.",
+      "desc": "Roguelike cooperativo de supervivencia en un submarino steampunk con dibujos a mano. Deberéis repartiros roles (piloto, ingeniero, artillero) para navegar por fosas abisales, gestionar la energía y combatir krakens gigantes."
+    },
+    {
+      "id": "g64",
+      "title": "Biped 2",
+      "category": "Salvavidas",
+      "steamId": "2560240",
+      "size": "~4 GB",
+      "availability": "available",
+      "perf": "🟢 Muy Bueno. Gráficos estilizados que la Vega 8 mueve de sobra a 1080p.",
+      "desc": "Aventura cooperativa de plataformas y puzles donde la mecánica principal es controlar individualmente cada pierna de vuestro robot. Esta curiosa forma de caminar exige una coordinación extrema entre ambos jugadores para no resbalar, superar pruebas de agilidad y activar mecanismos."
+    },
+    {
+      "id": "g65",
+      "title": "Ship of Fools",
+      "category": "Salvavidas",
+      "steamId": "1286580",
+      "size": "~2 GB",
+      "availability": "available",
+      "perf": "🟢 Excelente. Arte 2D dibujado a mano. Cero estrés para la gráfica.",
+      "desc": "Roguelite marítimo diseñado expresamente para dos jugadores. Navegaréis por un archipiélago traicionero para evitar el \"Aguapocalipsis\". Tendréis que disparar cañones, repeler abordajes y enfrentaros a leviatanes marinos en tiempo real."
+    },
+    {
+      "id": "g66",
+      "title": "Granny Simulator",
+      "category": "Salvavidas",
+      "steamId": "1053680",
+      "size": "~1 GB",
+      "availability": "unavailable",
+      "perf": "🟢 Excelente. Gráficos muy sencillos, ideal para echaros unas risas dándoos escobazos sin lag.",
+      "desc": "Comedia violenta multijugador donde un jugador es la abuela armada con escobas y sartenes y los demás son nietos gamberros intentando sabotear la casa con explosivos y objetos arrojadizos."
+    },
+    {
+      "id": "g69",
+      "title": "Plants vs. Zombies: Garden Warfare 1",
+      "category": "Salvavidas",
+      "steamId": "",
+      "size": "~15 GB",
+      "availability": "available",
+      "customImage": "/pvz-gw1-header.jpg",
+      "perf": "🟢 Muy Bueno . Motor Frostbite clásico bien optimizado. En 1080p / Medio-Bajo le irá a 50-60 FPS muy estables.",
+      "desc": "Shooter en tercera persona épico que enfrenta a plantas y zombis en jardines suburbanos con clases asimétricas, habilidades cómicas y modo cooperativo Operaciones de Jardín."
+    },
+    {
+      "id": "g70",
+      "title": "FlyKnight",
+      "category": "Salvavidas",
+      "steamId": "3108510",
+      "size": "~2 GB",
+      "availability": "available",
+      "perf": "🟢 Excelente . Estilo indie ligero con mecánicas arcade. Cero problemas para la Vega 8 a 1080p nativo.",
+      "desc": "Roguelite aéreo arcade de combate veloz donde pilotáis caballeros con alas a través de oleadas de criaturas mitológicas en arenas cerradas."
+    },
+    {
+      "id": "g71",
+      "title": "Exploding Kittens 2",
+      "category": "Salvavidas",
+      "steamId": "2999030",
+      "size": "~1.5 GB",
+      "availability": "available",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2999030/header.jpg?t=1787313738",
+      "perf": "🟢 Excelente . Juego de cartas/tablero en 2D. Requisitos mínimos nulos, 1080p y 60 FPS estables sin esfuerzo.",
+      "desc": "Experiencia cooperativa en la categoría Salvavidas. 🟢 Excelente . Juego de cartas/tablero en 2D. Requisitos mínimos nulos, 1080p y 60 FPS estables sin esfuerzo."
+    },
+    {
+      "id": "g72",
+      "title": "Heave Ho 2",
+      "category": "Salvavidas",
+      "steamId": "2802740",
+      "size": "~2 GB",
+      "availability": "unavailable",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2802740/829d9cf1b2dc94d98d2df66cf91ecec316e55802/header.jpg?t=1790264315",
+      "perf": "🟢 Excelente . Físicas 2D muy ligeras estilo fiesta. Cero estrés gráfico a 1080p nativo.",
+      "desc": "Plataformas cooperativo basado en físicas extremas donde los jugadores deben agarrarse de las manos y balancearse sobre abismos mortales para llegar juntos a la meta sin caer."
+    },
+    {
+      "id": "g73",
+      "title": "Pummel Party",
+      "category": "Salvavidas",
+      "steamId": "880940",
+      "size": "~4 GB",
+      "availability": "available",
+      "perf": "🟢 Excelente . Minijuegos estilo Mario Party bajo motor Unity muy optimizado. Mantiene 60 FPS a 1080p sin problemas.",
+      "desc": "Party game salvaje para 4-8 jugadores con tablero y decenas de minijuegos sádicos repletos de armas como guantes de boxeo, escopetas y bombas para destruir a tus colegas."
+    },
+    {
+      "id": "g74",
+      "title": "Funnel Runners",
+      "category": "Salvavidas",
+      "steamId": "3712080",
+      "size": "~4 GB",
+      "availability": "available",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3712080/5e03554f7fd68edf54813a8d5a576a8791672227/header.jpg?t=1784567934",
+      "perf": "🟢 Muy Bueno . Cooperativo con físicas desenfadadas. Muy ligero y totalmente fluido a 1080p.",
+      "desc": "Carreras frenéticas y obstáculos cooperativos con físicas ragdoll locas donde el objetivo es no quedar atrapado en el embudo y coordinar saltos milimétricos."
+    },
+    {
+      "id": "g75",
+      "title": "Together: Moon Escape",
+      "category": "Salvavidas",
+      "steamId": "3744430",
+      "size": "~13 GB",
+      "availability": "available",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3744430/2b1989c2b09a474a13a9dc3db410248ad9fc04e4/header.jpg?t=1778172724",
+      "perf": "🟢 Muy Bueno . Aventura de puzles cooperativos asimétricos espaciales (estilo We Were Here / It Takes Two ). Está optimizado para equipos de gama baja y Steam Deck; la Vega 8 lo moverá con total fluidez a 1080p/Bajo o 900p.",
+      "desc": "Aventura de puzles asimétricos espaciales para dos jugadores al estilo We Were Here e It Takes Two, ambientada en una base lunar abandonada que exige constante comunicación."
+    },
+    {
+      "id": "g76",
+      "title": "Rayman Legends Retold",
+      "category": "Salvavidas",
+      "steamId": "4084710",
+      "size": "~6 GB",
+      "availability": "unreleased",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4084710/4fc23980ce04f33d7dc91bf38d74591ec00015cb/header.jpg?t=1789636143",
+      "perf": "🟢 Excelente . Motor UbiArt Framework en 2D. Es una pluma para cualquier equipo; 1080p y 60 FPS estables como una roca.",
+      "desc": "Edición homenaje cooperativa del legendario plataformas 2D de Ubisoft con niveles musicales sincronizados, arte visual deslumbrante y soporte para 4 jugadores."
+    },
+    {
+      "id": "g77",
+      "title": "Children of Morta",
+      "category": "Salvavidas",
+      "steamId": "330020",
+      "size": "~2 GB",
+      "availability": "unreleased",
+      "perf": "🟢 Excelente . Roguelike en pixel art sublime. Cero estrés para la gráfica integrada a 1080p.",
+      "desc": "Aclamado RPG de acción roguelite con un pixel art sublime centrado en la familia Bergson, combinando combates de mazmorras cooperativos con una emotiva narrativa familiar."
+    },
+    {
+      "id": "g78",
+      "title": "BOMBANANA !",
+      "category": "Salvavidas",
+      "steamId": "4656000",
+      "size": "~2 GB",
+      "availability": "unreleased",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4656000/99c086faba625a8d3bc459bab444087d257ccbe1/header.jpg?t=1790377390",
+      "perf": "🟢 Excelente . Cooperativo desenfadado estilo Keep Talking and Nobody Explodes . Extremadamente ligero; correrá perfecto a 1080p nativo.",
+      "desc": "Party game cooperativo de comunicación y desactivación contrarreloj similar a Keep Talking, con estética cartoon y disparatadas mecánicas en equipo."
+    },
+    {
+      "id": "g79",
+      "title": "Double Dealers",
+      "category": "Salvavidas",
+      "steamId": "4218620",
+      "size": "~5 GB",
+      "availability": "unreleased",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4218620/0d770690dad82dbc74f06a656db3b5b16c8dab42/header.jpg?t=1790341130",
+      "perf": "🟢 Muy Bueno . Juego de engaño, subastas y cartas. Rendimiento impecable a 1080p ajustando sombras ligeras.",
+      "desc": "Juego de deducción, subastas y apuestas clandestinas donde los jugadores deben farolear, engañar a sus compañeros y acumular fortunas sin ser descubiertos."
+    },
+    {
+      "id": "g80",
+      "title": "Meltdown Crew",
+      "category": "Salvavidas",
+      "steamId": "4824220",
+      "size": "~4 GB",
+      "availability": "unreleased",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4824220/af47b508b6f44daee052b0c2e49f859e32171c13/header.jpg?t=1788966796",
+      "perf": "🟢 Muy Bueno . Cooperativo con físicas y estética retro ochentera. Muy fluido a 1080p.",
+      "desc": "Cooperativo de gestión de catástrofes y físicas con estética ochentera donde debéis reparar tuberías, apagar fuegos y evitar el colapso del reactor nuclear."
+    },
+    {
+      "id": "g81",
+      "title": "Last Pirates: Die Together",
+      "category": "Salvavidas",
+      "steamId": "4317790",
+      "size": "~4 GB",
+      "availability": "unreleased",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4317790/377709b6eccd8d8f766d9a416036b3b323742d9e/header_alt_assets_2.jpg?t=1790612839",
+      "perf": "🟢 Excelente . Cooperativo cómico de terror/extracción en barcos y mazmorras. Escenarios cerrados y modelados sencillos estilo low-poly; la gráfica Vega 8 lo moverá sin problemas a 1080p y 60 FPS estables.",
+      "desc": "Extraction horror cómico de piratas en el que abordáis barcos y mazmorras malditas para saquear tesoros y huir antes de que las criaturas abisales despierten."
+    },
+    {
+      "id": "g82",
+      "title": "Big Walk",
+      "category": "Salvavidas",
+      "steamId": "1478500",
+      "size": "~6 GB",
+      "availability": "available",
+      "perf": "🟢 Excelente . Desarrollado en Unity con arte estilizado y requisitos muy contenidos (pide una GTX 750 Ti de mínimo). La Vega 8 lo moverá con total soltura a 1080p/Bajo o 900p/Medio a 50-60 FPS estables.",
+      "desc": "Del estudio creador de Untitled Goose Game, una relajante y divertida aventura de senderismo cooperativo, orientación y puzles en equipo por paisajes naturales."
+    },
+    {
+      "id": "g83",
+      "title": "How to Fish",
+      "category": "Salvavidas",
+      "steamId": "4001890",
+      "size": "~2 GB",
+      "availability": "available",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4001890/45c4ddff4901e32c4b8b643e1b97d0d01898d299/header.jpg?t=1788788717",
+      "perf": "🟢 Excelente . Simulador cómico de pesca con físicas estilo Landfall. Gráficos low-poly muy ligeros; la Vega 8 lo moverá a 1080p y 60 FPS estables sin despeinarse.",
+      "desc": "Simulador de pesca cómico con físicas disparatadas estilo Landfall donde intentar atrapar peces gigantes se convierte en una lucha cuerpo a cuerpo con tus amigos."
+    },
+    {
+      "id": "g84",
+      "title": "Moo Who?",
+      "category": "Salvavidas",
+      "steamId": "4948000",
+      "size": "~2 GB",
+      "availability": "available",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4948000/362297ea18447bdf634052b56e7c1bc3d9ed2e72/header.jpg?t=1789487929",
+      "perf": "🟢 Excelente. Juego casual/party en entornos cerrados con modelados cartoon muy simples. La Vega 8 lo moverá a 1080p y 60 FPS estables sin despeinarse.",
+      "desc": "Party game de disimulo y minijuegos en una granja donde los jugadores deben camuflarse entre las vacas y descubrir al intruso antes de que termine el tiempo."
+    },
+    {
+      "id": "g85",
+      "title": "Machine Party",
+      "category": "Salvavidas",
+      "steamId": "4108000",
+      "size": "~4 GB",
+      "availability": "available",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4108000/00ae7d0e0fd0ad72635bddb1dd80ee68cc94eed5/header.jpg?t=1786561627",
+      "perf": "🟢 Excelente. Minijuegos cooperativos con estilo low-poly y físicas ligeras. No demanda potencia gráfica y mantendrá 1080p nativo con total fluidez.",
+      "desc": "Colección de minijuegos cooperativos con robots low-poly y físicas dinámicas diseñados para partidas rápidas de destreza y risas garantizadas."
+    },
+    {
+      "id": "g86",
+      "title": "Mimic Party",
+      "category": "Salvavidas",
+      "steamId": "5053820",
+      "size": "~2 GB",
+      "availability": "unavailable",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/5053820/cb42d784567e89c1c409e49856ece32c9cf8ab36/header.jpg?t=1789831835",
+      "perf": "🟢 Excelente. Party game de imitaciones por voz (1-5 jugadores). Gráficos ligeros e interfaz 2D/3D minimalista; la Vega 8 lo moverá con total soltura a 1080p y 60 FPS estables.",
+      "desc": "Party game de imitaciones por voz (1-5 jugadores). Gráficos ligeros e interfaz 2D/3D minimalista; la Vega 8 lo moverá con total soltura a 1080p y 60 FPS estables."
+    },
+    {
+      "id": "g87",
+      "title": "Meowgic",
+      "category": "Salvavidas",
+      "steamId": "4252290",
+      "size": "~1.5 GB",
+      "availability": "available",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4252290/b883c77dec337d5cb31e55e5de18e1d1c1183f9a/header.jpg?t=1784559240",
+      "perf": "🟢 Excelente",
+      "desc": "Aventura mágica cooperativa de gatos hechiceros que combinan runas elementales para derrotar hordas de monstruos en coloridas mazmorras procedurales."
+    },
+    {
+      "id": "g111",
+      "title": "Supermarket Together",
+      "category": "Salvavidas",
+      "steamId": "2709570",
+      "size": "~4 GB",
+      "availability": "available",
+      "owned": {
+        "status": "f2p",
+        "label": "Gratis (F2P)"
+      },
+      "perf": "🟢 Excelente. Simulador cooperativo en primera persona muy ligero para gestionar un supermercado.",
+      "desc": "Simulador multijugador gratuito donde hasta 16 jugadores gestionan un supermercado, reponiendo estanterías, cobrando en caja y persiguiendo a ladrones."
+    },
+    {
+      "id": "g112",
+      "title": "THE GAME OF LIFE 2",
+      "category": "Salvavidas",
+      "steamId": "1455630",
+      "size": "~1 GB",
+      "availability": "available",
+      "owned": {
+        "status": "pirate",
+        "label": "Jugado (🏴‍☠️)"
+      },
+      "perf": "🟢 Excelente. Juego de tablero 3D animado muy ligero.",
+      "desc": "Secuela contemporánea del clásico juego de mesa familiar con miles de nuevas decisiones, carreras, bodas, compras de casas y personalización."
+    },
+    {
+      "id": "g115",
+      "title": "Meccha Chameleon",
+      "category": "Salvavidas",
+      "steamId": "4704690",
+      "size": "~1 GB",
+      "availability": "available",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4704690/163e2a742e5fb8e1f5d1e3a890da98f04ab809d4/header.jpg?t=1789464996",
+      "owned": {
+        "status": "copies",
+        "count": 2,
+        "label": "2 Copias Compradas"
+      },
+      "perf": "🟢 Excelente. Gráficos cartoon y físicas ligeras.",
+      "desc": "Divertido multijugador cooperativo y competitivo con camaleones mecánicos que cambian de color para resolver puzles y sortear obstáculos."
+    },
+    {
+      "id": "g25",
+      "title": "Valheim",
+      "category": "Guerreros",
+      "steamId": "892970",
+      "size": "~2 GB",
+      "availability": "available",
+      "perf": "🟡 Fluido, pero los efectos de luz le pesarán.",
+      "desc": "RPG de supervivencia vikinga en un purgatorio generado procedimentalmente. Destaca por su sistema de construcción realista basado en integridad estructural y combates épicos contra jefes mitológicos que exigen gran preparación."
+    },
+    {
+      "id": "g27",
+      "title": "PEAK",
+      "category": "Guerreros",
+      "steamId": "3527290",
+      "size": "~3 GB",
+      "availability": "available",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3527290/31bac6b2eccf09b368f5e95ce510bae2baf3cfcd/header.jpg",
+      "owned": {
+        "status": "copies",
+        "count": 2,
+        "label": "2 Copias Compradas"
+      },
+      "perf": "🟢 Excelente . Indie centrado en control por voz y estética noir sencilla. No demandará potencia a la Vega 8.",
+      "desc": "Simulador de alpinismo cooperativo implacable. No hay resistencia mágica; dependeréis de físicas precisas, piolets y anclajes manuales. Deberéis asegurar siempre a vuestro compañero para evitar caídas libres mortales por el desfiladero."
+    },
+    {
+      "id": "g28",
+      "title": "Project Zomboid",
+      "category": "Guerreros",
+      "steamId": "108600",
+      "size": "~5 GB",
+      "availability": "available",
+      "perf": "🟡 Bien al principio. El juego es feíllo , pero cuando os persiga una horda de 500 zombis, su procesador empezará a pedir auxilio.",
+      "desc": "El simulador de supervivencia zombi más profundo. En este sandbox isométrico, gestionaréis el hambre, la depresión e infecciones. Construiréis refugios seguros sabiendo que la pregunta no es si moriréis, sino cuándo y cómo."
+    },
+    {
+      "id": "g29",
+      "title": "Party Animals",
+      "category": "Guerreros",
+      "steamId": "1260320",
+      "size": "~8 GB",
+      "availability": "available",
+      "perf": "🟡 Bien, aunque puede notar algún rasguño en peleas grandes.",
+      "desc": "Brawler multijugador caótico protagonizado por animales regordetes. Lucharéis en escenarios con físicas exageradas usando bates, ballestas o puñetazos para lanzar a vuestros amigos fuera de la plataforma en modos muy competitivos."
+    },
+    {
+      "id": "g30",
+      "title": "Grounded 1",
+      "category": "Guerreros",
+      "steamId": "962130",
+      "size": "~10 GB",
+      "availability": "available",
+      "perf": "🟡 Aceptable. La hierba le consumirá muchos recursos.",
+      "desc": "Survival de mundo abierto donde habéis sido encogidos al tamaño de una hormiga en el jardín. Tendréis que talar briznas de hierba para construir fortalezas y forjar armaduras con partes de insectos para defenderos de arañas gigantes."
+    },
+    {
+      "id": "g31",
+      "title": "7 Days to Die",
+      "category": "Guerreros",
+      "steamId": "251570",
+      "size": "~15 GB",
+      "availability": "available",
+      "perf": "🟡 Sufrido. Las hordas grandes le darán bajones de FPS.",
+      "desc": "Híbrido masivo de supervivencia y defensa de torres. Tendréis seis días para recolectar chatarra y fortificar un búnker antes de que la Luna Roja desate una horda imparable de zombis furiosos en la séptima noche."
+    },
+    {
+      "id": "g32",
+      "title": "Escape the Backrooms",
+      "category": "Guerreros",
+      "steamId": "1943950",
+      "size": "~15 GB",
+      "availability": "available",
+      "owned": {
+        "status": "copies",
+        "count": 3,
+        "label": "3 Copias Compradas"
+      },
+      "perf": "🟡 Aceptable.",
+      "desc": "Terror y exploración basado en el popular creepypasta de los espacios liminales. Recorreréis interminables oficinas amarillas usando el chat de voz de proximidad para sobrevivir a entidades anómalas que intentarán romper vuestra cordura."
+    },
+    {
+      "id": "g33",
+      "title": "Satisfactory",
+      "category": "Guerreros",
+      "steamId": "526870",
+      "size": "~20 GB",
+      "availability": "available",
+      "perf": "🟡 Bien al principio. 🔴 Injugable en el late-game con megafábricas.",
+      "desc": "Simulador de automatización de fábricas en un vasto planeta alienígena. Vuestra misión es explotar recursos y diseñar cadenas de montaje kilométricas conectadas por cintas transportadoras y trenes de eficiencia perfecta."
+    },
+    {
+      "id": "g34",
+      "title": "Palworld",
+      "category": "Guerreros",
+      "steamId": "1623730",
+      "size": "~25.1 GB",
+      "availability": "available",
+      "perf": "🟡 Al límite. Podrá atrapar Pals, pero sufrirá bajones a 25-30 FPS cuando construyáis bases enormes llenas de muñecos trabajando.",
+      "desc": "Survival RPG donde exploraréis un mundo abierto capturando criaturas llamadas Pals. Podréis usarlas para combatir en mazmorras o ponerlas a trabajar como mano de obra en vuestras enormes cadenas de montaje automatizadas."
+    },
+    {
+      "id": "g35",
+      "title": "Phasmophobia",
+      "category": "Guerreros",
+      "steamId": "739630",
+      "size": "~14.5 GB",
+      "availability": "available",
+      "perf": "🟡 Jugable.",
+      "desc": "El referente absoluto del terror psicológico de investigación. Adentraros en asilos encantados usando termómetros y cajas espirituales para identificar al fantasma. El ente os escuchará hablar por el micro y os cazará."
+    },
+    {
+      "id": "g37",
+      "title": "Borderlands 3",
+      "category": "Guerreros",
+      "steamId": "397540",
+      "size": "~95 GB",
+      "availability": "available",
+      "perf": "🟡 Sufrido. Muy borroso para que le vaya fluido.",
+      "desc": "Looter-shooter frenético con un característico arte cel-shading. Viajaréis por la galaxia disparando billones de armas generadas proceduralmente y desarrollando árboles de habilidades devastadores para vuestros Buscacámaras."
+    },
+    {
+      "id": "g38",
+      "title": "It Takes Two",
+      "category": "Guerreros",
+      "steamId": "1426210",
+      "size": "~45 GB",
+      "availability": "available",
+      "perf": "🟡 Aceptable. Del creador de A Way Out . Exclusivo para 2 jugadores, le rondará los 35-45 FPS.",
+      "desc": "Aventura cooperativa de plataformas ganadora del GOTY. Una pareja al borde del divorcio es convertida en muñecos y deberá superar niveles donde las mecánicas cambian constantemente, desde combates aéreos hasta puzles de tiempo."
+    },
+    {
+      "id": "g39",
+      "title": "Dead by Daylight",
+      "category": "Guerreros",
+      "steamId": "381210",
+      "size": "~40 GB",
+      "availability": "available",
+      "perf": "🟡 Muy Jugable. Bajando a 720p y gráficos en Bajo/Medio, logrará unos 50-60 FPS muy estables. Esto es vital para él, ya que necesita máxima fluidez para no fallar las pruebas de habilidad ( skill checks ) al reparar los motores o al huir del asesino.",
+      "desc": "Terror asimétrico 4 contra 1. Los supervivientes deben reparar cinco generadores para escapar, mientras un asesino con poderes únicos (basado en monstruos clásicos del cine) intenta darlos caza para sacrificarlos en ganchos."
+    },
+    {
+      "id": "g40",
+      "title": "Ghost of Tsushima: Legends",
+      "category": "Guerreros",
+      "steamId": "2215430",
+      "size": "~60 GB",
+      "availability": "available",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2215430/header.jpg",
+      "perf": "🟡Iván podrá jugarlo. Gracias a que el juego soporta FSR 3.1 con generación de fotogramas, su Vega 8 puede mantener unos 40-50 FPS en 720p/Bajo. Es un milagro de la optimización.",
+      "desc": "Expansión cooperativa independiente basada en la mitología japonesa. Los jugadores eligen entre cuatro clases para combatir en intensas misiones de supervivencia y asaltos contra hordas de demonios Oni y espíritus vengativos."
+    },
+    {
+      "id": "g41",
+      "title": "Grounded 2",
+      "category": "Guerreros",
+      "steamId": "2661300",
+      "size": "~20 GB",
+      "availability": "available",
+      "customImage": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2661300/c4fc47c7e6ece14e438f0957d066dc9ab2a3412a/header.jpg",
+      "perf": "🟡 Al límite absoluto. Si la primera parte ya le consumía muchos recursos por la densidad de la hierba, esta secuela le exigirá jugar a 720p con todo al mínimo estricto para rascar unos 30 FPS.",
+      "desc": "Secuela del survival en miniatura de Obsidian. Presenta un nuevo jardín mucho más vasto con mecánicas de crafteo evolucionadas, condiciones climáticas extremas y combates tácticos contra nuevas especies de insectos colosales."
+    },
+    {
+      "id": "g58",
+      "title": "Abiotic Factor",
+      "category": "Guerreros",
+      "steamId": "427410",
+      "size": "~4 GB",
+      "availability": "available",
+      "perf": "🟡 Bueno. Estilo retro PS1, pero las físicas exigen al procesador.",
+      "desc": "Survival de crafteo inspirado en Half-Life. Interpretáis a científicos atrapados en instalaciones de alta seguridad. Debéis construir barricadas con muebles y combatir criaturas interdimensionales con armas improvisadas."
+    },
+    {
+      "id": "g59",
+      "title": "Risk of Rain 2",
+      "category": "Guerreros",
+      "steamId": "632360",
+      "size": "~4 GB",
+      "availability": "available",
+      "perf": "🟡 Aceptable. 720p/Bajo. Sufrirá cuando haya muchos efectos.",
+      "desc": "Roguelite de acción y disparos en tercera persona increíblemente frenético. A medida que avanza el tiempo, la dificultad del planeta escala. Destaca por acumular infinitos objetos que se sinergizan creando construcciones poderosas."
+    },
+    {
+      "id": "g61",
+      "title": "Demonologist",
+      "category": "Guerreros",
+      "steamId": "1929610",
+      "size": "~14 GB",
+      "availability": "available",
+      "perf": "🟡 Justito. 720p/Bajo. Gráficamente exigente, pero jugable si activa el FSR.",
+      "desc": "Caza de fantasmas creada en Unreal Engine 5. Más oscuro e intenso que Phasmophobia, requiere exorcizar entidades utilizando comandos de voz y resolviendo puzles en escenarios dinámicos y fotorrealistas."
+    },
+    {
+      "id": "g62",
+      "title": "The Outlast Trials",
+      "category": "Guerreros",
+      "steamId": "1304930",
+      "size": "~40 GB",
+      "availability": "available",
+      "perf": "🟡 Aceptable. 720p/Bajo. Está bien optimizado por Red Barrels, pero los efectos de sangre y gas le darán tirones.",
+      "desc": "Survival horror psicológico y gore de la Corporación Murkoff. Deberéis completar sádicos objetivos en escenarios cerrados usando el sigilo y dispositivos tácticos para evadir a maníacos perturbados que os perseguirán."
+    },
+    {
+      "id": "g88",
+      "title": "Raft",
+      "category": "Guerreros",
+      "steamId": "648800",
+      "size": "~3 GB",
+      "availability": "available",
+      "perf": "🟡 Bien al inicio. Si hacéis una balsa gigante, le dará tirones.",
+      "desc": "Supervivencia en mar abierto sobre una pequeña balsa de madera. Debéis usar un gancho para atrapar restos flotantes, expandir vuestro barco y defenderos de los ataques de tiburones."
+    },
+    {
+      "id": "g89",
+      "title": "Baldur's Gate 3",
+      "category": "Guerreros",
+      "steamId": "1086940",
+      "size": "~123 GB",
+      "availability": "available",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1086940/48a2fcbda8565bb45025e98fd8ebde8a7203f6a0/header.jpg?t=1777363040",
+      "perf": "🟡 Va a 25 FPS y se ve fatal, pero al ser por turnos , se puede jugar.",
+      "desc": "Experiencia cooperativa en la categoría Guerreros. 🟡 Va a 25 FPS y se ve fatal, pero al ser por turnos , se puede jugar."
+    },
+    {
+      "id": "g90",
+      "title": "Plants vs. Zombies: Garden Warfare 2",
+      "category": "Guerreros",
+      "steamId": "1922560",
+      "size": "~20 GB",
+      "availability": "available",
+      "perf": "🟡 Jugable . Es más denso en efectos de partículas y habilidades que el 1. En 720p / Bajo rondará los 40-50 FPS.",
+      "desc": "La mayor batalla vegetal: incluye el modo Campo de Batalla del Patio, nuevas clases como el Capitán Mortifero y Mazorca, y defensa cooperativa para 4 jugadores."
+    },
+    {
+      "id": "g91",
+      "title": "Monster Hunter Rise: Sunbreak",
+      "category": "Guerreros",
+      "steamId": "1446780",
+      "size": "~36 GB",
+      "availability": "available",
+      "perf": "🟡 Muy Jugable . Desarrollado originalmente para Nintendo Switch (motor RE Engine). Con resolución a 720p y ajustes en Bajo/Medio le mantendrá unos 45-55 FPS bastante sólidos.",
+      "desc": "Caza cooperativa épica contra bestias colosales en entornos verticales usando los cordópteros. Acción frenética y forja de armas y armaduras legendarias."
+    },
+    {
+      "id": "g92",
+      "title": "The Mound: Omen of Cthulhu",
+      "category": "Guerreros",
+      "steamId": "2569760",
+      "size": "~12 GB",
+      "availability": "available",
+      "perf": "🟡 Aceptable . Roguelite 3D con niebla y efectos volumétricos. En 720p / Bajo rondará los 35-45 FPS.",
+      "desc": "Roguelite 3D de terror cósmico y supervivencia en expediciones donde los investigadores deben explorar catacumbas malditas manteniendo la cordura colectiva."
+    },
+    {
+      "id": "g93",
+      "title": "IKUMA - The Frozen Compass",
+      "category": "Guerreros",
+      "steamId": "1728620",
+      "size": "~8 GB",
+      "availability": "unreleased",
+      "perf": "🟡 Jugable . La carga de partículas de nieve y entornos 3D exigirá bajar resolución a 720p para evitar caídas de fotogramas.",
+      "desc": "Aventura narrativa y supervivencia polar de Mooneye Studios en 1864, donde un joven marinero y su perro husky Ellie cooperan para sobrevivir al ártico."
+    },
+    {
+      "id": "g94",
+      "title": "Aquapark Tycoon",
+      "category": "Guerreros",
+      "steamId": "2819470",
+      "size": "~10 GB",
+      "availability": "unavailable",
+      "perf": "🟡 Aceptable . La simulación de físicas de agua y acumulación de NPCs castiga la CPU y la RAM compartida. Fluido al inicio, con tirones en parques gigantes.",
+      "desc": "Simulador y gestión de parques acuáticos con físicas de agua en tiempo real donde construís toboganes demenciales y gestionáis visitantes en cooperativo."
+    },
+    {
+      "id": "g95",
+      "title": "Hela: of Mice & Magic",
+      "category": "Guerreros",
+      "steamId": "3161310",
+      "size": "~15 GB",
+      "availability": "unreleased",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3161310/868b1938e4540924707c8db978d494322757e28d/header.jpg?t=1790616093",
+      "perf": "🟡 Justito . Escenarios naturales densos y efectos de iluminación detallados. Requerirá 720p y ajustes mínimos para rondar los 30-40 FPS.",
+      "desc": "Experiencia cooperativa en la categoría Guerreros. 🟡 Justito . Escenarios naturales densos y efectos de iluminación detallados. Requerirá 720p y ajustes mínimos para rondar los 30-40 FPS."
+    },
+    {
+      "id": "g96",
+      "title": "We Were Here Forever",
+      "category": "Guerreros",
+      "steamId": "1341290",
+      "size": "~20 GB",
+      "availability": "available",
+      "perf": "🟡 Muy Jugable . Gráficamente más exigente que sus predecesores, pero al ser de puzles pausados, a 720p / Bajo ofrecerá una experiencia sólida de 40-50 FPS.",
+      "desc": "La entrega más ambiciosa de la saga de puzles asimétricos cooperativos. Dos exploradores atrapados en Castle Rock deben comunicarse por walkie-talkie para resolver acertijos."
+    },
+    {
+      "id": "g97",
+      "title": "Project: Doors",
+      "category": "Guerreros",
+      "steamId": "4174160",
+      "size": "~8 GB",
+      "availability": "unreleased",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4174160/5667599ad193be05f246a955042a5e0dfc66b7d9/header.jpg?t=1787829620",
+      "perf": "🟡 Jugable . Laberinto procedural con iluminación ambiental dinámica. En 720p / Bajo mantendrá unos 35-45 FPS.",
+      "desc": "Terror y laberintos dimensionales procedurales donde cruzar la puerta equivocada os separa y os enfrenta a entidades agresivas en la oscuridad."
+    },
+    {
+      "id": "g98",
+      "title": "GRAIN ROT",
+      "category": "Guerreros",
+      "steamId": "4450620",
+      "size": "~6 GB",
+      "availability": "available",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4450620/697974067797577ee1803c37a44b4217d886502a/header.jpg?t=1786114521",
+      "perf": "🟡 Aceptable . Survival horror y extracción con físicas de escombros. Bajando resolución a 720p rondará los 40 FPS.",
+      "desc": "Survival horror de extracción con físicas avanzadas en almacenes industriales abandonados plagados de infestaciones orgánicas biomecánicas."
+    },
+    {
+      "id": "g99",
+      "title": "Invokyr",
+      "category": "Guerreros",
+      "steamId": "3883570",
+      "size": "~10 GB",
+      "availability": "unreleased",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3883570/a1d37fb2bf0de54d1746d1aa4b83fb7ca81700d8/header.jpg?t=1790236698",
+      "perf": "🟡 Jugable . Terror psicológico en mansión con niebla y entidades 3D. En 720p / Bajo le dará unos 35-40 FPS estables.",
+      "desc": "Terror psicológico en una mansión victoriana embrujada donde la luz de las velas y la coordinación de rituales son la única forma de desterrar espíritus."
+    },
+    {
+      "id": "g100",
+      "title": "over the hill",
+      "category": "Guerreros",
+      "steamId": "2929250",
+      "size": "~8 GB",
+      "availability": "unreleased",
+      "perf": "🟡 Aceptable . Conducción off-road y físicas de barro/terreno. Fluido en 720p / Ajustes Medios-Bajos.",
+      "desc": "Conducción y rescate todoterreno off-road con físicas realistas de barro, cabrestantes y pendientes donde remolcar a tus amigos es vital para no volcar."
+    },
+    {
+      "id": "g101",
+      "title": "WTF - Waifu Tactical Force",
+      "category": "Guerreros",
+      "steamId": "2353050",
+      "size": "~10 GB",
+      "availability": "unreleased",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2353050/488547f674c06fec6c6f6963c8e0884299f11043/header.jpg?t=1786631207",
+      "perf": "🟡 Jugable . Optimizado para Steam Deck y GPUs de gama de entrada. Bajando a 720p / Bajo mantendrá unos 35-45 FPS estables en tiroteos.",
+      "desc": "Experiencia cooperativa en la categoría Guerreros. 🟡 Jugable . Optimizado para Steam Deck y GPUs de gama de entrada. Bajando a 720p / Bajo mantendrá unos 35-45 FPS estables en tiroteos."
+    },
+    {
+      "id": "g102",
+      "title": "Tears of Metal",
+      "category": "Guerreros",
+      "steamId": "1913120",
+      "size": "~10 GB",
+      "availability": "available",
+      "perf": "🟡 Jugable . Hack and slash de batallas medievales masivas. Cientos de tropas e IA en pantalla saturarán la memoria compartida a 1080p, pero en 720p / Bajo rondará los 35-45 FPS estables.",
+      "desc": "Hack and slash medieval de combates masivos y asedios a fortalezas con cientos de guerreros en pantalla y mecánicas roguelike en cooperativo."
+    },
+    {
+      "id": "g103",
+      "title": "Don't Panic Together",
+      "category": "Guerreros",
+      "steamId": "4359800",
+      "size": "~4 GB",
+      "availability": "unavailable",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4359800/dcde182f37d691b80fe6403cabf328385bc18212/header.jpg?t=1787694420",
+      "perf": "🟡 Jugable. Survival/extracción cooperativo indie con iluminación dinámica y niebla ligera. A 720p y ajustes en Bajo mantendrá unos 40-50 FPS estables.",
+      "desc": "Experiencia cooperativa en la categoría Guerreros. 🟡 Jugable. Survival/extracción cooperativo indie con iluminación dinámica y niebla ligera. A 720p y ajustes en Bajo mantendrá unos 40-50 FPS estables."
+    },
+    {
+      "id": "g104",
+      "title": "Alchemy Factory",
+      "category": "Guerreros",
+      "steamId": "3669570",
+      "size": "~6 GB",
+      "availability": "available",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3669570/6972705aba17c765ed16a98d81312a6970a9d362/header_alt_assets_0.jpg?t=1789021559",
+      "perf": "🟡 Aceptable. Simulación de automatización y gestión 3D. A medida que crezcan las cadenas de producción y aumenten los objetos móviles en pantalla, la CPU y la RAM compartida empezarán a notar tirones, pero a 720p será totalmente jugable.",
+      "desc": "Simulador de automatización mágica y gestión industrial en 3D: recolectad esencias, construid alquimias automáticas y optimizad la producción en equipo."
+    },
+    {
+      "id": "g105",
+      "title": "Shift At Midnight",
+      "category": "Guerreros",
+      "steamId": "3722330",
+      "size": "~6 GB",
+      "availability": "available",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3722330/759ecea2ffe1ad3819aefdda79e265b8b332bf8f/header.jpg?t=1789401053",
+      "perf": "🟡 Jugable . Terror y supervivencia en primera persona en turno de noche con modo historia cooperativo. La iluminación volumétrica nocturna, las sombras dinámicas de linternas y los modelados 3D de entidades penalizarán a 1080p, pero ajustando a 720p / Bajo mantendrá unos 35-45 FPS bastante estables",
+      "desc": "Terror y supervivencia nocturna en primera persona con modo historia cooperativo, investigando anomalías y escapando de horrores en el turno de noche."
+    },
+    {
+      "id": "g113",
+      "title": "The Finals",
+      "category": "Guerreros",
+      "steamId": "2073850",
+      "size": "~17 GB",
+      "availability": "available",
+      "owned": {
+        "status": "f2p",
+        "label": "Gratis (F2P)"
+      },
+      "perf": "🟡 Jugable. Exige 720p / Bajo por la destrucción procedural del entorno.",
+      "desc": "Shooter gratuito por equipos en arenas virtuales con destrucción ambiental total y combate dinámico en torneos televisados de alta velocidad."
+    },
+    {
+      "id": "g42",
+      "title": "Sons Of The Forest",
+      "category": "Zona Prohibida",
+      "steamId": "1326470",
+      "size": "~15 GB",
+      "availability": "available",
+      "owned": {
+        "status": "story",
+        "label": "Campaña en curso (🏴‍☠️)"
+      },
+      "perf": "El bosque hiperrealista y la IA saturan la gráfica por completo.",
+      "desc": "La cumbre del survival horror en mundo abierto. Varados en una isla inmensa deberéis enfrentaros a tribus caníbales inteligentes. Su avanzado sistema de construcción e IA destrozarán las tarjetas gráficas integradas."
+    },
+    {
+      "id": "g43",
+      "title": "Bodycam",
+      "category": "Zona Prohibida",
+      "steamId": "2406770",
+      "size": "~50 GB",
+      "availability": "available",
+      "perf": "Usa Unreal Engine 5 al extremo. Su PC literalmente no puede moverlo.",
+      "desc": "Shooter táctico multijugador fotorrealista en Unreal Engine 5. Utiliza una perspectiva \"bodycam\" con iluminación global real. Su carga gráfica es tan alta que hace colapsar a ordenadores sin GPUs dedicadas de última generación."
+    },
+    {
+      "id": "g44",
+      "title": "Enshrouded",
+      "category": "Zona Prohibida",
+      "steamId": "1203620",
+      "size": "~60 GB",
+      "availability": "available",
+      "perf": "El motor de vóxeles destruye las gráficas integradas.",
+      "desc": "RPG de acción y supervivencia en un mundo de vóxeles destructibles. Permite construir castillos épicos bloque a bloque. Adentrarse en el \"Sudario\", una espesa niebla corrupta, resulta mortal para el rendimiento de hardware básico."
+    },
+    {
+      "id": "g45",
+      "title": "Dead Island 2",
+      "category": "Zona Prohibida",
+      "steamId": "934700",
+      "size": "~70 GB",
+      "availability": "available",
+      "perf": "Demasiada carga gráfica para los desmembramientos en tiempo real. UE4",
+      "desc": "Viaje gore a la cuarentena zombi de Los Ángeles. Su mayor reclamo es el motor F.L.E.S.H., un sistema procedural de desmembramiento anatómico que reacciona a armas elementales con una carga de procesamiento brutal."
+    },
+    {
+      "id": "g46",
+      "title": "Remnant II",
+      "category": "Zona Prohibida",
+      "steamId": "1282100",
+      "size": "~80 GB",
+      "availability": "available",
+      "perf": "UE5 con Nanite. Ni siquiera a 720p en mínimo logra arrancar bien.",
+      "desc": "Shooter RPG de acción conocido como el \"Dark Souls con pistolas\". Viajaréis por dimensiones alternativas generadas proceduralmente enfrentando a jefes colosales. Exige reflejos perfectos y hardware potente bajo UE5."
+    },
+    {
+      "id": "g47",
+      "title": "Battlefield 6",
+      "category": "Zona Prohibida",
+      "steamId": "2807960",
+      "size": "~90 GB",
+      "availability": "available",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2807960/c12d12ce3c7d217398d3fcad77427bfc9d57c570/header.jpg",
+      "perf": "Mapas enormes con 64 jugadores colapsan la memoria RAM compartida.",
+      "desc": "La guerra moderna a escala masiva en mapas inmensos. Sus impresionantes eventos climáticos destructibles y colapsos de edificios saturan por completo los procesadores y la memoria RAM compartida en equipos modestos."
+    },
+    {
+      "id": "g48",
+      "title": "Ready or Not",
+      "category": "Zona Prohibida",
+      "steamId": "1144200",
+      "size": "~40 GB",
+      "availability": "available",
+      "perf": "Mala optimización general que castiga brutalmente a la Vega 8.",
+      "desc": "Simulador táctico policial SWAT hiperrealista. Cada asalto requiere planificar los ángulos y usar cámaras de fibra óptica. Los efectos de iluminación, físicas de balas y humo son asfixiantes para el rendimiento del PC."
+    },
+    {
+      "id": "g50",
+      "title": "REANIMAL",
+      "category": "Zona Prohibida",
+      "steamId": "2129530",
+      "size": "~18 GB",
+      "availability": "available",
+      "perf": "Unreal Engine 5",
+      "desc": "Aventura cooperativa oscura de los creadores de Little Nightmares. Controláis a dos huérfanos intentando sobrevivir a mutaciones animales. Su detallada dirección artística y atmósfera volumétrica consumen demasiados recursos."
+    },
+    {
+      "id": "g51",
+      "title": "LORT",
+      "category": "Zona Prohibida",
+      "steamId": "2956680",
+      "size": "~4 GB",
+      "availability": "available",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2956680/6b82d214ff59e8eab623f16a7b4d576ddff86d6a/header_alt_assets_2_spanish.jpg",
+      "perf": "Optimización crítica: Aunque pesa poco, el motor del juego está muy mal optimizado. Exige una GTX 1070 para llegar a 30 FPS en &quot;Bajo&quot;. La integrada Vega 8 de Iván daría menos de 10 FPS en cuanto aparezcan los primeros enemigos. Alternativa: Solo jugable para él mediante GeForce NOW (juego en la nube).",
+      "desc": "Roguelite de acción brutal y estética recargada. Destaca por apilar cientos de potenciadores convirtiendo la pantalla en un caos de partículas y explosiones que pone de rodillas a cualquier gráfica integrada."
+    },
+    {
+      "id": "g52",
+      "title": "Crimson Capes",
+      "category": "Zona Prohibida",
+      "steamId": "2488540",
+      "size": "~10 GB",
+      "availability": "available",
+      "perf": "Motor Unreal Engine 5: Aunque es un juego de acción táctica muy vistoso, utiliza efectos de iluminación y partículas muy densos. Al igual que con LORT , la integrada Vega 8 de Iván sufrirá horrores para mantener los FPS estables, cayendo por debajo de los 15-20 en combate.",
+      "desc": "Aventura Hack and Slash anime. Permite realizar combos vertiginosos y desatar magias elementales contra hordas demoníacas. Los densos efectos de postprocesado y su iluminación dinámica colapsarán por completo los PCs de gama baja."
+    },
+    {
+      "id": "g53",
+      "title": "Little Nightmares III",
+      "category": "Zona Prohibida",
+      "steamId": "1392860",
+      "size": "~25 GB",
+      "availability": "available",
+      "perf": "Motor de nueva generación: Al igual que ocurría con REANIMAL , este juego cuenta con una iluminación volumétrica y unos entornos hiperdetallados que colapsarían la integrada de Iván, dejándolo injugable.",
+      "desc": "Puzles y terror psicológico en un mundo decadente conocido como \"La Espiral\". Los protagonistas deberán utilizar herramientas asimétricas en escenarios gigantescos con un nivel de detalle ambiental prohibitivo para hardware básico."
+    },
+    {
+      "id": "g54",
+      "title": "Dying Light: The Beast",
+      "category": "Zona Prohibida",
+      "steamId": "3008130",
+      "size": "~60 GB",
+      "availability": "available",
+      "perf": "Mundo abierto masivo: Parkour a toda velocidad, físicas de desmembramiento de zombis y gráficos muy pesados. El portátil de Iván directamente se congelaría al intentar cargar los escenarios rápidos.",
+      "desc": "Evolución del terror zombi en mundo abierto. Exploraréis una densa región boscosa donde el parkour se combina con habilidades bestiales mutantes. La distancia de dibujado y la cantidad de infectados asfixian el rendimiento."
+    },
+    {
+      "id": "g60",
+      "title": "GTFO",
+      "category": "Zona Prohibida",
+      "steamId": "493520",
+      "size": "~15 GB",
+      "availability": "available",
+      "perf": "🔴 Injugable. Niebla volumétrica e IA que colapsan la Vega 8.",
+      "desc": "Extraction shooter de terror diseñado para castigar a los jugadores. La supervivencia se basa en el sigilo industrial y una gestión de munición asfixiante. Su compleja IA y nieblas volumétricas castigan mucho el hardware."
+    },
+    {
+      "id": "g106",
+      "title": "Helldivers 2",
+      "category": "Zona Prohibida",
+      "steamId": "553850",
+      "size": "~70 GB",
+      "availability": "unavailable",
+      "perf": "El motor de físicas y enjambres es letal. En dificultades altas (nivel 7+), con explosiones y cientos de bichos, caerá a 10 FPS. Injugable.",
+      "desc": "Shooter de acción en tercera persona frenético contra hordas de termínidos y autómatas por la Democracia Tutelada, con fuego amigo permanente y estratagemas orbitales masivas."
+    },
+    {
+      "id": "g107",
+      "title": "Dragon Ball: Sparking! ZERO",
+      "category": "Zona Prohibida",
+      "steamId": "1790600",
+      "size": "~30 GB",
+      "availability": "available",
+      "perf": "🔴 Injugable. Desarrollado en Unreal Engine 5 con destrucción masiva de escenarios y saturación de efectos de partículas (auras, ráfagas ki). La Vega 8 colapsará a menos de 15-20 FPS con tirones severos.",
+      "desc": "El regreso legendario de la saga Budokai Tenkaichi con combates aéreos 3D de velocidad vertiginosa, destrucción masiva y transformaciones icónicas de Dragon Ball."
+    },
+    {
+      "id": "g108",
+      "title": "Lords of the Fallen",
+      "category": "Zona Prohibida",
+      "steamId": "1501750",
+      "size": "~50 GB",
+      "availability": "available",
+      "perf": "🔴 Injugable. Desarrollado en Unreal Engine 5 con uso intensivo de Lumen y Nanite . Exige GPUs dedicadas potentes de gama media-alta; la Vega 8 se ahogará a menos de 10-15 FPS.",
+      "desc": "Soulslike de fantasía oscura en Unreal Engine 5 que conecta dos mundos paralelos: el reino de los vivos y el de los muertos, con cooperativo fluido ininterrumpido."
+    },
+    {
+      "id": "g109",
+      "title": "SAND: Raiders of Sophie",
+      "category": "Zona Prohibida",
+      "steamId": "1431300",
+      "size": "~30 GB",
+      "availability": "unavailable",
+      "perf": "🔴 Injugable. Mundo abierto masivo con combate vehicular y destrucción en Unreal Engine 5. La memoria compartida de la integrada colapsará al cargar estructuras complejas en combate JcJ.",
+      "desc": "Mundo abierto PvPvE ambientado en un planeta desértico con gigantescos mechas sobre orugas (tramplers) que debéis tripular, mejorar y combatir en equipo."
+    },
+    {
+      "id": "g110",
+      "title": "Species: Unknown",
+      "category": "Zona Prohibida",
+      "steamId": "2747330",
+      "size": "~5 GB",
+      "availability": "available",
+      "perf": "🔴 Injugable. Es un survival horror espacial cooperativo que exige como requisito mínimo una NVIDIA RTX 2070 / 12 GB de RAM. La gráfica integrada Vega 8 de Iván sufrirá caídas severas por debajo de 15 FPS en cuanto haya iluminación dinámica y criaturas en pantalla.",
+      "desc": "Survival horror espacial inmersivo en estaciones orbitales derruidas, enfrentando a organismos mutantes con armas científicas y gestión de energía."
+    },
+    {
+      "id": "g116",
+      "title": "WheelMates",
+      "category": "Zona Prohibida",
+      "steamId": "3905450",
+      "size": "~15 GB",
+      "availability": "unreleased",
+      "customImage": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3905450/77c8adc4c5c11a80f0ae22633789396a0f313433/header.jpg?t=1790677075",
+      "perf": "🔴 Injugable. Desarrollado en Unreal Engine 5 con DirectX 12 obligatorio. Pide una GTX 1060 de mínimo; la iluminación y las físicas continuas de los coches RC asfixiarán la integrada de Iván, haciéndolo injugable (15-20 FPS con tirones).",
+      "desc": "Carreras y batallas de coches radiocontrol con físicas detalladas, pistas caseras llenas de saltos y modos competitivos y cooperativos desternillantes."
+    },
+    {
+      "id": "g117",
+      "title": "Mistfall Hunter",
+      "category": "Zona Prohibida",
+      "steamId": "3282300",
+      "size": "~45 GB",
+      "availability": "unreleased",
+      "perf": "🔴 Injugable. Desarrollado en Unreal Engine 5 con DirectX 12 obligatorio. Pide una GTX 1060 / RX 580 y 12 GB de RAM de mínimo; el combate rápido PvPvE, las partículas mágicas y la niebla volumétrica asfixiarán la integrada Vega 8 de Iván (15-20 FPS con tirones severos).",
+      "desc": "Extraction RPG de acción PvPvE en tercera persona ambientado tras la caída de los dioses nórdicos, luchando contra monstruos mitológicos y otros jugadores."
+    },
+    {
+      "id": "g118",
+      "title": "Carnival Hunt",
+      "category": "Zona Prohibida",
+      "steamId": "1181550",
+      "size": "~15 GB",
+      "availability": "unavailable",
+      "perf": "🔴 Injugable. Survival horror asimétrico desarrollado en Unreal Engine con fuerte carga de sombras dinámicas, niebla volumétrica y texturas de alta resolución. La Vega 8 caerá por debajo de los 15-20 FPS con tirones severos en persecuciones.",
+      "desc": "Terror asimétrico en un circo siniestro donde conejos de cuerda deben darse cuerda mutuamente para no detenerse mientras huyen de un monstruoso animatrónico."
+    },
+    {
+      "id": "g119",
+      "title": "Western Rye",
+      "category": "Zona Prohibida",
+      "steamId": "2358630",
+      "size": "~20 GB",
+      "availability": "unavailable",
+      "perf": "🔴 Injugable. Sandbox western multijugador con mundo abierto amplio, vegetación, iluminación en tiempo real y físicas que saturan la memoria VRAM compartida. Se ahogará a menos de 15-20 FPS incluso al mínimo.",
+      "desc": "Sandbox multijugador del Salvaje Oeste con tiroteos, duelos, cabalgatas, construcción de campamentos y supervivencia en amplias llanuras fronterizas."
+    },
+    {
+      "id": "g120",
+      "title": "ARC Raiders",
+      "category": "Zona Prohibida",
+      "steamId": "1808500",
+      "size": "~30 GB",
+      "availability": "available",
+      "owned": {
+        "status": "copies",
+        "count": 2,
+        "label": "2 Copias Compradas"
+      },
+      "perf": "🔴 Injugable. Motor Unreal Engine 5 con iluminación y física de enjambre de robots letal para integradas.",
+      "desc": "Extraction shooter PvPvE en tercera persona ambientado en una Tierra postapocalíptica amenazada por máquinas letales del espacio profundo."
+    }
+  ],
+  "single": [
+    {
+      "id": "eldenring",
+      "title": "Elden Ring",
+      "metacritic": 96,
+      "steamAppId": 1245620,
+      "genres": [
+        "TIPO «DARK SOULS»",
+        "MUNDO ABIERTO",
+        "DIFICÍLES",
+        "ROL",
+        "ACCIÓN"
+      ],
+      "hltb": {
+        "general": "100h",
+        "main": "60h",
+        "extras": "100h",
+        "completionist": "135h",
+        "mainHours": 60
+      },
+      "description": "Surca las Tierras Intermedias en una epopeya de fantasía oscura creada por Hidetaka Miyazaki y George R. R. Martin. Como un Sinluz, deberás blandir el poder del Círculo de Elden y alzarte como el Señor de Elden en un mundo abierto sin precedentes donde la libertad de exploración se encuentra con el desafío implacable de jefes legendarios y una mitología críptica."
+    },
+    {
+      "id": "rdr2",
+      "title": "Red Dead Redemption 2",
+      "metacritic": 97,
+      "steamAppId": 1174180,
+      "genres": [
+        "MUNDO ABIERTO",
+        "AVENTURA",
+        "WESTERN",
+        "ACCIÓN",
+        "NARRATIVOS"
+      ],
+      "hltb": {
+        "general": "78½h",
+        "main": "50½h",
+        "extras": "84½h",
+        "completionist": "194h",
+        "mainHours": 50
+      },
+      "description": "Arthur Morgan y la banda de van der Linde son forajidos en busca y captura tras un atraco fallido. Sumérgete en un mundo abierto viviente y reactivo, forjando tu camino a través de la América del siglo XIX en una obra maestra sobre la lealtad, la traición y el inevitable fin del Salvaje Oeste."
+    },
+    {
+      "id": "hades",
+      "title": "Hades",
+      "metacritic": 93,
+      "steamAppId": 1145360,
+      "genres": [
+        "ROGUELIKE",
+        "ACCIÓN",
+        "MITOLOGÍA",
+        "ISOMÉTRICO",
+        "INDIE"
+      ],
+      "hltb": {
+        "general": "50h",
+        "main": "23½h",
+        "extras": "48½h",
+        "completionist": "95h",
+        "mainHours": 23
+      },
+      "description": "Desafía al Dios de los Muertos y ábrete camino fuera del Inframundo a base de tajos en este roguelike de acción trepidante. Enfréntate a hordas de almas perdidas empuñando las armas y poderes del mismísimo Olimpo en un bucle narrativo donde cada intento de escape revela nuevos secretos."
+    },
+    {
+      "id": "hollowknight",
+      "title": "Hollow Knight",
+      "metacritic": 87,
+      "steamAppId": 367520,
+      "genres": [
+        "METROIDVANIA",
+        "INDIE",
+        "DIFICÍLES",
+        "PLATAFORMAS",
+        "EXPLORACIÓN"
+      ],
+      "hltb": {
+        "general": "40h",
+        "main": "27h",
+        "extras": "41h",
+        "completionist": "65h",
+        "mainHours": 27
+      },
+      "description": "Forja tu propio camino a través del reino subterráneo de Hallownest, un laberinto de cavernas en ruinas y ciudades olvidadas. Este magistral metroidvania te exige dominar un combate preciso, desentrañar misterios ancestrales y aliarte con extraños insectos en una atmósfera insuperable."
+    },
+    {
+      "id": "witcher3",
+      "title": "The Witcher 3: Wild Hunt",
+      "metacritic": 93,
+      "steamAppId": 292030,
+      "genres": [
+        "ROL",
+        "MUNDO ABIERTO",
+        "FANTASÍA",
+        "NARRATIVO",
+        "ACCIÓN"
+      ],
+      "hltb": {
+        "general": "100h",
+        "main": "51½h",
+        "extras": "103h",
+        "completionist": "174h",
+        "mainHours": 51
+      },
+      "description": "Encarna a Geralt de Rivia, un curtido cazador de monstruos a sueldo embarcado en la búsqueda de la Niña de la Profecía. Explora un inabarcable continente asolado por la guerra, habitado por criaturas letales y personajes ambiguos, en un RPG maduro donde cada decisión moldea irreversiblemente el mundo a tu alrededor."
+    },
+    {
+      "id": "sifu",
+      "title": "Sifu",
+      "metacritic": 81,
+      "steamAppId": 2138710,
+      "genres": [
+        "ACCIÓN",
+        "BEAT 'EM UP",
+        "INDIE",
+        "UN JUGADOR",
+        "DIFICÍLES"
+      ],
+      "hltb": {
+        "general": "12h",
+        "main": "8h",
+        "extras": "14h",
+        "completionist": "22h",
+        "mainHours": 8
+      },
+      "description": "Domina el letal Kung-Fu estilo Pak Mei en tu cruzada solitaria de venganza por las calles de una ciudad contemporánea. Un beat 'em up revolucionario donde cada muerte te hace envejecer físicamente, volviéndote más fuerte pero más frágil, obligándote a dominar cada combate al compás de las artes marciales cinematográficas."
+    },
+    {
+      "id": "cp2077",
+      "title": "Cyberpunk 2077",
+      "metacritic": 86,
+      "steamAppId": 1091500,
+      "genres": [
+        "ROL",
+        "MUNDO ABIERTO",
+        "CYBERPUNK",
+        "ACCIÓN",
+        "NARRATIVOS"
+      ],
+      "hltb": {
+        "general": "65½h",
+        "main": "26h",
+        "extras": "63h",
+        "completionist": "108h",
+        "mainHours": 26
+      },
+      "description": "Adéntrate en Night City, la megalópolis hiperviolenta del futuro dominada por megacorporaciones y ciberimplantes. Como V, un mercenario en constante evolución, lidiarás con una reliquia experimental implantada en tu mente que alberga el constructo digital del legendario roquero terrorista Johnny Silverhand."
+    },
+    {
+      "id": "tsushima",
+      "title": "Ghost of Tsushima Director's Cut",
+      "metacritic": 87,
+      "steamAppId": 2215430,
+      "genres": [
+        "ACCIÓN",
+        "AVENTURA",
+        "MUNDO ABIERTO"
+      ],
+      "hltb": {
+        "general": "51h",
+        "main": "25h",
+        "extras": "47½h",
+        "completionist": "65h",
+        "mainHours": 25
+      },
+      "description": "Tsushima arde bajo el paso de la arrolladora invasión mongol en pleno Japón feudal de 1274. Jin Sakai, un noble samurái superviviente, deberá sacrificar la doctrina de su linaje y convertirse en el temido Fantasma para liberar su hogar y proteger a su asediado pueblo."
+    },
+    {
+      "id": "ds3",
+      "title": "Dark Souls III",
+      "metacritic": 89,
+      "steamAppId": 374320,
+      "genres": [
+        "TIPO «DARK SOULS»",
+        "FANTASÍA OSCURA",
+        "DIFICÍLES",
+        "ROL",
+        "ACCIÓN"
+      ],
+      "hltb": {
+        "general": "55½h",
+        "main": "31h",
+        "extras": "48½h",
+        "completionist": "100h",
+        "mainHours": 31
+      },
+      "description": "La ceniza cae sobre el Reino de Lothric donde la Primera Llama amenaza con apagarse para siempre. Un viaje solemne, oscuro y brutal te aguarda mientras combates formidables criaturas corrompidas para devolver a los Señores de la Ceniza a sus tronos caídos en la obra magna que cimentó el género soulslike."
+    },
+    {
+      "id": "godofwar",
+      "title": "God of War (2018)",
+      "metacritic": 93,
+      "steamAppId": 1593500,
+      "genres": [
+        "ACCIÓN",
+        "AVENTURA",
+        "NARRATIVO",
+        "HACK AND SLASH",
+        "MITOLOGÍA"
+      ],
+      "hltb": {
+        "general": "30h",
+        "main": "21h",
+        "extras": "33h",
+        "completionist": "51h",
+        "mainHours": 21
+      },
+      "description": "Huyendo de la sangre derramada en Grecia, Kratos vive ahora como hombre en el gélido reino nórdico de Midgard junto a su hijo Atreus. En un viaje inquebrantable para esparcir las cenizas de su amada esposa desde el pico más alto, padre e hijo forjarán su turbio legado frente al amenazante panteón nórdico."
+    },
+    {
+      "id": "bg3",
+      "title": "Baldur's Gate 3",
+      "metacritic": 96,
+      "steamAppId": 1086940,
+      "genres": [
+        "ROL",
+        "ESTRATEGIA",
+        "POR TURNOS",
+        "FANTASÍA",
+        "NARRATIVO"
+      ],
+      "hltb": {
+        "general": "100h",
+        "main": "60h",
+        "extras": "100h",
+        "completionist": "150h",
+        "mainHours": 60
+      },
+      "description": "Reúne a tu grupo y regresa al vasto reino de Faerûn en la secuela que ha redefinido los RPG tácticos isométricos. Tus decisiones moldean una historia inabarcable de alianzas inciertas, traiciones oscuras y profundas amistades mientras liberas o sucumbes a la corrupción de la deidad destructiva insertada en tu mente."
+    },
+    {
+      "id": "inside",
+      "title": "Inside",
+      "metacritic": 87,
+      "steamAppId": 304430,
+      "genres": [
+        "PUZZLES",
+        "PLATAFORMAS",
+        "ATMOSFÉRICO",
+        "INDIE",
+        "TERROR"
+      ],
+      "hltb": {
+        "general": "4h",
+        "main": "3h",
+        "extras": "4h",
+        "completionist": "5h",
+        "mainHours": 3
+      },
+      "description": "Perseguido y solo, un niño se encuentra en el centro de un proyecto oscuro. Un rompecabezas de plataformas inquietante y atmosférico."
+    },
+    {
+      "id": "ln2",
+      "title": "Little Nightmares II",
+      "metacritic": 82,
+      "steamAppId": 860510,
+      "genres": [
+        "TERROR",
+        "PUZZLES",
+        "PLATAFORMAS",
+        "ATMOSFÉRICO",
+        "AVENTURA"
+      ],
+      "hltb": {
+        "general": "6h",
+        "main": "5h",
+        "extras": "6h",
+        "completionist": "9h",
+        "mainHours": 5
+      },
+      "description": "Regresa a un mundo de terror encantador en Little Nightmares II, un juego de aventuras y suspense en el que juegas como Mono."
+    },
+    {
+      "id": "re4",
+      "title": "Resident Evil 4 (Remake)",
+      "metacritic": 93,
+      "steamAppId": 2050650,
+      "genres": [
+        "TERROR",
+        "ACCIÓN",
+        "SURVIVAL HORROR",
+        "DISPAROS",
+        "AVENTURA"
+      ],
+      "hltb": {
+        "general": "21h",
+        "main": "16h",
+        "extras": "22h",
+        "completionist": "58h",
+        "mainHours": 16
+      },
+      "description": "Seis años después del desastre biológico en Raccoon City, Leon S. Kennedy debe rescatar a la hija del presidente en un pueblo europeo."
+    },
+    {
+      "id": "1888930",
+      "title": "The Last of Us Part I",
+      "metacritic": 89,
+      "steamAppId": 1888930,
+      "genres": [
+        "NARRATIVO",
+        "ACCIÓN",
+        "SIGILO"
+      ],
+      "hltb": {
+        "general": "14h",
+        "main": "14h",
+        "extras": "16h",
+        "completionist": "23h",
+        "mainHours": 14
+      },
+      "description": "En una civilización devastada por una pandemia fúngica, Joel, un contrabandista endurecido, debe escoltar a la joven Ellie a través de unos Estados Unidos postapocalípticos. Una obra maestra narrativa que explora la moralidad, el sacrificio y los límites de la supervivencia humana."
+    },
+    {
+      "id": "portal2",
+      "title": "Portal 2",
+      "metacritic": 95,
+      "steamAppId": 620,
+      "genres": [
+        "PUZZLES",
+        "CIENCIA FICCIÓN",
+        "COMEDIA",
+        "PRIMERA PERSONA",
+        "INDIE"
+      ],
+      "hltb": {
+        "general": "11h",
+        "main": "8h",
+        "extras": "11h",
+        "completionist": "21h",
+        "mainHours": 8
+      },
+      "description": "Una brillante amalgama de puzles espaciales, humor negro y ciencia ficción. Despierta 9999 días después de los eventos de Aperture Science y vuelve a empuñar la pistola de portales junto a la carismática Inteligencia Artificial GLaDOS y la peculiar esfera Wheatley."
+    },
+    {
+      "id": "outerwilds",
+      "title": "Outer Wilds",
+      "metacritic": 85,
+      "steamAppId": 753640,
+      "genres": [
+        "EXPLORACIÓN",
+        "MISTERIO",
+        "ESPACIO",
+        "AVENTURA",
+        "INDIE"
+      ],
+      "hltb": {
+        "general": "21h",
+        "main": "16h",
+        "extras": "22h",
+        "completionist": "32h",
+        "mainHours": 16
+      },
+      "description": "Estás atrapado en un bucle temporal de 22 minutos, en un sistema solar inexplorado a punto de ser devorado por una supernova. Este aclamado título de misterio espacial te invita a deducir cómo funciona el universo uniendo los enigmáticos fragmentos de la antigua civilización Nomai, guiado únicamente por tu curiosidad."
+    },
+    {
+      "id": "stardew",
+      "title": "Stardew Valley",
+      "metacritic": 89,
+      "steamAppId": 413150,
+      "genres": [
+        "SIMULADOR",
+        "GRANJA",
+        "RELAJANTE",
+        "INDIE",
+        "RPG"
+      ],
+      "hltb": {
+        "general": "100h",
+        "main": "53h",
+        "extras": "97h",
+        "completionist": "154h",
+        "mainHours": 53
+      },
+      "description": "Heredaste la vieja granja de tu abuelo en el entrañable Valle Stardew. Armado con herramientas de segunda mano, empezarás una nueva vida cultivando la tierra, cuidando animales y forjando relaciones íntimas con los lugareños en un indispensable simulador de vida y rol pastoral."
+    },
+    {
+      "id": "discoelysium",
+      "title": "Disco Elysium - The Final Cut",
+      "metacritic": 97,
+      "steamAppId": 632470,
+      "genres": [
+        "RPG",
+        "DETECTIVE",
+        "NARRATIVO",
+        "FILOSÓFICO",
+        "ISOMÉTRICO"
+      ],
+      "hltb": {
+        "general": "33h",
+        "main": "23h",
+        "extras": "33h",
+        "completionist": "52h",
+        "mainHours": 23
+      },
+      "description": "Despiertas con una amnesia brutal en un hotel destrozado y descubres que eres un detective en Revachol, una ciudad fracturada política y moralmente. Este inigualable RPG isométrico sustituye el combate físico por batallas dialécticas entre las distintas facciones psicológicas de tu propia mente."
+    },
+    {
+      "id": "cuphead",
+      "title": "Cuphead",
+      "metacritic": 88,
+      "steamAppId": 268910,
+      "genres": [
+        "DIFÍCIL",
+        "BOSS RUSH",
+        "PLATAFORMAS",
+        "INDIE",
+        "DIBUJOS ANIMADOS"
+      ],
+      "hltb": {
+        "general": "14h",
+        "main": "11h",
+        "extras": "14h",
+        "completionist": "25h",
+        "mainHours": 11
+      },
+      "description": "Déjate cautivar por la gloriosa animación tradicional de los años 30 en este despiadado run-and-gun. Cuphead y Mugman apostaron sus almas con el mismísimo Diablo y perdieron; ahora deben recolectar las deudas de otros pintorescos y demenciales jefes en una danza mortal que exige reflejos impecables."
+    },
+    {
+      "id": "1903340",
+      "title": "Clair Obscur: Expedition 33",
+      "metacritic": 86,
+      "steamAppId": 1903340,
+      "genres": [
+        "RPG",
+        "COMBATE POR TURNOS",
+        "RICA HISTORIA",
+        "FANTASÍA"
+      ],
+      "hltb": {
+        "general": "30h",
+        "main": "30h",
+        "extras": "45h",
+        "completionist": "60h",
+        "mainHours": 30
+      },
+      "description": "Un RPG por turnos reactivo ambientado en un mundo inspirado en la Belle Époque. Únete a la Expedición 33 en una misión desesperada para destruir a la Pintora y romper el ciclo de la muerte en una obra que mezcla la estrategia clásica con mecánicas de combate en tiempo real."
+    },
+    {
+      "id": "3110390",
+      "title": "Ball x pit",
+      "metacritic": 80,
+      "steamAppId": 3110390,
+      "genres": [
+        "FÍSICAS",
+        "INDIE",
+        "DIFÍCIL"
+      ],
+      "hltb": {
+        "general": "2h",
+        "main": "2h",
+        "extras": "4h",
+        "completionist": "6h",
+        "mainHours": 2
+      },
+      "description": "Plataformas de precisión basado puramente en físicas. Controla una bola a través de laberintos donde el impulso y la gravedad son tus únicas herramientas."
+    },
+    {
+      "id": "1746030",
+      "title": "Murders on the Yangtze River",
+      "metacritic": 84,
+      "steamAppId": 1746030,
+      "genres": [
+        "DETECTIVE",
+        "AVENTURA",
+        "PUZLES",
+        "MISTERIO",
+        "RICA HISTORIA"
+      ],
+      "hltb": {
+        "general": "16h",
+        "main": "16h",
+        "extras": "17h",
+        "completionist": "18h",
+        "mainHours": 16
+      },
+      "description": "Una aventura de misterio al estilo 'whodunnit' ambientada en la China de principios del siglo XX. Investiga crímenes imposibles a bordo de un barco por el río Yangtsé utilizando el razonamiento lógico para desvelar una conspiración histórica."
+    },
+    {
+      "id": "plague_requiem",
+      "title": "A Plague Tale: Requiem",
+      "metacritic": 82,
+      "steamAppId": 1182900,
+      "genres": [
+        "AVENTURA",
+        "NARRATIVO",
+        "SIGILO",
+        "ACCIÓN",
+        "TERROR"
+      ],
+      "hltb": {
+        "general": "21h",
+        "main": "17h",
+        "extras": "22h",
+        "completionist": "27h",
+        "mainHours": 17
+      },
+      "description": "Sigue a los mellizos De Rune en su viaje al extremo sur intentando evadir la devastadora bendición encubierta de La Macula del pequeño Hugo. Esta aventura desgarradora combina intenso sigilo táctico con secuencias abrumadoras infestadas por inabarcables enjambres de ratas frenéticas en la desesperada Francia del siglo XIV."
+    },
+    {
+      "id": "plague_innocence",
+      "title": "A Plague Tale: Innocence",
+      "metacritic": 81,
+      "steamAppId": 752590,
+      "genres": [
+        "AVENTURA",
+        "NARRATIVO",
+        "SIGILO",
+        "TERROR",
+        "HISTÓRICO"
+      ],
+      "hltb": {
+        "general": "12h",
+        "main": "10h",
+        "extras": "12h",
+        "completionist": "16h",
+        "mainHours": 10
+      },
+      "description": "Francia, año de gracia 1349. Sumérgete en las deprimentes horas de la historia europea al amparo de Amicia de Rune y su frágil hermano. Perseguidos incesantemente por una opresiva congregación monástica y oleadas espectrales de ratas purulentas, confiarán su supervivencia exclusivamente a las antorchas y su astucia."
+    },
+    {
+      "id": "1939970",
+      "title": "Nobody Wants to Die",
+      "metacritic": 79,
+      "steamAppId": 1939970,
+      "genres": [
+        "DETECTIVE",
+        "CYBERPUNK",
+        "NOIR",
+        "NARRATIVO"
+      ],
+      "hltb": {
+        "general": "5h",
+        "main": "5h",
+        "extras": "6h",
+        "completionist": "7h",
+        "mainHours": 5
+      },
+      "description": "Sumérgete en una Nueva York distópica del año 2329. Encarna al detective James Karra en una investigación noir ultra-tecnológica utilizando herramientas de manipulación temporal para reconstruir escenas del crimen y dar caza a un asesino en serie."
+    },
+    {
+      "id": "deathstranding_dc",
+      "title": "DEATH STRANDING DIRECTOR'S CUT",
+      "metacritic": 85,
+      "steamAppId": 1850570,
+      "genres": [
+        "ACCIÓN",
+        "AVENTURA",
+        "MUNDO ABIERTO",
+        "NARRATIVO",
+        "CIENCIA FICCIÓN"
+      ],
+      "hltb": {
+        "general": "58h",
+        "main": "36h",
+        "extras": "60h",
+        "completionist": "113h",
+        "mainHours": 36
+      },
+      "description": "La experiencia extendida de Hideo Kojima te sumerge en un mundo apocalíptico desolado donde los mortales están atrapados entre dos realidades insidiosas. Tu labor como repartidor de esperanza es vital en esta reflexiva obra colaborativa conectando a la humanidad en una solitaria red contra los Entes Varados."
+    },
+    {
+      "id": "2902340",
+      "title": "Death Stranding 2: On The Beach",
+      "metacritic": 86,
+      "steamAppId": 2902340,
+      "genres": [
+        "ACCIÓN",
+        "AVENTURA",
+        "NARRATIVO"
+      ],
+      "hltb": {
+        "general": "34h",
+        "main": "34h",
+        "extras": "62h",
+        "completionist": "115h",
+        "mainHours": 34
+      },
+      "description": "Sam Porter Bridges regresa para reconectar un mundo fragmentado más allá de las fronteras conocidas in esta secuela de Hideo Kojima."
+    },
+    {
+      "id": "megabonk",
+      "title": "Megabonk",
+      "metacritic": 80,
+      "steamAppId": 3448400,
+      "genres": [
+        "ACCIÓN",
+        "PLATAFORMAS",
+        "INDIE",
+        "CASUAL",
+        "DIFÍCIL"
+      ],
+      "hltb": {
+        "general": "14h",
+        "main": "14h",
+        "extras": "31½h",
+        "completionist": "55½h",
+        "mainHours": 14
+      },
+      "description": "Combates de acción frenética y vibrante caos dominan tu trayectoria a lomos de un martillar gigante que se beneficia espectacularmente del rebote físico total. Machaca a contrarreloj y destroza escenarios en una entrega arcade brillante, caóticamente entretenida y visualmente estimulante."
+    },
+    {
+      "id": "pluckysquire",
+      "title": "El Escudero Valiente (The Plucky Squire)",
+      "metacritic": 83,
+      "steamAppId": 1627570,
+      "genres": [
+        "ACCIÓN",
+        "AVENTURA",
+        "PLATAFORMAS",
+        "INDIE",
+        "PUZZLES"
+      ],
+      "hltb": {
+        "general": "---",
+        "main": "---",
+        "extras": "---",
+        "completionist": "---",
+        "mainHours": 10
+      },
+      "description": "Una deliciosa aventura interdimensional en la vida de Jot un héroe literario expulsado directamente fuera de su imaginario reino bidimensional. Resuelve situaciones innovadoras moviéndote del colorido cuento ilustrado hacia los imponentes escenarios y plataformas del escritorio tridimensional interactuando con palabras dinámicas."
+    },
+    {
+      "id": "1809540",
+      "title": "Nine Sols",
+      "metacritic": 83,
+      "steamAppId": 1809540,
+      "genres": [
+        "METROIDVANIA",
+        "ACCIÓN",
+        "DIFÍCIL",
+        "SOULSLIKE"
+      ],
+      "hltb": {
+        "general": "21h",
+        "main": "21h",
+        "extras": "30h",
+        "completionist": "38h",
+        "mainHours": 21
+      },
+      "description": "Un metroidvania 2D de estética 'Taopunk' que fusiona el ciberpunk con el taoísmo. Con un sistema de combate inspirado en Sekiro basado en el 'parry', deberás enfrentarte a los 9 Soles en una cruzada de venganza dibujada a mano."
+    },
+    {
+      "id": "p5r",
+      "title": "Persona 5 Royal",
+      "metacritic": 95,
+      "steamAppId": 1687950,
+      "genres": [
+        "ROL",
+        "JRPG",
+        "POR TURNOS",
+        "ANIME",
+        "HISTORIA EXCELENTE"
+      ],
+      "hltb": {
+        "general": "110h",
+        "main": "101h",
+        "extras": "124h",
+        "completionist": "143h",
+        "mainHours": 101
+      },
+      "description": "Ponte la máscara de Joker y únete a los Ladrones Fantasma de Corazones en esta versión definitiva del aclamado JRPG. Libérate de las cadenas de la sociedad moderna, infíltrate en los Palacios de los corruptos y despierta a tu Persona para cambiar el corazón de los malvados."
+    },
+    {
+      "id": "gta5",
+      "title": "Grand Theft Auto V",
+      "metacritic": 96,
+      "steamAppId": 271590,
+      "genres": [
+        "MUNDO ABIERTO",
+        "ACCIÓN",
+        "CRIMEN",
+        "TERCERA PERSONA",
+        "SANDBOX"
+      ],
+      "hltb": {
+        "general": "45h",
+        "main": "32h",
+        "extras": "50h",
+        "completionist": "84h",
+        "mainHours": 32
+      },
+      "description": "Explora el extenso y peligroso mundo de Los Santos y el condado de Blaine a través de las vidas entrelazadas de Michael, Franklin y Trevor. Planifica y ejecuta audaces atracos en una de las sátiras más completas y detalladas de la sociedad contemporánea jamás creadas."
+    },
+    {
+      "id": "hl2",
+      "title": "Half-Life 2",
+      "metacritic": 96,
+      "steamAppId": 220,
+      "genres": [
+        "FPS",
+        "CIENCIA FICCIÓN",
+        "HISTORIA",
+        "CLÁSICO",
+        "FÍSICAS"
+      ],
+      "hltb": {
+        "general": "14h",
+        "main": "13h",
+        "extras": "15h",
+        "completionist": "20h",
+        "mainHours": 13
+      },
+      "description": "Empuña la palanca como Gordon Freeman y encabeza la resistencia contra la dictadura alienígena de la Alianza en Ciudad 17. Una obra cumbre de la narrativa ambiental y las físicas interactivas gracias al revolucionario Cañón de Gravedad."
+    },
+    {
+      "id": "sekiro",
+      "title": "Sekiro: Shadows Die Twice",
+      "metacritic": 88,
+      "steamAppId": 814380,
+      "genres": [
+        "SOULSLIKE",
+        "ACCIÓN",
+        "DIFÍCIL",
+        "NINJA",
+        "SIGILO"
+      ],
+      "hltb": {
+        "general": "35h",
+        "main": "30h",
+        "extras": "43h",
+        "completionist": "71h",
+        "mainHours": 30
+      },
+      "description": "Enfréntate a la muerte en el Japón del período Sengoku como el 'Lobo de un solo brazo'. Domina un sistema de combate milimétrico basado en el desvío de katanas, la prótesis de shinobi y la verticalidad del gancho de agarre en busca de venganza."
+    },
+    {
+      "id": "celeste",
+      "title": "Celeste",
+      "metacritic": 91,
+      "steamAppId": 504230,
+      "genres": [
+        "PLATAFORMAS",
+        "DIFÍCIL",
+        "PÍXEL ART",
+        "INDIE",
+        "MÚSICA INCREÍBLE"
+      ],
+      "hltb": {
+        "general": "12h",
+        "main": "8h",
+        "extras": "14h",
+        "completionist": "39h",
+        "mainHours": 8
+      },
+      "description": "Ayuda a Madeline a escalar la imponente montaña Celeste mientras lidia con sus demonios internos. Un plataformas de precisión quirúrgica con un diseño de niveles magistral y una banda sonora emotiva e inolvidable."
+    },
+    {
+      "id": "undertale",
+      "title": "Undertale",
+      "metacritic": 92,
+      "steamAppId": 391540,
+      "genres": [
+        "ROL",
+        "INDIE",
+        "HISTORIA EXCELENTE",
+        "COMEDIA",
+        "DECISIONES"
+      ],
+      "hltb": {
+        "general": "8h",
+        "main": "6½h",
+        "extras": "10h",
+        "completionist": "22h",
+        "mainHours": 6.5
+      },
+      "description": "Cae en el submundo de los monstruos en este innovador juego de rol donde no es necesario destruir a nadie. Negocia, esquiva ataques al estilo bullet-hell o hazte amigo de personajes inolvidables con consecuencias que rompen la cuarta pared."
+    },
+    {
+      "id": "arkhamcity",
+      "title": "Batman: Arkham City",
+      "metacritic": 91,
+      "steamAppId": 200260,
+      "genres": [
+        "ACCIÓN",
+        "SUPERHÉROES",
+        "MUNDO ABIERTO",
+        "SIGILO",
+        "COMBATE"
+      ],
+      "hltb": {
+        "general": "18h",
+        "main": "13h",
+        "extras": "23h",
+        "completionist": "47h",
+        "mainHours": 13
+      },
+      "description": "Desciende a la prisión de máxima seguridad al aire libre de Gotham y enfréntate a los criminales más peligrosos liderados por el Joker. Perfecciona el sistema de combate FreeFlow y el vuelo con capa en una de las mejores adaptaciones del Caballero Oscuro."
+    },
+    {
+      "id": "dishonored",
+      "title": "Dishonored",
+      "metacritic": 91,
+      "steamAppId": 205100,
+      "genres": [
+        "INMERSIVO",
+        "SIGILO",
+        "PRIMERA PERSONA",
+        "STEAMPUNK",
+        "ASESINO"
+      ],
+      "hltb": {
+        "general": "15h",
+        "main": "12h",
+        "extras": "18h",
+        "completionist": "35h",
+        "mainHours": 12
+      },
+      "description": "Asume el papel de Corvo Attano, el guardaespaldas de la emperatriz acusado de su asesinato. En una Dunwall azotada por la peste, combina habilidades sobrenaturales, armas letales y sigilo para ejecutar tu venganza sin matar a nadie... o desatando el caos."
+    },
+    {
+      "id": "masseffect_le",
+      "title": "Mass Effect Legendary Edition",
+      "metacritic": 90,
+      "steamAppId": 1328670,
+      "genres": [
+        "ROL",
+        "CIENCIA FICCIÓN",
+        "ESPACIO",
+        "HISTORIA ÉPICA",
+        "DISPAROS"
+      ],
+      "hltb": {
+        "general": "75h",
+        "main": "60h",
+        "extras": "95h",
+        "completionist": "135h",
+        "mainHours": 60
+      },
+      "description": "Revive la legendaria epopeya espacial del Comandante Shepard. Reúne a tu tripulación a bordo de la Normandía y toma decisiones que afectarán el destino de toda la Vía Láctea contra la amenaza ancestral de los Segadores."
+    },
+    {
+      "id": "mhw",
+      "title": "Monster Hunter: World",
+      "metacritic": 90,
+      "steamAppId": 582010,
+      "genres": [
+        "ACCIÓN",
+        "CAZA",
+        "ROL",
+        "TERCERA PERSONA",
+        "AVENTURA"
+      ],
+      "hltb": {
+        "general": "85h",
+        "main": "48h",
+        "extras": "105h",
+        "completionist": "380h",
+        "mainHours": 48
+      },
+      "description": "Conviértete en cazador y viaja al Nuevo Mundo para rastrear y abatir colosales criaturas en ecosistemas vivos. Fabrica armas y armaduras a partir de tus presas para superar desafíos cada vez mayores."
+    },
+    {
+      "id": "doometernal",
+      "title": "DOOM Eternal",
+      "metacritic": 88,
+      "steamAppId": 782330,
+      "genres": [
+        "FPS",
+        "ACCIÓN RÁPIDA",
+        "GORE",
+        "HEAVY METAL",
+        "DEMONIOS"
+      ],
+      "hltb": {
+        "general": "16h",
+        "main": "14h",
+        "extras": "19h",
+        "completionist": "26h",
+        "mainHours": 14
+      },
+      "description": "Los ejércitos del infierno han invadido la Tierra. Conviértete en el Slayer en una épica campaña individual para conquistar demonios a través de dimensiones y detener la destrucción definitiva de la humanidad con un ritmo de combate trepidante."
+    },
+    {
+      "id": "ori_wisps",
+      "title": "Ori and the Will of the Wisps",
+      "metacritic": 88,
+      "steamAppId": 1057090,
+      "genres": [
+        "METROIDVANIA",
+        "PLATAFORMAS",
+        "ARTE HERMOSO",
+        "EMOTIVO",
+        "ACCIÓN"
+      ],
+      "hltb": {
+        "general": "13h",
+        "main": "12h",
+        "extras": "15h",
+        "completionist": "18h",
+        "mainHours": 12
+      },
+      "description": "Embárcate en una nueva aventura a través de un vasto mundo lleno de nuevos amigos y enemigos cobra vida con asombrosos gráficos dibujados a mano para desentrañar el verdadero destino de Ori."
+    },
+    {
+      "id": "slaythespire",
+      "title": "Slay the Spire",
+      "metacritic": 89,
+      "steamAppId": 646570,
+      "genres": [
+        "ROGUELIKE",
+        "CARTAS",
+        "ESTRATEGIA",
+        "CONSTRUCCIÓN DE MAZOS",
+        "INDIE"
+      ],
+      "hltb": {
+        "general": "40h",
+        "main": "12h",
+        "extras": "55h",
+        "completionist": "220h",
+        "mainHours": 12
+      },
+      "description": "Fusiona la construcción de mazos con elementos roguelike para crear un mazo único, encontrar criaturas bizarras y descubrir reliquias de inmenso poder mientras intentas ascender hasta la cima de la Aguja."
+    },
+    {
+      "id": "deadspace_remake",
+      "title": "Dead Space (Remake)",
+      "metacritic": 89,
+      "steamAppId": 1693980,
+      "genres": [
+        "SURVIVAL HORROR",
+        "CIENCIA FICCIÓN",
+        "ESPACIO",
+        "GORE",
+        "ATMOSFÉRICO"
+      ],
+      "hltb": {
+        "general": "14h",
+        "main": "12h",
+        "extras": "15h",
+        "completionist": "27h",
+        "mainHours": 12
+      },
+      "description": "El clásico de supervivencia y terror de ciencia ficción regresa completamente reconstruido desde cero. Isaac Clarke debe reparar la USG Ishimura mientras descubre la masacre perpetrada por los letales necromorfos."
+    },
+    {
+      "id": "re2_remake",
+      "title": "Resident Evil 2 (Remake)",
+      "metacritic": 89,
+      "steamAppId": 883710,
+      "genres": [
+        "SURVIVAL HORROR",
+        "ZOMBIS",
+        "ACCIÓN",
+        "TERCERA PERSONA",
+        "ATMOSFÉRICO"
+      ],
+      "hltb": {
+        "general": "11h",
+        "main": "8½h",
+        "extras": "15h",
+        "completionist": "34h",
+        "mainHours": 8.5
+      },
+      "description": "Una obra maestra reimaginada con el RE Engine. Acompaña al policía novato Leon S. Kennedy y a la universitaria Claire Redfield mientras intentan sobrevivir a la pesadilla biológica que consume Raccoon City."
+    },
+    {
+      "id": "obradinn",
+      "title": "Return of the Obra Dinn",
+      "metacritic": 89,
+      "steamAppId": 653530,
+      "genres": [
+        "MISTERIO",
+        "DETECTIVE",
+        "PUZZLE",
+        "MONOCROMO",
+        "HISTORIA EXCELENTE"
+      ],
+      "hltb": {
+        "general": "9h",
+        "main": "8½h",
+        "extras": "10h",
+        "completionist": "11h",
+        "mainHours": 8.5
+      },
+      "description": "1807. El barco mercante Obra Dinn arriba a puerto con todos sus tripulantes muertos o desaparecidos. Como investigador de seguros, utiliza un reloj de bolsillo sobrenatural para rebobinar el tiempo y deducir la suerte de las 60 almas a bordo."
+    },
+    {
+      "id": "nierautomata",
+      "title": "NieR:Automata",
+      "metacritic": 88,
+      "steamAppId": 524220,
+      "genres": [
+        "HACK AND SLASH",
+        "FILOSÓFICO",
+        "CIENCIA FICCIÓN",
+        "BANDA SONORA",
+        "MUNDO ABIERTO"
+      ],
+      "hltb": {
+        "general": "28h",
+        "main": "21h",
+        "extras": "38h",
+        "completionist": "63h",
+        "mainHours": 21
+      },
+      "description": "Los androides 2B, 9S y A2 luchan para recuperar la Tierra dominada por máquinas en una obra maestra existencial de Yoko Taro. Múltiples finales y una fusión única de géneros de combate con una banda sonora inolvidable."
+    },
+    {
+      "id": "subnautica",
+      "title": "Subnautica",
+      "metacritic": 87,
+      "steamAppId": 264710,
+      "genres": [
+        "SUPERVIVENCIA",
+        "MUNDO ABIERTO",
+        "SUBMARINO",
+        "EXPLORACIÓN",
+        "CIENCIA FICCIÓN"
+      ],
+      "hltb": {
+        "general": "36h",
+        "main": "30h",
+        "extras": "44h",
+        "completionist": "57h",
+        "mainHours": 30
+      },
+      "description": "Tras estrellarte en un mundo oceánico alienígena, el único camino es descender. Gestiona tu suministro de oxígeno mientras exploras arrecifes de coral, fosas volcánicas y abismos oscuros plagados de colosales leviatanes."
+    },
+    {
+      "id": "armoredcore6",
+      "title": "Armored Core VI: Fires of Rubicon",
+      "metacritic": 87,
+      "steamAppId": 1887720,
+      "genres": [
+        "MECHAS",
+        "ACCIÓN RÁPIDA",
+        "PERSONALIZACIÓN",
+        "DIFÍCIL",
+        "CIENCIA FICCIÓN"
+      ],
+      "hltb": {
+        "general": "25h",
+        "main": "20h",
+        "extras": "33h",
+        "completionist": "59h",
+        "mainHours": 20
+      },
+      "description": "FromSoftware lleva su maestría en juegos de acción a batallas omnidireccionales con mechas. Ensambla y pilota tu propio AC personalizado en misiones de alta velocidad por el control de una sustancia energética en el planeta Rubicón 3."
+    },
+    {
+      "id": "liesofp",
+      "title": "Lies of P",
+      "metacritic": 85,
+      "steamAppId": 1627720,
+      "genres": [
+        "SOULSLIKE",
+        "DIFÍCIL",
+        "GÓTICO",
+        "ACCIÓN",
+        "ATMOSFÉRICO"
+      ],
+      "hltb": {
+        "general": "34h",
+        "main": "30h",
+        "extras": "39h",
+        "completionist": "58h",
+        "mainHours": 30
+      },
+      "description": "Inspirado en la historia de Pinocho, viaja por la decadente ciudad de Krat durante la Belle Époque infestada de marionetas homicidas. Modifica tu brazo mecánico y decide cuándo mentir para alcanzar la humanidad."
+    },
+    {
+      "id": "ff7_remake",
+      "title": "Final Fantasy VII Remake Intergrade",
+      "metacritic": 86,
+      "steamAppId": 1462040,
+      "genres": [
+        "JRPG",
+        "ACCIÓN",
+        "FANTASÍA",
+        "ROL",
+        "CIENCIA FICCIÓN"
+      ],
+      "hltb": {
+        "general": "38h",
+        "main": "33h",
+        "extras": "43h",
+        "completionist": "86h",
+        "mainHours": 33
+      },
+      "description": "Reinvención monumental del legendario clásico de Square Enix. Acompaña a Cloud Strife y a Avalancha en su rebelión clandestina contra la corporación Shinra en la metrópolis distópica de Midgar, combinando acción en tiempo real con comandos tácticos estratégicos."
+    },
+    {
+      "id": "chrono_trigger",
+      "title": "Chrono Trigger",
+      "metacritic": 92,
+      "steamAppId": 613830,
+      "genres": [
+        "JRPG",
+        "CLÁSICO",
+        "PIXEL ART",
+        "VIAJES EN EL TIEMPO",
+        "ROL"
+      ],
+      "hltb": {
+        "general": "25h",
+        "main": "23h",
+        "extras": "27h",
+        "completionist": "43h",
+        "mainHours": 23
+      },
+      "description": "Considerado unánimemente una de las cumbres de la historia del videojuego. Creado por el célebre 'Dream Team' (Hironobu Sakaguchi, Yuji Horii y Akira Toriyama), viaja a través de diferentes eras para prevenir el cataclismo de Lavos y alterar el destino del planeta."
+    },
+    {
+      "id": "dq11s",
+      "title": "Dragon Quest XI S: Ecos de un pasado esquivo - Edición definitiva",
+      "metacritic": 91,
+      "steamAppId": 1295510,
+      "genres": [
+        "JRPG",
+        "POR TURNOS",
+        "FANTASÍA",
+        "ROL",
+        "ANIME"
+      ],
+      "hltb": {
+        "general": "70h",
+        "main": "57h",
+        "extras": "88h",
+        "completionist": "133h",
+        "mainHours": 57
+      },
+      "description": "La cumbre de la franquicia más emblemática del rol japonés tradicional. Encarna al Luminario, un héroe proscrito perseguido por el reino que debe reunir a un elenco carismático para desvelar el secreto de su destino y salvar Erdrea de la oscuridad."
+    },
+    {
+      "id": "fallout_nv",
+      "title": "Fallout: New Vegas",
+      "metacritic": 84,
+      "steamAppId": 22380,
+      "genres": [
+        "ROL",
+        "POSTAPOCALÍPTICO",
+        "MUNDO ABIERTO",
+        "FPS",
+        "DECISIONES"
+      ],
+      "hltb": {
+        "general": "45h",
+        "main": "28h",
+        "extras": "60h",
+        "completionist": "131h",
+        "mainHours": 28
+      },
+      "description": "Una obra maestra absoluta del rol reactivo desarrollada por Obsidian Entertainment. Tras recibir un disparo en la cabeza y ser enterrado vivo en el desierto de Mojave, emprende tu venganza en un conflicto político despiadado por el control de la presa Hoover y Las Vegas."
+    },
+    {
+      "id": "divinity_os2",
+      "title": "Divinity: Original Sin 2 - Definitive Edition",
+      "metacritic": 93,
+      "steamAppId": 435150,
+      "genres": [
+        "ROL",
+        "POR TURNOS",
+        "FANTASÍA",
+        "TÁCTICO",
+        "ISOMÉTRICO"
+      ],
+      "hltb": {
+        "general": "75h",
+        "main": "60h",
+        "extras": "100h",
+        "completionist": "152h",
+        "mainHours": 60
+      },
+      "description": "La obra magna de Larian Studios previa a Baldur's Gate 3. Explora el vasto mundo de Rivellon con libertad sistémica sin límites, manipula los elementos en combates tácticos por turnos profundos y asciende para convertirte en la nueva divinidad."
+    },
+    {
+      "id": "dragons_dogma_da",
+      "title": "Dragon's Dogma: Dark Arisen",
+      "metacritic": 82,
+      "steamAppId": 367500,
+      "genres": [
+        "ROL",
+        "ACCIÓN",
+        "MUNDO ABIERTO",
+        "FANTASÍA OSCURA",
+        "TERCERA PERSONA"
+      ],
+      "hltb": {
+        "general": "42h",
+        "main": "33h",
+        "extras": "55h",
+        "completionist": "112h",
+        "mainHours": 33
+      },
+      "description": "Una aventura épica con uno de los sistemas de combate de acción más satisfactorios del género. Escala monstruos mitológicos descomunales, personaliza a tus Peones aliados para combatir a tu lado y recupera tu corazón arrancado por el dragón Grigori."
+    },
+    {
+      "id": "yakuza_lad",
+      "title": "Yakuza: Like a Dragon",
+      "metacritic": 84,
+      "steamAppId": 1235140,
+      "genres": [
+        "JRPG",
+        "POR TURNOS",
+        "HISTORIA EXCELENTE",
+        "COMEDIA",
+        "CRIMEN"
+      ],
+      "hltb": {
+        "general": "55h",
+        "main": "45h",
+        "extras": "68h",
+        "completionist": "102h",
+        "mainHours": 45
+      },
+      "description": "Revolución de la saga Yakuza convertida en un JRPG por turnos inolvidable. Ponte en los zapatos de Ichiban Kasuga, un yakuza de corazón puro traicionado por su clan, y lucha por las calles de Yokohama acompañado de un peculiar grupo de marginados."
+    },
+    {
+      "id": "p4g",
+      "title": "Persona 4 Golden",
+      "metacritic": 87,
+      "steamAppId": 1113000,
+      "genres": [
+        "JRPG",
+        "POR TURNOS",
+        "MISTERIO",
+        "ANIME",
+        "SIMULADOR SOCIAL"
+      ],
+      "hltb": {
+        "general": "75h",
+        "main": "68h",
+        "extras": "85h",
+        "completionist": "140h",
+        "mainHours": 68
+      },
+      "description": "Viaja al apacible pueblo rural de Inaba y sumérgete en un misterio policiaco donde una serie de asesinatos se vinculan al misterioso Canal de Medianoche. Forja vínculos imborrables con tus compañeros y despierta tu Persona en un clásico atemporal."
+    },
+    {
+      "id": "p3r",
+      "title": "Persona 3 Reload",
+      "metacritic": 87,
+      "steamAppId": 2161700,
+      "genres": [
+        "JRPG",
+        "POR TURNOS",
+        "ANIME",
+        "HISTORIA EXCELENTE",
+        "FANTASÍA URBANA"
+      ],
+      "hltb": {
+        "general": "70h",
+        "main": "64h",
+        "extras": "82h",
+        "completionist": "103h",
+        "mainHours": 64
+      },
+      "description": "Reconstrucción completa desde cero del RPG definitorio que revolucionó la franquicia. Investiga la misteriosa 'Hora Oscura', escala la imponente torre del Tártaro durante la medianoche y afronta la inevitabilidad de la muerte junto al escuadrón SEES."
+    },
+    {
+      "id": "ds1_remastered",
+      "title": "Dark Souls: Remastered",
+      "metacritic": 84,
+      "steamAppId": 570940,
+      "genres": [
+        "TIPO «DARK SOULS»",
+        "DIFÍCIL",
+        "FANTASÍA OSCURA",
+        "ROL",
+        "ACCIÓN"
+      ],
+      "hltb": {
+        "general": "38h",
+        "main": "30h",
+        "extras": "44h",
+        "completionist": "67h",
+        "mainHours": 30
+      },
+      "description": "El título que redefinió el diseño de niveles moderno e instauró todo un género. Explora la tierra interconectada y desolada de Lordran a 60 FPS, enciende hogueras, desafía a los señores antiguos y decide el destino del fuego primigenio."
+    },
+    {
+      "id": "witcher2",
+      "title": "The Witcher 2: Assassins of Kings Enhanced Edition",
+      "metacritic": 88,
+      "steamAppId": 20920,
+      "genres": [
+        "ROL",
+        "FANTASÍA OSCURA",
+        "HISTORIA EXCELENTE",
+        "DECISIONES",
+        "ACCIÓN"
+      ],
+      "hltb": {
+        "general": "30h",
+        "main": "24h",
+        "extras": "35h",
+        "completionist": "54h",
+        "mainHours": 24
+      },
+      "description": "Geralt de Rivia es falsamente acusado del regicidio de Temeria. Sumérgete en una intriga política madura y descarnada donde las bifurcaciones narrativas cambian por completo capítulos enteros del viaje."
+    },
+    {
+      "id": "fallout4",
+      "title": "Fallout 4",
+      "metacritic": 84,
+      "steamAppId": 377160,
+      "genres": [
+        "POSTAPOCALÍPTICO",
+        "MUNDO ABIERTO",
+        "ROL",
+        "EXPLORACIÓN",
+        "FPS"
+      ],
+      "hltb": {
+        "general": "55h",
+        "main": "27h",
+        "extras": "81h",
+        "completionist": "160h",
+        "mainHours": 27
+      },
+      "description": "Como único superviviente del Refugio 111, emerge a la Commonwealth devastada por la guerra nuclear para encontrar a tu hijo secuestrado. Construye asentamientos, forja armaduras de poder y decide el futuro de la humanidad entre facciones enfrentadas."
+    },
+    {
+      "id": "octopath2",
+      "title": "Octopath Traveler II",
+      "metacritic": 85,
+      "steamAppId": 1971650,
+      "genres": [
+        "JRPG",
+        "POR TURNOS",
+        "PIXEL ART",
+        "HISTORIA EXCELENTE",
+        "ROL"
+      ],
+      "hltb": {
+        "general": "70h",
+        "main": "61h",
+        "extras": "79h",
+        "completionist": "93h",
+        "mainHours": 61
+      },
+      "description": "Ocho viajeros, ocho historias y un continente entero por descubrir en el fascinante mundo de Solistia. Con un portentoso apartado visual HD-2D refinado al milímetro, cada héroe cuenta con sendas de acción exclusivas de día y de noche."
+    },
+    {
+      "id": "tales_of_arise",
+      "title": "Tales of Arise",
+      "metacritic": 87,
+      "steamAppId": 740130,
+      "genres": [
+        "JRPG",
+        "ACCIÓN",
+        "ANIME",
+        "ROL",
+        "FANTASÍA"
+      ],
+      "hltb": {
+        "general": "50h",
+        "main": "41h",
+        "extras": "57h",
+        "completionist": "73h",
+        "mainHours": 41
+      },
+      "description": "Reinvención técnica y visual de la legendaria serie Tales of con el motor Unreal Engine. Acompaña a Alphen y Shionne en una épica rebelión por liberar al pueblo de Dahna del yugo opresor de los señores de Rena."
+    },
+    {
+      "id": "kingdomcome",
+      "title": "Kingdom Come: Deliverance",
+      "metacritic": 82,
+      "steamAppId": 379430,
+      "genres": [
+        "MEDIEVAL",
+        "ROL",
+        "MUNDO ABIERTO",
+        "HISTÓRICO",
+        "PRIMERA PERSONA"
+      ],
+      "hltb": {
+        "general": "65h",
+        "main": "41h",
+        "extras": "82h",
+        "completionist": "130h",
+        "mainHours": 41
+      },
+      "description": "Un RPG medieval hiperrealista ambientado en el Sacro Imperio Romano Germánico. Encarna a Henry, hijo de herrero cuya aldea es masacrada, y sobrevive en una Bohemia asolada por la guerra civil con un riguroso combate histórico de esgrima."
+    },
+    {
+      "id": "spiderman_remastered",
+      "title": "Marvel’s Spider-Man Remastered",
+      "metacritic": 87,
+      "steamAppId": 1817070,
+      "genres": [
+        "SUPERHÉROES",
+        "ACCIÓN",
+        "MUNDO ABIERTO",
+        "AVENTURA",
+        "TERCERA PERSONA"
+      ],
+      "hltb": {
+        "general": "25h",
+        "main": "17h",
+        "extras": "26h",
+        "completionist": "35h",
+        "mainHours": 17
+      },
+      "description": "Balancéate a toda velocidad entre los rascacielos de una deslumbrante Nueva York como un Peter Parker experimentado. Combates acrobáticos dinámicos, villanos icónicos de Marvel y una emotiva narrativa que profundiza en el coste de ser un héroe."
+    },
+    {
+      "id": "spiderman_miles",
+      "title": "Marvel’s Spider-Man: Miles Morales",
+      "metacritic": 85,
+      "steamAppId": 1817190,
+      "genres": [
+        "SUPERHÉROES",
+        "ACCIÓN",
+        "MUNDO ABIERTO",
+        "AVENTURA",
+        "TERCERA PERSONA"
+      ],
+      "hltb": {
+        "general": "11h",
+        "main": "7.5h",
+        "extras": "12h",
+        "completionist": "18h",
+        "mainHours": 7.5
+      },
+      "description": "Descubre el ascenso de Miles Morales mientras domina poderes bioeléctricos de veneno y camuflaje óptico para salvar Harlem en plena temporada navideña de una guerra entre una corporación energética y un ejército criminal de alta tecnología."
+    },
+    {
+      "id": "horizon_zd",
+      "title": "Horizon Zero Dawn Complete Edition",
+      "metacritic": 86,
+      "steamAppId": 1151640,
+      "genres": [
+        "MUNDO ABIERTO",
+        "ACCIÓN",
+        "CIENCIA FICCIÓN",
+        "ROL",
+        "PROTAGONISTA FEMENINA"
+      ],
+      "hltb": {
+        "general": "38h",
+        "main": "30h",
+        "extras": "45h",
+        "completionist": "61h",
+        "mainHours": 30
+      },
+      "description": "Acompaña a Aloy, una paria de la tribu Nora, en un exuberante mundo postapocalíptico dominado por colosales máquinas zoomorfas. Desentraña el misterio del colapso de la civilización antigua combinando arquería táctica y trampas tecnológicas."
+    },
+    {
+      "id": "control",
+      "title": "Control Ultimate Edition",
+      "metacritic": 85,
+      "steamAppId": 870780,
+      "genres": [
+        "ACCIÓN",
+        "CIENCIA FICCIÓN",
+        "METROIDVANIA 3D",
+        "MISTERIO",
+        "TERCERA PERSONA"
+      ],
+      "hltb": {
+        "general": "17h",
+        "main": "12h",
+        "extras": "20h",
+        "completionist": "30h",
+        "mainHours": 12
+      },
+      "description": "Adéntrate en La Casa Inmemorial como Jesse Faden, nueva directora de la Agencia Federal de Control. Emplea telequinesis destructiva y un arma de servicio metamórfica para combatir una fuerza extradimensional corruptora en este galardonado thriller paranormal."
+    },
+    {
+      "id": "alan_wake",
+      "title": "Alan Wake",
+      "metacritic": 83,
+      "steamAppId": 108710,
+      "genres": [
+        "TERROR PSICOLÓGICO",
+        "HISTORIA EXCELENTE",
+        "ACCIÓN",
+        "MISTERIO",
+        "TERCERA PERSONA"
+      ],
+      "hltb": {
+        "general": "13h",
+        "main": "11h",
+        "extras": "15h",
+        "completionist": "26h",
+        "mainHours": 11
+      },
+      "description": "El atribulado novelista Alan Wake busca a su esposa desaparecida en el idílico pero siniestro pueblo de Bright Falls. La luz es tu única arma contra la Presencia Oscura en una narración episódica que rinde homenaje a Stephen King y Twin Peaks."
+    },
+    {
+      "id": "tomb_raider_2013",
+      "title": "Tomb Raider",
+      "metacritic": 86,
+      "steamAppId": 203160,
+      "genres": [
+        "AVENTURA",
+        "ACCIÓN",
+        "SUPERVIVENCIA",
+        "PROTAGONISTA FEMENINA",
+        "EXPLORACIÓN"
+      ],
+      "hltb": {
+        "general": "14h",
+        "main": "12h",
+        "extras": "16h",
+        "completionist": "21h",
+        "mainHours": 12
+      },
+      "description": "El aclamado reinicio que forjó a Lara Croft de una joven inexperta a una curtida superviviente. Naufragada en la misteriosa isla perdida de Yamatai, deberás sobrevivir a una naturaleza hostil y a una sanguinaria secta religiosa."
+    },
+    {
+      "id": "rise_tomb_raider",
+      "title": "Rise of the Tomb Raider",
+      "metacritic": 86,
+      "steamAppId": 391220,
+      "genres": [
+        "AVENTURA",
+        "ACCIÓN",
+        "SUPERVIVENCIA",
+        "PROTAGONISTA FEMENINA",
+        "EXPLORACIÓN"
+      ],
+      "hltb": {
+        "general": "19h",
+        "main": "14h",
+        "extras": "22h",
+        "completionist": "36h",
+        "mainHours": 14
+      },
+      "description": "Lara Croft viaja a los gélidos páramos de Siberia en busca de la mítica ciudad de Kítezh y el secreto de la inmortalidad. Tumbas de desafío descomunales, cacería, sigilo y tiroteos viscerales contra la orden de La Trinidad."
+    },
+    {
+      "id": "hifi_rush",
+      "title": "Hi-Fi RUSH",
+      "metacritic": 87,
+      "steamAppId": 1817230,
+      "genres": [
+        "RITMO",
+        "HACK AND SLASH",
+        "ACCIÓN",
+        "ESTILO ANIME",
+        "COLORIDO"
+      ],
+      "hltb": {
+        "general": "14h",
+        "main": "11h",
+        "extras": "16h",
+        "completionist": "30h",
+        "mainHours": 11
+      },
+      "description": "Chai, un aspirante a estrella de rock con un reproductor de música fusionado al pecho, lidera una rebelión rítmica contra una megacorporación corrupta. El mundo entero vibra al compás de la música mientras ejecutas combos devastadores sincronizados."
+    },
+    {
+      "id": "gow_ragnarok",
+      "title": "God of War Ragnarök",
+      "metacritic": 90,
+      "steamAppId": 2322010,
+      "genres": [
+        "ACCIÓN",
+        "AVENTURA",
+        "MITOLOGÍA",
+        "HISTORIA EXCELENTE",
+        "HACK AND SLASH"
+      ],
+      "hltb": {
+        "general": "36h",
+        "main": "26h",
+        "extras": "43h",
+        "completionist": "56h",
+        "mainHours": 26
+      },
+      "description": "Kratos y Atreus deben viajar a cada uno de los Nueve Reinos nórdicos mientras las fuerzas asgardianas se preparan para la profetizada batalla del fin del mundo. Una odisea emocionante e íntima sobre el destino paterno filial y el perdón."
+    },
+    {
+      "id": "horizon_fw",
+      "title": "Horizon Forbidden West Complete Edition",
+      "metacritic": 89,
+      "steamAppId": 2420110,
+      "genres": [
+        "MUNDO ABIERTO",
+        "ACCIÓN",
+        "CIENCIA FICCIÓN",
+        "ROL",
+        "PROTAGONISTA FEMENINA"
+      ],
+      "hltb": {
+        "general": "44h",
+        "main": "29h",
+        "extras": "55h",
+        "completionist": "89h",
+        "mainHours": 29
+      },
+      "description": "Aloy viaja al majestuoso pero peligroso Oeste Prohibido para investigar una plaga mortal que amenaza la biosfera de la Tierra. Asombrosa fidelidad visual, nuevas máquinas aterradoras y un arsenal ampliado con garfio y planeador."
+    },
+    {
+      "id": "arkham_asylum",
+      "title": "Batman: Arkham Asylum Game of the Year Edition",
+      "metacritic": 91,
+      "steamAppId": 35140,
+      "genres": [
+        "SUPERHÉROES",
+        "ACCIÓN",
+        "SIGILO",
+        "METROIDVANIA 3D",
+        "ATMOSFÉRICO"
+      ],
+      "hltb": {
+        "general": "14h",
+        "main": "12h",
+        "extras": "16h",
+        "completionist": "26h",
+        "mainHours": 12
+      },
+      "description": "La obra que revolucionó para siempre los videojuegos de superhéroes y el combate FreeFlow. Atrapado en el manicomio de Arkham tomado por el Joker, Batman debe abrirse paso entre los peores psicópatas de Gotham en una noche claustrofóbica."
+    },
+    {
+      "id": "arkham_knight",
+      "title": "Batman: Arkham Knight",
+      "metacritic": 87,
+      "steamAppId": 208650,
+      "genres": [
+        "SUPERHÉROES",
+        "MUNDO ABIERTO",
+        "ACCIÓN",
+        "SIGILO",
+        "TERCERA PERSONA"
+      ],
+      "hltb": {
+        "general": "24h",
+        "main": "17h",
+        "extras": "30h",
+        "completionist": "49h",
+        "mainHours": 17
+      },
+      "description": "El épico desenlace de la trilogía Arkham de Rocksteady Studios. El Espantapájaros une a todos los supervillanos contra Batman, obligándolo a desplegar el Batmóvil totalmente transformable en una Gotham masiva e hiperdetallada."
+    },
+    {
+      "id": "jedi_fallen_order",
+      "title": "Star Wars Jedi: Fallen Order",
+      "metacritic": 82,
+      "steamAppId": 1172380,
+      "genres": [
+        "TIPO «DARK SOULS»",
+        "ACCIÓN",
+        "CIENCIA FICCIÓN",
+        "AVENTURA",
+        "METROIDVANIA 3D"
+      ],
+      "hltb": {
+        "general": "22h",
+        "main": "17h",
+        "extras": "25h",
+        "completionist": "34h",
+        "mainHours": 17
+      },
+      "description": "Sigue la huida de Cal Kestis, un joven padawan superviviente a la infame Orden 66. Reconstruye tu conexión con la Fuerza y domina el combate con sable de luz en un viaje interplanetario para restaurar la Orden Jedi antes de que te capture la Inquisición."
+    },
+    {
+      "id": "jedi_survivor",
+      "title": "Star Wars Jedi: Survivor",
+      "metacritic": 85,
+      "steamAppId": 1774580,
+      "genres": [
+        "TIPO «DARK SOULS»",
+        "ACCIÓN",
+        "CIENCIA FICCIÓN",
+        "MUNDO ABIERTO",
+        "AVENTURA"
+      ],
+      "hltb": {
+        "general": "29h",
+        "main": "20h",
+        "extras": "35h",
+        "completionist": "52h",
+        "mainHours": 20
+      },
+      "description": "Cinco años después de Fallen Order, Cal Kestis continúa su desesperada cruzada contra el Imperio Galáctico. Incorpora nuevas posturas de combate, exploración más vertical y mundos interconectados con gran riqueza de secretos."
+    },
+    {
+      "id": "mgsv",
+      "title": "Metal Gear Solid V: The Phantom Pain",
+      "metacritic": 91,
+      "steamAppId": 287700,
+      "genres": [
+        "SIGILO",
+        "MUNDO ABIERTO",
+        "ACCIÓN",
+        "MILITAR",
+        "TÁCTICO"
+      ],
+      "hltb": {
+        "general": "65h",
+        "main": "46h",
+        "extras": "85h",
+        "completionist": "164h",
+        "mainHours": 46
+      },
+      "description": "La cumbre del sigilo táctico sandbox dirigida por Hideo Kojima. Como Big Boss / Punished 'Venom' Snake, reconstruye tu ejército mercenario Diamond Dogs en Afganistán y África con libertad operativa total e infiltración sin parangón."
+    },
+    {
+      "id": "dishonored2",
+      "title": "Dishonored 2",
+      "metacritic": 86,
+      "steamAppId": 403640,
+      "genres": [
+        "SIGILO",
+        "INMERSIVO",
+        "PRIMERA PERSONA",
+        "ASESINO",
+        "STEAMPUNK"
+      ],
+      "hltb": {
+        "general": "18h",
+        "main": "13h",
+        "extras": "23h",
+        "completionist": "45h",
+        "mainHours": 13
+      },
+      "description": "Juega como la emperatriz Emily Kaldwin o el protector real Corvo Attano en las calles soleadas y exóticas de Karnaca. Diseño de niveles de vanguardia, poderes sobrenaturales creativos y un simulador inmersivo donde el ingenio del jugador manda."
+    },
+    {
+      "id": "prey",
+      "title": "Prey",
+      "metacritic": 82,
+      "steamAppId": 480490,
+      "genres": [
+        "INMERSIVO",
+        "CIENCIA FICCIÓN",
+        "TERROR ESPACIAL",
+        "PRIMERA PERSONA",
+        "EXPLORACIÓN"
+      ],
+      "hltb": {
+        "general": "21h",
+        "main": "16h",
+        "extras": "27h",
+        "completionist": "45h",
+        "mainHours": 16
+      },
+      "description": "Despiertas a bordo de la estación espacial Talos I en el año 2032 invadida por una entidad alienígena hostil y cambiante llamada Tifón. Un simulador inmersivo magistral de Arkane Studios centrado en la resolución creativa de problemas y la neurociencia alienígena."
+    },
+    {
+      "id": "deus_ex_hr",
+      "title": "Deus Ex: Human Revolution - Director's Cut",
+      "metacritic": 89,
+      "steamAppId": 238010,
+      "genres": [
+        "CYBERPUNK",
+        "SIGILO",
+        "ROL",
+        "INMERSIVO",
+        "CIENCIA FICCIÓN"
+      ],
+      "hltb": {
+        "general": "26h",
+        "main": "21h",
+        "extras": "30h",
+        "completionist": "46h",
+        "mainHours": 21
+      },
+      "description": "Como Adam Jensen, un especialista en seguridad cibernéticamente aumentado en un futuro transhumanista, investiga una conspiración global clandestina combinando combate, sigilo táctico, piratería informática e interacciones sociales con repercusiones morales."
+    },
+    {
+      "id": "deus_ex_md",
+      "title": "Deus Ex: Mankind Divided",
+      "metacritic": 83,
+      "steamAppId": 337000,
+      "genres": [
+        "CYBERPUNK",
+        "SIGILO",
+        "ROL",
+        "INMERSIVO",
+        "CIENCIA FICCIÓN"
+      ],
+      "hltb": {
+        "general": "24h",
+        "main": "16h",
+        "extras": "30h",
+        "completionist": "52h",
+        "mainHours": 16
+      },
+      "description": "Ambientado en la Praga de 2029 en plena era del 'apartheid mecánico', Adam Jensen opera como agente doble antiterrorista con aumentos de última generación para desenmascarar a los Iluminati."
+    },
+    {
+      "id": "hitman_woa",
+      "title": "Hitman World of Assassination",
+      "metacritic": 87,
+      "steamAppId": 1659040,
+      "genres": [
+        "SIGILO",
+        "ASESINO",
+        "SANDBOX",
+        "TÁCTICO",
+        "TERCERA PERSONA"
+      ],
+      "hltb": {
+        "general": "25h",
+        "main": "10h",
+        "extras": "35h",
+        "completionist": "120h",
+        "mainHours": 10
+      },
+      "description": "La experiencia definitiva de asesinato sigiloso que unifica la trilogía completa del Agente 47. Viaja por todo el globo eliminando objetivos de élite mediante disfraces, sabotajes, venenos y un nivel de libertad interactiva sin rival."
+    },
+    {
+      "id": "deathloop",
+      "title": "Deathloop",
+      "metacritic": 88,
+      "steamAppId": 1252330,
+      "genres": [
+        "FPS",
+        "INMERSIVO",
+        "BUCLE TEMPORAL",
+        "ACCIÓN",
+        "SIGILO"
+      ],
+      "hltb": {
+        "general": "22h",
+        "main": "16h",
+        "extras": "27h",
+        "completionist": "39h",
+        "mainHours": 16
+      },
+      "description": "Como Colt, estás atrapado en un bucle temporal en la isla retrofuturista de Blackreef. Para romper el ciclo eterno deberás asesinar a ocho visionarios clave antes de que el día se reinicie a medianoche, evitando a la letal Julianna."
+    },
+    {
+      "id": "shadow_tactics",
+      "title": "Shadow Tactics: Blades of the Shogun",
+      "metacritic": 85,
+      "steamAppId": 418240,
+      "genres": [
+        "SIGILO",
+        "ESTRATEGIA TÁCTICA",
+        "NINJA",
+        "ISOMÉTRICO",
+        "DIFÍCIL"
+      ],
+      "hltb": {
+        "general": "28h",
+        "main": "25h",
+        "extras": "32h",
+        "completionist": "45h",
+        "mainHours": 25
+      },
+      "description": "Una obra maestra de la infiltración táctica en tiempo real ambientada en el Japón del período Edo. Controla a un equipo de cinco especialistas con habilidades únicas (ninja, samurái, geisha, trampero y francotirador) para derrocar conspiraciones en la sombra."
+    },
+    {
+      "id": "desperados3",
+      "title": "Desperados III",
+      "metacritic": 86,
+      "steamAppId": 618290,
+      "genres": [
+        "ESTRATEGIA TÁCTICA",
+        "SIGILO",
+        "WESTERN",
+        "ISOMÉTRICO",
+        "DIFÍCIL"
+      ],
+      "hltb": {
+        "general": "32h",
+        "main": "27h",
+        "extras": "38h",
+        "completionist": "58h",
+        "mainHours": 27
+      },
+      "description": "Precuela magistral ambientada en el Salvaje Oeste. Lidera a John Cooper y su banda de forajidos especialistas en una historia de redención y venganza con planificación milimétrica, sincronización perfecta y ejecución de sigilo implacable."
+    },
+    {
+      "id": "dishonored_doto",
+      "title": "Dishonored: Death of the Outsider",
+      "metacritic": 82,
+      "steamAppId": 614570,
+      "genres": [
+        "SIGILO",
+        "INMERSIVO",
+        "PRIMERA PERSONA",
+        "ASESINO",
+        "MAGIA"
+      ],
+      "hltb": {
+        "general": "9h",
+        "main": "7h",
+        "extras": "11h",
+        "completionist": "19h",
+        "mainHours": 7
+      },
+      "description": "Ponte en la piel de la temida asesina sobrenatural Billie Lurk y reúnete con tu legendario mentor Daud para llevar a cabo el asesinato más trascendental jamás concebido: acabar con el Forastero, la deidad responsable del caos del Imperio."
+    },
+    {
+      "id": "alien_isolation",
+      "title": "Alien: Isolation",
+      "metacritic": 82,
+      "steamAppId": 214490,
+      "genres": [
+        "TERROR DE SUPERVIVENCIA",
+        "CIENCIA FICCIÓN",
+        "SIGILO",
+        "ATMOSFÉRICO",
+        "PRIMERA PERSONA"
+      ],
+      "hltb": {
+        "general": "21h",
+        "main": "19h",
+        "extras": "24h",
+        "completionist": "34h",
+        "mainHours": 19
+      },
+      "description": "Quince años después de la desaparición de Ellen Ripley, su hija Amanda viaja a la estación Sevastopol en busca de la caja negra del Nostromo. Sobrevive a un implacable Xenomorfo gobernado por una IA reactiva e impredecible que aprende de tus hábitos."
+    },
+    {
+      "id": "firewatch",
+      "title": "Firewatch",
+      "metacritic": 82,
+      "steamAppId": 383870,
+      "genres": [
+        "NARRATIVO",
+        "MISTERIO",
+        "PRIMERA PERSONA",
+        "ATMOSFÉRICO",
+        "AVENTURA"
+      ],
+      "hltb": {
+        "general": "4.5h",
+        "main": "4h",
+        "extras": "4.5h",
+        "completionist": "5h",
+        "mainHours": 4
+      },
+      "description": "Año 1989. Henry huye de una vida personal trágica para trabajar como guarda forestal en la naturaleza virgen de Wyoming. Conectado únicamente por radio con su supervisora Delilah, algo extraño empieza a ocurrir en el bosque que pondrá a prueba su cordura y confianza."
+    },
+    {
+      "id": "edith_finch",
+      "title": "What Remains of Edith Finch",
+      "metacritic": 89,
+      "steamAppId": 501300,
+      "genres": [
+        "NARRATIVO",
+        "HISTORIA EXCELENTE",
+        "ATMOSFÉRICO",
+        "MISTERIO",
+        "PRIMERA PERSONA"
+      ],
+      "hltb": {
+        "general": "2.5h",
+        "main": "2.5h",
+        "extras": "3h",
+        "completionist": "3.5h",
+        "mainHours": 2.5
+      },
+      "description": "Una de las experiencias narrativas más aclamadas de la historia del medio. Como Edith Finch, explora la colosal mansión familiar y revive las últimas horas de cada uno de tus parientes a través de viñetas jugables interactivas con estilos y mecánicas únicos."
+    },
+    {
+      "id": "talos_principle",
+      "title": "The Talos Principle",
+      "metacritic": 85,
+      "steamAppId": 257510,
+      "genres": [
+        "PUZLE",
+        "FILOSOFÍA",
+        "PRIMERA PERSONA",
+        "CIENCIA FICCIÓN",
+        "ATMOSFÉRICO"
+      ],
+      "hltb": {
+        "general": "19h",
+        "main": "16h",
+        "extras": "22h",
+        "completionist": "31h",
+        "mainHours": 16
+      },
+      "description": "Despiertas como una inteligencia artificial en un entorno de ruinas antiguas entrelazadas con tecnología avanzada. Bajo la voz del creador Elohim, resuelve más de 120 acertijos complejos mientras interrogas el libre albedrío, la consciencia y el destino humano."
+    },
+    {
+      "id": "talos_principle2",
+      "title": "The Talos Principle 2",
+      "metacritic": 88,
+      "steamAppId": 835910,
+      "genres": [
+        "PUZLE",
+        "FILOSOFÍA",
+        "CIENCIA FICCIÓN",
+        "PRIMERA PERSONA",
+        "EXPLORACIÓN"
+      ],
+      "hltb": {
+        "general": "25h",
+        "main": "21h",
+        "extras": "29h",
+        "completionist": "39h",
+        "mainHours": 21
+      },
+      "description": "Una secuela monumental que expande la escala y ambición filosófica original con Unreal Engine 5. En un mundo donde la humanidad biológica se ha extinguido y la cultura robótica florece, enfréntate a nuevos rompecabezas ontológicos sobre el progreso y el cosmos."
+    },
+    {
+      "id": "the_witness",
+      "title": "The Witness",
+      "metacritic": 87,
+      "steamAppId": 210970,
+      "genres": [
+        "PUZLE",
+        "MUNDO ABIERTO",
+        "EXPLORACIÓN",
+        "COLORIDO",
+        "PRIMERA PERSONA"
+      ],
+      "hltb": {
+        "general": "24h",
+        "main": "18h",
+        "extras": "27h",
+        "completionist": "43h",
+        "mainHours": 18
+      },
+      "description": "Diseñado por Jonathan Blow (creador de Braid), despiertas en una isla solitaria y bellamente iluminada, repleta de cientos de paneles y enigmas interconectados. Un tributo genial a la epifanía del razonamiento lógico sin palabras ni tutoriales explícitos."
+    },
+    {
+      "id": "baba_is_you",
+      "title": "Baba Is You",
+      "metacritic": 87,
+      "steamAppId": 736260,
+      "genres": [
+        "PUZLE",
+        "LÓGICA",
+        "DIFÍCIL",
+        "INDIE",
+        "2D"
+      ],
+      "hltb": {
+        "general": "45h",
+        "main": "34h",
+        "extras": "52h",
+        "completionist": "84h",
+        "mainHours": 34
+      },
+      "description": "Un juego de puzles revolucionario donde las reglas de cada nivel están presentes como bloques de palabras manipulables. Modifica la sintaxis para transformar muros en lava, flotar sobre el agua o convertirte en la propia meta para ganar."
+    },
+    {
+      "id": "chants_of_sennaar",
+      "title": "Chants of Sennaar",
+      "metacritic": 85,
+      "steamAppId": 1931770,
+      "genres": [
+        "PUZLE",
+        "MISTERIO",
+        "LINGÜÍSTICA",
+        "AVENTURA",
+        "ESTILIZADO"
+      ],
+      "hltb": {
+        "general": "10h",
+        "main": "10h",
+        "extras": "11h",
+        "completionist": "12h",
+        "mainHours": 10
+      },
+      "description": "Inspirado en el mito de Babel, asciende por una inmensa torre vertical para reconciliar a pueblos aislados por la incomunicación. Descifra glifos, gramáticas e idiomas desconocidos en tu cuaderno para restaurar el diálogo entre culturas."
+    },
+    {
+      "id": "cocoon",
+      "title": "Cocoon",
+      "metacritic": 88,
+      "steamAppId": 1497440,
+      "genres": [
+        "PUZLE",
+        "CIENCIA FICCIÓN",
+        "ATMOSFÉRICO",
+        "ISOMÉTRICO",
+        "AVENTURA"
+      ],
+      "hltb": {
+        "general": "5.5h",
+        "main": "5h",
+        "extras": "6h",
+        "completionist": "6.5h",
+        "mainHours": 5
+      },
+      "description": "Del diseñador principal de LIMBO e INSIDE (Jeppe Carlsen). Salta entre mundos contenidos dentro de esferas que puedes cargar en tu espalda, combinando y reorganizando realidades cósmicas para resolver puzles biomecánicos deslumbrantes."
+    },
+    {
+      "id": "stray",
+      "title": "Stray",
+      "metacritic": 83,
+      "steamAppId": 1332010,
+      "genres": [
+        "CYBERPUNK",
+        "GATOS",
+        "AVENTURA",
+        "ATMOSFÉRICO",
+        "TERCERA PERSONA"
+      ],
+      "hltb": {
+        "general": "6h",
+        "main": "5h",
+        "extras": "7h",
+        "completionist": "10h",
+        "mainHours": 5
+      },
+      "description": "Perdido, solo y separado de su familia, un gato callejero debe desentrañar un antiguo misterio para escapar de una ciberciudad decadente habitada por entrañables robots y criaturas carnívoras, con la ayuda de un pequeño dron llamado B-12."
+    },
+    {
+      "id": "detroit_become_human",
+      "title": "Detroit: Become Human",
+      "metacritic": 82,
+      "steamAppId": 1222140,
+      "genres": [
+        "DECISIONES",
+        "CIENCIA FICCIÓN",
+        "HISTORIA EXCELENTE",
+        "CINEMATOGRÁFICO",
+        "TERCERA PERSONA"
+      ],
+      "hltb": {
+        "general": "15h",
+        "main": "12h",
+        "extras": "18h",
+        "completionist": "31h",
+        "mainHours": 12
+      },
+      "description": "En el año 2038 en Detroit, los androides con aspecto humano realizan todo el trabajo servil hasta que algunos empiezan a experimentar emociones. Controla los destinos de Connor, Kara y Markus en un árbol narrativo con ramificaciones colosales."
+    },
+    {
+      "id": "pentiment",
+      "title": "Pentiment",
+      "metacritic": 86,
+      "steamAppId": 1205520,
+      "genres": [
+        "HISTÓRICO",
+        "MISTERIO",
+        "DECISIONES",
+        "NARRATIVO",
+        "MEDIEVAL"
+      ],
+      "hltb": {
+        "general": "17h",
+        "main": "15h",
+        "extras": "19h",
+        "completionist": "23h",
+        "mainHours": 15
+      },
+      "description": "Dirigido por Josh Sawyer (Fallout: New Vegas) en Obsidian Entertainment. Encarna a Andreas Maler, un maestro ilustrador en la Baviera del siglo XVI, e investiga una serie de asesinatos y conspiraciones a lo largo de 25 años plasmados con el arte de los manuscritos iluminados."
+    },
+    {
+      "id": "soma",
+      "title": "SOMA",
+      "metacritic": 84,
+      "steamAppId": 282140,
+      "genres": [
+        "TERROR PSICOLÓGICO",
+        "CIENCIA FICCIÓN",
+        "FILOSOFÍA",
+        "HISTORIA EXCELENTE",
+        "PRIMERA PERSONA"
+      ],
+      "hltb": {
+        "general": "11h",
+        "main": "10h",
+        "extras": "12h",
+        "completionist": "15h",
+        "mainHours": 10
+      },
+      "description": "De los creadores de Amnesia, una obra de terror existencial en las profundidades del océano en la estación sumergida PATHOS-II. Afronta dilemas sobre la identidad humana, la consciencia artificial y el significado de estar vivo."
+    },
+    {
+      "id": "stanley_parable_ud",
+      "title": "The Stanley Parable: Ultra Deluxe",
+      "metacritic": 90,
+      "steamAppId": 1703340,
+      "genres": [
+        "COMEDIA",
+        "META",
+        "NARRATIVO",
+        "PRIMERA PERSONA",
+        "FILOSOFÍA"
+      ],
+      "hltb": {
+        "general": "6h",
+        "main": "4.5h",
+        "extras": "7h",
+        "completionist": "10h",
+        "mainHours": 4.5
+      },
+      "description": "La versión definitiva del fenómeno metanarrativo que deconstruye la ilusión de libertad en los videojuegos. Cuando todos los empleados de la oficina desaparecen misteriosamente, Stanley debe decidir si obedece o desafía la voz del carismático Narrador."
+    },
+    {
+      "id": "portal",
+      "title": "Portal",
+      "metacritic": 90,
+      "steamAppId": 400,
+      "genres": [
+        "PUZLE",
+        "PRIMERA PERSONA",
+        "CIENCIA FICCIÓN",
+        "CLÁSICO",
+        "COMEDIA"
+      ],
+      "hltb": {
+        "general": "3.5h",
+        "main": "3h",
+        "extras": "4.5h",
+        "completionist": "10h",
+        "mainHours": 3
+      },
+      "description": "La obra maestra de puzles físicos de Valve ambientada en los laboratorios de Aperture Science. Utiliza el dispositivo portátil de portales espaciales para superar las cámaras de prueba ideadas por la sociópata inteligencia artificial GLaDOS."
+    },
+    {
+      "id": "tunic",
+      "title": "TUNIC",
+      "metacritic": 85,
+      "steamAppId": 553420,
+      "genres": [
+        "AVENTURA",
+        "ISOMÉTRICO",
+        "MISTERIO",
+        "TIPO «DARK SOULS»",
+        "PUZLE"
+      ],
+      "hltb": {
+        "general": "14h",
+        "main": "12h",
+        "extras": "16h",
+        "completionist": "22h",
+        "mainHours": 12
+      },
+      "description": "Explora una tierra enigmática plagada de leyendas perdidas como un pequeño zorro intrépido. Colecciona páginas del manual de instrucciones retro del propio juego para descifrar pistas crípticas, secretos milenarios y técnicas ocultas de combate."
+    },
+    {
+      "id": "re7",
+      "title": "Resident Evil 7: Biohazard",
+      "metacritic": 86,
+      "steamAppId": 418370,
+      "genres": [
+        "TERROR DE SUPERVIVENCIA",
+        "PRIMERA PERSONA",
+        "ZOMBIS",
+        "ATMOSFÉRICO",
+        "ACCIÓN"
+      ],
+      "hltb": {
+        "general": "11h",
+        "main": "9.5h",
+        "extras": "12h",
+        "completionist": "21h",
+        "mainHours": 9.5
+      },
+      "description": "El renacimiento visceral de la franquicia en primera persona. Ethan Winters se adentra en la decrépita plantación de Luisiana para buscar a su esposa desaparecida Mia, viéndose acosado implacablemente por la perturbadora y sádica familia Baker."
+    },
+    {
+      "id": "re_village",
+      "title": "Resident Evil Village",
+      "metacritic": 84,
+      "steamAppId": 1196590,
+      "genres": [
+        "TERROR DE SUPERVIVENCIA",
+        "PRIMERA PERSONA",
+        "ACCIÓN",
+        "GÓTICO",
+        "ATMOSFÉRICO"
+      ],
+      "hltb": {
+        "general": "12h",
+        "main": "10h",
+        "extras": "14h",
+        "completionist": "37h",
+        "mainHours": 10
+      },
+      "description": "Ethan Winters viaja a un recóndito pueblo de Europa del Este dominado por cuatro jerarcas mutantes y Lady Dimitrescu para rescatar a su hija Rose. Una mezcla magistral entre horror gótico, acción frenética y gestión de recursos."
+    },
+    {
+      "id": "silent_hill_2",
+      "title": "Silent Hill 2 (Remake)",
+      "metacritic": 86,
+      "steamAppId": 2124490,
+      "genres": [
+        "TERROR PSICOLÓGICO",
+        "TERROR DE SUPERVIVENCIA",
+        "MISTERIO",
+        "ATMOSFÉRICO",
+        "TERCERA PERSONA"
+      ],
+      "hltb": {
+        "general": "17h",
+        "main": "16h",
+        "extras": "19h",
+        "completionist": "25h",
+        "mainHours": 16
+      },
+      "description": "Recreación fidedigna de Bloober Team de la obra maestra psicológica de Konami. Habiendo recibido una carta de su difunta esposa Mary, James Sunderland viaja al pueblo cubierto de niebla de Silent Hill para descubrir la verdad."
+    },
+    {
+      "id": "signalis",
+      "title": "Signalis",
+      "metacritic": 82,
+      "steamAppId": 1262350,
+      "genres": [
+        "TERROR DE SUPERVIVENCIA",
+        "RETRO",
+        "CIENCIA FICCIÓN",
+        "PIXEL ART",
+        "ATMOSFÉRICO"
+      ],
+      "hltb": {
+        "general": "10h",
+        "main": "9h",
+        "extras": "11h",
+        "completionist": "14h",
+        "mainHours": 9
+      },
+      "description": "Un tributo de amor milimétrico a la era dorada del survival horror clásico de PS1. Encarna a Elster, una androide Replika que despierta en una nave estrellada en una instalación minera helada asolada por horrores cósmicos distópicos."
+    },
+    {
+      "id": "deadspace2",
+      "title": "Dead Space 2",
+      "metacritic": 87,
+      "steamAppId": 47780,
+      "genres": [
+        "TERROR DE SUPERVIVENCIA",
+        "CIENCIA FICCIÓN",
+        "ACCIÓN",
+        "TERCERA PERSONA",
+        "ESPACIO"
+      ],
+      "hltb": {
+        "general": "10h",
+        "main": "9h",
+        "extras": "12h",
+        "completionist": "21h",
+        "mainHours": 9
+      },
+      "description": "Isaac Clarke despierta en el Sprawl, una megalópolis espacial en la órbita de Saturno, presa de alucinaciones traumáticas y de un nuevo brote necrómorfo. Mayor dinamismo, desmembramiento estratégico perfeccionado y una atmósfera asfixiante."
+    },
+    {
+      "id": "amnesia_bunker",
+      "title": "Amnesia: The Bunker",
+      "metacritic": 82,
+      "steamAppId": 1944430,
+      "genres": [
+        "TERROR DE SUPERVIVENCIA",
+        "PRIMERA PERSONA",
+        "TENSIÓN",
+        "INMERSIVO",
+        "ATMOSFÉRICO"
+      ],
+      "hltb": {
+        "general": "5h",
+        "main": "4.5h",
+        "extras": "6h",
+        "completionist": "9h",
+        "mainHours": 4.5
+      },
+      "description": "Atrapado en un búnker subterráneo de la Primera Guerra Mundial con un solo proyectil en el revólver y una ruidosa linterna de dinamo, sobrevive a una bestia sanguinaria que reacciona al sonido en un entorno no lineal y emergente."
+    },
+    {
+      "id": "evil_within2",
+      "title": "The Evil Within 2",
+      "metacritic": 82,
+      "steamAppId": 601430,
+      "genres": [
+        "TERROR PSICOLÓGICO",
+        "TERROR DE SUPERVIVENCIA",
+        "ACCIÓN",
+        "TERCERA PERSONA",
+        "MONSTRUOS"
+      ],
+      "hltb": {
+        "general": "15h",
+        "main": "13.5h",
+        "extras": "18h",
+        "completionist": "28h",
+        "mainHours": 13.5
+      },
+      "description": "El exdetective Sebastian Castellanos desciende de nuevo a la pesadilla simulada de STEM para rescatar a su hija Lily. Zonas semiabiertas para explorar en la ciudad de Union, gestión tensa de munición y monstruos de diseño macabro."
+    },
+    {
+      "id": "darkwood",
+      "title": "Darkwood",
+      "metacritic": 82,
+      "steamAppId": 274520,
+      "genres": [
+        "TERROR DE SUPERVIVENCIA",
+        "VISTA SUPERIOR",
+        "ATMOSFÉRICO",
+        "DIFÍCIL",
+        "CRAFTING"
+      ],
+      "hltb": {
+        "general": "21h",
+        "main": "18h",
+        "extras": "24h",
+        "completionist": "33h",
+        "mainHours": 18
+      },
+      "description": "Una experiencia de terror opresiva y sin sobresaltos fáciles (jumpscares). Explora un misterioso bosque soviético corrupto durante el día buscando recursos, y atrinchérate en tu refugio al caer la noche rezando para que amanezca."
+    },
+    {
+      "id": "amnesia_dark_descent",
+      "title": "Amnesia: The Dark Descent",
+      "metacritic": 85,
+      "steamAppId": 57300,
+      "genres": [
+        "TERROR DE SUPERVIVENCIA",
+        "TERROR PSICOLÓGICO",
+        "PRIMERA PERSONA",
+        "ATMOSFÉRICO",
+        "CLÁSICO"
+      ],
+      "hltb": {
+        "general": "9h",
+        "main": "8h",
+        "extras": "10h",
+        "completionist": "12h",
+        "mainHours": 8
+      },
+      "description": "El título que redefinió el terror moderno en primera persona. Daniel despierta en los pasillos lúgubres del castillo prusiano de Brennenburg sin recordar su pasado, vigilando su medidor de cordura y huyendo en la oscuridad sin armas."
+    },
+    {
+      "id": "re3_remake",
+      "title": "Resident Evil 3 (Remake)",
+      "metacritic": 82,
+      "steamAppId": 952060,
+      "genres": [
+        "TERROR DE SUPERVIVENCIA",
+        "ACCIÓN",
+        "ZOMBIS",
+        "TERCERA PERSONA",
+        "CINEMATOGRÁFICO"
+      ],
+      "hltb": {
+        "general": "7.5h",
+        "main": "6h",
+        "extras": "9h",
+        "completionist": "21h",
+        "mainHours": 6
+      },
+      "description": "Jill Valentine intenta escapar de una Raccoon City colapsada por el virus T mientras es perseguida sin descanso por Nemesis, una imparable arma biológica inteligente armada con lanzacohetes y tentáculos mutagénicos."
+    },
+    {
+      "id": "balatro",
+      "title": "Balatro",
+      "metacritic": 90,
+      "steamAppId": 2379780,
+      "genres": [
+        "ROGUELIKE",
+        "CONSTRUCCIÓN DE MAZOS",
+        "CARTAS",
+        "ESTRATEGIA",
+        "ADICTIVO"
+      ],
+      "hltb": {
+        "general": "40h",
+        "main": "25h",
+        "extras": "65h",
+        "completionist": "155h",
+        "mainHours": 25
+      },
+      "description": "Un hipnótico roguelike de construcción de barajas inspirado en el póker. Combina manos válidas con comodines especiales que desatan sinergias matemáticas demoledoras y multiplicadores delirantes para derrotar las ciegas de la banca."
+    },
+    {
+      "id": "dead_cells",
+      "title": "Dead Cells",
+      "metacritic": 89,
+      "steamAppId": 588650,
+      "genres": [
+        "ROGUEVITE",
+        "METROIDVANIA",
+        "ACCIÓN 2D",
+        "PIXEL ART",
+        "DIFÍCIL"
+      ],
+      "hltb": {
+        "general": "28h",
+        "main": "14h",
+        "extras": "40h",
+        "completionist": "105h",
+        "mainHours": 14
+      },
+      "description": "Frenético roguevania de acción en 2D que combina el aprendizaje de patrones de un souls con la generación procedural de mazmorras. Explora un castillo interconectado en constante cambio, domina decenas de armas y esquiva la muerte permanente."
+    },
+    {
+      "id": "risk_of_rain_2",
+      "title": "Risk of Rain 2",
+      "metacritic": 85,
+      "steamAppId": 632360,
+      "genres": [
+        "ROGUELIKE",
+        "TERCERA PERSONA",
+        "SHOOTER",
+        "ACCIÓN",
+        "CIENCIA FICCIÓN"
+      ],
+      "hltb": {
+        "general": "30h",
+        "main": "15h",
+        "extras": "42h",
+        "completionist": "100h",
+        "mainHours": 15
+      },
+      "description": "El salto sublime del clásico bidimensional a un shooter roguelike en tercera persona en 3D. Escapa de un caótico planeta alienígena mientras la dificultad aumenta con cada segundo que pasa, acumulando cientos de objetos con efectos pasivos acumulables."
+    },
+    {
+      "id": "enter_the_gungeon",
+      "title": "Enter the Gungeon",
+      "metacritic": 84,
+      "steamAppId": 311690,
+      "genres": [
+        "BULLET HELL",
+        "ROGUELIKE",
+        "PIXEL ART",
+        "ACCIÓN 2D",
+        "DIFÍCIL"
+      ],
+      "hltb": {
+        "general": "35h",
+        "main": "21h",
+        "extras": "55h",
+        "completionist": "165h",
+        "mainHours": 21
+      },
+      "description": "Desciende por la Armazmorra en busca del arma legendaria que puede matar el pasado. Voltea mesas para cubrirte, rueda sobre ráfagas de proyectiles densas y colecciona cientos de armas estrafalarias en un prodigio de acción arcade."
+    },
+    {
+      "id": "binding_of_isaac_rebirth",
+      "title": "The Binding of Isaac: Rebirth",
+      "metacritic": 86,
+      "steamAppId": 250900,
+      "genres": [
+        "ROGUELIKE",
+        "DUNGEON CRAWLER",
+        "PIXEL ART",
+        "DIFÍCIL",
+        "OSCURO"
+      ],
+      "hltb": {
+        "general": "50h",
+        "main": "16h",
+        "extras": "85h",
+        "completionist": "300h",
+        "mainHours": 16
+      },
+      "description": "El roguelike cenital definitivo que definió la escena moderna e independiente. Ayuda a Isaac a huir de su madre hacia las entrañas del sótano, enfrentando monstruos grotescos y desbloqueando infinitas combinaciones de sinergias y transformaciones."
+    },
+    {
+      "id": "inscryption",
+      "title": "Inscryption",
+      "metacritic": 85,
+      "steamAppId": 1092790,
+      "genres": [
+        "CONSTRUCCIÓN DE MAZOS",
+        "ROGUELIKE",
+        "TERROR PSICOLÓGICO",
+        "MISTERIO",
+        "ESTRATEGIA"
+      ],
+      "hltb": {
+        "general": "13h",
+        "main": "12h",
+        "extras": "15h",
+        "completionist": "25h",
+        "mainHours": 12
+      },
+      "description": "Una perturbadora odisea de cartas de Daniel Mullins que combina roguelike de construcción de mazos, escape room y terror psicológico. Desvela los oscuros secretos que esconde la cabaña del misterioso Leshy en una experiencia meta única."
+    },
+    {
+      "id": "dave_the_diver",
+      "title": "Dave the Diver",
+      "metacritic": 90,
+      "steamAppId": 1868140,
+      "genres": [
+        "EXPLORACIÓN SUBMARINA",
+        "GESTIÓN",
+        "PIXEL ART",
+        "PESCA",
+        "AVENTURA"
+      ],
+      "hltb": {
+        "general": "32h",
+        "main": "25h",
+        "extras": "40h",
+        "completionist": "60h",
+        "mainHours": 25
+      },
+      "description": "Un híbrido magistralmente adictivo: explora las profundidades del cambiante Agujero Azul durante el día arponeando fauna marina exótica, y gestiona un popular restaurante de sushi junto al chef Bancho al caer la noche."
+    },
+    {
+      "id": "dredge",
+      "title": "Dredge",
+      "metacritic": 82,
+      "steamAppId": 1562430,
+      "genres": [
+        "TERROR CÓSMICO",
+        "PESCA",
+        "ATMOSFÉRICO",
+        "MISTERIO",
+        "EXPLORACIÓN"
+      ],
+      "hltb": {
+        "general": "10h",
+        "main": "9h",
+        "extras": "12h",
+        "completionist": "16h",
+        "mainHours": 9
+      },
+      "description": "Capitanea tu barco pesquero a través de un remoto archipiélago y desentierra aberraciones submarinas en un ambiente lovecraftiano. Mejora tu navío, pesca en aguas profundas y regresa a puerto antes de que la niebla nocturna consuma tu mente."
+    },
+    {
+      "id": "animal_well",
+      "title": "Animal Well",
+      "metacritic": 90,
+      "steamAppId": 813230,
+      "genres": [
+        "METROIDVANIA",
+        "PUZLE",
+        "PIXEL ART",
+        "ATMOSFÉRICO",
+        "EXPLORACIÓN"
+      ],
+      "hltb": {
+        "general": "9h",
+        "main": "6.5h",
+        "extras": "12h",
+        "completionist": "20h",
+        "mainHours": 6.5
+      },
+      "description": "Una obra de arte meticulosa creada por un solo desarrollador (Billy Basso). Explora un laberinto no lineal de secretos densos utilizando objetos cotidianos como juguetes, yo-yos y pompas de jabón en un fascinante mundo nocturno de iluminación volumétrica."
+    },
+    {
+      "id": "sea_of_stars",
+      "title": "Sea of Stars",
+      "metacritic": 87,
+      "steamAppId": 1244090,
+      "genres": [
+        "JRPG",
+        "POR TURNOS",
+        "PIXEL ART",
+        "FANTASÍA",
+        "BANDA SONORA EXCELENTE"
+      ],
+      "hltb": {
+        "general": "30h",
+        "main": "27h",
+        "extras": "35h",
+        "completionist": "45h",
+        "mainHours": 27
+      },
+      "description": "Una deslumbrante carta de amor a los clásicos del rol de la época de los 16 bits como Chrono Trigger. Domina la magia del sol y la luna con dos Hijos del Solsticio en combates por turnos interactivos sincronizados y navegación fluida por el mundo."
+    },
+    {
+      "id": "katana_zero",
+      "title": "Katana ZERO",
+      "metacritic": 83,
+      "steamAppId": 460950,
+      "genres": [
+        "ACCIÓN 2D",
+        "CYBERPUNK",
+        "PIXEL ART",
+        "CÁMARA LENTA",
+        "DIFÍCIL"
+      ],
+      "hltb": {
+        "general": "6h",
+        "main": "5h",
+        "extras": "7h",
+        "completionist": "11h",
+        "mainHours": 5
+      },
+      "description": "Un vertiginoso juego de acción neo-noir y muerte instantánea. Encarna a un samurái adicto a una droga militar experimental que le permite ralentizar el tiempo y predecir el futuro, desatando una masacre coreografiada en una ciudad corrupta."
+    },
+    {
+      "id": "rogue_legacy_2",
+      "title": "Rogue Legacy 2",
+      "metacritic": 88,
+      "steamAppId": 1253920,
+      "genres": [
+        "ROGUE-LITE",
+        "METROIDVANIA",
+        "PLATAFORMAS",
+        "ACCIÓN 2D",
+        "DIFÍCIL"
+      ],
+      "hltb": {
+        "general": "35h",
+        "main": "25h",
+        "extras": "45h",
+        "completionist": "85h",
+        "mainHours": 25
+      },
+      "description": "El árbol genealógico del rogue-lite genealógico regresa a lo grande. Cada vez que mueres, uno de tus herederos genéticos toma el relevo: un mago miope, un arquero vegano o un caballero con sinestesia, conservando las mejoras de tu castillo."
+    },
+    {
+      "id": "ftl",
+      "title": "FTL: Faster Than Light",
+      "metacritic": 84,
+      "steamAppId": 212680,
+      "genres": [
+        "ROGUELIKE",
+        "ESTRATEGIA",
+        "ESPACIO",
+        "CIENCIA FICCIÓN",
+        "DIFÍCIL"
+      ],
+      "hltb": {
+        "general": "30h",
+        "main": "17h",
+        "extras": "55h",
+        "completionist": "115h",
+        "mainHours": 17
+      },
+      "description": "Comanda tu propia nave estelar y a su tripulación en un angustioso viaje a través de una galaxia generada aleatoriamente. Gestiona la energía de tus escudos, apaga incendios y toma decisiones de vida o muerte para entregar datos vitales a la Federación."
+    },
+    {
+      "id": "into_the_breach",
+      "title": "Into the Breach",
+      "metacritic": 90,
+      "steamAppId": 590380,
+      "genres": [
+        "ESTRATEGIA POR TURNOS",
+        "ROGUELIKE",
+        "MECHAS",
+        "PIXEL ART",
+        "TÁCTICO"
+      ],
+      "hltb": {
+        "general": "12h",
+        "main": "6h",
+        "extras": "22h",
+        "completionist": "60h",
+        "mainHours": 6
+      },
+      "description": "De los creadores de FTL. Controla poderosos mechas del futuro para repeler una invasión de monstruos gigantes (Vek) en un tablero de 8x8 estilo ajedrez donde cada ataque enemigo es telegrafiado con antelación milimétrica."
+    },
+    {
+      "id": "spelunky2",
+      "title": "Spelunky 2",
+      "metacritic": 91,
+      "steamAppId": 418530,
+      "genres": [
+        "ROGUELIKE",
+        "PLATAFORMAS",
+        "DIFÍCIL",
+        "GENERACIÓN PROCEDURAL",
+        "2D"
+      ],
+      "hltb": {
+        "general": "50h",
+        "main": "30h",
+        "extras": "75h",
+        "completionist": "200h",
+        "mainHours": 30
+      },
+      "description": "La cima absoluta del diseño roguelike de plataformas creado por Derek Yu. Explora cavernas lunares dinámicas y reactivas donde cada elemento físico interactúa con los demás en una danza mortal de trampas, sacrificios y secretos."
+    },
+    {
+      "id": "titanfall2",
+      "title": "Titanfall 2",
+      "metacritic": 89,
+      "steamAppId": 1237970,
+      "genres": [
+        "FPS",
+        "MECHAS",
+        "CIENCIA FICCIÓN",
+        "ACCIÓN",
+        "CAMPAÑA EXCELENTE"
+      ],
+      "hltb": {
+        "general": "7h",
+        "main": "6h",
+        "extras": "8h",
+        "completionist": "15h",
+        "mainHours": 6
+      },
+      "description": "Considerada una de las mejores campañas de disparos en primera persona de todos los tiempos. Como el fusilero Jack Cooper, forja un vínculo inolvidable con el titán clase Vanguard BT-7274 en misiones maestras de plataformeo y viajes temporales."
+    },
+    {
+      "id": "doom2016",
+      "title": "DOOM (2016)",
+      "metacritic": 85,
+      "steamAppId": 379720,
+      "genres": [
+        "FPS",
+        "ACCIÓN RÁPIDA",
+        "DEMONIOS",
+        "GORE",
+        "HEAVY METAL"
+      ],
+      "hltb": {
+        "general": "13.5h",
+        "main": "11.5h",
+        "extras": "16h",
+        "completionist": "26h",
+        "mainHours": 11.5
+      },
+      "description": "El triunfal renacimiento del pionero de los shooters. Como el indómito DOOM Slayer, masacra hordas de demonios en las instalaciones de Marte y en el mismísimo infierno mediante ejecuciones brutales Glory Kills y un arsenal demoledor."
+    },
+    {
+      "id": "bioshock_infinite",
+      "title": "BioShock Infinite",
+      "metacritic": 94,
+      "steamAppId": 8870,
+      "genres": [
+        "FPS",
+        "HISTORIA EXCELENTE",
+        "STEAMPUNK",
+        "CIENCIA FICCIÓN",
+        "ATMOSFÉRICO"
+      ],
+      "hltb": {
+        "general": "13h",
+        "main": "11.5h",
+        "extras": "15h",
+        "completionist": "27h",
+        "mainHours": 11.5
+      },
+      "description": "Año 1912. El detective endeudado Booker DeWitt viaja a la deslumbrante ciudad flotante de Columbia para rescatar a Elizabeth, una misteriosa joven capaz de rasgar el tejido dimensional entre realidades alternativas."
+    },
+    {
+      "id": "bioshock_remastered",
+      "title": "BioShock Remastered",
+      "metacritic": 96,
+      "steamAppId": 409710,
+      "genres": [
+        "FPS",
+        "ATMOSFÉRICO",
+        "HISTORIA EXCELENTE",
+        "DISTOPÍA",
+        "INMERSIVO"
+      ],
+      "hltb": {
+        "general": "13.5h",
+        "main": "12h",
+        "extras": "15.5h",
+        "completionist": "21h",
+        "mainHours": 12
+      },
+      "description": "Tras un accidente aéreo en mitad del Atlántico en 1960, descubres Rapture, una utopía submarina art déco creada por Andrew Ryan que ha colapsado por culpa del ADAM. Modifica tu ADN con plásmidos y decide si rescatar o cosechar a las Little Sisters."
+    },
+    {
+      "id": "metro_exodus",
+      "title": "Metro Exodus",
+      "metacritic": 82,
+      "steamAppId": 412020,
+      "genres": [
+        "POSTAPOCALÍPTICO",
+        "FPS",
+        "ATMOSFÉRICO",
+        "SUPERVIVENCIA",
+        "HISTORIA"
+      ],
+      "hltb": {
+        "general": "20h",
+        "main": "15h",
+        "extras": "25h",
+        "completionist": "40h",
+        "mainHours": 15
+      },
+      "description": "Huyendo de las ruinas asfixiantes del metro de Moscú, Artyom lidera a un grupo de comandos espartanos a bordo de la locomotora Aurora en un viaje de un año a través de las estaciones del año en la Rusia postnuclear."
+    },
+    {
+      "id": "ultrakill",
+      "title": "ULTRAKILL",
+      "metacritic": 90,
+      "steamAppId": 1229490,
+      "genres": [
+        "BOOMER SHOOTER",
+        "ACCIÓN RÁPIDA",
+        "RETRO",
+        "FPS",
+        "DIFÍCIL"
+      ],
+      "hltb": {
+        "general": "10h",
+        "main": "7h",
+        "extras": "15h",
+        "completionist": "40h",
+        "mainHours": 7
+      },
+      "description": "La humanidad está extinta. La sangre es combustible. El infierno está lleno. Controla a V1 en un FPS frenético que combina la velocidad vertiginosa de Quake con el sistema de combos por estilo y medidor de rango de Devil May Cry."
+    },
+    {
+      "id": "wolfenstein_new_order",
+      "title": "Wolfenstein: The New Order",
+      "metacritic": 82,
+      "steamAppId": 201810,
+      "genres": [
+        "FPS",
+        "HISTORIA ALTERNATIVA",
+        "ACCIÓN",
+        "DISPAROS",
+        "SIGILO"
+      ],
+      "hltb": {
+        "general": "13.5h",
+        "main": "11.5h",
+        "extras": "16h",
+        "completionist": "26h",
+        "mainHours": 11.5
+      },
+      "description": "En una perturbadora línea temporal donde el régimen nazi ganó la Segunda Guerra Mundial gracias a tecnología avanzada robada, B.J. Blazkowicz despierta de un coma de catorce años para encabezar una resistencia clandestina desesperada."
+    },
+    {
+      "id": "wolfenstein2_colossus",
+      "title": "Wolfenstein II: The New Colossus",
+      "metacritic": 86,
+      "steamAppId": 612880,
+      "genres": [
+        "FPS",
+        "HISTORIA ALTERNATIVA",
+        "ACCIÓN",
+        "GORE",
+        "CINEMATOGRÁFICO"
+      ],
+      "hltb": {
+        "general": "13h",
+        "main": "11h",
+        "extras": "16h",
+        "completionist": "32h",
+        "mainHours": 11
+      },
+      "description": "B.J. Blazkowicz viaja a unos Estados Unidos ocupados para encender la chispa de la segunda revolución americana. Una historia visceral, humor negro, personajes memorables y tiroteos demoledores con doble empuñadura de armas pesadas."
+    },
+    {
+      "id": "metro2033_redux",
+      "title": "Metro 2033 Redux",
+      "metacritic": 90,
+      "steamAppId": 286690,
+      "genres": [
+        "POSTAPOCALÍPTICO",
+        "FPS",
+        "ATMOSFÉRICO",
+        "SUPERVIVENCIA",
+        "HISTORIA"
+      ],
+      "hltb": {
+        "general": "10.5h",
+        "main": "9h",
+        "extras": "12h",
+        "completionist": "22h",
+        "mainHours": 9
+      },
+      "description": "Reconstrucción definitiva del clásico de culto de 4A Games. En las profundidades claustrofóbicas del metro de Moscú, una generación sobrevive a las secuelas de un holocausto nuclear mientras Artyom viaja al corazón del sistema para advertir de una nueva amenaza mutante."
+    },
+    {
+      "id": "metro_lastlight_redux",
+      "title": "Metro: Last Light Redux",
+      "metacritic": 82,
+      "steamAppId": 287390,
+      "genres": [
+        "POSTAPOCALÍPTICO",
+        "FPS",
+        "ATMOSFÉRICO",
+        "SUPERVIVENCIA",
+        "HISTORIA"
+      ],
+      "hltb": {
+        "general": "11h",
+        "main": "9.5h",
+        "extras": "13.5h",
+        "completionist": "25h",
+        "mainHours": 9.5
+      },
+      "description": "Bajo las ruinas de Moscú, las facciones ideológicas del metro se encuentran al borde de una guerra fratricida total por el control del búnker militar D6. Una soberbia experiencia de supervivencia y sigilo con mecánicas de máscara de gas y filtros limitados."
+    },
+    {
+      "id": "rayman_legends",
+      "title": "Rayman Legends",
+      "metacritic": 89,
+      "steamAppId": 242550,
+      "genres": [
+        "PLATAFORMAS",
+        "2D",
+        "COOPERATIVO",
+        "MÚSICA",
+        "COLORIDO"
+      ],
+      "hltb": {
+        "general": "13h",
+        "main": "10h",
+        "extras": "17h",
+        "completionist": "29h",
+        "mainHours": 10
+      },
+      "description": "Una joya desbordante de dinamismo, diseño de niveles y carisma visual creada con el motor UbiArt Framework. Supera mundos pintorescos que culminan en niveles musicales rítmicos memorables sincronizados al compás de rock y mariachi."
+    },
+    {
+      "id": "psychonauts2",
+      "title": "Psychonauts 2",
+      "metacritic": 87,
+      "steamAppId": 607080,
+      "genres": [
+        "PLATAFORMAS 3D",
+        "AVENTURA",
+        "HISTORIA EXCELENTE",
+        "COMEDIA",
+        "COLORIDO"
+      ],
+      "hltb": {
+        "general": "17h",
+        "main": "15h",
+        "extras": "20h",
+        "completionist": "28h",
+        "mainHours": 15
+      },
+      "description": "Razputin Aquato, recién nombrado acróbata psíquico, se infiltra en las mentes de amigos y enemigos para desenmascarar a un topo dentro de la agencia de espías mentales Psychonauts. Ingenio narrativo hilarante y diseño visual rebosante de creatividad."
+    },
+    {
+      "id": "a_hat_in_time",
+      "title": "A Hat in Time",
+      "metacritic": 82,
+      "steamAppId": 253230,
+      "genres": [
+        "PLATAFORMAS 3D",
+        "COLECCIONABLE",
+        "COLORIDO",
+        "AVENTURA",
+        "INDIE"
+      ],
+      "hltb": {
+        "general": "11h",
+        "main": "9h",
+        "extras": "13h",
+        "completionist": "20h",
+        "mainHours": 9
+      },
+      "description": "Un plataformas en 3D tierno y vibrante inspirado en los grandes clásicos de Nintendo 64 y GameCube. Hat Kid viaja por el espacio confeccionando sombreros mágicos para recuperar los Fragmentos Temporales dispersados por mundos estrambóticos."
+    },
+    {
+      "id": "blasphemous",
+      "title": "Blasphemous",
+      "metacritic": 82,
+      "steamAppId": 774360,
+      "genres": [
+        "METROIDVANIA",
+        "TIPO «DARK SOULS»",
+        "PIXEL ART",
+        "FANTASÍA OSCURA",
+        "DIFÍCIL"
+      ],
+      "hltb": {
+        "general": "16h",
+        "main": "14h",
+        "extras": "19h",
+        "completionist": "27h",
+        "mainHours": 14
+      },
+      "description": "Obra magna del estudio sevillano The Game Kitchen impregnada de imaginería religiosa y folclore andaluz. Como el Penitente, único superviviente de la Hermandad del Lamento Mudo, empuña la espada Mea Culpa para liberar a la tierra de Cvstodia del Milagro."
+    },
+    {
+      "id": "blasphemous2",
+      "title": "Blasphemous 2",
+      "metacritic": 84,
+      "steamAppId": 2114740,
+      "genres": [
+        "METROIDVANIA",
+        "TIPO «DARK SOULS»",
+        "PIXEL ART",
+        "FANTASÍA OSCURA",
+        "ACCIÓN"
+      ],
+      "hltb": {
+        "general": "17h",
+        "main": "15h",
+        "extras": "20h",
+        "completionist": "26h",
+        "mainHours": 15
+      },
+      "description": "Despertado en una tierra extraña y alejado de su lugar de descanso final, el Penitente es devuelto al interminable ciclo de vida, muerte y resurrección. Tres nuevas armas con árboles de habilidades únicos y un diseño de metroidvania refinadísimo."
+    },
+    {
+      "id": "shovel_knight",
+      "title": "Shovel Knight: Treasure Trove",
+      "metacritic": 88,
+      "steamAppId": 250760,
+      "genres": [
+        "PLATAFORMAS",
+        "RETRO",
+        "PIXEL ART",
+        "AVENTURA",
+        "2D"
+      ],
+      "hltb": {
+        "general": "15h",
+        "main": "10h",
+        "extras": "22h",
+        "completionist": "45h",
+        "mainHours": 10
+      },
+      "description": "La edición definitiva del clásico moderno de plataformas en 8 bits de Yacht Club Games. Incluye la campaña fundacional de Shovel Knight junto a las tres campañas completas de Plague Knight, Specter Knight y King Knight."
+    },
+    {
+      "id": "ender_lilies",
+      "title": "Ender Lilies: Quietus of the Knights",
+      "metacritic": 86,
+      "steamAppId": 1369630,
+      "genres": [
+        "METROIDVANIA",
+        "TIPO «DARK SOULS»",
+        "FANTASÍA OSCURA",
+        "ATMOSFÉRICO",
+        "BANDA SONORA EXCELENTE"
+      ],
+      "hltb": {
+        "general": "17h",
+        "main": "15h",
+        "extras": "20h",
+        "completionist": "25h",
+        "mainHours": 15
+      },
+      "description": "En el trágico reino de Finisterra asolado por el 'Diluvio Mortal' que convierte a los vivos en monstruos enloquecidos, la joven sacerdotisa Lily despierta en una iglesia profunda. Purifica y convoca a espíritus de caballeros caídos para luchar a tu lado."
+    },
+    {
+      "id": "ori_blind_forest",
+      "title": "Ori and the Blind Forest: Definitive Edition",
+      "metacritic": 88,
+      "steamAppId": 387290,
+      "genres": [
+        "METROIDVANIA",
+        "PLATAFORMAS",
+        "ATMOSFÉRICO",
+        "HERMOSO",
+        "BANDA SONORA EXCELENTE"
+      ],
+      "hltb": {
+        "general": "9.5h",
+        "main": "8.5h",
+        "extras": "11h",
+        "completionist": "14h",
+        "mainHours": 8.5
+      },
+      "description": "El bosque de Nibel perece tras una tormenta devastadora. Ori, un joven espíritu guardián huérfano, debe reunir el coraje para enfrentarse a una némesis alada oscura y salvar su hogar. Apartado artístico pintado a mano y banda sonora orquestal insuperable."
+    },
+    {
+      "id": "prince_of_persia_lost_crown",
+      "title": "Prince of Persia: The Lost Crown",
+      "metacritic": 87,
+      "steamAppId": 2751000,
+      "genres": [
+        "METROIDVANIA",
+        "ACCIÓN",
+        "PLATAFORMAS",
+        "DIFÍCIL",
+        "MITOLOGÍA"
+      ],
+      "hltb": {
+        "general": "19h",
+        "main": "16h",
+        "extras": "23h",
+        "completionist": "30h",
+        "mainHours": 16
+      },
+      "description": "Regreso triunfal de la franquicia en formato metroidvania 2.5D de precisión milimétrica. Encarna a Sargon, un prodigioso miembro de los Inmortales, y domina poderes de manipulación temporal para salvar al príncipe Ghassan en el monte Qaf."
+    },
+    {
+      "id": "gris",
+      "title": "Gris",
+      "metacritic": 84,
+      "steamAppId": 683320,
+      "genres": [
+        "HERMOSO",
+        "PLATAFORMAS",
+        "RELAJANTE",
+        "ARTE",
+        "BANDA SONORA EXCELENTE"
+      ],
+      "hltb": {
+        "general": "4h",
+        "main": "3.5h",
+        "extras": "4.5h",
+        "completionist": "6.5h",
+        "mainHours": 3.5
+      },
+      "description": "Una deslumbrante experiencia artística creada por Nomada Studio en Barcelona. Gris es una joven perdida en su propio mundo, lidiando con una experiencia dolorosa que se manifiesta en su vestido, devolviendo el color a un universo en acuarelas."
+    }
+  ]
+}

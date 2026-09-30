@@ -6,6 +6,7 @@ config_discord.json
 *.ps1
 *.json
 !slots_data.json
+!tribunal_data.json
 CHAT_RAW.md
 HISTORIAL_CONVERSACION.md
 INFO_SERVIDOR.md

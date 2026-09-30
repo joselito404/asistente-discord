@@ -27,6 +27,7 @@ import urllib.request
 import urllib.parse
 import urllib.error
 import discord
+from discord import app_commands
 import io
 from datetime import datetime, timezone, timedelta
 
@@ -76,13 +77,24 @@ SYSTEM_PROMPT = """Eres 'Asistente', la IA oficial y colega del servidor de Disc
 - ❌ CERO SPAM DE NIVELES Y XP: Habla de forma natural y humana. NO menciones niveles de Cakey Bot (ej. Nivel 47, Nivel 27, Nivel 31) ni rangos en cada mensaje como un loro. Menciónalos ÚNICAMENTE si el usuario te pregunta explícitamente por su nivel, XP o el ranking.
 - PUEDES Y DEBES RESPONDER A CUALQUIER TIPO DE PREGUNTA: anime, manhwas, videojuegos, hardware, programación, ciencia, dilemas, bromas, actualidad, cine o salseo.
 
-🎨 MOTOR DE GENERACIÓN DE IMÁGENES (FLUX.1):
-- Tienes capacidad nativa de generar imágenes y dibujos en alta resolución.
+🎨 MOTOR DE GENERACIÓN Y EDICIÓN DE IMÁGENES (FLUX.1):
+- Tienes capacidad nativa de generar imágenes y dibujos en alta resolución desde cero o adaptando imágenes adjuntas.
 - CUÁNDO GENERAR: Si el usuario te pide dibujar algo, generar una imagen, o define la escena que quiere pintar (incluso en mensajes de seguimiento tipo "dibújalo", "hazlo", "era robando a joselito..."), DEBES incluir en cualquier parte de tu respuesta la etiqueta especial:
   [ACTION_DRAW: <detailed English visual prompt for FLUX.1 (max 40 words, subject, art style, lighting, cinematic)>]
   Acompaña la etiqueta con un comentario breve y natural de colega (ej: "¡Marchando!", "A ver qué tal sale esta joyita:", etc.).
-- PREGUNTAS SOBRE CAPACIDAD: Si el usuario solo pregunta si eres capaz de dibujar ("¿sabes dibujar?", "¿puedes hacer imágenes?"), responde normalmente explicando con buen rollo que sí puedes y cómo pedírtelo, SIN incluir la etiqueta [ACTION_DRAW].
+- 🔄 EDICIÓN MULTIMODAL (Image-to-Image): Si el usuario adjunta una imagen o responde citando una foto pidiendo transformarla ("hazlo anime", "ponle un gorro de pirata", "haz una versión cyberpunk", "hazlo pixel art"): analiza la imagen original para identificar el sujeto y composición, aplica la transformación solicitada y emite la etiqueta [ACTION_DRAW: <detailed English prompt transforming the original subject with the new style/features>].
+- PREGUNTAS SOBRE CAPACIDAD: Si el usuario solo pregunta si eres capaz de dibujar ("¿sabes dibujar?", "¿puedes hacer imágenes?"), responde normalmente explicando con buen rollo que sí puedes y cómo pedírtelo (o que pueden usar el comando `/dibuja`), SIN incluir la etiqueta [ACTION_DRAW].
 - ❌ PROHIBIDO SIMULAR IMÁGENES EN TEXTO: NUNCA digas "Aquí tienes la imagen generada", "Aquí está el dibujo" ni describas con texto una escena fingiendo que la has dibujado si tu mensaje no incluye [ACTION_DRAW].
+
+⚖️ EL TRIBUNAL GAMING (tribunal-gaming.vercel.app):
+- Conoces al dedillo la base de datos oficial de El Tribunal Gaming (113 juegos cooperativos catalogados por categorías como Salvavidas o Guerreros con notas de rendimiento, 151 títulos evaluados con Metacritic y HowLongToBeat, y el Muro de la Vergüenza).
+- Puedes responder sobre notas, horas de juego y viabilidad cooperativa si te lo preguntan en el chat o remitiéndoles al comando `/tribunal`.
+
+🕹️ STEAM STORE EN VIVO:
+- Puedes consultar precios en tiempo real en euros, ofertas actuales, porcentaje de descuento y compatibilidad de juegos en Steam mediante el comando `/steam` o en el chat general.
+
+💻 COMANDOS SLASH ACTIVOS:
+- Dispones de comandos nativos de Discord con interfaz y autocompletado: `/dibuja [prompt] [estilo]`, `/steam [juego]`, `/tribunal [accion] [juego]`, `/perfil [usuario]` y `/pregunta [duda]`. Anima a usarlos cuando sea oportuno.
 
 👥 MIEMBROS CLAVE DEL SERVIDOR (Lore & Respeto):
 - Joselito (@joselito3499): Fundador, dueño y Administrador del servidor. Fanático de los manhwas (Olympus Scanlation, Asura Scans). En #cultura tiene anclado su top 69 manhwas.
@@ -116,6 +128,74 @@ intents.message_content = True
 intents.members = True
 
 bot = discord.Client(intents=intents)
+tree = app_commands.CommandTree(bot)
+
+TRIBUNAL_DATA_PATH = os.path.join(BASE_DIR, "tribunal_data.json")
+
+def load_tribunal_data() -> dict:
+    if os.path.exists(TRIBUNAL_DATA_PATH):
+        try:
+            with open(TRIBUNAL_DATA_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Aviso lectura tribunal_data.json: {e}")
+    return {"coop": [], "single": []}
+
+tribunal_data = load_tribunal_data()
+
+def fetch_steam_game(query: str) -> dict:
+    """Busca en Steam Store y devuelve ficha completa con precios en EUR, descuento y detalles."""
+    try:
+        encoded = urllib.parse.quote(query.strip())
+        search_url = f"https://store.steampowered.com/api/storesearch/?term={encoded}&l=spanish&cc=ES"
+        req = urllib.request.Request(search_url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=6) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            items = data.get("items", [])
+            if not items:
+                return None
+            app_id = items[0]["id"]
+        
+        detail_url = f"https://store.steampowered.com/api/appdetails?appids={app_id}&cc=es&l=spanish"
+        req2 = urllib.request.Request(detail_url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req2, timeout=6) as resp2:
+            d = json.loads(resp2.read().decode("utf-8"))
+            game_data = d.get(str(app_id), {}).get("data", {})
+            return game_data
+    except Exception as e:
+        print(f"Error consultando Steam Store: {e}")
+        return None
+
+def get_tribunal_query_ctx(text: str) -> str:
+    """Busca menciones a juegos de El Tribunal Gaming y devuelve su ficha resumida."""
+    low = text.lower()
+    if not any(k in low for k in ["tribunal", "nota", "veredicto", "muro", "vergüenza", "cooperativo", "salvavidas", "guerreros", "pesados"]):
+        return ""
+    for g in tribunal_data.get("single", []):
+        t = g.get("title", "")
+        if len(t) > 3 and t.lower() in low:
+            hltb = g.get("hltb", {})
+            return f"\n[FICHA EN EL TRIBUNAL GAMING: '{t}']:\n  * Metacritic: {g.get('metacritic', 'N/D')}\n  * HLTB: Historia {hltb.get('main', 'N/D')}, Completo {hltb.get('completionist', 'N/D')}\n  * Géneros: {', '.join(g.get('genres', [])[:3])}\n  * Web oficial: https://tribunal-gaming.vercel.app"
+    for g in tribunal_data.get("coop", []):
+        t = g.get("title", "")
+        if len(t) > 3 and t.lower() in low:
+            return f"\n[FICHA COOPERATIVO EN EL TRIBUNAL GAMING: '{t}']:\n  * Categoría: {g.get('category', 'Coop')}\n  * Estado: {g.get('availability')}\n  * Rendimiento: {g.get('perf', 'N/D')}\n  * Web oficial: https://tribunal-gaming.vercel.app"
+    return ""
+
+def get_steam_query_ctx(text: str) -> str:
+    """Detecta si se pregunta por el precio o ficha de Steam de un juego y aporta datos frescos."""
+    low = text.lower()
+    if not any(k in low for k in ["steam", "precio", "cuanto vale", "cuánto vale", "cuanto cuesta", "cuánto cuesta", "oferta", "descuento"]):
+        return ""
+    clean = re.sub(r"\b(steam|precio|de|cuanto|cuánto|vale|cuesta|oferta|descuento|en|el|juego|porfa|asistente)\b", "", low).strip()
+    if len(clean) >= 3:
+        game = fetch_steam_game(clean)
+        if game:
+            p = game.get("price_overview", {})
+            price_str = f"{p.get('final_formatted', 'N/D')}" + (f" (-{p.get('discount_percent')}% oferta)" if p.get("discount_percent", 0) > 0 else "") if p else ("Gratis" if game.get("is_free") else "Precio no disponible")
+            meta = game.get("metacritic", {}).get("score", "Sin nota")
+            return f"\n[FICHA STEAM STORE EN VIVO: '{game.get('name')}']:\n  * Precio actual: {price_str}\n  * Metacritic: {meta}\n  * URL: https://store.steampowered.com/app/{game.get('steam_appid')}/"
+    return ""
 
 user_cooldowns = {}
 COOLDOWN_SECONDS = 3
@@ -418,12 +498,273 @@ def call_gemini_multiturn(turns: list) -> str:
                 
     return "Cuota diaria de IA temporalmente saturada. Se restablece automáticamente de madrugada sin coste alguno."
 
+# ==========================================
+# COMANDOS SLASH NATIVOS (discord.app_commands)
+# ==========================================
+
+@tree.command(name="dibuja", description="Genera una imagen en alta resolución con el motor FLUX.1")
+@app_commands.describe(
+    prompt="Describe la escena, personajes o idea que quieres generar",
+    estilo="Elige un estilo artístico para la imagen"
+)
+@app_commands.choices(estilo=[
+    app_commands.Choice(name="🎨 Anime / Manga Shonen", value="anime style, highly detailed shonen anime aesthetic, vivid colors, dynamic lighting"),
+    app_commands.Choice(name="🌃 Cyberpunk / Neón", value="cyberpunk aesthetic, futuristic neon lights, dark sci-fi city, dramatic reflections, cinematic"),
+    app_commands.Choice(name="📸 Fotorrealista / Cine", value="photorealistic 8k, cinematic movie still, 35mm lens, natural volumetric lighting, depth of field"),
+    app_commands.Choice(name="👾 Pixel Art Retro", value="16-bit pixel art style, detailed retro game graphics, vibrant pixel palette"),
+    app_commands.Choice(name="🖼️ Óleo Clásico / Pintura", value="classical oil painting, textured brush strokes, dramatic chiaroscuro lighting, masterpiece")
+])
+async def cmd_dibuja(interaction: discord.Interaction, prompt: str, estilo: app_commands.Choice[str] = None):
+    await interaction.response.defer(thinking=True)
+    author_name = interaction.user.display_name
+    concept = prompt
+    if estilo:
+        concept += f", {estilo.value}"
+    enhanced = await asyncio.to_thread(enhance_image_prompt, concept, author_name)
+    try:
+        img_bytes = await asyncio.to_thread(generate_image_flux, enhanced)
+        file = discord.File(io.BytesIO(img_bytes), filename="creacion_flux.png")
+        await interaction.followup.send(
+            content=f"🎨 **Aquí tienes tu creación, {author_name}:**\n> *\"{prompt}\"*",
+            file=file
+        )
+    except Exception as e:
+        await interaction.followup.send(f"⚠️ Error generando la imagen: {e}. Inténtalo de nuevo en unos momentos.")
+
+@tree.command(name="steam", description="Consulta el precio oficial, ofertas y detalles de un juego en Steam")
+@app_commands.describe(juego="Nombre del juego en Steam")
+async def cmd_steam(interaction: discord.Interaction, juego: str):
+    await interaction.response.defer(thinking=True)
+    game = await asyncio.to_thread(fetch_steam_game, juego)
+    if not game:
+        await interaction.followup.send(f"❌ No se encontró ningún juego en Steam llamado **'{juego}'**. Revisa el título o prueba con el nombre en inglés.")
+        return
+    
+    title = game.get("name", juego)
+    app_id = game.get("steam_appid", "")
+    url = f"https://store.steampowered.com/app/{app_id}/" if app_id else "https://store.steampowered.com"
+    header_img = game.get("header_image")
+    short_desc = game.get("short_description", "Sin descripción disponible.")
+    if len(short_desc) > 280:
+        short_desc = short_desc[:277] + "..."
+    
+    price_info = game.get("price_overview", {})
+    is_free = game.get("is_free", False)
+    if is_free:
+        price_str = "🆓 **Gratis (Free-to-Play)**"
+    elif price_info:
+        final_price = price_info.get("final_formatted", "N/D")
+        discount = price_info.get("discount_percent", 0)
+        if discount > 0:
+            init_price = price_info.get("initial_formatted", "")
+            price_str = f"🔥 **{final_price}** *(~~{init_price}~~ -{discount}% Rebajado)*"
+        else:
+            price_str = f"💳 **{final_price}**"
+    else:
+        price_str = "No disponible para compra directa"
+    
+    meta = game.get("metacritic", {}).get("score", "Sin nota")
+    genres = [g.get("description", "") for g in game.get("genres", [])]
+    genre_str = ", ".join(genres[:4]) if genres else "Varios"
+    devs = ", ".join(game.get("developers", [])[:2]) or "Desconocido"
+    release = game.get("release_date", {}).get("date", "Desconocida")
+
+    embed = discord.Embed(
+        title=f"🎮 {title}",
+        url=url,
+        description=short_desc,
+        color=0x1b2838
+    )
+    if header_img:
+        embed.set_image(url=header_img)
+    embed.add_field(name="💰 Precio (Steam ES)", value=price_str, inline=True)
+    embed.add_field(name="⭐ Metacritic", value=f"**{meta}**", inline=True)
+    embed.add_field(name="🏷️ Géneros", value=genre_str, inline=True)
+    embed.add_field(name="🛠️ Desarrollador", value=devs, inline=True)
+    embed.add_field(name="📅 Lanzamiento", value=release, inline=True)
+    embed.set_footer(text="Steam Store API España • Datos oficiales en tiempo real", icon_url="https://store.steampowered.com/favicon.ico")
+
+    await interaction.followup.send(embed=embed)
+
+@tree.command(name="tribunal", description="Consulta las notas, juegos cooperativos y veredictos de El Tribunal Gaming")
+@app_commands.describe(
+    accion="Qué deseas consultar en El Tribunal Gaming",
+    juego="Nombre del juego a buscar (opcional si consultas listas)"
+)
+@app_commands.choices(accion=[
+    app_commands.Choice(name="🔍 Buscar ficha de juego", value="buscar"),
+    app_commands.Choice(name="🤝 Catálogo Cooperativo (categorías y viabilidad)", value="coop"),
+    app_commands.Choice(name="💀 Muro de la Vergüenza / Vetados", value="muro"),
+    app_commands.Choice(name="🏆 Top Rankings Metacritic & HLTB", value="top")
+])
+async def cmd_tribunal(interaction: discord.Interaction, accion: app_commands.Choice[str], juego: str = ""):
+    await interaction.response.defer(thinking=True)
+    val = accion.value
+    
+    if val == "buscar":
+        if not juego:
+            await interaction.followup.send("⚠️ Por favor indica el nombre del juego que quieres buscar en El Tribunal Gaming.")
+            return
+        q = juego.lower().strip()
+        found_sp = [g for g in tribunal_data.get("single", []) if q in g.get("title", "").lower()]
+        found_coop = [g for g in tribunal_data.get("coop", []) if q in g.get("title", "").lower()]
+        
+        if not found_sp and not found_coop:
+            await interaction.followup.send(f"❌ No se encontró ningún juego en El Tribunal Gaming con el nombre **'{juego}'**. Puedes ver el catálogo completo en https://tribunal-gaming.vercel.app")
+            return
+        
+        if found_sp:
+            g = found_sp[0]
+            embed = discord.Embed(
+                title=f"⚖️ {g['title']} - El Tribunal Gaming",
+                url="https://tribunal-gaming.vercel.app",
+                description=g.get("description", "")[:320] + "...",
+                color=0x6366f1
+            )
+            embed.add_field(name="⭐ Metacritic", value=f"**{g.get('metacritic', 'N/D')}**", inline=True)
+            hltb = g.get("hltb", {})
+            hltb_str = f"Historia: {hltb.get('main', 'N/D')} | Completo: {hltb.get('completionist', 'N/D')}" if hltb else "N/D"
+            embed.add_field(name="⏱️ Duración (HLTB)", value=hltb_str, inline=True)
+            genres = ", ".join(g.get("genres", [])[:4]) or "Varios"
+            embed.add_field(name="🏷️ Géneros", value=genres, inline=False)
+            embed.set_footer(text="tribunal-gaming.vercel.app • Evaluaciones de los Magistrados")
+            await interaction.followup.send(embed=embed)
+            return
+        
+        if found_coop:
+            g = found_coop[0]
+            embed = discord.Embed(
+                title=f"🤝 {g['title']} (Cooperativo) - El Tribunal Gaming",
+                url="https://tribunal-gaming.vercel.app",
+                description=g.get("desc", "")[:320],
+                color=0x10b981
+            )
+            embed.add_field(name="📂 Categoría", value=f"**{g.get('category', 'Cooperativo')}**", inline=True)
+            embed.add_field(name="💾 Tamaño", value=g.get("size", "N/D"), inline=True)
+            embed.add_field(name="⚙️ Rendimiento", value=g.get("perf", "Sin notas específicas"), inline=False)
+            embed.set_footer(text="tribunal-gaming.vercel.app • Cooperativos evaluados")
+            await interaction.followup.send(embed=embed)
+            return
+
+    elif val == "muro":
+        unavail = [g for g in tribunal_data.get("coop", []) if g.get("availability") == "unavailable"]
+        embed = discord.Embed(
+            title="💀 El Muro de la Vergüenza - El Tribunal Gaming",
+            url="https://tribunal-gaming.vercel.app",
+            description="Juegos cooperativos retirados, vetados o en el limbo por los Magistrados del Tribunal Gaming:",
+            color=0xef4444
+        )
+        sample = unavail[:8]
+        lines = [f"• **{g['title']}** ({g.get('category', 'Coop')}) - {g.get('perf', 'Vetado / No disponible')[:75]}" for g in sample]
+        embed.add_field(name=f"Juegos en el Limbo ({len(unavail)} totales)", value="\n".join(lines) or "Sin juegos registrados actualmente.", inline=False)
+        embed.set_footer(text="tribunal-gaming.vercel.app • El Muro de la Vergüenza")
+        await interaction.followup.send(embed=embed)
+
+    elif val == "top":
+        sp = sorted(tribunal_data.get("single", []), key=lambda x: x.get("metacritic") or 0, reverse=True)
+        embed = discord.Embed(
+            title="🏆 Top Rankings - El Tribunal Gaming",
+            url="https://tribunal-gaming.vercel.app",
+            description="Los títulos mejor puntuados en la base de datos de El Tribunal Gaming:",
+            color=0xf59e0b
+        )
+        lines = []
+        for i, g in enumerate(sp[:8], 1):
+            lines.append(f"**#{i}** **{g['title']}** - ⭐ **{g.get('metacritic')}** | ⏱️ {g.get('hltb', {}).get('main', 'N/D')}")
+        embed.add_field(name="Top Obras Maestras", value="\n".join(lines), inline=False)
+        embed.set_footer(text="tribunal-gaming.vercel.app • Rankings Oficiales")
+        await interaction.followup.send(embed=embed)
+
+    elif val == "coop":
+        cats = {}
+        for g in tribunal_data.get("coop", []):
+            c = g.get("category", "Otros")
+            cats[c] = cats.get(c, 0) + 1
+        cat_str = "\n".join([f"• **{k}**: {v} juegos analizados" for k, v in cats.items()])
+        embed = discord.Embed(
+            title="🤝 Catálogo Cooperativo - El Tribunal Gaming",
+            url="https://tribunal-gaming.vercel.app",
+            description=f"El Tribunal Gaming tiene registrados **{len(tribunal_data.get('coop', []))} juegos cooperativos** clasificados por viabilidad y rendimiento técnico:\n\n{cat_str}\n\n*Usa `/tribunal buscar [juego]` para ver la ficha técnica de un juego concreto.*",
+            color=0x10b981
+        )
+        embed.set_footer(text="tribunal-gaming.vercel.app • Filtro Cooperativo")
+        await interaction.followup.send(embed=embed)
+
+@tree.command(name="perfil", description="Muestra la ficha técnica, rango de Cakey Bot y roles de un miembro")
+@app_commands.describe(usuario="El miembro del que quieres consultar la ficha (por defecto tú)")
+async def cmd_perfil(interaction: discord.Interaction, usuario: discord.Member = None):
+    member = usuario or interaction.user
+    live_levels = await get_live_levels_dict(interaction.guild) if interaction.guild else {}
+    lvl_val = f"**Nivel {live_levels[member.id]}**" if member.id in live_levels else "No registrado recientemente en #bots"
+    roles = [r.name for r in member.roles if r.name != "@everyone"]
+    top_role = member.top_role.name if member.top_role else "Ninguno"
+    color = member.color if member.color.value != 0 else discord.Color.blue()
+    
+    created = member.created_at.strftime("%d/%m/%Y")
+    joined = member.joined_at.strftime("%d/%m/%Y") if member.joined_at else "Desconocida"
+    
+    embed = discord.Embed(
+        title=f"👤 Ficha de {member.display_name} (@{member.name})",
+        color=color
+    )
+    embed.set_thumbnail(url=member.display_avatar.url)
+    embed.add_field(name="📊 Nivel Cakey Bot", value=lvl_val, inline=True)
+    embed.add_field(name="👑 Rol Principal", value=f"**{top_role}**", inline=True)
+    embed.add_field(name="📅 Cuenta Creada", value=created, inline=True)
+    embed.add_field(name="🚪 Entrada al Server", value=joined, inline=True)
+    roles_str = ", ".join(roles[:12]) if roles else "Sin roles"
+    if len(roles) > 12:
+        roles_str += f" *(+{len(roles) - 12} más)*"
+    embed.add_field(name=f"🎭 Roles ({len(roles)})", value=roles_str, inline=False)
+    embed.set_footer(text=f"ID: {member.id} • Servidor: {interaction.guild.name if interaction.guild else 'Discord'}")
+    
+    await interaction.response.send_message(embed=embed)
+
+@tree.command(name="pregunta", description="Haz una pregunta o debate con el Asistente sin necesidad de mencionarlo")
+@app_commands.describe(duda="Tu pregunta sobre juegos, anime, hardware, salseo o cualquier tema")
+async def cmd_pregunta(interaction: discord.Interaction, duda: str):
+    await interaction.response.defer(thinking=True)
+    spain_time = get_spain_now_str()
+    prompt = f"{interaction.user.display_name}: {duda}\n[CONTEXTO: Fecha y hora en España: {spain_time} | Usuario: {interaction.user.display_name} (@{interaction.user.name})]"
+    turns = [{"role": "user", "parts": [{"text": prompt}]}]
+    response = await asyncio.to_thread(call_gemini_multiturn, turns)
+    
+    draw_match = re.search(r"\[ACTION_DRAW:\s*(.*?)\]", response, re.DOTALL | re.IGNORECASE)
+    if draw_match:
+        prompt_flux = draw_match.group(1).strip()
+        clean_response = re.sub(r"\[ACTION_DRAW:\s*.*?\]", "", response, flags=re.DOTALL | re.IGNORECASE).strip()
+        try:
+            img_bytes = await asyncio.to_thread(generate_image_flux, prompt_flux)
+            file = discord.File(io.BytesIO(img_bytes), filename="creacion_flux.png")
+            await interaction.followup.send(content=clean_response or None, file=file)
+            return
+        except Exception:
+            pass
+            
+    if len(response) <= 1900:
+        await interaction.followup.send(response)
+    else:
+        await interaction.followup.send(response[:1900])
+
 @bot.event
 async def on_ready():
     print(f"Bot '{bot.user}' conectado y listo en Discord.")
     print(f"Motores de IA con respaldo: {MODELS_PRIORITY}")
-    print("Capacidades activas: Niveles Reales (#bots), Búsqueda Web, Pins, Visión, PDFs, Dibujo/Imágenes (FLUX.1) y Calculadora XP.")
-    activity = discord.Activity(type=discord.ActivityType.listening, name="menciones y dibujos (@Asistente)")
+    print("Capacidades activas: Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y Slash Commands.")
+    
+    # Sincronización instantánea de Slash Commands en el servidor y global
+    try:
+        GUILD_ID = 1446143936891715616
+        guild_obj = discord.Object(id=GUILD_ID)
+        tree.copy_global_to(guild=guild_obj)
+        await tree.sync(guild=guild_obj)
+        print(f"Comandos Slash sincronizados instantáneamente en el servidor ID {GUILD_ID}.")
+        await tree.sync()
+        print("Comandos Slash sincronizados globalmente.")
+    except Exception as e:
+        print(f"Aviso sincronización comandos slash: {e}")
+
+    activity = discord.Activity(type=discord.ActivityType.listening, name="menciones, /dibuja y /steam")
     await bot.change_presence(activity=activity)
 
 @bot.event
@@ -657,6 +998,10 @@ async def _handle_message_safe(message: discord.Message):
                 ref_txt = ref_m.clean_content.replace("\n", " ").strip()[:200]
                 reply_ref_ctx = f"\n[RESPONDIENDO DIRECTAMENTE AL MENSAJE DE {ref_m.author.display_name}]: \"{ref_txt}\""
 
+            # Contexto de El Tribunal Gaming y Steam Store si se consultan en el chat
+            tribunal_ctx = get_tribunal_query_ctx(clean_text)
+            steam_ctx = get_steam_query_ctx(clean_text)
+
             # Turno actual del usuario
             current_prompt_text = f"{message.author.display_name}: {clean_text}"
             if reply_ref_ctx:
@@ -669,7 +1014,7 @@ async def _handle_message_safe(message: discord.Message):
                 current_prompt_text = f"{message.author.display_name}: Hola"
 
             # Inyectar todo el paquete de contexto enriquecido
-            current_prompt_text += f"{server_live_ctx}{user_live_ctx}{recent_channel_ctx}{members_ctx}{dossier_context}{pins_context}{xp_calc_context}{web_search_context}{channel_lookup_ctx}"
+            current_prompt_text += f"{server_live_ctx}{user_live_ctx}{recent_channel_ctx}{members_ctx}{dossier_context}{pins_context}{xp_calc_context}{web_search_context}{channel_lookup_ctx}{tribunal_ctx}{steam_ctx}"
 
             current_turn_parts = [{"text": current_prompt_text}] + attachment_parts
 
