@@ -9,6 +9,7 @@ config_discord.json
 !tribunal_data.json
 CHAT_RAW.md
 HISTORIAL_CONVERSACION.md
+chat *.md
 INFO_SERVIDOR.md
 AGENTS.md
 node_modules/
