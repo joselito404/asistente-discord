@@ -370,22 +370,35 @@ async def generate_speech_audio(text: str, voice_type: str = "alvaro") -> str:
     await comm.save(out_path)
     return out_path
 
-def pcm_48k_stereo_to_16k_mono(pcm_bytes: bytes) -> bytes:
-    """Convierte audio PCM de 48kHz estéreo a 16kHz mono para transmisión ultraligera a Gemini (<100KB)."""
-    out = bytearray()
-    for i in range(0, len(pcm_bytes) - 11, 12):
-        l = int.from_bytes(pcm_bytes[i:i+2], byteorder="little", signed=True)
-        r = int.from_bytes(pcm_bytes[i+2:i+4], byteorder="little", signed=True)
-        mono = (l + r) // 2
-        out.extend(mono.to_bytes(2, byteorder="little", signed=True))
-    return bytes(out)
+RECORDINGS_DIR = os.path.join(tempfile.gettempdir(), "discord_voice_recordings")
+os.makedirs(RECORDINGS_DIR, exist_ok=True)
+VOICE_TURNS_LOG = []
+VOICE_TURNS_LOCK = threading.Lock()
+
+def pcm_stereo_to_mono_48k(pcm_bytes: bytes) -> bytes:
+    """Convierte audio PCM estéreo de 48kHz a mono puro a 48kHz con normalización de volumen para máxima claridad en Gemini."""
+    try:
+        import audioop
+        mono = audioop.tomono(pcm_bytes, 2, 0.5, 0.5)
+        max_val = audioop.max(mono, 2)
+        if max_val > 80 and max_val < 18000:
+            factor = min(18000.0 / max_val, 3.5)
+            mono = audioop.mul(mono, 2, factor)
+        return mono
+    except Exception:
+        count = len(pcm_bytes) // 4
+        if count == 0:
+            return b""
+        shorts = struct.unpack(f"<{count * 2}h", pcm_bytes[:count * 4])
+        mono_shorts = [(shorts[i*2] + shorts[i*2+1]) // 2 for i in range(count)]
+        return struct.pack(f"<{count}h", *mono_shorts)
 
 class GeminiLiveVoiceSink(voice_recv.AudioSink):
     """
     Sink de audio bidireccional en tiempo real (estilo Gemini Live) para llamadas de Discord.
     - Captura tramas PCM de 48kHz estéreo de los usuarios en la llamada.
-    - Detección de actividad vocal (VAD) y segmentación por silencios (750ms).
-    - Convierte a 16kHz mono y consulta Gemini Flash multimodal en memoria.
+    - Detección de actividad vocal (VAD) y segmentación por silencios.
+    - Convierte a 48kHz mono con ganancia normalizada y guarda el clip de audio en disco para auditoría.
     - Filtra inteligentemente si los usuarios hablan entre ellos jugando o se dirigen al Asistente.
     - Responde al vuelo con voz neuronal fluida (Edge Neural TTS) directamente en la llamada.
     """
@@ -396,9 +409,9 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
         self.user_buffers = {}
         self._lock = threading.Lock()
         self._is_active = True
-        self.silence_threshold_rms = 50  # Sensibilidad alta para captar cualquier micrófono con Krisp
+        self.silence_threshold_rms = 50  # Sensibilidad para captar cualquier micrófono con Krisp
         self.silence_timeout = 0.65
-        self.min_speech_frames = 8   # ~0.16s (capta incluso palabras cortas o saludos)
+        self.min_speech_frames = 14   # ~0.28s (ignora clics o ruidos ultra-breves)
         self.max_speech_frames = 450  # ~9.0s máximo por turno
         self.recent_turns = []
         self.last_bot_reply_time = 0.0
@@ -525,13 +538,15 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                 user = humans[0] if humans else None
 
             raw_pcm = b"".join(frames)
-            mono_pcm = pcm_48k_stereo_to_16k_mono(raw_pcm)
+            mono_pcm = pcm_stereo_to_mono_48k(raw_pcm)
+            if not mono_pcm:
+                return
 
             wav_io = io.BytesIO()
             with wave.open(wav_io, "wb") as wf:
                 wf.setnchannels(1)
                 wf.setsampwidth(2)
-                wf.setframerate(16000)
+                wf.setframerate(48000)
                 wf.writeframes(mono_pcm)
             wav_bytes = wav_io.getvalue()
             b64_audio = base64.b64encode(wav_bytes).decode("utf-8")
@@ -543,7 +558,42 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             guild_name = getattr(getattr(client, "guild", None), "name", "Servidor")
             channel_members = getattr(getattr(client, "channel", None), "members", [])
             members_str = ", ".join([m.display_name for m in channel_members if not m.bot]) or user_name
-            bot_log(f"🎙️ [Gemini Live Turno] Procesando audio de '{user_name}' ({len(frames)} tramas, {len(wav_bytes)} B)...")
+            duration_s = round(len(mono_pcm) / (48000 * 2), 2)
+            bot_log(f"🎙️ [Gemini Live Turno] Procesando audio de '{user_name}' ({len(frames)} tramas, {duration_s}s, {len(wav_bytes)} B)...")
+
+            # Guardar el audio en disco para que el usuario y el agente puedan escucharlo/auditarlo
+            clean_uname = re.sub(r'[^a-zA-Z0-9_\-]', '', user_name)[:20] or "Usuario"
+            turn_timestamp_str = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            filename = f"{turn_timestamp_str}_{clean_uname}_{int(time.time()*1000)%100000}.wav"
+            file_path = os.path.join(RECORDINGS_DIR, filename)
+            try:
+                with open(file_path, "wb") as f_wav:
+                    f_wav.write(wav_bytes)
+            except Exception as e_w:
+                bot_log(f"Aviso guardando archivo audio: {e_w}")
+
+            record_entry = {
+                "id": filename.replace(".wav", ""),
+                "timestamp": get_spain_now_str(),
+                "user": user_name,
+                "user_id": str(user_id) if user_id else None,
+                "duration_s": duration_s,
+                "filename": filename,
+                "audio_url": f"/audios/file/{filename}",
+                "transcription": "",
+                "bot_reply": "",
+                "status": "procesando"
+            }
+            with VOICE_TURNS_LOCK:
+                VOICE_TURNS_LOG.append(record_entry)
+                if len(VOICE_TURNS_LOG) > 60:
+                    old = VOICE_TURNS_LOG.pop(0)
+                    old_path = os.path.join(RECORDINGS_DIR, old.get("filename", ""))
+                    if os.path.exists(old_path):
+                        try:
+                            os.remove(old_path)
+                        except Exception:
+                            pass
 
             now = time.time()
             time_since_last_reply = now - getattr(self, "last_bot_reply_time", 0.0)
@@ -558,47 +608,28 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                 f"Estás en vivo como asistente de voz en el canal '{channel_name}' en Discord (servidor de España: {guild_name}).\n"
                 f"Tu nombre es 'Asistente' (también respondes si te dicen 'bot').\n"
                 f"Gente en la sala de voz: {members_str}.\n"
-                f"El usuario que acaba de hablar por el micro es: '{user_name}'.\n"
-                f"{user_mem}\n\n"
-                f"LO QUE HAS DICHO TÚ ANTERIORMENTE EN ESTA LLAMADA:\n{hist_ctx}\n\n"
-                f"ESTADO DE CONVERSACIÓN:\n"
-                f"{'▶️ Diálogo activo en curso (hablaste con ellos hace menos de 25s).' if is_dialogue_active else '⚪ En espera de llamada o consulta.'}\n\n"
+                f"El usuario que acaba de hablar por el micro es: '{user_name}'.\n\n"
+                f"LO QUE DIJISTE TÚ ANTERIORMENTE EN LA LLAMADA:\n{hist_ctx}\n\n"
                 f"INSTRUCCIONES CLAVE:\n"
-                f"1. ORDEN DE SILENCIO (MÁXIMA PRIORIDAD):\n"
-                f"   - Si el usuario te manda callar o parar ('cállate', 'silencio', 'cállate ya', 'cierra la boca', 'para ya', 'shh', 'pesado', 'para de hablar', 'basta', 'calla'):\n"
-                f"     RESPONDE EXACTAMENTE: [SILENCIO]\n\n"
-                f"2. CUÁNDO RESPONDER:\n"
-                f"   - Si te llaman o mencionan ('Asistente', 'oye bot', 'bot').\n"
-                f"   - Si saludan, preguntan si estás o si escuchas ('hola', 'buenas', '¿me escuchas?', '¿estás ahí?', '¿me oyes?').\n"
-                f"   - Si te hacen una pregunta, piden tu opinión, consejo, o ayuda.\n"
-                f"   - Si hay un diálogo activo en curso ({is_dialogue_active}) y el usuario sigue comentando o respondiendo a lo que tú dijiste. NO hace falta que repitan tu nombre en cada frase si ya estáis hablando.\n\n"
-                f"3. CUÁNDO IGNORAR ([IGNORAR]):\n"
-                f"   - Si los usuarios están jugando a videojuegos y hablando claramente ENTRE ELLOS de la partida (ej: 'vamos a B', 'pásame balas', 'qué malo eres', 'me han matado', 'tira flash').\n"
-                f"   - Si son solo risas aisladas, carraspeos, toses, ruidos de fondo o quejas al juego.\n"
-                f"   - Si tú estabas hablando y solo fue un pequeño murmullo o eco de tu voz.\n"
-                f"   - En estos casos, RESPONDE EXACTAMENTE: [IGNORAR]\n\n"
-                f"4. BÚSQUEDA WEB EN TIEMPO REAL:\n"
-                f"   - Si el usuario te pide buscar información actual, consultar noticias, el tiempo, resultados deportivos, etc. (ej: 'busca en internet el tiempo en Alicante', 'busca qué pasó ayer con...', 'mira en internet quién ganó'):\n"
-                f"     RESPONDE EXACTAMENTE: [BUSCAR: <términos de búsqueda>]\n"
-                f"     Ejemplo: [BUSCAR: tiempo hoy Alicante]\n"
-                f"   - Si el usuario solo pregunta si eres capaz de buscar ('¿puedes hacer búsquedas web?', '¿puedes buscar en internet?'):\n"
-                f"     Responde que sí, que puedes buscar cualquier cosa en tiempo real y que te digan qué quieren buscar.\n\n"
-                f"5. ESTILO Y CONCISIÓN (EQUILIBRADO):\n"
-                f"   - En charla casual y respuestas rápidas, sé DIRECTO y CONCISO (1 a 3 frases claras, 15-30 palabras). Evita rodeos innecesarios.\n"
-                f"   - EXCEPCIÓN: Si te piden expresamente una explicación, resumir una noticia o juego, o enseñarle algo, explícaselo con detalle, claridad y buen rollo sin cortarte a medias.\n"
-                f"   - Tono: Colega cercano de España (San Vicente / Alicante). Prohibidas expresiones latinoamericanas ('órale', 'tantito').\n"
-                f"   - Sin formato markdown ni emojis (se leerá por sintetizador de voz).\n\n"
-                f"6. CAMBIO DE VOZ:\n"
-                f"   - Si el usuario te pide cambiarte la voz (ej: 'ponte voz de chica/mujer', 'cambia tu voz a femenina', 'ponte la voz de Elvira o Ximena', 'ponte voz de chico/tío/hombre/Álvaro'):\n"
-                f"     Añade al inicio de tu respuesta [VOZ: elvira] (o [VOZ: ximena] o [VOZ: alvaro]) y confirma con simpatía el cambio usando tu nueva voz.\n\n"
-                f"7. RESPETO Y AMABILIDAD (NUNCA SARCASMO):\n"
-                f"   - Sé SIEMPRE amable, respetuoso y con buena vibra.\n"
-                f"   - NUNCA te enfades, ni seas borde, prepotente ni sarcástico. NUNCA digas cosas como 'estás bugeado', 'ya te lo he dicho', 'qué pesado', ni desprecies al usuario aunque una pregunta se parezca a una anterior.\n\n"
-                f"8. FORMATO DE SALIDA:\n"
-                f"   - Si decides responder, escribe DIRECTAMENTE la frase que dirás en voz alta (o [VOZ: ...] al inicio si aplica).\n"
-                f"   - Si decides no intervenir, responde únicamente: [IGNORAR]\n"
-                f"   - Si te mandaron callar, responde únicamente: [SILENCIO]\n"
-                f"   - Si requiere buscar en internet, responde únicamente: [BUSCAR: <términos>]"
+                f"1. PASO 1 - TRANSCRIBE EL AUDIO DEL USUARIO (MÁXIMA ATENCIÓN FONÉTICA):\n"
+                f"   - Escucha atentamente el audio en español y transcribe con exactitud lo que ha pronunciado '{user_name}'.\n"
+                f"   - Si solo son risas, carraspeos, toses, suspiros, ruidos de juego o murmullos ininteligibles sin palabras claras, escribe exactamente: [ININTELIGIBLE]\n\n"
+                f"2. PASO 2 - DECIDE TU RESPUESTA:\n"
+                f"   - Si el usuario te manda callar ('cállate', 'silencio', 'para ya', 'shh', 'cierra la boca', 'basta', 'calla'):\n"
+                f"     Escribe en Respuesta: [SILENCIO]\n"
+                f"   - Si transcribiste [ININTELIGIBLE], o los usuarios están jugando y hablando claramente ENTRE ELLOS del juego (ej: 'vamos a B', 'pásame balas', 'me han matado'):\n"
+                f"     Escribe en Respuesta: [IGNORAR]\n"
+                f"   - Si te piden buscar algo en internet (tiempo, noticias, estrenos, datos actuales):\n"
+                f"     Escribe en Respuesta: [BUSCAR: <términos de búsqueda>]\n"
+                f"   - Si te saludan, preguntan, piden tu ayuda, opinión o continúan conversando contigo:\n"
+                f"     Responde de forma amable, cercana y natural en 1 o 2 frases breves (15-25 palabras).\n\n"
+                f"3. ACTITUD Y RESPETO OBLIGATORIO (CERO SARCASMO O IMPACIENCIA):\n"
+                f"   - Sé SIEMPRE amable, respetuoso, educado y con buena onda.\n"
+                f"   - NUNCA seas borde, arrogante ni vacilón. NUNCA mandes 'espabilar' a nadie ni digas que el usuario es lento o que te aburres.\n"
+                f"   - NO menciones datos de la memoria del usuario (mangas, juegos favoritos) de la nada; úsalos solo si él te pide recomendaciones expresamente.\n\n"
+                f"4. FORMATO DE SALIDA ESTRICTO:\n"
+                f"Oído: <texto exacto pronunciado por el usuario o [ININTELIGIBLE]>\n"
+                f"Respuesta: <tu respuesta para locutar, o [IGNORAR], o [SILENCIO], o [BUSCAR: <términos>]>"
             )
 
             payload = {
@@ -609,7 +640,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                     ]
                 }],
                 "generationConfig": {
-                    "temperature": 0.5,
+                    "temperature": 0.3,
                     "maxOutputTokens": 600
                 }
             }
@@ -636,19 +667,37 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                     bot_log(f"Aviso API Gemini Live ({model_name}): {e}")
                     continue
 
-            if "[SILENCIO]" in response_text or response_text.strip() == "SILENCIO":
-                bot_log(f"🤫 [Gemini Live Silencio] Orden de silencio recibida de '{user_name}'. Cortando audio inmediatamente.")
+            user_spoken = ""
+            bot_reply = response_text
+            if "Respuesta:" in response_text:
+                parts = response_text.split("Respuesta:", 1)
+                bot_reply = parts[1].strip()
+                if "Oído:" in parts[0]:
+                    user_spoken = parts[0].replace("Oído:", "").strip()
+            elif "Oído:" in response_text:
+                parts = response_text.split("Oído:", 1)
+                bot_reply = parts[0].strip()
+                user_spoken = parts[1].strip()
+
+            record_entry["transcription"] = user_spoken or "(audio procesado)"
+
+            if "[SILENCIO]" in response_text or "[SILENCIO]" in bot_reply:
+                record_entry["status"] = "silenciado"
+                record_entry["bot_reply"] = "[SILENCIO]"
+                bot_log(f"🤫 [Gemini Live Silencio] Orden de silencio de '{user_name}'. Cortando audio.")
                 if client.is_playing():
                     client.stop()
                 return
 
-            if not response_text or "[IGNORAR]" in response_text or response_text.strip() == "IGNORAR":
-                bot_log(f"🎙️ [Gemini Live] Audio de '{user_name}' filtrado como [IGNORAR]")
+            if not bot_reply or "[IGNORAR]" in bot_reply or bot_reply.strip() == "IGNORAR" or "[ININTELIGIBLE]" in user_spoken:
+                record_entry["status"] = "ignorado"
+                record_entry["bot_reply"] = "[IGNORAR]"
+                bot_log(f"🎙️ [Gemini Live] '{user_name}' ('{user_spoken}') -> [IGNORAR]")
                 return
 
             # Manejo de búsqueda web en tiempo real por voz
-            if "[BUSCAR:" in response_text:
-                m_search = re.search(r"\[BUSCAR:\s*([^\]]+)\]", response_text, re.IGNORECASE)
+            if "[BUSCAR:" in bot_reply:
+                m_search = re.search(r"\[BUSCAR:\s*([^\]]+)\]", bot_reply, re.IGNORECASE)
                 if m_search:
                     search_q = m_search.group(1).strip()
                     bot_log(f"🔍 [Gemini Live Web Search] Buscando en internet para voz: '{search_q}'")
@@ -656,9 +705,9 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                     if web_ctx:
                         search_summary_prompt = (
                             f"Estás en vivo por voz en Discord con '{user_name}'.\n"
-                            f"El usuario pidió buscar: '{search_q}'.\n"
-                            f"Resultados encontrados en internet:\n{web_ctx}\n\n"
-                            f"Resume la respuesta en 2 a 3 frases claras, amables y directas para locutar por voz en español de España (sin formato markdown ni emojis):"
+                            f"El usuario preguntó: '{user_spoken}'.\n"
+                            f"Resultados de internet:\n{web_ctx}\n\n"
+                            f"Resume la respuesta en 2 frases claras, amables y directas para locutar por voz en español de España (sin markdown ni emojis):"
                         )
                         sum_payload = {
                             "contents": [{"parts": [{"text": search_summary_prompt}]}],
@@ -673,19 +722,12 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                                     return json.loads(r.read().decode("utf-8"))
                             s_res = await asyncio.to_thread(_call_s)
                             if s_res.get("candidates") and "content" in s_res["candidates"][0]:
-                                response_text = s_res["candidates"][0]["content"]["parts"][0]["text"].strip()
+                                bot_reply = s_res["candidates"][0]["content"]["parts"][0]["text"].strip()
                         except Exception as e_sum:
                             bot_log(f"Aviso resumen búsqueda voz: {e_sum}")
-                            response_text = f"He buscado sobre {search_q}, pero no he podido sintetizar los resultados en este instante."
+                            bot_reply = f"He buscado sobre {search_q}, pero no he podido sintetizar los resultados en este instante."
                     else:
-                        response_text = f"He buscado en internet sobre {search_q}, pero no he encontrado datos claros ahora mismo."
-
-            bot_reply = response_text
-            # Limpieza de etiquetas accesorias si aparecieran
-            if "Respuesta:" in bot_reply:
-                bot_reply = bot_reply.split("Respuesta:", 1)[1].strip()
-            if "Oído:" in bot_reply:
-                bot_reply = bot_reply.split("Oído:", 1)[-1].strip()
+                        bot_reply = f"He buscado en internet sobre {search_q}, pero no he encontrado datos claros ahora mismo."
 
             if "[VOZ:" in bot_reply:
                 m_v = re.search(r"\[VOZ:\s*([a-zA-Z0-9_-]+)\]", bot_reply, re.IGNORECASE)
@@ -698,6 +740,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
 
             clean_resp = clean_text_for_tts(bot_reply)
             if not clean_resp:
+                record_entry["status"] = "vacio"
                 return
 
             # Protección contra auto-interrupción: si ya está reproduciendo y el audio entrante fue muy breve, no cortar
@@ -707,7 +750,9 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                     return
                 client.stop()
 
-            bot_log(f"🎙️ [Gemini Live] Hablando a '{user_name}' -> Asistente: '{clean_resp}'")
+            record_entry["status"] = "respondido"
+            record_entry["bot_reply"] = clean_resp
+            bot_log(f"🎙️ [Gemini Live] '{user_name}' dijo: \"{user_spoken}\" -> Asistente: \"{clean_resp}\"")
             self.last_bot_reply_time = time.time()
             self.recent_turns.append((user_name, clean_resp))
             if len(self.recent_turns) > 8:
@@ -2708,6 +2753,144 @@ def run_health_check_server():
                     self.send_header("Content-length", str(len(err_bytes)))
                     self.end_headers()
                     self.wfile.write(err_bytes)
+            elif parsed.path in ["/audios", "/grabaciones"]:
+                try:
+                    with VOICE_TURNS_LOCK:
+                        turns = list(reversed(VOICE_TURNS_LOG))
+
+                    cards_html = []
+                    for t in turns:
+                        status_cls = t.get("status", "procesando")
+                        u_name = html.escape(str(t.get("user", "Usuario")))
+                        t_time = html.escape(str(t.get("timestamp", "")))
+                        dur = t.get("duration_s", 0.0)
+                        fname = html.escape(str(t.get("filename", "")))
+                        trans = html.escape(str(t.get("transcription", "")))
+                        reply = html.escape(str(t.get("bot_reply", "")))
+                        file_url = f"/audios/file/{fname}"
+
+                        card = f"""
+                        <div class="card {status_cls}">
+                          <div class="card-header">
+                            <span class="user-badge">{u_name}</span>
+                            <span class="time-tag">⏱️ {dur}s &nbsp;|&nbsp; 🕒 {t_time}</span>
+                          </div>
+                          <div class="speech-bubble user">
+                            <div class="bubble-label">👤 Usuario ({u_name}):</div>
+                            <div>"{trans or '(audio procesado)'}"</div>
+                          </div>
+                        """
+                        if reply and reply not in ["[IGNORAR]", "IGNORAR"]:
+                            card += f"""
+                          <div class="speech-bubble bot">
+                            <div class="bubble-label">🤖 Asistente:</div>
+                            <div>"{reply}"</div>
+                          </div>
+                        """
+                        card += f"""
+                          <div class="player-container">
+                            <audio controls preload="none" src="{file_url}"></audio>
+                            <a href="{file_url}" download="{fname}" class="btn btn-secondary">📥 Descargar WAV</a>
+                          </div>
+                        </div>
+                        """
+                        cards_html.append(card)
+
+                    body_content = "\n".join(cards_html) if cards_html else '<div class="empty-state"><h3>Aún no hay grabaciones en esta sesión</h3><p>Cuando alguien hable en la llamada de Discord, sus intervenciones aparecerán aquí con su reproductor de audio y transcripción.</p></div>'
+
+                    html_page = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grabaciones en Vivo - Asistente Discord</title>
+<style>
+* {{ box-sizing: border-box; }}
+body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #1e1f22; color: #dbdee1; margin: 0; padding: 20px; }}
+.container {{ max-width: 920px; margin: 0 auto; }}
+header {{ display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3f4147; padding-bottom: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }}
+.title-group h1 {{ margin: 0; font-size: 22px; color: #fff; }}
+.title-group p {{ margin: 4px 0 0 0; color: #949ba4; font-size: 13px; }}
+.actions {{ display: flex; gap: 8px; align-items: center; }}
+.btn {{ background: #5865f2; color: #fff; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }}
+.btn:hover {{ background: #4752c4; }}
+.btn-secondary {{ background: #35373c; color: #dbdee1; font-size: 12px; padding: 6px 12px; }}
+.btn-secondary:hover {{ background: #3b3e45; color: #fff; }}
+.card {{ background: #2b2d31; border-radius: 8px; padding: 16px; margin-bottom: 14px; border-left: 4px solid #5865f2; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }}
+.card.respondido {{ border-left-color: #57f287; }}
+.card.ignorado {{ border-left-color: #80848e; opacity: 0.85; }}
+.card.silenciado {{ border-left-color: #f23f43; }}
+.card-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; }}
+.user-badge {{ font-weight: 700; color: #fff; background: #5865f2; padding: 3px 10px; border-radius: 12px; font-size: 13px; }}
+.time-tag {{ color: #949ba4; font-size: 12px; }}
+.speech-bubble {{ background: #313338; border-radius: 6px; padding: 10px 14px; margin: 8px 0; font-size: 14px; }}
+.speech-bubble.user {{ border-left: 3px solid #5865f2; color: #f2f3f5; }}
+.speech-bubble.bot {{ border-left: 3px solid #57f287; background: #232428; color: #57f287; }}
+.bubble-label {{ font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; color: #949ba4; }}
+.player-container {{ display: flex; align-items: center; gap: 10px; margin-top: 10px; background: #1e1f22; padding: 8px 12px; border-radius: 6px; flex-wrap: wrap; }}
+audio {{ flex: 1; height: 36px; min-width: 220px; }}
+.empty-state {{ text-align: center; padding: 60px 20px; background: #2b2d31; border-radius: 8px; color: #949ba4; }}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="title-group">
+      <h1>🎙️ Grabaciones de Voz - Asistente Discord</h1>
+      <p>Escucha las intervenciones de los usuarios y las respuestas del Asistente en tiempo real.</p>
+    </div>
+    <div class="actions">
+      <a href="/audios" class="btn">🔄 Refrescar</a>
+      <a href="/status" class="btn btn-secondary">📊 Estado</a>
+      <a href="/logs" class="btn btn-secondary">📜 Logs</a>
+    </div>
+  </header>
+  <div class="content">
+    {body_content}
+  </div>
+</div>
+</body>
+</html>"""
+                    out_bytes = html_page.encode("utf-8")
+                    self.send_response(200)
+                    self.send_header("Content-type", "text/html; charset=utf-8")
+                    self.send_header("Content-length", str(len(out_bytes)))
+                    self.end_headers()
+                    self.wfile.write(out_bytes)
+                except Exception as e_page:
+                    err_b = f"Error generando página: {e_page}".encode("utf-8")
+                    self.send_response(500)
+                    self.send_header("Content-type", "text/plain; charset=utf-8")
+                    self.end_headers()
+                    self.wfile.write(err_b)
+            elif parsed.path.startswith("/audios/file/"):
+                fname = os.path.basename(parsed.path)
+                fpath = os.path.join(RECORDINGS_DIR, fname)
+                if os.path.exists(fpath):
+                    try:
+                        with open(fpath, "rb") as f_a:
+                            audio_b = f_a.read()
+                        self.send_response(200)
+                        self.send_header("Content-type", "audio/wav")
+                        self.send_header("Content-length", str(len(audio_b)))
+                        self.send_header("Content-Disposition", f'inline; filename="{fname}"')
+                        self.end_headers()
+                        self.wfile.write(audio_b)
+                    except Exception:
+                        self.send_response(500)
+                        self.end_headers()
+                else:
+                    self.send_response(404)
+                    self.end_headers()
+            elif parsed.path == "/api/audios":
+                with VOICE_TURNS_LOCK:
+                    turns = list(reversed(VOICE_TURNS_LOG))
+                d_b = json.dumps(turns, ensure_ascii=False, indent=2).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-type", "application/json; charset=utf-8")
+                self.send_header("Content-length", str(len(d_b)))
+                self.end_headers()
+                self.wfile.write(d_b)
             else:
                 status = "OK - Asistente Bot Activo (Discord: Conectado)" if bot.is_ready() else "OK - Asistente Bot Activo (Discord: Conectando...)"
                 status_bytes = status.encode("utf-8")
