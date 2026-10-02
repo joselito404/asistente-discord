@@ -360,7 +360,9 @@ async def generate_speech_audio(text: str, voice_type: str = "alvaro") -> str:
             
     voice_map = {
         "alvaro": "es-ES-AlvaroNeural",
-        "abril": "es-ES-AbrilNeural"
+        "elvira": "es-ES-ElviraNeural",
+        "ximena": "es-ES-XimenaNeural",
+        "abril": "es-ES-ElviraNeural",
     }
     edge_voice = voice_map.get(voice_type, "es-ES-AlvaroNeural")
     out_path = os.path.join(temp_dir, f"speech_edge_{int(time.time()*1000)}.mp3")
@@ -573,7 +575,10 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                 f"     Oído: <lo que dijo o preguntó el usuario>\n"
                 f"     Respuesta: <tu respuesta para locutar por voz>\n"
                 f"   - Si decides no intervenir, responde únicamente: [IGNORAR]\n"
-                f"   - Si te mandaron callar, responde únicamente: [SILENCIO]"
+                f"   - Si te mandaron callar, responde únicamente: [SILENCIO]\n\n"
+                f"6. CAMBIO DE VOZ:\n"
+                f"   - Si el usuario te pide cambiarte la voz (ej: 'ponte voz de chica/mujer', 'cambia tu voz a femenina', 'ponte la voz de Elvira o Ximena', 'ponte voz de chico/tío/hombre/Álvaro'):\n"
+                f"     Añade al inicio de tu Respuesta la etiqueta [VOZ: elvira] (o [VOZ: ximena] o [VOZ: alvaro]) y confirma con simpatía el cambio usando tu nueva voz."
             )
 
             payload = {
@@ -631,6 +636,15 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             elif "Oído:" in response_text:
                 parts = response_text.split("Oído:", 1)
                 bot_reply = parts[0].strip()
+
+            if "[VOZ:" in bot_reply:
+                m_v = re.search(r"\[VOZ:\s*([a-zA-Z0-9_-]+)\]", bot_reply, re.IGNORECASE)
+                if m_v:
+                    target_v = m_v.group(1).lower()
+                    if target_v in ["alvaro", "elvira", "ximena", "abril"]:
+                        self.voice_type = target_v
+                        bot_log(f"🎙️ [Gemini Live Voz] Voz cambiada en llamada a '{self.voice_type}' por orden de '{user_name}'")
+                bot_reply = re.sub(r"\[VOZ:\s*([a-zA-Z0-9_-]+)\]", "", bot_reply).strip()
 
             clean_resp = clean_text_for_tts(bot_reply)
             if not clean_resp:
@@ -1737,8 +1751,9 @@ async def cmd_habla(interaction: discord.Interaction, texto: str, voz: app_comma
         app_commands.Choice(name="Baja (entornos con mucho ruido de fondo)", value="baja"),
     ],
     voz=[
-        app_commands.Choice(name="Álvaro (Español neutro / natural - Edge Neural)", value="alvaro"),
-        app_commands.Choice(name="Abril (Femenino / natural - Edge Neural)", value="abril"),
+        app_commands.Choice(name="Álvaro (Masculina, natural de España)", value="alvaro"),
+        app_commands.Choice(name="Elvira (Femenina cálida, España)", value="elvira"),
+        app_commands.Choice(name="Ximena (Femenina juvenil, España)", value="ximena"),
     ]
 )
 async def cmd_geminilive(
@@ -1789,7 +1804,7 @@ async def cmd_geminilive(
     ch_name = vc.channel.name if (is_conn and vc.channel) else "Desconectado"
     is_listening = getattr(vc, "is_listening", lambda: False)() if is_conn else False
     current_sens = "Media (RMS 70)"
-    current_voice = "Álvaro (Edge Neural)"
+    current_voice = "Álvaro (Masculina)"
     if sink:
         rms_val = getattr(sink, "silence_threshold_rms", 70)
         if rms_val <= 50:
@@ -1797,7 +1812,8 @@ async def cmd_geminilive(
         elif rms_val >= 150:
             current_sens = "Baja (RMS 180)"
         v_type = getattr(sink, "voice_type", "alvaro")
-        current_voice = "Abril (Edge Neural)" if v_type == "abril" else "Álvaro (Edge Neural)"
+        v_labels = {"alvaro": "Álvaro (Masculina)", "elvira": "Elvira (Femenina cálida)", "ximena": "Ximena (Femenina juvenil)", "abril": "Elvira (Femenina)"}
+        current_voice = v_labels.get(v_type, "Álvaro (Masculina)")
 
     embed = discord.Embed(
         title="🎙️ Panel de Control: Gemini Live Voice",
@@ -1810,8 +1826,37 @@ async def cmd_geminilive(
     embed.add_field(name="🎚️ Sensibilidad Micro (VAD)", value=f"`{current_sens}`", inline=True)
     embed.add_field(name="🗣️ Voz de Salida", value=f"`{current_voice}`", inline=True)
     embed.add_field(name="⚡ Latencia de Respuesta", value="`~1.5s (Full Duplex)`", inline=True)
-    embed.set_footer(text="Usa /unete para conectar a tu canal de voz o /desconecta para salir.")
+    embed.set_footer(text="Usa /voz para cambiar de locutor o /desconecta para salir.")
     await interaction.followup.send(embed=embed)
+
+@tree.command(name="voz", description="Cambia la voz del Asistente en la llamada de voz (Gemini Live)")
+@app_commands.describe(tipo="Selecciona la voz neuronal")
+@app_commands.choices(
+    tipo=[
+        app_commands.Choice(name="Álvaro (Masculina, natural de España)", value="alvaro"),
+        app_commands.Choice(name="Elvira (Femenina cálida, España)", value="elvira"),
+        app_commands.Choice(name="Ximena (Femenina juvenil, España)", value="ximena"),
+    ]
+)
+async def cmd_voz(interaction: discord.Interaction, tipo: app_commands.Choice[str]):
+    await interaction.response.defer(thinking=True)
+    if not interaction.guild:
+        await interaction.followup.send("❌ Este comando solo está disponible en un servidor.")
+        return
+    vc = interaction.guild.voice_client
+    sink = getattr(vc, "sink", None) if vc else None
+    labels = {
+        "alvaro": "Álvaro (Masculina)",
+        "elvira": "Elvira (Femenina cálida)",
+        "ximena": "Ximena (Femenina juvenil)"
+    }
+    lbl = labels.get(tipo.value, tipo.name)
+    if sink and hasattr(sink, "voice_type"):
+        sink.voice_type = tipo.value
+        await interaction.followup.send(f"🎙️ **Voz cambiada**: A partir de ahora el Asistente responderá con la voz de **{lbl}**.\n*(También puedes cambiársela pidiéndole por voz 'ponte voz de chica' o 'ponte voz de chico')*.")
+    else:
+        channel_hint = interaction.user.voice.channel.name if getattr(interaction.user, 'voice', None) and interaction.user.voice.channel else "una sala de voz"
+        await interaction.followup.send(f"ℹ️ El Asistente no tiene una llamada activa ahora. Conéctalo a **#{channel_hint}** y podrás usar `/voz` o pedírselo por el micro.")
 
 @tree.command(name="unete", description="Conecta al Asistente a tu canal de voz en modo conversacional Gemini Live")
 @app_commands.describe(canal="Canal de voz al que conectarse (por defecto el tuyo)")
