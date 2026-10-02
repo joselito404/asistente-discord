@@ -5,7 +5,6 @@ config_discord.json
 *.html
 *.ps1
 *.json
-!slots_data.json
 !tribunal_data.json
 !user_memory.json
 !trivia_data.json
@@ -22,3 +21,6 @@ build_*.js
 recordings/
 recordings_backup/
 *.wav
+historico_chat/
+herramientas/
+documentos_pdf/
