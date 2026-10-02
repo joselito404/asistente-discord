@@ -330,21 +330,22 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
     """
     def __init__(self, voice_client: voice_recv.VoiceRecvClient, loop: asyncio.AbstractEventLoop):
         super().__init__()
-        self.voice_client = voice_client
+        self.vc = voice_client
         self.loop = loop
         self.user_buffers = {}
         self._lock = threading.Lock()
         self._is_active = True
-        self.silence_threshold_rms = 350
+        self.silence_threshold_rms = 280
         self.silence_timeout = 0.75
-        self.min_speech_frames = 25   # ~0.5s de audio mínimo
+        self.min_speech_frames = 20   # ~0.4s de audio mínimo
         self.max_speech_frames = 450  # ~9.0s máximo por turno
         self.recent_turns = []
         self.last_bot_reply_time = 0.0
         self.voice_type = "alvaro"
         self.processing_lock = asyncio.Lock()
         self.watchdog_task = self.loop.create_task(self._watchdog())
-        print(f"🎙️ [Gemini Live] Sink activado en #{getattr(voice_client.channel, 'name', 'llamada')}")
+        ch_name = getattr(getattr(voice_client, "channel", None), "name", "llamada")
+        print(f"🎙️ [Gemini Live] Sink activado y escuchando en #{ch_name}")
 
     def wants_opus(self) -> bool:
         return False
@@ -352,7 +353,8 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
     def write(self, user: discord.User, data: voice_recv.VoiceData) -> None:
         if not self._is_active or user is None or getattr(user, "bot", False):
             return
-        if self.voice_client and self.voice_client.is_playing():
+        client = self.vc or getattr(self, "voice_client", None)
+        if client and client.is_playing():
             return
         pcm = data.pcm
         if not pcm:
@@ -377,7 +379,10 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             if rms >= self.silence_threshold_rms:
                 state["frames"].append(pcm)
                 state["last_speech_time"] = now
-                state["in_speech"] = True
+                if not state["in_speech"]:
+                    state["in_speech"] = True
+                    u_name = getattr(user, "display_name", None) or getattr(user, "name", "Usuario")
+                    print(f"🎙️ [Gemini Live VAD] Voz detectada de '{u_name}' (RMS: {rms})")
                 if len(state["frames"]) >= self.max_speech_frames:
                     frames = state["frames"][:]
                     state["frames"].clear()
@@ -420,7 +425,8 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
         if not self._is_active or self.processing_lock.locked():
             return
         async with self.processing_lock:
-            if not self.voice_client or not self.voice_client.is_connected() or self.voice_client.is_playing():
+            client = self.vc or getattr(self, "voice_client", None)
+            if not client or not client.is_connected() or client.is_playing():
                 return
 
             raw_pcm = b"".join(frames)
@@ -436,9 +442,9 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             b64_audio = base64.b64encode(wav_bytes).decode("utf-8")
 
             user_name = getattr(user, "display_name", None) or user.name
-            channel_name = getattr(self.voice_client.channel, "name", "llamada")
-            guild_name = getattr(self.voice_client.guild, "name", "Servidor")
-            channel_members = getattr(self.voice_client.channel, "members", [])
+            channel_name = getattr(getattr(client, "channel", None), "name", "llamada")
+            guild_name = getattr(getattr(client, "guild", None), "name", "Servidor")
+            channel_members = getattr(getattr(client, "channel", None), "members", [])
             members_str = ", ".join([m.display_name for m in channel_members if not m.bot]) or user_name
             now = time.time()
             recent_active = (now - self.last_bot_reply_time) < 22.0
@@ -517,7 +523,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
 
             try:
                 audio_file = await generate_speech_audio(clean_resp, voice_type=self.voice_type)
-                play_audio_in_voice(self.voice_client, audio_file)
+                play_audio_in_voice(client, audio_file)
             except Exception as ex:
                 print(f"Error reproduciendo voz Gemini Live: {ex}")
 
