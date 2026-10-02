@@ -604,9 +604,11 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                 history_lines.append(f"- Asistente (hablando con {spk}): {b_txt}")
             hist_ctx = "\n".join(history_lines) if history_lines else "Sin intervenciones previas recientes."
 
+            spain_now_str = get_spain_now_str()
             prompt = (
                 f"Estás en vivo como asistente de voz en el canal '{channel_name}' en Discord (servidor de España: {guild_name}).\n"
                 f"Tu nombre es 'Asistente' (también respondes si te dicen 'bot').\n"
+                f"FECHA Y HORA ACTUAL EXACTA EN ESPAÑA: {spain_now_str}\n"
                 f"Gente en la sala de voz: {members_str}.\n"
                 f"El usuario que acaba de hablar por el micro es: '{user_name}'.\n\n"
                 f"LO QUE DIJISTE TÚ ANTERIORMENTE EN LA LLAMADA:\n{hist_ctx}\n\n"
@@ -621,12 +623,14 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                 f"     Escribe en Respuesta: [IGNORAR]\n"
                 f"   - Si te piden buscar algo en internet (tiempo, noticias, estrenos, datos actuales):\n"
                 f"     Escribe en Respuesta: [BUSCAR: <términos de búsqueda>]\n"
+                f"   - Si te preguntan la fecha, día o la hora, indícala con total precisión usando la FECHA Y HORA ACTUAL EXACTA arriba indicada ({spain_now_str}).\n"
                 f"   - Si te saludan, preguntan, piden tu ayuda, opinión o continúan conversando contigo:\n"
                 f"     Responde de forma amable, cercana y natural en 1 o 2 frases breves (15-25 palabras).\n\n"
-                f"3. ACTITUD Y RESPETO OBLIGATORIO (CERO SARCASMO O IMPACIENCIA):\n"
+                f"3. ACTITUD Y RESPETO OBLIGATORIO (CERO SARCASMO O MULETILLAS):\n"
                 f"   - Sé SIEMPRE amable, respetuoso, educado y con buena onda.\n"
                 f"   - NUNCA seas borde, arrogante ni vacilón. NUNCA mandes 'espabilar' a nadie ni digas que el usuario es lento o que te aburres.\n"
-                f"   - NO menciones datos de la memoria del usuario (mangas, juegos favoritos) de la nada; úsalos solo si él te pide recomendaciones expresamente.\n\n"
+                f"   - NO menciones datos de la memoria del usuario de la nada.\n"
+                f"   - NO repitas muletillas como 'para la partida con Omen' ni 'para vuestra partida' en cada frase; contesta de forma directa y variada a lo que pregunta la persona que te habla.\n\n"
                 f"4. FORMATO DE SALIDA ESTRICTO:\n"
                 f"Oído: <texto exacto pronunciado por el usuario o [ININTELIGIBLE]>\n"
                 f"Respuesta: <tu respuesta para locutar, o [IGNORAR], o [SILENCIO], o [BUSCAR: <términos>]>"
