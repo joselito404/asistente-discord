@@ -57,38 +57,38 @@ try:
         _orig_decode_packet = vo.PacketDecoder._decode_packet
 
         def _patched_decode_packet(self, packet):
-            if packet and getattr(packet, "decrypted_data", None):
-                vc = getattr(self.sink, "voice_client", None)
-                if vc:
-                    conn = getattr(vc, "_connection", None)
-                    dave = getattr(conn, "dave_session", None)
-                    if dave and getattr(dave, "ready", False):
-                        candidates = []
-                        if self._cached_id:
-                            candidates.append(self._cached_id)
-                        u = vc._get_id_from_ssrc(self.ssrc)
-                        if u and u not in candidates:
-                            candidates.append(u)
-                        if not candidates:
-                            try:
-                                candidates = dave.get_user_ids()
-                            except Exception:
-                                candidates = []
-
-                        for cand_id in candidates:
-                            try:
-                                dec = dave.decrypt(cand_id, davey.MediaType.audio, packet.decrypted_data)
-                                if dec:
-                                    packet.decrypted_data = dec
-                                    self._cached_id = cand_id
-                                    if not vc._get_id_from_ssrc(self.ssrc):
-                                        vc._add_ssrc(cand_id, self.ssrc)
-                                    break
-                            except Exception:
-                                pass
             try:
+                if packet and getattr(packet, "decrypted_data", None):
+                    vc = getattr(self.sink, "voice_client", None)
+                    if vc:
+                        conn = getattr(vc, "_connection", None)
+                        dave = getattr(conn, "dave_session", None)
+                        if dave and getattr(dave, "ready", False):
+                            candidates = []
+                            if self._cached_id:
+                                candidates.append(self._cached_id)
+                            u = vc._get_id_from_ssrc(self.ssrc)
+                            if u and u not in candidates:
+                                candidates.append(u)
+                            if not candidates:
+                                try:
+                                    candidates = dave.get_user_ids()
+                                except Exception:
+                                    candidates = []
+
+                            for cand_id in candidates:
+                                try:
+                                    dec = dave.decrypt(cand_id, davey.MediaType.audio, packet.decrypted_data)
+                                    if dec:
+                                        packet.decrypted_data = dec
+                                        self._cached_id = cand_id
+                                        if not vc._get_id_from_ssrc(self.ssrc):
+                                            vc._add_ssrc(cand_id, self.ssrc)
+                                        break
+                                except Exception:
+                                    pass
                 return _orig_decode_packet(self, packet)
-            except discord.opus.OpusError:
+            except Exception:
                 return packet, b""
 
         vo.PacketDecoder._decode_packet = _patched_decode_packet
@@ -412,67 +412,80 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
         return False
 
     def write(self, user: discord.User, data: voice_recv.VoiceData) -> None:
-        if not self._is_active:
-            return
-        if user is not None and getattr(user, "bot", False):
-            return
-        client = self.vc or getattr(self, "voice_client", None)
-        pcm = data.pcm
-        if not pcm:
-            return
+        try:
+            if not self._is_active:
+                return
+            if user is not None and getattr(user, "bot", False):
+                return
+            client = self.vc or getattr(self, "voice_client", None)
+            pcm = data.pcm
+            if not pcm:
+                return
 
-        # Si user no viene resuelto por el gateway, asociar al primer miembro humano en la sala
-        if user is None and client and getattr(client, "channel", None):
-            humans = [m for m in client.channel.members if not m.bot]
-            if humans:
-                user = humans[0]
+            # Si user no viene resuelto por el gateway, asociar al primer miembro humano en la sala
+            if user is None and client and getattr(client, "channel", None):
+                humans = [m for m in client.channel.members if not m.bot]
+                if humans:
+                    user = humans[0]
 
-        count = len(pcm) // 2
-        if count == 0:
-            return
-        shorts = struct.unpack(f"<{count}h", pcm)
-        rms = int(math.sqrt(sum(s * s for s in shorts) / count))
+            count = len(pcm) // 2
+            if count == 0:
+                return
+            shorts = struct.unpack(f"<{count}h", pcm)
+            rms = int(math.sqrt(sum(s * s for s in shorts) / count))
 
-        user_key = user.id if user else (getattr(getattr(data, "packet", None), "ssrc", None) or "speaker")
+            user_key = user.id if user else (getattr(getattr(data, "packet", None), "ssrc", None) or "speaker")
 
-        now = time.time()
-        with self._lock:
-            state = self.user_buffers.setdefault(user_key, {
-                "frames": [],
-                "last_speech_time": 0.0,
-                "in_speech": False,
-                "user": user
-            })
-            if user:
-                state["user"] = user
+            now = time.time()
+            with self._lock:
+                state = self.user_buffers.setdefault(user_key, {
+                    "frames": [],
+                    "last_speech_time": 0.0,
+                    "in_speech": False,
+                    "user": user
+                })
+                if user:
+                    state["user"] = user
 
-            if rms >= self.silence_threshold_rms:
-                state["frames"].append(pcm)
-                state["last_speech_time"] = now
-                if not state["in_speech"]:
-                    state["in_speech"] = True
-                    u_name = getattr(user, "display_name", None) or getattr(user, "name", "Usuario")
-                    bot_log(f"🎙️ [Gemini Live VAD] Voz detectada de '{u_name}' (RMS: {rms})")
-                if len(state["frames"]) >= self.max_speech_frames:
-                    frames = state["frames"][:]
-                    state["frames"].clear()
-                    state["in_speech"] = False
-                    asyncio.run_coroutine_threadsafe(self.process_speech_turn(state["user"], frames), self.loop)
-            elif state["in_speech"]:
-                if len(state["frames"]) % 2 == 0 and len(state["frames"]) < self.max_speech_frames:
+                if rms >= self.silence_threshold_rms:
                     state["frames"].append(pcm)
-                if (now - state["last_speech_time"]) >= self.silence_timeout:
-                    frames = state["frames"][:]
-                    state["frames"].clear()
-                    state["in_speech"] = False
-                    if len(frames) >= self.min_speech_frames:
+                    state["last_speech_time"] = now
+                    if not state["in_speech"]:
+                        state["in_speech"] = True
+                        u_name = getattr(user, "display_name", None) or getattr(user, "name", "Usuario")
+                        bot_log(f"🎙️ [Gemini Live VAD] Voz detectada de '{u_name}' (RMS: {rms})")
+                    if len(state["frames"]) >= self.max_speech_frames:
+                        frames = state["frames"][:]
+                        state["frames"].clear()
+                        state["in_speech"] = False
                         asyncio.run_coroutine_threadsafe(self.process_speech_turn(state["user"], frames), self.loop)
+                elif state["in_speech"]:
+                    if len(state["frames"]) % 2 == 0 and len(state["frames"]) < self.max_speech_frames:
+                        state["frames"].append(pcm)
+                    if (now - state["last_speech_time"]) >= self.silence_timeout:
+                        frames = state["frames"][:]
+                        state["frames"].clear()
+                        state["in_speech"] = False
+                        if len(frames) >= self.min_speech_frames:
+                            asyncio.run_coroutine_threadsafe(self.process_speech_turn(state["user"], frames), self.loop)
+        except Exception as e:
+            bot_log(f"Aviso en GeminiLiveVoiceSink.write: {e}")
 
     async def _watchdog(self):
-        """Vigila pausas de voz cuando Discord suspende el envío de paquetes (voice gate)."""
+        """Vigila pausas de voz cuando Discord suspende el envío de paquetes (voice gate) y auto-resucita el listener si se cae."""
         while self._is_active:
             try:
                 await asyncio.sleep(0.15)
+                client = self.vc or getattr(self, "voice_client", None)
+                if client and getattr(client, "channel", None) and hasattr(client, "is_listening"):
+                    if not client.is_listening():
+                        bot_log("⚠️ [Gemini Live Watchdog] AudioReader detenido. Reactivando escucha automáticamente...")
+                        try:
+                            client.listen(self)
+                            bot_log("✅ [Gemini Live Watchdog] Escucha reactivada con éxito.")
+                        except Exception as ex:
+                            bot_log(f"Error reactivando listener de voz: {ex}")
+
                 now = time.time()
                 turns = []
                 with self._lock:
@@ -537,10 +550,9 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             is_dialogue_active = time_since_last_reply < 25.0
 
             history_lines = []
-            for spk, u_txt, b_txt in self.recent_turns[-4:]:
-                history_lines.append(f"- {spk}: {u_txt}")
-                history_lines.append(f"- Asistente: {b_txt}")
-            hist_ctx = "\n".join(history_lines) if history_lines else "Sin diálogo previo reciente."
+            for spk, b_txt in self.recent_turns[-4:]:
+                history_lines.append(f"- Asistente (hablando con {spk}): {b_txt}")
+            hist_ctx = "\n".join(history_lines) if history_lines else "Sin intervenciones previas recientes."
 
             prompt = (
                 f"Estás en vivo como asistente de voz en el canal '{channel_name}' en Discord (servidor de España: {guild_name}).\n"
@@ -548,7 +560,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                 f"Gente en la sala de voz: {members_str}.\n"
                 f"El usuario que acaba de hablar por el micro es: '{user_name}'.\n"
                 f"{user_mem}\n\n"
-                f"HISTORIAL RECIENTE DE LA CONVERSACIÓN:\n{hist_ctx}\n\n"
+                f"LO QUE HAS DICHO TÚ ANTERIORMENTE EN ESTA LLAMADA:\n{hist_ctx}\n\n"
                 f"ESTADO DE CONVERSACIÓN:\n"
                 f"{'▶️ Diálogo activo en curso (hablaste con ellos hace menos de 25s).' if is_dialogue_active else '⚪ En espera de llamada o consulta.'}\n\n"
                 f"INSTRUCCIONES CLAVE:\n"
@@ -558,27 +570,35 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                 f"2. CUÁNDO RESPONDER:\n"
                 f"   - Si te llaman o mencionan ('Asistente', 'oye bot', 'bot').\n"
                 f"   - Si saludan, preguntan si estás o si escuchas ('hola', 'buenas', '¿me escuchas?', '¿estás ahí?', '¿me oyes?').\n"
-                f"   - Si te hacen una pregunta, piden buscar algo, explicar un tema, pedir tu opinión, ayuda o consejo.\n"
+                f"   - Si te hacen una pregunta, piden tu opinión, consejo, o ayuda.\n"
                 f"   - Si hay un diálogo activo en curso ({is_dialogue_active}) y el usuario sigue comentando o respondiendo a lo que tú dijiste. NO hace falta que repitan tu nombre en cada frase si ya estáis hablando.\n\n"
                 f"3. CUÁNDO IGNORAR ([IGNORAR]):\n"
                 f"   - Si los usuarios están jugando a videojuegos y hablando claramente ENTRE ELLOS de la partida (ej: 'vamos a B', 'pásame balas', 'qué malo eres', 'me han matado', 'tira flash').\n"
                 f"   - Si son solo risas aisladas, carraspeos, toses, ruidos de fondo o quejas al juego.\n"
                 f"   - Si tú estabas hablando y solo fue un pequeño murmullo o eco de tu voz.\n"
                 f"   - En estos casos, RESPONDE EXACTAMENTE: [IGNORAR]\n\n"
-                f"4. ESTILO Y CONCISIÓN (EQUILIBRADO):\n"
+                f"4. BÚSQUEDA WEB EN TIEMPO REAL:\n"
+                f"   - Si el usuario te pide buscar información actual, consultar noticias, el tiempo, resultados deportivos, etc. (ej: 'busca en internet el tiempo en Alicante', 'busca qué pasó ayer con...', 'mira en internet quién ganó'):\n"
+                f"     RESPONDE EXACTAMENTE: [BUSCAR: <términos de búsqueda>]\n"
+                f"     Ejemplo: [BUSCAR: tiempo hoy Alicante]\n"
+                f"   - Si el usuario solo pregunta si eres capaz de buscar ('¿puedes hacer búsquedas web?', '¿puedes buscar en internet?'):\n"
+                f"     Responde que sí, que puedes buscar cualquier cosa en tiempo real y que te digan qué quieren buscar.\n\n"
+                f"5. ESTILO Y CONCISIÓN (EQUILIBRADO):\n"
                 f"   - En charla casual y respuestas rápidas, sé DIRECTO y CONCISO (1 a 3 frases claras, 15-30 palabras). Evita rodeos innecesarios.\n"
-                f"   - EXCEPCIÓN: Si te piden expresamente una explicación, buscar información, resumir una noticia o juego, o enseñarle algo, explícaselo con detalle, claridad y buen rollo sin cortarte a medias.\n"
+                f"   - EXCEPCIÓN: Si te piden expresamente una explicación, resumir una noticia o juego, o enseñarle algo, explícaselo con detalle, claridad y buen rollo sin cortarte a medias.\n"
                 f"   - Tono: Colega cercano de España (San Vicente / Alicante). Prohibidas expresiones latinoamericanas ('órale', 'tantito').\n"
                 f"   - Sin formato markdown ni emojis (se leerá por sintetizador de voz).\n\n"
-                f"5. FORMATO DE SALIDA:\n"
-                f"   - Si decides responder, incluye en tu respuesta:\n"
-                f"     Oído: <lo que dijo o preguntó el usuario>\n"
-                f"     Respuesta: <tu respuesta para locutar por voz>\n"
-                f"   - Si decides no intervenir, responde únicamente: [IGNORAR]\n"
-                f"   - Si te mandaron callar, responde únicamente: [SILENCIO]\n\n"
                 f"6. CAMBIO DE VOZ:\n"
                 f"   - Si el usuario te pide cambiarte la voz (ej: 'ponte voz de chica/mujer', 'cambia tu voz a femenina', 'ponte la voz de Elvira o Ximena', 'ponte voz de chico/tío/hombre/Álvaro'):\n"
-                f"     Añade al inicio de tu Respuesta la etiqueta [VOZ: elvira] (o [VOZ: ximena] o [VOZ: alvaro]) y confirma con simpatía el cambio usando tu nueva voz."
+                f"     Añade al inicio de tu respuesta [VOZ: elvira] (o [VOZ: ximena] o [VOZ: alvaro]) y confirma con simpatía el cambio usando tu nueva voz.\n\n"
+                f"7. RESPETO Y AMABILIDAD (NUNCA SARCASMO):\n"
+                f"   - Sé SIEMPRE amable, respetuoso y con buena vibra.\n"
+                f"   - NUNCA te enfades, ni seas borde, prepotente ni sarcástico. NUNCA digas cosas como 'estás bugeado', 'ya te lo he dicho', 'qué pesado', ni desprecies al usuario aunque una pregunta se parezca a una anterior.\n\n"
+                f"8. FORMATO DE SALIDA:\n"
+                f"   - Si decides responder, escribe DIRECTAMENTE la frase que dirás en voz alta (o [VOZ: ...] al inicio si aplica).\n"
+                f"   - Si decides no intervenir, responde únicamente: [IGNORAR]\n"
+                f"   - Si te mandaron callar, responde únicamente: [SILENCIO]\n"
+                f"   - Si requiere buscar en internet, responde únicamente: [BUSCAR: <términos>]"
             )
 
             payload = {
@@ -626,16 +646,46 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                 bot_log(f"🎙️ [Gemini Live] Audio de '{user_name}' filtrado como [IGNORAR]")
                 return
 
-            user_spoken = "(audio)"
+            # Manejo de búsqueda web en tiempo real por voz
+            if "[BUSCAR:" in response_text:
+                m_search = re.search(r"\[BUSCAR:\s*([^\]]+)\]", response_text, re.IGNORECASE)
+                if m_search:
+                    search_q = m_search.group(1).strip()
+                    bot_log(f"🔍 [Gemini Live Web Search] Buscando en internet para voz: '{search_q}'")
+                    web_ctx = await asyncio.to_thread(search_web_lite, search_q, 3)
+                    if web_ctx:
+                        search_summary_prompt = (
+                            f"Estás en vivo por voz en Discord con '{user_name}'.\n"
+                            f"El usuario pidió buscar: '{search_q}'.\n"
+                            f"Resultados encontrados en internet:\n{web_ctx}\n\n"
+                            f"Resume la respuesta en 2 a 3 frases claras, amables y directas para locutar por voz en español de España (sin formato markdown ni emojis):"
+                        )
+                        sum_payload = {
+                            "contents": [{"parts": [{"text": search_summary_prompt}]}],
+                            "generationConfig": {"temperature": 0.4, "maxOutputTokens": 300}
+                        }
+                        try:
+                            s_data = json.dumps(sum_payload).encode("utf-8")
+                            s_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key={GEMINI_KEY}"
+                            s_req = urllib.request.Request(s_url, data=s_data, headers={"Content-Type": "application/json"})
+                            def _call_s():
+                                with urllib.request.urlopen(s_req, timeout=10) as r:
+                                    return json.loads(r.read().decode("utf-8"))
+                            s_res = await asyncio.to_thread(_call_s)
+                            if s_res.get("candidates") and "content" in s_res["candidates"][0]:
+                                response_text = s_res["candidates"][0]["content"]["parts"][0]["text"].strip()
+                        except Exception as e_sum:
+                            bot_log(f"Aviso resumen búsqueda voz: {e_sum}")
+                            response_text = f"He buscado sobre {search_q}, pero no he podido sintetizar los resultados en este instante."
+                    else:
+                        response_text = f"He buscado en internet sobre {search_q}, pero no he encontrado datos claros ahora mismo."
+
             bot_reply = response_text
-            if "Respuesta:" in response_text:
-                parts = response_text.split("Respuesta:", 1)
-                bot_reply = parts[1].strip()
-                if "Oído:" in parts[0]:
-                    user_spoken = parts[0].replace("Oído:", "").strip()
-            elif "Oído:" in response_text:
-                parts = response_text.split("Oído:", 1)
-                bot_reply = parts[0].strip()
+            # Limpieza de etiquetas accesorias si aparecieran
+            if "Respuesta:" in bot_reply:
+                bot_reply = bot_reply.split("Respuesta:", 1)[1].strip()
+            if "Oído:" in bot_reply:
+                bot_reply = bot_reply.split("Oído:", 1)[-1].strip()
 
             if "[VOZ:" in bot_reply:
                 m_v = re.search(r"\[VOZ:\s*([a-zA-Z0-9_-]+)\]", bot_reply, re.IGNORECASE)
@@ -657,9 +707,9 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                     return
                 client.stop()
 
-            bot_log(f"🎙️ [Gemini Live] '{user_name}' ('{user_spoken}') -> Asistente: '{clean_resp}'")
+            bot_log(f"🎙️ [Gemini Live] Hablando a '{user_name}' -> Asistente: '{clean_resp}'")
             self.last_bot_reply_time = time.time()
-            self.recent_turns.append((user_name, user_spoken, clean_resp))
+            self.recent_turns.append((user_name, clean_resp))
             if len(self.recent_turns) > 8:
                 self.recent_turns.pop(0)
 
