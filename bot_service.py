@@ -2178,22 +2178,32 @@ async def on_ready():
     activity = discord.Activity(type=discord.ActivityType.listening, name="Gemini Live en voz (/unete)")
     await bot.change_presence(activity=activity)
 
-    # Auto-conectar inmediatamente si hay miembros humanos en un canal de voz
-    try:
-        target_channel = None
-        for g in bot.guilds:
-            for ch in g.voice_channels:
-                humans = [m for m in ch.members if not m.bot]
-                if humans:
-                    target_channel = ch
-                    if "games" in ch.name.lower():
-                        break
-            if target_channel:
-                bot_log(f"🎙️ [Auto-Connect on_ready] Miembros detectados en #{target_channel.name}. Conectando en modo Gemini Live...")
-                await ensure_voice_connection(target_channel)
-                break
-    except Exception as e:
-        bot_log(f"Aviso auto-conexión on_ready: {e}")
+    # Tarea de vigilancia continua para auto-conectar y mantener la llamada activa si hay humanos en sala
+    async def _voice_channel_auto_watchdog():
+        await asyncio.sleep(3.0)
+        while not bot.is_closed():
+            try:
+                for g in bot.guilds:
+                    vc = g.voice_client
+                    target_channel = None
+                    for ch in g.voice_channels:
+                        humans = [m for m in ch.members if not m.bot]
+                        if humans:
+                            target_channel = ch
+                            if "games" in ch.name.lower():
+                                break
+                    if target_channel:
+                        if vc is None or not (vc.is_connected() or getattr(vc, "is_listening", lambda: False)()):
+                            bot_log(f"🎙️ [Voice Auto-Watchdog] Conectando a #{target_channel.name} ({len([m for m in target_channel.members if not m.bot])} miembros)...")
+                            await ensure_voice_connection(target_channel)
+                        elif vc.channel.id != target_channel.id and len([m for m in vc.channel.members if not m.bot]) == 0:
+                            bot_log(f"🎙️ [Voice Auto-Watchdog] Moviendo a #{target_channel.name}...")
+                            await ensure_voice_connection(target_channel)
+            except Exception as e:
+                bot_log(f"Aviso en _voice_channel_auto_watchdog: {e}")
+            await asyncio.sleep(15.0)
+
+    bot.loop.create_task(_voice_channel_auto_watchdog())
 
 @bot.event
 async def on_message(message: discord.Message):
