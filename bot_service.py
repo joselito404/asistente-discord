@@ -1920,6 +1920,29 @@ async def _handle_message_safe(message: discord.Message):
             for chunk in chunks:
                 await message.reply(chunk)
 
+        # Si el bot está en llamada en este servidor, hablar en directo la respuesta por el micrófono
+        vc = message.guild.voice_client if message.guild else None
+        if vc and vc.is_connected():
+            try:
+                clean_for_speech = re.sub(r"\[ACTION_DRAW:\s*.*?\]", "", response_text, flags=re.DOTALL | re.IGNORECASE).strip()
+                clean_for_speech = re.sub(r"```.*?```", "", clean_for_speech, flags=re.DOTALL).strip()
+                sentences = re.split(r"(?<=[.!?])\s+", clean_for_speech)
+                spoken_candidate = ""
+                for s in sentences:
+                    if len(spoken_candidate) + len(s) < 250:
+                        spoken_candidate += (" " if spoken_candidate else "") + s
+                    else:
+                        break
+                if not spoken_candidate and sentences:
+                    spoken_candidate = sentences[0][:220]
+                
+                tts_text = clean_text_for_tts(spoken_candidate)
+                if tts_text and len(tts_text) >= 2:
+                    audio_path = await generate_speech_audio(tts_text, "alvaro")
+                    play_audio_in_voice(vc, audio_path)
+            except Exception as e:
+                print(f"Aviso locución de respuesta en llamada: {e}")
+
 import http.server
 import socketserver
 import threading
