@@ -2444,32 +2444,44 @@ def run_health_check_server():
                 content = "\n".join(GLOBAL_LOG_BUFFER) if GLOBAL_LOG_BUFFER else "Sin logs registrados aún."
                 self.wfile.write(content.encode("utf-8"))
             elif parsed.path == "/status":
-                self.send_response(200)
-                self.send_header("Content-type", "application/json; charset=utf-8")
-                self.end_headers()
-                voice_data = []
-                for vc in bot.voice_clients:
-                    voice_data.append({
-                        "guild": vc.guild.name,
-                        "channel": getattr(vc.channel, "name", "desconocido"),
-                        "is_connected": vc.is_connected(),
-                        "is_listening": getattr(vc, "is_listening", lambda: False)(),
-                        "is_playing": vc.is_playing(),
-                        "members": [m.display_name for m in getattr(vc.channel, "members", []) if not m.bot]
-                    })
-                payload = {
-                    "bot_ready": bot.is_ready(),
-                    "bot_user": str(bot.user) if bot.user else None,
-                    "voice_clients": voice_data,
-                    "server_time": get_spain_now_str()
-                }
-                self.wfile.write(json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8"))
+                try:
+                    voice_data = []
+                    for vc in list(bot.voice_clients):
+                        voice_data.append({
+                            "guild": str(vc.guild.name) if vc.guild else None,
+                            "channel": str(getattr(vc.channel, "name", "desconocido")),
+                            "is_connected": bool(vc.is_connected()),
+                            "is_listening": bool(vc.is_listening()) if hasattr(vc, "is_listening") else False,
+                            "is_playing": bool(vc.is_playing()) if hasattr(vc, "is_playing") else False,
+                            "members": [m.display_name for m in getattr(vc.channel, "members", []) if not m.bot]
+                        })
+                    payload = {
+                        "bot_ready": bot.is_ready(),
+                        "bot_user": str(bot.user) if bot.user else None,
+                        "voice_clients": voice_data,
+                        "server_time": get_spain_now_str()
+                    }
+                    data_bytes = json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")
+                    self.send_response(200)
+                    self.send_header("Content-type", "application/json; charset=utf-8")
+                    self.send_header("Content-length", str(len(data_bytes)))
+                    self.end_headers()
+                    self.wfile.write(data_bytes)
+                except Exception as ex:
+                    err_bytes = json.dumps({"error": str(ex)}).encode("utf-8")
+                    self.send_response(500)
+                    self.send_header("Content-type", "application/json; charset=utf-8")
+                    self.send_header("Content-length", str(len(err_bytes)))
+                    self.end_headers()
+                    self.wfile.write(err_bytes)
             else:
                 status = "OK - Asistente Bot Activo (Discord: Conectado)" if bot.is_ready() else "OK - Asistente Bot Activo (Discord: Conectando...)"
+                status_bytes = status.encode("utf-8")
                 self.send_response(200)
                 self.send_header("Content-type", "text/plain; charset=utf-8")
+                self.send_header("Content-length", str(len(status_bytes)))
                 self.end_headers()
-                self.wfile.write(status.encode("utf-8"))
+                self.wfile.write(status_bytes)
 
         def do_HEAD(self):
             self.send_response(200)
