@@ -38,6 +38,15 @@ import tempfile
 import edge_tts
 from discord.ext import voice_recv
 from datetime import datetime, timezone, timedelta
+import collections
+
+GLOBAL_LOG_BUFFER = collections.deque(maxlen=200)
+
+def bot_log(msg: str):
+    timestamp = datetime.now(timezone.utc).strftime("%H:%M:%S")
+    line = f"[{timestamp}] {msg}"
+    print(line)
+    GLOBAL_LOG_BUFFER.append(line)
 
 if sys.platform == "win32":
     try:
@@ -250,7 +259,9 @@ def clean_text_for_tts(text: str) -> str:
     clean = re.sub(r"<@!?\d+>", "", clean)
     clean = re.sub(r"<@&\d+>", "", clean)
     clean = re.sub(r"<#\d+>", "", clean)
-    clean = re.sub(r"<:[^:]+:\d+>", "", clean)
+    clean = re.sub(r"<a?:[^:]+:\d+>", "", clean)
+    # Convertir saltos de línea en pausas oracionales para locutar párrafos consecutivos con fluidez
+    clean = re.sub(r"([^\.\?!])\n+", r"\1. ", clean)
     clean = re.sub(r"[*_~`#>\[\]\(\)\{\}\\\^\$]", " ", clean)
     clean = re.sub(r"\s+", " ", clean).strip()
     return clean
@@ -260,7 +271,7 @@ async def generate_speech_audio(text: str, voice_type: str = "alvaro") -> str:
     clean = clean_text_for_tts(text)
     if not clean:
         clean = "Hola, aquí estoy."
-    clean = clean[:1200]
+    clean = clean[:2500]
     
     temp_dir = tempfile.gettempdir()
     
@@ -345,7 +356,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
         self.processing_lock = asyncio.Lock()
         self.watchdog_task = self.loop.create_task(self._watchdog())
         ch_name = getattr(getattr(voice_client, "channel", None), "name", "llamada")
-        print(f"🎙️ [Gemini Live] Sink activado y escuchando en #{ch_name}")
+        bot_log(f"🎙️ [Gemini Live] Sink activado y escuchando en #{ch_name}")
 
     def wants_opus(self) -> bool:
         return False
@@ -393,7 +404,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                 if not state["in_speech"]:
                     state["in_speech"] = True
                     u_name = getattr(user, "display_name", None) or getattr(user, "name", "Usuario")
-                    print(f"🎙️ [Gemini Live VAD] Voz detectada de '{u_name}' (RMS: {rms})")
+                    bot_log(f"🎙️ [Gemini Live VAD] Voz detectada de '{u_name}' (RMS: {rms})")
                 if len(state["frames"]) >= self.max_speech_frames:
                     frames = state["frames"][:]
                     state["frames"].clear()
@@ -430,7 +441,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                print(f"Aviso en watchdog de voz: {e}")
+                bot_log(f"Aviso en watchdog de voz: {e}")
 
     async def process_speech_turn(self, user: discord.Member, frames: list):
         if not self._is_active or self.processing_lock.locked():
@@ -462,7 +473,6 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             channel_members = getattr(getattr(client, "channel", None), "members", [])
             members_str = ", ".join([m.display_name for m in channel_members if not m.bot]) or user_name
             now = time.time()
-            recent_active = (now - self.last_bot_reply_time) < 25.0
 
             history_lines = []
             for spk, u_txt, b_txt in self.recent_turns[-3:]:
@@ -479,13 +489,13 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                 f"INSTRUCCIONES CLAVE:\n"
                 f"1. Escucha con atención el audio adjunto de lo que dijo '{user_name}'.\n"
                 f"2. FILTRO INTELIGENTE:\n"
-                f"   - Si el audio es silencio, tos, ruido o risas sin palabras claras, responde: [IGNORAR]\n"
-                f"   - Si el usuario dice algo inteligible, hace una pregunta (ej: '¿me escuchas?', '¿por qué no hablas?', '¿qué opinas?'), saluda o se dirige al Asistente: RESPONDE de inmediato.\n"
-                f"   - Solo si es evidente que están hablando entre ellos jugando a un juego (ej: 'cúbreme', 'vamos al punto B') responde: [IGNORAR]\n"
+                f"   - Si el audio es silencio puro, tos o ruido ininteligible sin palabras, responde exactamente: [IGNORAR]\n"
+                f"   - Si el usuario dice algo inteligible, te saluda, te hace una pregunta (ej: '¿me escuchas?', '¿por qué no hablas?', '¿qué opinas?', 'hola asistente') o te habla: RESPONDE con naturalidad inmediata.\n"
+                f"   - Solo si es evidente que están hablando exclusivamente entre ellos jugando a un juego (ej: 'vamos a B', 'cúbreme') responde: [IGNORAR]\n"
                 f"3. FORMATO DE RESPUESTA EN VOZ:\n"
-                f"   - Responde de forma muy natural, cercana, amigable y conversacional.\n"
-                f"   - 1 a 3 frases claras (locución concisa).\n"
-                f"   - NUNCA uses formato markdown ni emojis."
+                f"   - Responde de forma muy natural, amigable, cercana y conversacional.\n"
+                f"   - Responde de manera completa (puedes estructurar la respuesta en párrafos claros según lo que requiera la pregunta).\n"
+                f"   - NUNCA uses formato markdown, asteriscos, guiones ni emojis (ya que se locuta directamente por voz)."
             )
 
             payload = {
@@ -497,12 +507,12 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                 }],
                 "generationConfig": {
                     "temperature": 0.7,
-                    "maxOutputTokens": 160
+                    "maxOutputTokens": 800
                 }
             }
             data = json.dumps(payload).encode("utf-8")
             response_text = ""
-            for model_name in get_available_models():
+            for model_name in ["gemini-flash-lite-latest", "gemini-3.5-flash-lite", "gemini-3.6-flash"]:
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_KEY}"
                 try:
                     req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
@@ -519,17 +529,19 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                     if e.code in (429, 503):
                         mark_model_cooldown(model_name, 60)
                     continue
-                except Exception:
+                except Exception as e:
+                    bot_log(f"Aviso API Gemini Live ({model_name}): {e}")
                     continue
 
-            if not response_text or "[IGNORAR]" in response_text or response_text == "IGNORAR":
+            if not response_text or "[IGNORAR]" in response_text or response_text.strip() == "IGNORAR":
+                bot_log(f"🎙️ [Gemini Live] Audio de '{user_name}' filtrado como [IGNORAR]")
                 return
 
             clean_resp = clean_text_for_tts(response_text)
             if not clean_resp:
                 return
 
-            print(f"🎙️ [Gemini Live] '{user_name}' -> Asistente: '{clean_resp}'")
+            bot_log(f"🎙️ [Gemini Live] '{user_name}' -> Asistente: '{clean_resp}'")
             self.last_bot_reply_time = time.time()
             self.recent_turns.append((user_name, "(voz)", clean_resp))
             if len(self.recent_turns) > 8:
@@ -538,8 +550,9 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             try:
                 audio_file = await generate_speech_audio(clean_resp, voice_type=self.voice_type)
                 play_audio_in_voice(client, audio_file)
+                bot_log(f"🔊 [Gemini Live] Audio enviado a #{channel_name}")
             except Exception as ex:
-                print(f"Error reproduciendo voz Gemini Live: {ex}")
+                bot_log(f"Error reproduciendo voz Gemini Live: {ex}")
 
     def cleanup(self):
         self._is_active = False
@@ -563,6 +576,7 @@ async def ensure_voice_connection(channel: discord.VoiceChannel) -> voice_recv.V
     if vc is not None:
         if isinstance(vc, voice_recv.VoiceRecvClient) and vc.is_connected():
             if vc.channel.id != channel.id:
+                bot_log(f"🎙️ [Voice Move] Moviendo Asistente de #{vc.channel.name} a #{channel.name}...")
                 await vc.move_to(channel)
             if not vc.is_listening():
                 sink = GeminiLiveVoiceSink(vc, bot.loop)
@@ -582,9 +596,11 @@ async def ensure_voice_connection(channel: discord.VoiceChannel) -> voice_recv.V
                 pass
             await asyncio.sleep(0.5)
 
+    bot_log(f"🎙️ [Voice Connect] Conectando Asistente a #{channel.name} (ID: {channel.id})...")
     vc = await channel.connect(cls=voice_recv.VoiceRecvClient, timeout=15.0, reconnect=True, self_deaf=False)
     sink = GeminiLiveVoiceSink(vc, bot.loop)
     vc.listen(sink)
+    bot_log(f"🎙️ [Voice Connected] Conexión establecida y escuchando en #{channel.name}")
     return vc
 
 def play_audio_in_voice(voice_client: discord.VoiceClient, audio_path: str):
@@ -1888,13 +1904,30 @@ async def cmd_ranking_trivial(interaction: discord.Interaction):
 
 @bot.event
 async def on_voice_state_update(member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
-    """Auto-desconexión si el bot se queda solo en un canal de voz."""
+    if member.bot:
+        return
     guild = member.guild
     vc = guild.voice_client
+
+    # Si un usuario humano entra a una sala de voz o se mueve de sala
+    if after.channel is not None and (before.channel is None or before.channel.id != after.channel.id):
+        # Si el bot no está conectado o está solo en otro canal, unirse a donde está la gente
+        bot_alone = False
+        if vc and vc.is_connected() and vc.channel:
+            bot_alone = len([m for m in vc.channel.members if not m.bot]) == 0
+        if vc is None or not vc.is_connected() or bot_alone:
+            try:
+                bot_log(f"🎙️ [Voice Auto-Join] '{member.display_name}' entró a #{after.channel.name}. Conectando Asistente...")
+                await ensure_voice_connection(after.channel)
+            except Exception as e:
+                bot_log(f"Error al auto-unirse a #{after.channel.name}: {e}")
+        return
+
+    # Si un usuario se va y el canal del bot se queda vacío
     if vc and vc.is_connected() and vc.channel:
         human_members = [m for m in vc.channel.members if not m.bot]
         if len(human_members) == 0:
-            print(f"ℹ️ Canal de voz #{vc.channel.name} vacío. Desconectando Asistente...")
+            bot_log(f"ℹ️ Canal de voz #{vc.channel.name} vacío. Desconectando Asistente...")
             if hasattr(vc, "stop_listening"):
                 try:
                     vc.stop_listening()
@@ -1912,9 +1945,9 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
 
 @bot.event
 async def on_ready():
-    print(f"Bot '{bot.user}' conectado y listo en Discord.")
-    print(f"Motores de IA con respaldo: {MODELS_PRIORITY}")
-    print("Capacidades activas: Gemini Live en Voz (/geminilive), Memoria Persistente, Trivial, Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y Slash Commands.")
+    bot_log(f"Bot '{bot.user}' conectado y listo en Discord.")
+    bot_log(f"Motores de IA con respaldo: {MODELS_PRIORITY}")
+    bot_log("Capacidades activas: Gemini Live en Voz (/geminilive), Memoria Persistente, Trivial, Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y Slash Commands.")
     
     # Sincronización instantánea de Slash Commands en el servidor (sin duplicados globales)
     try:
@@ -1922,12 +1955,29 @@ async def on_ready():
         guild_obj = discord.Object(id=GUILD_ID)
         tree.copy_global_to(guild=guild_obj)
         await tree.sync(guild=guild_obj)
-        print(f"Comandos Slash sincronizados limpiamente en el servidor ID {GUILD_ID} (sin duplicados).")
+        bot_log(f"Comandos Slash sincronizados limpiamente en el servidor ID {GUILD_ID} (sin duplicados).")
     except Exception as e:
-        print(f"Aviso sincronización comandos slash: {e}")
+        bot_log(f"Aviso sincronización comandos slash: {e}")
 
     activity = discord.Activity(type=discord.ActivityType.listening, name="Gemini Live en voz (/unete)")
     await bot.change_presence(activity=activity)
+
+    # Auto-conectar inmediatamente si hay miembros humanos en un canal de voz
+    try:
+        target_channel = None
+        for g in bot.guilds:
+            for ch in g.voice_channels:
+                humans = [m for m in ch.members if not m.bot]
+                if humans:
+                    target_channel = ch
+                    if "games" in ch.name.lower():
+                        break
+            if target_channel:
+                bot_log(f"🎙️ [Auto-Connect on_ready] Miembros detectados en #{target_channel.name}. Conectando en modo Gemini Live...")
+                await ensure_voice_connection(target_channel)
+                break
+    except Exception as e:
+        bot_log(f"Aviso auto-conexión on_ready: {e}")
 
 @bot.event
 async def on_message(message: discord.Message):
@@ -2347,19 +2397,33 @@ async def _handle_message_safe(message: discord.Message):
             for chunk in chunks:
                 await message.reply(chunk)
 
-        # Si el bot está en llamada en este servidor, hablar en directo la respuesta completa por el micrófono (todos los párrafos)
+        # Si el autor del mensaje está en un canal de voz o el bot ya está en llamada, asegurar conexión y locución
+        vch = None
+        if message.author and hasattr(message.author, "voice") and message.author.voice and message.author.voice.channel:
+            vch = message.author.voice.channel
+        
         vc = message.guild.voice_client if message.guild else None
+        if not vc or not vc.is_connected():
+            if vch:
+                try:
+                    bot_log(f"🎙️ [Chat-to-Voice] '{message.author.display_name}' habló en texto estando en #{vch.name}. Conectando voz...")
+                    vc = await ensure_voice_connection(vch)
+                except Exception as e:
+                    bot_log(f"Aviso conectando a voz desde texto: {e}")
+
         if vc and vc.is_connected():
             try:
                 clean_for_speech = re.sub(r"\[ACTION_DRAW:\s*.*?\]", "", response_text, flags=re.DOTALL | re.IGNORECASE).strip()
                 clean_for_speech = re.sub(r"```.*?```", "", clean_for_speech, flags=re.DOTALL).strip()
-                # Permitir hasta 1200 caracteres para leer todos los párrafos de forma completa y natural
-                tts_text = clean_text_for_tts(clean_for_speech[:1200])
+                clean_for_speech = re.sub(r"`.*?`", "", clean_for_speech).strip()
+                # Permitir hasta 2500 caracteres para leer todos los párrafos de forma completa y natural
+                tts_text = clean_text_for_tts(clean_for_speech[:2500])
                 if tts_text and len(tts_text) >= 2:
+                    bot_log(f"🎙️ [TTS Locución] Reproduciendo respuesta ({len(tts_text)} chars) en #{vc.channel.name}...")
                     audio_path = await generate_speech_audio(tts_text, "alvaro")
                     play_audio_in_voice(vc, audio_path)
             except Exception as e:
-                print(f"Aviso locución de respuesta en llamada: {e}")
+                bot_log(f"Aviso locución de respuesta en llamada: {e}")
 
 import http.server
 import socketserver
@@ -2372,22 +2436,54 @@ def run_health_check_server():
     port = int(os.getenv("PORT", 10000))
     class HealthHandler(http.server.SimpleHTTPRequestHandler):
         def do_GET(self):
-            status = "OK - Asistente Bot Activo (Discord: Conectado)" if bot.is_ready() else "OK - Asistente Bot Activo (Discord: Conectando...)"
-            self.send_response(200)
-            self.send_header("Content-type", "text/plain; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(status.encode("utf-8"))
+            parsed = urllib.parse.urlparse(self.path)
+            if parsed.path == "/logs":
+                self.send_response(200)
+                self.send_header("Content-type", "text/plain; charset=utf-8")
+                self.end_headers()
+                content = "\n".join(GLOBAL_LOG_BUFFER) if GLOBAL_LOG_BUFFER else "Sin logs registrados aún."
+                self.wfile.write(content.encode("utf-8"))
+            elif parsed.path == "/status":
+                self.send_response(200)
+                self.send_header("Content-type", "application/json; charset=utf-8")
+                self.end_headers()
+                voice_data = []
+                for vc in bot.voice_clients:
+                    voice_data.append({
+                        "guild": vc.guild.name,
+                        "channel": getattr(vc.channel, "name", "desconocido"),
+                        "is_connected": vc.is_connected(),
+                        "is_listening": getattr(vc, "is_listening", lambda: False)(),
+                        "is_playing": vc.is_playing(),
+                        "members": [m.display_name for m in getattr(vc.channel, "members", []) if not m.bot]
+                    })
+                payload = {
+                    "bot_ready": bot.is_ready(),
+                    "bot_user": str(bot.user) if bot.user else None,
+                    "voice_clients": voice_data,
+                    "server_time": get_spain_now_str()
+                }
+                self.wfile.write(json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8"))
+            else:
+                status = "OK - Asistente Bot Activo (Discord: Conectado)" if bot.is_ready() else "OK - Asistente Bot Activo (Discord: Conectando...)"
+                self.send_response(200)
+                self.send_header("Content-type", "text/plain; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(status.encode("utf-8"))
+
         def do_HEAD(self):
             self.send_response(200)
             self.end_headers()
+
         def log_message(self, format, *args):
             pass
+
     try:
         with ReusableTCPServer(("", port), HealthHandler) as httpd:
-            print(f"Servidor de salud activo en puerto {port} para Render")
+            bot_log(f"Servidor de salud y logs HTTP activo en puerto {port} para Render")
             httpd.serve_forever()
     except Exception as e:
-        print(f"Aviso servidor salud: {e}")
+        bot_log(f"Aviso servidor salud: {e}")
 
 def start_bot_persistent():
     """Bucle supervisor persistente para mantener el bot conectado 24/7 sin caídas."""
