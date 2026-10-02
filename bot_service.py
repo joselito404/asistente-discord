@@ -260,7 +260,7 @@ async def generate_speech_audio(text: str, voice_type: str = "alvaro") -> str:
     clean = clean_text_for_tts(text)
     if not clean:
         clean = "Hola, aquí estoy."
-    clean = clean[:450]
+    clean = clean[:1200]
     
     temp_dir = tempfile.gettempdir()
     
@@ -335,9 +335,9 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
         self.user_buffers = {}
         self._lock = threading.Lock()
         self._is_active = True
-        self.silence_threshold_rms = 280
+        self.silence_threshold_rms = 70  # Calibrado para captar micrófonos con Krisp o volumen moderado
         self.silence_timeout = 0.75
-        self.min_speech_frames = 20   # ~0.4s de audio mínimo
+        self.min_speech_frames = 18   # ~0.36s de audio mínimo
         self.max_speech_frames = 450  # ~9.0s máximo por turno
         self.recent_turns = []
         self.last_bot_reply_time = 0.0
@@ -351,7 +351,9 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
         return False
 
     def write(self, user: discord.User, data: voice_recv.VoiceData) -> None:
-        if not self._is_active or user is None or getattr(user, "bot", False):
+        if not self._is_active:
+            return
+        if user is not None and getattr(user, "bot", False):
             return
         client = self.vc or getattr(self, "voice_client", None)
         if client and client.is_playing():
@@ -360,21 +362,30 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
         if not pcm:
             return
 
+        # Si user no viene resuelto por el gateway, asociar al primer miembro humano en la sala
+        if user is None and client and getattr(client, "channel", None):
+            humans = [m for m in client.channel.members if not m.bot]
+            if humans:
+                user = humans[0]
+
         count = len(pcm) // 2
         if count == 0:
             return
         shorts = struct.unpack(f"<{count}h", pcm)
         rms = int(math.sqrt(sum(s * s for s in shorts) / count))
 
+        user_key = user.id if user else (getattr(getattr(data, "packet", None), "ssrc", None) or "speaker")
+
         now = time.time()
         with self._lock:
-            state = self.user_buffers.setdefault(user.id, {
+            state = self.user_buffers.setdefault(user_key, {
                 "frames": [],
                 "last_speech_time": 0.0,
                 "in_speech": False,
                 "user": user
             })
-            state["user"] = user
+            if user:
+                state["user"] = user
 
             if rms >= self.silence_threshold_rms:
                 state["frames"].append(pcm)
@@ -387,7 +398,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                     frames = state["frames"][:]
                     state["frames"].clear()
                     state["in_speech"] = False
-                    asyncio.run_coroutine_threadsafe(self.process_speech_turn(user, frames), self.loop)
+                    asyncio.run_coroutine_threadsafe(self.process_speech_turn(state["user"], frames), self.loop)
             elif state["in_speech"]:
                 if len(state["frames"]) % 2 == 0 and len(state["frames"]) < self.max_speech_frames:
                     state["frames"].append(pcm)
@@ -396,7 +407,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                     state["frames"].clear()
                     state["in_speech"] = False
                     if len(frames) >= self.min_speech_frames:
-                        asyncio.run_coroutine_threadsafe(self.process_speech_turn(user, frames), self.loop)
+                        asyncio.run_coroutine_threadsafe(self.process_speech_turn(state["user"], frames), self.loop)
 
     async def _watchdog(self):
         """Vigila pausas de voz cuando Discord suspende el envío de paquetes (voice gate)."""
@@ -429,6 +440,10 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             if not client or not client.is_connected() or client.is_playing():
                 return
 
+            if user is None and getattr(client, "channel", None):
+                humans = [m for m in client.channel.members if not m.bot]
+                user = humans[0] if humans else None
+
             raw_pcm = b"".join(frames)
             mono_pcm = pcm_48k_stereo_to_16k_mono(raw_pcm)
 
@@ -441,13 +456,13 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             wav_bytes = wav_io.getvalue()
             b64_audio = base64.b64encode(wav_bytes).decode("utf-8")
 
-            user_name = getattr(user, "display_name", None) or user.name
+            user_name = getattr(user, "display_name", None) or getattr(user, "name", "Usuario")
             channel_name = getattr(getattr(client, "channel", None), "name", "llamada")
             guild_name = getattr(getattr(client, "guild", None), "name", "Servidor")
             channel_members = getattr(getattr(client, "channel", None), "members", [])
             members_str = ", ".join([m.display_name for m in channel_members if not m.bot]) or user_name
             now = time.time()
-            recent_active = (now - self.last_bot_reply_time) < 22.0
+            recent_active = (now - self.last_bot_reply_time) < 25.0
 
             history_lines = []
             for spk, u_txt, b_txt in self.recent_turns[-3:]:
@@ -462,16 +477,15 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                 f"El usuario que acaba de hablar por el micro es: '{user_name}'.\n\n"
                 f"HISTORIAL RECIENTE EN VOZ:\n{hist_ctx}\n\n"
                 f"INSTRUCCIONES CLAVE:\n"
-                f"1. Escucha atentamente el audio adjunto de '{user_name}'.\n"
+                f"1. Escucha con atención el audio adjunto de lo que dijo '{user_name}'.\n"
                 f"2. FILTRO INTELIGENTE:\n"
-                f"   - Los usuarios juegan o charlan entre ellos, tosen, se ríen o exclaman sobre su juego (ej: 'vamos', 'qué malo', 'muerto', 'pásamelo').\n"
-                f"   - Si lo que dice NO va dirigido a ti ('Asistente', 'bot', dudas directas), o es ruido/risa/ininteligible/diálogo interno de su partida, RESPONDE EXACTAMENTE: [IGNORAR]\n"
-                f"   - Si te llaman ('Asistente', 'oye bot', etc.) o te hacen una pregunta directa {'o continúan la conversación anterior' if recent_active else ''}, responde.\n"
+                f"   - Si el audio es silencio, tos, ruido o risas sin palabras claras, responde: [IGNORAR]\n"
+                f"   - Si el usuario dice algo inteligible, hace una pregunta (ej: '¿me escuchas?', '¿por qué no hablas?', '¿qué opinas?'), saluda o se dirige al Asistente: RESPONDE de inmediato.\n"
+                f"   - Solo si es evidente que están hablando entre ellos jugando a un juego (ej: 'cúbreme', 'vamos al punto B') responde: [IGNORAR]\n"
                 f"3. FORMATO DE RESPUESTA EN VOZ:\n"
-                f"   - Responde de forma muy natural, cercana, educada y como un colega en la llamada.\n"
-                f"   - Máximo 1 a 3 frases cortas y claras (locución concisa).\n"
-                f"   - NUNCA uses formato markdown (nada de asteriscos **, viñetas, títulos # ni emojis).\n"
-                f"   - Directo para ser escuchado por audio."
+                f"   - Responde de forma muy natural, cercana, amigable y conversacional.\n"
+                f"   - 1 a 3 frases claras (locución concisa).\n"
+                f"   - NUNCA uses formato markdown ni emojis."
             )
 
             payload = {
@@ -1628,8 +1642,8 @@ async def cmd_geminilive(
     # Ajustes de sensibilidad o voz si se han especificado
     if sink:
         if sensibilidad and hasattr(sink, "silence_threshold_rms"):
-            sens_map = {"alta": 220, "media": 350, "baja": 600}
-            sink.silence_threshold_rms = sens_map.get(sensibilidad.value, 350)
+            sens_map = {"alta": 40, "media": 70, "baja": 180}
+            sink.silence_threshold_rms = sens_map.get(sensibilidad.value, 70)
         if voz and hasattr(sink, "voice_type"):
             sink.voice_type = voz.value
 
@@ -1637,14 +1651,14 @@ async def cmd_geminilive(
     is_conn = vc is not None and vc.is_connected()
     ch_name = vc.channel.name if (is_conn and vc.channel) else "Desconectado"
     is_listening = getattr(vc, "is_listening", lambda: False)() if is_conn else False
-    current_sens = "Media (RMS 350)"
+    current_sens = "Media (RMS 70)"
     current_voice = "Álvaro (Edge Neural)"
     if sink:
-        rms_val = getattr(sink, "silence_threshold_rms", 350)
-        if rms_val <= 250:
-            current_sens = "Alta (RMS 220)"
-        elif rms_val >= 500:
-            current_sens = "Baja (RMS 600)"
+        rms_val = getattr(sink, "silence_threshold_rms", 70)
+        if rms_val <= 50:
+            current_sens = "Alta (RMS 40)"
+        elif rms_val >= 150:
+            current_sens = "Baja (RMS 180)"
         v_type = getattr(sink, "voice_type", "alvaro")
         current_voice = "Abril (Edge Neural)" if v_type == "abril" else "Álvaro (Edge Neural)"
 
@@ -1691,7 +1705,13 @@ async def cmd_unete(interaction: discord.Interaction, canal: discord.VoiceChanne
         return
     
     try:
-        await ensure_voice_connection(target_channel)
+        vc = await ensure_voice_connection(target_channel)
+        # Saludo vocal inmediato para inicializar la conexión y confirmar que el audio bidireccional está activo
+        try:
+            greeting_path = await generate_speech_audio("¡Hola! Ya estoy en la llamada en modo Gemini Live. Te escucho por el micro.", "alvaro")
+            play_audio_in_voice(vc, greeting_path)
+        except Exception as ge:
+            print(f"Aviso saludo vocal /unete: {ge}")
         embed = discord.Embed(
             title="🎙️ Gemini Live Conectado",
             description=(
@@ -2327,23 +2347,14 @@ async def _handle_message_safe(message: discord.Message):
             for chunk in chunks:
                 await message.reply(chunk)
 
-        # Si el bot está en llamada en este servidor, hablar en directo la respuesta por el micrófono
+        # Si el bot está en llamada en este servidor, hablar en directo la respuesta completa por el micrófono (todos los párrafos)
         vc = message.guild.voice_client if message.guild else None
         if vc and vc.is_connected():
             try:
                 clean_for_speech = re.sub(r"\[ACTION_DRAW:\s*.*?\]", "", response_text, flags=re.DOTALL | re.IGNORECASE).strip()
                 clean_for_speech = re.sub(r"```.*?```", "", clean_for_speech, flags=re.DOTALL).strip()
-                sentences = re.split(r"(?<=[.!?])\s+", clean_for_speech)
-                spoken_candidate = ""
-                for s in sentences:
-                    if len(spoken_candidate) + len(s) < 250:
-                        spoken_candidate += (" " if spoken_candidate else "") + s
-                    else:
-                        break
-                if not spoken_candidate and sentences:
-                    spoken_candidate = sentences[0][:220]
-                
-                tts_text = clean_text_for_tts(spoken_candidate)
+                # Permitir hasta 1200 caracteres para leer todos los párrafos de forma completa y natural
+                tts_text = clean_text_for_tts(clean_for_speech[:1200])
                 if tts_text and len(tts_text) >= 2:
                     audio_path = await generate_speech_audio(tts_text, "alvaro")
                     play_audio_in_voice(vc, audio_path)
