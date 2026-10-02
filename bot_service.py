@@ -306,12 +306,27 @@ async def generate_speech_audio(text: str, voice_type: str = "alvaro") -> str:
 
 async def ensure_voice_connection(channel: discord.VoiceChannel) -> discord.VoiceClient:
     """Asegura la conexión del bot a una sala de voz en el servidor."""
+    if not discord.opus.is_loaded():
+        for opus_lib in ["libopus.so.0", "libopus.so", "opus", "libopus-0.x86_64.so"]:
+            try:
+                discord.opus.load_opus(opus_lib)
+                if discord.opus.is_loaded():
+                    break
+            except Exception:
+                pass
+
     vc = channel.guild.voice_client
     if vc is not None:
-        if vc.channel.id != channel.id:
-            await vc.move_to(channel)
-        return vc
-    return await channel.connect()
+        if vc.is_connected():
+            if vc.channel.id != channel.id:
+                await vc.move_to(channel)
+            return vc
+        else:
+            try:
+                await vc.disconnect(force=True)
+            except Exception:
+                pass
+    return await channel.connect(timeout=15.0, reconnect=True, self_deaf=True)
 
 def play_audio_in_voice(voice_client: discord.VoiceClient, audio_path: str):
     """Reproduce el audio en el canal de voz usando FFmpegPCMAudio y elimina el archivo al terminar."""
@@ -1249,18 +1264,38 @@ async def cmd_musica(interaction: discord.Interaction, cancion: str):
     app_commands.Choice(name="Charon (Gemini Flash TTS grave)", value="charon")
 ])
 async def cmd_habla(interaction: discord.Interaction, texto: str, voz: app_commands.Choice[str] = None):
+    # Defer inmediato para evitar cualquier timeout de 3 segundos en Discord
+    await interaction.response.defer(thinking=True)
+    
     if not interaction.guild:
-        await interaction.response.send_message("Este comando solo está disponible en un servidor.", ephemeral=True)
+        await interaction.followup.send("❌ Este comando solo está disponible dentro de un servidor.")
         return
     
-    if not interaction.user.voice or not interaction.user.voice.channel:
-        await interaction.response.send_message("❌ Debes estar conectado a un canal de voz para que pueda hablar contigo.", ephemeral=True)
+    # 1. Resolver el canal de voz del usuario con múltiples fallbacks robustos
+    voice_channel = None
+    member = interaction.guild.get_member(interaction.user.id)
+    if not member and isinstance(interaction.user, discord.Member):
+        member = interaction.user
+    if not member:
+        try:
+            member = await interaction.guild.fetch_member(interaction.user.id)
+        except Exception:
+            member = None
+            
+    if member and getattr(member, "voice", None) and member.voice.channel:
+        voice_channel = member.voice.channel
+    else:
+        # Fallback de radar: buscar en qué canal de voz figura el usuario
+        for vc in interaction.guild.voice_channels:
+            if any(m.id == interaction.user.id for m in vc.members):
+                voice_channel = vc
+                break
+                
+    if not voice_channel:
+        await interaction.followup.send("❌ Debes estar conectado a un canal de voz para que pueda hablar contigo.")
         return
     
     voice_choice = voz.value if voz else "alvaro"
-    voice_channel = interaction.user.voice.channel
-    
-    await interaction.response.defer(thinking=True)
     
     try:
         audio_file = await generate_speech_audio(texto, voice_choice)
@@ -1289,43 +1324,60 @@ async def cmd_habla(interaction: discord.Interaction, texto: str, voz: app_comma
 @tree.command(name="unete", description="Conecta al Asistente a tu canal de voz actual")
 @app_commands.describe(canal="Canal de voz al que conectarse (por defecto el tuyo)")
 async def cmd_unete(interaction: discord.Interaction, canal: discord.VoiceChannel = None):
-    target_channel = canal or (interaction.user.voice.channel if interaction.user.voice else None)
+    await interaction.response.defer(thinking=True)
+    if not interaction.guild:
+        await interaction.followup.send("❌ Este comando solo está disponible en un servidor.")
+        return
+        
+    target_channel = canal
     if not target_channel:
-        await interaction.response.send_message("❌ Debes estar conectado a una sala de voz o especificar una.", ephemeral=True)
+        member = interaction.guild.get_member(interaction.user.id)
+        if member and getattr(member, "voice", None) and member.voice.channel:
+            target_channel = member.voice.channel
+        else:
+            for vc in interaction.guild.voice_channels:
+                if any(m.id == interaction.user.id for m in vc.members):
+                    target_channel = vc
+                    break
+                    
+    if not target_channel:
+        await interaction.followup.send("❌ Debes estar conectado a una sala de voz o especificar una.")
         return
     
     try:
-        vc = await ensure_voice_connection(target_channel)
-        await interaction.response.send_message(f"🔊 Me he conectado a la sala **#{target_channel.name}**. ¡Listo para hablar con `/habla`!")
+        await ensure_voice_connection(target_channel)
+        await interaction.followup.send(f"🔊 Me he conectado a la sala **#{target_channel.name}**. ¡Listo para hablar con `/habla`!")
     except Exception as e:
-        await interaction.response.send_message(f"❌ Error al conectar a la llamada de voz: {e}", ephemeral=True)
+        await interaction.followup.send(f"❌ Error al conectar a la llamada de voz: {e}")
 
 @tree.command(name="desconecta", description="Desconecta al Asistente del canal de voz")
 async def cmd_desconecta(interaction: discord.Interaction):
+    await interaction.response.defer(thinking=True)
     if not interaction.guild:
-        await interaction.response.send_message("Este comando solo está disponible en un servidor.", ephemeral=True)
+        await interaction.followup.send("❌ Este comando solo está disponible en un servidor.")
         return
     
     vc = interaction.guild.voice_client
     if not vc or not vc.is_connected():
-        await interaction.response.send_message("ℹ️ No estoy conectado a ningún canal de voz en este servidor.", ephemeral=True)
+        await interaction.followup.send("ℹ️ No estoy conectado a ningún canal de voz en este servidor.")
         return
     
     ch_name = vc.channel.name if vc.channel else "la llamada"
     await vc.disconnect(force=True)
-    await interaction.response.send_message(f"🔌 Me he desconectado de **#{ch_name}**.")
+    await interaction.followup.send(f"🔌 Me he desconectado de **#{ch_name}**.")
 
 @tree.command(name="para_audio", description="Detiene la locución actual si el bot está hablando en la sala de voz")
 async def cmd_para_audio(interaction: discord.Interaction):
+    await interaction.response.defer(thinking=True)
     vc = interaction.guild.voice_client if interaction.guild else None
     if not vc or not vc.is_connected():
-        await interaction.response.send_message("ℹ️ No estoy en ningún canal de voz.", ephemeral=True)
+        await interaction.followup.send("ℹ️ No estoy en ningún canal de voz.")
         return
     if vc.is_playing():
         vc.stop()
-        await interaction.response.send_message("⏹️ Audio detenido.")
+        await interaction.followup.send("⏹️ Audio detenido.")
     else:
-        await interaction.response.send_message("ℹ️ No hay ningún audio reproduciéndose actualmente.", ephemeral=True)
+        await interaction.followup.send("ℹ️ No hay ningún audio reproduciéndose actualmente.")
 
 @tree.command(name="recuerda", description="Guarda un gusto, nota o detalle en la memoria persistente de un usuario")
 @app_commands.describe(
@@ -1507,9 +1559,15 @@ async def _handle_message_safe(message: discord.Message):
             lowered = clean_text.lower()
 
             # Detección de acciones conversacionales directas en llamadas de voz
-            if any(p in lowered for p in ["únete a la llamada", "unete a la llamada", "entra a la llamada", "ven a la llamada", "conéctate a voz", "conectate a voz"]):
-                if message.author.voice and message.author.voice.channel:
-                    vch = message.author.voice.channel
+            if any(p in lowered for p in ["únete a la llamada", "unete a la llamada", "entra a la llamada", "ven a la llamada", "conéctate a voz", "conectate a voz", "ven a voz", "entra a voz"]):
+                vch = getattr(message.author, "voice", None) and message.author.voice.channel
+                if not vch and message.guild:
+                    for c in message.guild.voice_channels:
+                        if any(m.id == message.author.id for m in c.members):
+                            vch = c
+                            break
+                            
+                if vch:
                     try:
                         await ensure_voice_connection(vch)
                         await message.reply(f"🔊 ¡Me he conectado a **#{vch.name}**! Puedes pedirme que hable con `/habla [texto]` o diciendo *di en la llamada: ...*.")
@@ -1542,7 +1600,13 @@ async def _handle_message_safe(message: discord.Message):
             say_match = re.search(r"(?:di en la llamada|di por voz|habla en la llamada|di en voz|suelta por voz)\s*[:,\-]?\s*(.+)", clean_text, re.IGNORECASE)
             if say_match:
                 phrase = say_match.group(1).strip()
-                vch = message.author.voice.channel if (message.author.voice and message.author.voice.channel) else None
+                vch = getattr(message.author, "voice", None) and message.author.voice.channel
+                if not vch and message.guild:
+                    for c in message.guild.voice_channels:
+                        if any(m.id == message.author.id for m in c.members):
+                            vch = c
+                            break
+                            
                 if not vch:
                     await message.reply("❌ Para que hable en la llamada tienes que estar conectado a una sala de voz.")
                     return
