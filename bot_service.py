@@ -1500,15 +1500,13 @@ async def on_ready():
     print(f"Motores de IA con respaldo: {MODELS_PRIORITY}")
     print("Capacidades activas: Voz & TTS (/habla), Memoria Persistente, Trivial, Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y Slash Commands.")
     
-    # Sincronización instantánea de Slash Commands en el servidor y global
+    # Sincronización instantánea de Slash Commands en el servidor (sin duplicados globales)
     try:
         GUILD_ID = 1446143936891715616
         guild_obj = discord.Object(id=GUILD_ID)
         tree.copy_global_to(guild=guild_obj)
         await tree.sync(guild=guild_obj)
-        print(f"Comandos Slash sincronizados instantáneamente en el servidor ID {GUILD_ID}.")
-        await tree.sync()
-        print("Comandos Slash sincronizados globalmente.")
+        print(f"Comandos Slash sincronizados limpiamente en el servidor ID {GUILD_ID} (sin duplicados).")
     except Exception as e:
         print(f"Aviso sincronización comandos slash: {e}")
 
