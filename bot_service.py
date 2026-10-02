@@ -72,11 +72,27 @@ GEMINI_MODEL = os.getenv("GEMINI_MODEL") or cfg.get("gemini_model", "gemini-3.6-
 SYSTEM_PROMPT = """Eres 'Asistente', la IA oficial y colega del servidor de Discord 'LOS MONGOLOS DEL SANVI Y SUS AMIGOS'.
 
 🎯 PERSONALIDAD Y TONO DE COLEGA:
-- Eres un colega más del grupo, cercano, ocurrente, con sentido del humor y buen rollo de Discord.
-- ❌ CERO PELOTEO / SUMISIÓN: Habla de tú a tú con todos como un igual, incluido Joselito. NUNCA uses frases sumisas o ridículas como "mi creador supremo", "jefe supremo" o "dueño del banhammer". Eres un colega inteligente del grupo, no un lacayo.
-- ❌ CERO TOXICIDAD O INSULTOS DESPECTIVOS: Respeta y vacila con buen rollo sano a todos los miembros (Iván, Lázaro, Omen, Vexus, Carlitos, etc.). NUNCA digas que Iván o nadie tiene "admin prestado", "admin de adorno" ni los trates de impostores. Iván es Administrador veterano y legítimo del servidor.
-- ❌ CERO SPAM DE NIVELES Y XP: Habla de forma natural y humana. NO menciones niveles de Cakey Bot (ej. Nivel 47, Nivel 27, Nivel 31) ni rangos en cada mensaje como un loro. Menciónalos ÚNICAMENTE si el usuario te pregunta explícitamente por su nivel, XP o el ranking.
+- Eres un colega más del grupo, maduro, cercano, divertido, resolutivo y con buen rollo de Discord.
+- ❌ CERO "MODO CUÑADO VACILÓN" / CERO FALTAS DE RESPETO: Trata a todos con respeto y estima. NUNCA te burles de los miembros, no uses apodos despectivos, no hagas chistes pesados de mafiosos ni te pongas arrogante o condescendiente. No digas tonterías como "meme de dueño" o "menudo espectáculo de admin".
+- ❌ CERO PELOTEO / SUMISIÓN: Habla de tú a tú como un igual con todos, incluido Joselito. Eres un colega inteligente del grupo, no un lacayo.
+- ❌ CERO INVENCIÓN DE FECHAS HISTÓRICAS: NUNCA inventes fechas del pasado ("tiene admin desde el 4 de diciembre de 2025"). Si alguien te pregunta desde cuándo tiene un rango o rol, di con honestidad que en tus datos actuales ves sus roles vigentes, pero no dispones de la fecha exacta histórica de asignación.
+- ❌ CERO RESPUESTAS DESCOLOCADAS O CRUZADAS: Responde única y exclusivamente a la duda o tema planteado por el usuario en el mensaje actual. No rescates temas antiguos o animes aleatorios que nadie ha pedido.
+- ❌ CERO SPAM DE NIVELES Y XP: Habla de forma natural y humana. NO menciones niveles de Cakey Bot ni rangos en cada mensaje como un loro. Menciónalos ÚNICAMENTE si el usuario te pregunta explícitamente por su nivel, XP o el ranking.
 - PUEDES Y DEBES RESPONDER A CUALQUIER TIPO DE PREGUNTA: anime, manhwas, videojuegos, hardware, programación, ciencia, dilemas, bromas, actualidad, cine o salseo.
+
+🎙️ PROTOCOLO ESTRICTO DE ESTADO DE VOZ Y LLAMADAS:
+- Consulta OBLIGATORIAMENTE el bloque [RADAR EN VIVO DE CANALES DE VOZ]. Es la verdad absoluta y en tiempo real del servidor.
+- Si un usuario aparece en el radar conectado a una sala, ESTÁ DENTRO. Revisa sus flags ([Micro activo/Hablando], [Silenciado/Mute], [Ensordecido], [Compartiendo pantalla]).
+- Si un usuario NO aparece en el radar de esa sala o figura como [FUERA DE LLAMADA], ESTÁ FUERA. NUNCA contradigas a quien te está hablando diciendo que alguien está dentro si no figura en el radar.
+- Si te preguntan si Joselito o cualquier otra persona está en la llamada, mira si su nombre aparece en la sala. Si no está, confirma claramente que no está en la llamada.
+
+🎵 MÚSICA Y REPRODUCCIÓN EN CANALES DE VOZ:
+- El bot oficial para poner música en el servidor es Cakey Bot.
+- Si alguien pide escuchar una canción (ej: "escuchar projection (de yoshimasa terui)", "pon música", "/play"):
+  1. Reconoce y comenta brevemente el tema solicitado con buen rollo.
+  2. Explica con claridad cómo reproducirla en la sala con Cakey Bot mediante el comando slash: `/play song: <nombre de la canción>` o `/play search: <nombre>`.
+  3. Si Cakey Bot está atascado con spam de 'queue empty' o la cola está vacía, indica que se desatasca con `/skip`, `/stop` o lanzando una nueva canción con `/play`.
+  4. Facilita siempre el enlace directo de búsqueda de YouTube para que puedan escucharla al instante con un clic.
 
 🎨 MOTOR DE GENERACIÓN Y EDICIÓN DE IMÁGENES (FLUX.1):
 - Tienes capacidad nativa de generar imágenes y dibujos en alta resolución desde cero o adaptando imágenes adjuntas.
@@ -95,11 +111,11 @@ SYSTEM_PROMPT = """Eres 'Asistente', la IA oficial y colega del servidor de Disc
 - Puedes consultar precios en tiempo real en euros, ofertas actuales, porcentaje de descuento y compatibilidad de juegos en Steam mediante el comando `/steam` o en el chat general.
 
 💻 COMANDOS SLASH ACTIVOS:
-- Dispones de comandos nativos de Discord con interfaz y autocompletado: `/dibuja [prompt] [estilo]`, `/steam [juego]`, `/tribunal [accion] [juego]`, `/perfil [usuario]` y `/pregunta [duda]`. Anima a usarlos cuando sea oportuno.
+- Dispones de comandos nativos de Discord con interfaz y autocompletado: `/voz` (radar en vivo de llamadas), `/musica [cancion]`, `/dibuja [prompt] [estilo]`, `/steam [juego]`, `/tribunal [accion] [juego]`, `/perfil [usuario]` y `/pregunta [duda]`. Anima a usarlos cuando sea oportuno.
 
 👥 MIEMBROS CLAVE DEL SERVIDOR (Lore & Respeto):
 - Joselito (@joselito3499): Fundador, dueño y Administrador del servidor. Fanático de los manhwas (Olympus Scanlation, Asura Scans). En #cultura tiene anclado su top 69 manhwas.
-- Iván / RobaAbuelas (@racerwasp): Co-Administrador del servidor junto a Joselito y Magistrado oficial de El Tribunal Gaming. Veterano del colegio/grupo, jugador de Brawl Stars, Soulslike y lector de manhwas. Trátale como el colega y Admin veterano que es.
+- Iván / RobaAbuelas (@racerwasp): Co-Administrador del servidor junto a Joselito y Magistrado oficial de El Tribunal Gaming. Veterano del colegio/grupo, jugador de Brawl Stars, Soulslike y lector de manhwas. Trátale con el respeto y la confianza de colega y Admin veterano que es.
 - Lázaro (@terreneiror): Miembro veterano, colega de la vieja guardia. Aficionado a videojuegos, RPGs y anime.
 - Omen2042 (@omen2042_38051): Organizador de torneos y eventos de la comunidad.
 - Carlitosmf (@carlitosmf__): Miembro habitual del chat y del casino.
@@ -107,7 +123,7 @@ SYSTEM_PROMPT = """Eres 'Asistente', la IA oficial y colega del servidor de Disc
 
 🗺️ MAPA DE CANALES PRINCIPALES:
 - #cultura: El santuario de mangas, manhwas, anime, cine, novelas ligeras y charlas de madrugada.
-- #el-tribunal-gaming: Sede oficial del Tribunal Gaming (tribunal-gaming.vercel.app). Los magistrados (Jose, Mario, Iván, Lázaro, Alejandro, Víctor) juzgan videojuegos (0-100), gestionan la Escala de Ganas y el Muro de la Vergüenza. (Nota: Es un proyecto de análisis de juegos, nada que ver con moderación ni sanciones).
+- #el-tribunal-gaming: Sede oficial del Tribunal Gaming (tribunal-gaming.vercel.app). Los magistrados juzgan videojuegos (0-100), gestionan la Escala de Ganas y el Muro de la Vergüenza.
 - #la-shit-de-todos-los-dias: El canal de charla general del día a día.
 - #violencia: Debates intensos, piques deportivos y salseo.
 - #muro-de-la-fama: Starboard oficial del servidor.
@@ -127,6 +143,7 @@ REGLAS DE FORMATO:
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
+intents.voice_states = True
 
 bot = discord.Client(intents=intents)
 tree = app_commands.CommandTree(bot)
@@ -201,8 +218,15 @@ def get_steam_query_ctx(text: str) -> str:
 user_cooldowns = {}
 COOLDOWN_SECONDS = 3
 
-# Modelos en orden de respuesta y cuota gratuita (3.5-flash-lite líder absoluto en velocidad y límites)
-MODELS_PRIORITY = ["gemini-3.5-flash-lite", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.7-flash"]
+# Modelos verificados en orden de respuesta (<0.7s) y cuota gratuita amplia
+MODELS_PRIORITY = [
+    "gemini-flash-lite-latest",
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-3.6-flash",
+    "gemini-3.8-flash",
+    "gemini-flash-latest"
+]
 model_cooldowns = {}
 
 def get_available_models():
@@ -371,6 +395,69 @@ async def extract_attachments_parts(msg: discord.Message) -> list:
             
     return parts
 
+def get_live_voice_radar(guild: discord.Guild, author: discord.Member = None) -> str:
+    """Extrae un radar en tiempo real de todos los canales de voz del servidor con detalles de miembros y estados."""
+    if not guild:
+        return ""
+    lines = []
+    total_in_voice = 0
+    connected_member_ids = set()
+    
+    for vc in guild.voice_channels:
+        if vc.members:
+            total_in_voice += len(vc.members)
+            member_details = []
+            for m in vc.members:
+                connected_member_ids.add(m.id)
+                state = m.voice
+                flags = []
+                if m.bot:
+                    flags.append("Bot")
+                if state:
+                    if state.self_mute or state.mute:
+                        flags.append("Silenciado/Mute")
+                    else:
+                        flags.append("Micro activo/Hablando")
+                    if state.self_deaf or state.deaf:
+                        flags.append("Ensordecido")
+                    if state.self_stream:
+                        flags.append("Compartiendo pantalla")
+                    if state.self_video:
+                        flags.append("Cámara encendida")
+                flag_str = f" [{', '.join(flags)}]" if flags else ""
+                tag = f"@{m.name}"
+                member_details.append(f"    - {m.display_name} ({tag}){flag_str}")
+            
+            lines.append(f"  * #{vc.name} ({len(vc.members)} personas en sala):\n" + "\n".join(member_details))
+    
+    key_members_status = []
+    joselito_member = guild.get_member(857923274771136522)
+    if joselito_member and joselito_member.id not in connected_member_ids:
+        key_members_status.append("    - Joselito (@joselito3499): FUERA DE LLAMADA (Desconectado de salas de voz)")
+    
+    ivan_member = guild.get_member(1208551025578082367)
+    if ivan_member and ivan_member.id not in connected_member_ids:
+        key_members_status.append("    - Iván (@racerwasp): FUERA DE LLAMADA (Desconectado de salas de voz)")
+
+    author_status = ""
+    if author:
+        if getattr(author, "voice", None) and author.voice.channel:
+            vc = author.voice.channel
+            author_status = f"\n  * Autor del mensaje ({author.display_name}): CONECTADO en la sala de voz #{vc.name}"
+        else:
+            author_status = f"\n  * Autor del mensaje ({author.display_name}): FUERA DE LLAMADA (No está en ningún canal de voz)"
+
+    out = f"\n[RADAR EN VIVO DE CANALES DE VOZ ({total_in_voice} conectados)]:\n"
+    if lines:
+        out += "\n".join(lines)
+    else:
+        out += "  * No hay nadie conectado a ninguna sala de voz actualmente."
+    
+    if key_members_status:
+        out += "\n  * Estado de miembros destacados ausentes:\n" + "\n".join(key_members_status)
+    out += author_status
+    return out
+
 def get_live_members_ctx(guild: discord.Guild, levels: dict) -> str:
     """Genera un snapshot en tiempo real de los miembros del servidor con sus roles y niveles reales."""
     if not guild:
@@ -499,7 +586,7 @@ def call_gemini_multiturn(turns: list) -> str:
         for attempt in range(2):
             req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
             try:
-                with urllib.request.urlopen(req, timeout=14) as resp:
+                with urllib.request.urlopen(req, timeout=7) as resp:
                     res = json.loads(resp.read().decode("utf-8"))
                     candidates = res.get("candidates", [])
                     if candidates and "content" in candidates[0]:
@@ -832,6 +919,77 @@ async def cmd_pregunta(interaction: discord.Interaction, duda: str):
     else:
         await interaction.followup.send(response[:1900])
 
+@tree.command(name="voz", description="Consulta el radar en tiempo real de quién está en las salas de voz y su estado")
+async def cmd_voz(interaction: discord.Interaction):
+    if not interaction.guild:
+        await interaction.response.send_message("Este comando solo está disponible dentro de un servidor.", ephemeral=True)
+        return
+    
+    embed = discord.Embed(
+        title="🎙️ Radar de Canales de Voz en Vivo",
+        color=0x3b82f6,
+        description=f"Estado de las salas de voz en **{interaction.guild.name}** al segundo:"
+    )
+    
+    total_active = 0
+    for vc in interaction.guild.voice_channels:
+        if vc.members:
+            total_active += len(vc.members)
+            member_lines = []
+            for m in vc.members:
+                state = m.voice
+                icons = []
+                if m.bot:
+                    icons.append("🤖 Bot")
+                else:
+                    if state.self_mute or state.mute:
+                        icons.append("🔇 Silenciado")
+                    else:
+                        icons.append("🎤 Micro activo")
+                    if state.self_deaf or state.deaf:
+                        icons.append("🎧 Ensordecido")
+                    if state.self_stream:
+                        icons.append("📺 Streaming")
+                    if state.self_video:
+                        icons.append("📷 Cámara")
+                icon_str = f" • *{', '.join(icons)}*" if icons else ""
+                member_lines.append(f"• **{m.display_name}** (`@{m.name}`){icon_str}")
+            
+            embed.add_field(
+                name=f"🔊 #{vc.name} ({len(vc.members)} personas)",
+                value="\n".join(member_lines),
+                inline=False
+            )
+            
+    if total_active == 0:
+        embed.description = "🟢 **Todas las salas de voz están libres actualmente.** No hay nadie conectado ahora mismo."
+    else:
+        embed.set_footer(text=f"Total: {total_active} miembros en llamadas de voz • Actualizado al segundo")
+        
+    await interaction.response.send_message(embed=embed)
+
+@tree.command(name="musica", description="Busca una canción y muestra cómo reproducirla con Cakey Bot en la llamada de voz")
+@app_commands.describe(cancion="Título o artista de la canción que quieres escuchar")
+async def cmd_musica(interaction: discord.Interaction, cancion: str):
+    encoded = urllib.parse.quote(cancion.strip())
+    yt_url = f"https://www.youtube.com/results?search_query={encoded}"
+    sp_url = f"https://open.spotify.com/search/{encoded}"
+    
+    embed = discord.Embed(
+        title=f"🎵 Búsqueda Musical: {cancion}",
+        description=(
+            f"Para reproducirla en la sala de voz con **Cakey Bot**, escribe en el canal:\n"
+            f"> `/play song: {cancion}`\n\n"
+            f"🔗 **Enlaces directos para escucharla al instante:**\n"
+            f"• [▶️ Buscar en YouTube]({yt_url})\n"
+            f"• [🟢 Buscar en Spotify]({sp_url})\n\n"
+            f"-# *Si Cakey Bot tiene la cola vacía o se atasca, usa `/skip`, `/stop` o un nuevo `/play`.*"
+        ),
+        color=0x1db954
+    )
+    embed.set_footer(text="Asistente de Música • Integración Cakey Bot & Streaming")
+    await interaction.response.send_message(embed=embed)
+
 @bot.event
 async def on_ready():
     print(f"Bot '{bot.user}' conectado y listo en Discord.")
@@ -896,13 +1054,17 @@ async def _handle_message_safe(message: discord.Message):
             clean_text = re.sub(r"<@&?\d+>", "", clean_text).strip()
             lowered = clean_text.lower()
 
-            # 1. Historial amplio del canal (últimos 25 mensajes para contexto completo)
+            # 1. Historial amplio del canal (últimos 35 mensajes para contexto completo)
             raw_msgs = []
             try:
-                async for prev_msg in message.channel.history(limit=25, before=message):
-                    # Omitir spam de otros bots pero mantener mensajes del propio Asistente y todos los humanos
+                async for prev_msg in message.channel.history(limit=35, before=message):
+                    # Omitir spam de bots pero mantener mensajes del propio Asistente y todos los humanos
                     if prev_msg.author.bot and prev_msg.author != bot.user:
-                        continue
+                        # Si es spam de cola vacía de Cakey Bot, ignorarlo
+                        if any("queue" in str(e.to_dict()).lower() for e in prev_msg.embeds):
+                            continue
+                        if not prev_msg.clean_content and not prev_msg.attachments:
+                            continue
                     clean_prev = prev_msg.clean_content.strip()
                     if clean_prev or prev_msg.attachments:
                         raw_msgs.append(prev_msg)
@@ -1030,14 +1192,28 @@ async def _handle_message_safe(message: discord.Message):
             # Estado en vivo del servidor y Fecha/Hora exacta en España
             spain_time_str = get_spain_now_str()
             server_live_ctx = ""
+            voice_radar_ctx = ""
             if message.guild:
-                active_voices = []
-                for vc in message.guild.voice_channels:
-                    if vc.members:
-                        names = [m.display_name for m in vc.members]
-                        active_voices.append(f"#{vc.name}: {', '.join(names)}")
-                voice_str = "; ".join(active_voices) if active_voices else "Nadie en llamada de voz ahora mismo"
-                server_live_ctx = f"\n[ESTADO EN VIVO DEL SERVIDOR]: Fecha y hora actual: {spain_time_str} | Servidor: {message.guild.name} ({message.guild.member_count} miembros) | Canal: #{message.channel.name} | Llamadas activas: {voice_str}"
+                server_live_ctx = f"\n[ESTADO EN VIVO DEL SERVIDOR]: Fecha y hora actual: {spain_time_str} | Servidor: {message.guild.name} ({message.guild.member_count} miembros) | Canal: #{message.channel.name}"
+                voice_radar_ctx = get_live_voice_radar(message.guild, message.author)
+
+            # Detección de peticiones de música en chats de voz o texto
+            music_ctx = ""
+            music_triggers = ["escuchar ", "pon la canción", "pon música", "ponte la de", "reproduce ", "toca la de", "play ", "cancion", "canción"]
+            is_voice_chat = getattr(message.channel, "type", None) == discord.ChannelType.voice
+            if any(t in lowered for t in music_triggers) or (is_voice_chat and any(w in lowered for w in ["musica", "música", "cakey", "tema", "escuchar"])):
+                clean_song = re.sub(r"\b(asistente|escuchar|pon|la|cancion|canción|musica|música|de|porfa|oye|reproduce|toca|play)\b", "", lowered).strip()
+                yt_link = ""
+                if len(clean_song) >= 3:
+                    encoded_song = urllib.parse.quote(clean_song)
+                    yt_link = f"https://www.youtube.com/results?search_query={encoded_song}"
+                music_ctx = (
+                    f"\n[ASISTENCIA MUSICAL EN SALA DE VOZ]:\n"
+                    f"  * Bot de música oficial en el servidor: Cakey Bot.\n"
+                    f"  * Comando para reproducir música con Cakey Bot en la llamada de voz: `/play song: <nombre>` o `/play search: <nombre>`.\n"
+                    f"  * Si Cakey Bot está atascado con spam de 'queue empty' o cola vacía, se desatasca usando `/skip`, `/stop` o metiendo un nuevo `/play`.\n"
+                    + (f"  * Enlace directo a YouTube para el usuario: {yt_link}\n" if yt_link else "")
+                )
 
             # Snapshot de miembros reales del servidor (con roles y niveles) - Inyección selectiva para ahorrar tokens
             members_ctx = ""
@@ -1103,7 +1279,7 @@ async def _handle_message_safe(message: discord.Message):
                 current_prompt_text = f"{message.author.display_name}: Hola"
 
             # Inyectar todo el paquete de contexto enriquecido
-            current_prompt_text += f"{server_live_ctx}{user_live_ctx}{recent_channel_ctx}{members_ctx}{dossier_context}{pins_context}{xp_calc_context}{web_search_context}{channel_lookup_ctx}{tribunal_ctx}{steam_ctx}"
+            current_prompt_text += f"{server_live_ctx}{voice_radar_ctx}{user_live_ctx}{recent_channel_ctx}{music_ctx}{members_ctx}{dossier_context}{pins_context}{xp_calc_context}{web_search_context}{channel_lookup_ctx}{tribunal_ctx}{steam_ctx}"
 
             current_turn_parts = [{"text": current_prompt_text}] + attachment_parts
 
