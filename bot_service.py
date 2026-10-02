@@ -48,6 +48,54 @@ def bot_log(msg: str):
     print(line)
     GLOBAL_LOG_BUFFER.append(line)
 
+# === PARCHE DAVE (DISCORD E2EE VOICE DECRYPTION) ===
+# Permite al bot descifrar el audio encriptado con MLS proveniente de la app de escritorio de Discord
+try:
+    import davey
+    import discord.ext.voice_recv.opus as vo
+    if hasattr(vo, "PacketDecoder"):
+        _orig_decode_packet = vo.PacketDecoder._decode_packet
+
+        def _patched_decode_packet(self, packet):
+            if packet and getattr(packet, "decrypted_data", None):
+                vc = getattr(self.sink, "voice_client", None)
+                if vc:
+                    conn = getattr(vc, "_connection", None)
+                    dave = getattr(conn, "dave_session", None)
+                    if dave and getattr(dave, "ready", False):
+                        candidates = []
+                        if self._cached_id:
+                            candidates.append(self._cached_id)
+                        u = vc._get_id_from_ssrc(self.ssrc)
+                        if u and u not in candidates:
+                            candidates.append(u)
+                        if not candidates:
+                            try:
+                                candidates = dave.get_user_ids()
+                            except Exception:
+                                candidates = []
+
+                        for cand_id in candidates:
+                            try:
+                                dec = dave.decrypt(cand_id, davey.MediaType.audio, packet.decrypted_data)
+                                if dec:
+                                    packet.decrypted_data = dec
+                                    self._cached_id = cand_id
+                                    if not vc._get_id_from_ssrc(self.ssrc):
+                                        vc._add_ssrc(cand_id, self.ssrc)
+                                    break
+                            except Exception:
+                                pass
+            try:
+                return _orig_decode_packet(self, packet)
+            except discord.opus.OpusError:
+                return packet, b""
+
+        vo.PacketDecoder._decode_packet = _patched_decode_packet
+        bot_log("🔒 [DAVE E2EE] Parche de descifrado de voz activo en PacketDecoder.")
+except Exception as _patch_err:
+    bot_log(f"Aviso inicialización parche DAVE: {_patch_err}")
+
 if sys.platform == "win32":
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -346,9 +394,9 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
         self.user_buffers = {}
         self._lock = threading.Lock()
         self._is_active = True
-        self.silence_threshold_rms = 70  # Calibrado para captar micrófonos con Krisp o volumen moderado
-        self.silence_timeout = 0.75
-        self.min_speech_frames = 18   # ~0.36s de audio mínimo
+        self.silence_threshold_rms = 50  # Sensibilidad alta para captar cualquier micrófono con Krisp
+        self.silence_timeout = 0.65
+        self.min_speech_frames = 8   # ~0.16s (capta incluso palabras cortas o saludos)
         self.max_speech_frames = 450  # ~9.0s máximo por turno
         self.recent_turns = []
         self.last_bot_reply_time = 0.0
@@ -367,8 +415,6 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
         if user is not None and getattr(user, "bot", False):
             return
         client = self.vc or getattr(self, "voice_client", None)
-        if client and client.is_playing():
-            return
         pcm = data.pcm
         if not pcm:
             return
@@ -424,7 +470,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
         """Vigila pausas de voz cuando Discord suspende el envío de paquetes (voice gate)."""
         while self._is_active:
             try:
-                await asyncio.sleep(0.2)
+                await asyncio.sleep(0.15)
                 now = time.time()
                 turns = []
                 with self._lock:
@@ -436,6 +482,8 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                             user = state["user"]
                             if len(frames) >= self.min_speech_frames:
                                 turns.append((user, frames))
+                                u_name = getattr(user, "display_name", None) or getattr(user, "name", "Usuario")
+                                bot_log(f"🎙️ [VAD Fin Silencio] Turno completado para '{u_name}' ({len(frames)} tramas). Enviando a Gemini...")
                 for u, f in turns:
                     asyncio.create_task(self.process_speech_turn(u, f))
             except asyncio.CancelledError:
@@ -448,8 +496,14 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             return
         async with self.processing_lock:
             client = self.vc or getattr(self, "voice_client", None)
-            if not client or not client.is_connected() or client.is_playing():
+            if not client or not client.is_connected():
                 return
+
+            # Si el bot estaba terminando de reproducir un audio previo, esperar brevemente en vez de descartar
+            wait_count = 0
+            while client.is_playing() and wait_count < 15:
+                await asyncio.sleep(0.2)
+                wait_count += 1
 
             if user is None and getattr(client, "channel", None):
                 humans = [m for m in client.channel.members if not m.bot]
@@ -473,6 +527,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             channel_members = getattr(getattr(client, "channel", None), "members", [])
             members_str = ", ".join([m.display_name for m in channel_members if not m.bot]) or user_name
             now = time.time()
+            bot_log(f"🎙️ [Gemini Live Turno] Procesando audio de '{user_name}' ({len(frames)} tramas, {len(wav_bytes)} B)...")
 
             history_lines = []
             for spk, u_txt, b_txt in self.recent_turns[-3:]:
@@ -2447,12 +2502,20 @@ def run_health_check_server():
                 try:
                     voice_data = []
                     for vc in list(bot.voice_clients):
+                        conn = getattr(vc, "_connection", None)
+                        dave = getattr(conn, "dave_session", None)
+                        dave_info = {
+                            "protocol_version": getattr(conn, "dave_protocol_version", 0),
+                            "ready": getattr(dave, "ready", False) if dave else False,
+                            "user_ids": dave.get_user_ids() if dave and hasattr(dave, "get_user_ids") else []
+                        }
                         voice_data.append({
                             "guild": str(vc.guild.name) if vc.guild else None,
                             "channel": str(getattr(vc.channel, "name", "desconocido")),
                             "is_connected": bool(vc.is_connected()),
                             "is_listening": bool(vc.is_listening()) if hasattr(vc, "is_listening") else False,
                             "is_playing": bool(vc.is_playing()) if hasattr(vc, "is_playing") else False,
+                            "dave": dave_info,
                             "members": [m.display_name for m in getattr(vc.channel, "members", []) if not m.bot]
                         })
                     payload = {
