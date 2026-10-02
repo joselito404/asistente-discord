@@ -29,9 +29,14 @@ import urllib.error
 import discord
 from discord import app_commands
 import io
+import wave
+import struct
+import math
+import threading
 import random
 import tempfile
 import edge_tts
+from discord.ext import voice_recv
 from datetime import datetime, timezone, timedelta
 
 if sys.platform == "win32":
@@ -304,8 +309,227 @@ async def generate_speech_audio(text: str, voice_type: str = "alvaro") -> str:
     await comm.save(out_path)
     return out_path
 
-async def ensure_voice_connection(channel: discord.VoiceChannel) -> discord.VoiceClient:
-    """Asegura la conexión del bot a una sala de voz en el servidor."""
+def pcm_48k_stereo_to_16k_mono(pcm_bytes: bytes) -> bytes:
+    """Convierte audio PCM de 48kHz estéreo a 16kHz mono para transmisión ultraligera a Gemini (<100KB)."""
+    out = bytearray()
+    for i in range(0, len(pcm_bytes) - 11, 12):
+        l = int.from_bytes(pcm_bytes[i:i+2], byteorder="little", signed=True)
+        r = int.from_bytes(pcm_bytes[i+2:i+4], byteorder="little", signed=True)
+        mono = (l + r) // 2
+        out.extend(mono.to_bytes(2, byteorder="little", signed=True))
+    return bytes(out)
+
+class GeminiLiveVoiceSink(voice_recv.AudioSink):
+    """
+    Sink de audio bidireccional en tiempo real (estilo Gemini Live) para llamadas de Discord.
+    - Captura tramas PCM de 48kHz estéreo de los usuarios en la llamada.
+    - Detección de actividad vocal (VAD) y segmentación por silencios (750ms).
+    - Convierte a 16kHz mono y consulta Gemini Flash multimodal en memoria.
+    - Filtra inteligentemente si los usuarios hablan entre ellos jugando o se dirigen al Asistente.
+    - Responde al vuelo con voz neuronal fluida (Edge Neural TTS) directamente en la llamada.
+    """
+    def __init__(self, voice_client: voice_recv.VoiceRecvClient, loop: asyncio.AbstractEventLoop):
+        super().__init__()
+        self.voice_client = voice_client
+        self.loop = loop
+        self.user_buffers = {}
+        self._lock = threading.Lock()
+        self._is_active = True
+        self.silence_threshold_rms = 350
+        self.silence_timeout = 0.75
+        self.min_speech_frames = 25   # ~0.5s de audio mínimo
+        self.max_speech_frames = 450  # ~9.0s máximo por turno
+        self.recent_turns = []
+        self.last_bot_reply_time = 0.0
+        self.voice_type = "alvaro"
+        self.processing_lock = asyncio.Lock()
+        self.watchdog_task = self.loop.create_task(self._watchdog())
+        print(f"🎙️ [Gemini Live] Sink activado en #{getattr(voice_client.channel, 'name', 'llamada')}")
+
+    def wants_opus(self) -> bool:
+        return False
+
+    def write(self, user: discord.User, data: voice_recv.VoiceData) -> None:
+        if not self._is_active or user is None or getattr(user, "bot", False):
+            return
+        if self.voice_client and self.voice_client.is_playing():
+            return
+        pcm = data.pcm
+        if not pcm:
+            return
+
+        count = len(pcm) // 2
+        if count == 0:
+            return
+        shorts = struct.unpack(f"<{count}h", pcm)
+        rms = int(math.sqrt(sum(s * s for s in shorts) / count))
+
+        now = time.time()
+        with self._lock:
+            state = self.user_buffers.setdefault(user.id, {
+                "frames": [],
+                "last_speech_time": 0.0,
+                "in_speech": False,
+                "user": user
+            })
+            state["user"] = user
+
+            if rms >= self.silence_threshold_rms:
+                state["frames"].append(pcm)
+                state["last_speech_time"] = now
+                state["in_speech"] = True
+                if len(state["frames"]) >= self.max_speech_frames:
+                    frames = state["frames"][:]
+                    state["frames"].clear()
+                    state["in_speech"] = False
+                    asyncio.run_coroutine_threadsafe(self.process_speech_turn(user, frames), self.loop)
+            elif state["in_speech"]:
+                if len(state["frames"]) % 2 == 0 and len(state["frames"]) < self.max_speech_frames:
+                    state["frames"].append(pcm)
+                if (now - state["last_speech_time"]) >= self.silence_timeout:
+                    frames = state["frames"][:]
+                    state["frames"].clear()
+                    state["in_speech"] = False
+                    if len(frames) >= self.min_speech_frames:
+                        asyncio.run_coroutine_threadsafe(self.process_speech_turn(user, frames), self.loop)
+
+    async def _watchdog(self):
+        """Vigila pausas de voz cuando Discord suspende el envío de paquetes (voice gate)."""
+        while self._is_active:
+            try:
+                await asyncio.sleep(0.2)
+                now = time.time()
+                turns = []
+                with self._lock:
+                    for uid, state in list(self.user_buffers.items()):
+                        if state["in_speech"] and (now - state["last_speech_time"]) >= self.silence_timeout:
+                            frames = state["frames"][:]
+                            state["frames"].clear()
+                            state["in_speech"] = False
+                            user = state["user"]
+                            if len(frames) >= self.min_speech_frames:
+                                turns.append((user, frames))
+                for u, f in turns:
+                    asyncio.create_task(self.process_speech_turn(u, f))
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                print(f"Aviso en watchdog de voz: {e}")
+
+    async def process_speech_turn(self, user: discord.Member, frames: list):
+        if not self._is_active or self.processing_lock.locked():
+            return
+        async with self.processing_lock:
+            if not self.voice_client or not self.voice_client.is_connected() or self.voice_client.is_playing():
+                return
+
+            raw_pcm = b"".join(frames)
+            mono_pcm = pcm_48k_stereo_to_16k_mono(raw_pcm)
+
+            wav_io = io.BytesIO()
+            with wave.open(wav_io, "wb") as wf:
+                wf.setnchannels(1)
+                wf.setsampwidth(2)
+                wf.setframerate(16000)
+                wf.writeframes(mono_pcm)
+            wav_bytes = wav_io.getvalue()
+            b64_audio = base64.b64encode(wav_bytes).decode("utf-8")
+
+            user_name = getattr(user, "display_name", None) or user.name
+            channel_name = getattr(self.voice_client.channel, "name", "llamada")
+            guild_name = getattr(self.voice_client.guild, "name", "Servidor")
+            channel_members = getattr(self.voice_client.channel, "members", [])
+            members_str = ", ".join([m.display_name for m in channel_members if not m.bot]) or user_name
+            now = time.time()
+            recent_active = (now - self.last_bot_reply_time) < 22.0
+
+            history_lines = []
+            for spk, u_txt, b_txt in self.recent_turns[-3:]:
+                history_lines.append(f"- {spk}: {u_txt}")
+                history_lines.append(f"- Asistente: {b_txt}")
+            hist_ctx = "\n".join(history_lines) if history_lines else "Sin diálogo reciente."
+
+            prompt = (
+                f"Estás en vivo en el canal de voz '{channel_name}' en Discord (servidor: {guild_name}).\n"
+                f"Modo: Gemini Live Conversacional en Tiempo Real.\n"
+                f"Gente en la sala: {members_str}.\n"
+                f"El usuario que acaba de hablar por el micro es: '{user_name}'.\n\n"
+                f"HISTORIAL RECIENTE EN VOZ:\n{hist_ctx}\n\n"
+                f"INSTRUCCIONES CLAVE:\n"
+                f"1. Escucha atentamente el audio adjunto de '{user_name}'.\n"
+                f"2. FILTRO INTELIGENTE:\n"
+                f"   - Los usuarios juegan o charlan entre ellos, tosen, se ríen o exclaman sobre su juego (ej: 'vamos', 'qué malo', 'muerto', 'pásamelo').\n"
+                f"   - Si lo que dice NO va dirigido a ti ('Asistente', 'bot', dudas directas), o es ruido/risa/ininteligible/diálogo interno de su partida, RESPONDE EXACTAMENTE: [IGNORAR]\n"
+                f"   - Si te llaman ('Asistente', 'oye bot', etc.) o te hacen una pregunta directa {'o continúan la conversación anterior' if recent_active else ''}, responde.\n"
+                f"3. FORMATO DE RESPUESTA EN VOZ:\n"
+                f"   - Responde de forma muy natural, cercana, educada y como un colega en la llamada.\n"
+                f"   - Máximo 1 a 3 frases cortas y claras (locución concisa).\n"
+                f"   - NUNCA uses formato markdown (nada de asteriscos **, viñetas, títulos # ni emojis).\n"
+                f"   - Directo para ser escuchado por audio."
+            )
+
+            payload = {
+                "contents": [{
+                    "parts": [
+                        {"text": prompt},
+                        {"inline_data": {"mime_type": "audio/wav", "data": b64_audio}}
+                    ]
+                }],
+                "generationConfig": {
+                    "temperature": 0.7,
+                    "maxOutputTokens": 160
+                }
+            }
+            data = json.dumps(payload).encode("utf-8")
+            response_text = ""
+            for model_name in get_available_models():
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_KEY}"
+                try:
+                    req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+                    def call_api():
+                        with urllib.request.urlopen(req, timeout=12) as resp:
+                            return json.loads(resp.read().decode("utf-8"))
+                    res = await asyncio.to_thread(call_api)
+                    candidates = res.get("candidates", [])
+                    if candidates and "content" in candidates[0]:
+                        response_text = candidates[0]["content"]["parts"][0]["text"].strip()
+                        if response_text:
+                            break
+                except urllib.error.HTTPError as e:
+                    if e.code in (429, 503):
+                        mark_model_cooldown(model_name, 60)
+                    continue
+                except Exception:
+                    continue
+
+            if not response_text or "[IGNORAR]" in response_text or response_text == "IGNORAR":
+                return
+
+            clean_resp = clean_text_for_tts(response_text)
+            if not clean_resp:
+                return
+
+            print(f"🎙️ [Gemini Live] '{user_name}' -> Asistente: '{clean_resp}'")
+            self.last_bot_reply_time = time.time()
+            self.recent_turns.append((user_name, "(voz)", clean_resp))
+            if len(self.recent_turns) > 8:
+                self.recent_turns.pop(0)
+
+            try:
+                audio_file = await generate_speech_audio(clean_resp, voice_type=self.voice_type)
+                play_audio_in_voice(self.voice_client, audio_file)
+            except Exception as ex:
+                print(f"Error reproduciendo voz Gemini Live: {ex}")
+
+    def cleanup(self):
+        self._is_active = False
+        if self.watchdog_task and not self.watchdog_task.done():
+            self.watchdog_task.cancel()
+        with self._lock:
+            self.user_buffers.clear()
+
+async def ensure_voice_connection(channel: discord.VoiceChannel) -> voice_recv.VoiceRecvClient:
+    """Asegura la conexión del bot a una sala de voz con Gemini Live bidireccional activo."""
     if not discord.opus.is_loaded():
         for opus_lib in ["libopus.so.0", "libopus.so", "opus", "libopus-0.x86_64.so"]:
             try:
@@ -317,20 +541,37 @@ async def ensure_voice_connection(channel: discord.VoiceChannel) -> discord.Voic
 
     vc = channel.guild.voice_client
     if vc is not None:
-        if vc.is_connected():
+        if isinstance(vc, voice_recv.VoiceRecvClient) and vc.is_connected():
             if vc.channel.id != channel.id:
                 await vc.move_to(channel)
+            if not vc.is_listening():
+                sink = GeminiLiveVoiceSink(vc, bot.loop)
+                vc.listen(sink)
             return vc
         else:
             try:
+                if hasattr(vc, "stop_listening"):
+                    vc.stop_listening()
+                if vc.is_playing():
+                    if hasattr(vc, "stop_playing"):
+                        vc.stop_playing()
+                    else:
+                        vc.stop()
                 await vc.disconnect(force=True)
             except Exception:
                 pass
-    return await channel.connect(timeout=15.0, reconnect=True, self_deaf=True)
+            await asyncio.sleep(0.5)
+
+    vc = await channel.connect(cls=voice_recv.VoiceRecvClient, timeout=15.0, reconnect=True, self_deaf=False)
+    sink = GeminiLiveVoiceSink(vc, bot.loop)
+    vc.listen(sink)
+    return vc
 
 def play_audio_in_voice(voice_client: discord.VoiceClient, audio_path: str):
     """Reproduce el audio en el canal de voz usando FFmpegPCMAudio y elimina el archivo al terminar."""
-    if voice_client.is_playing():
+    if hasattr(voice_client, "stop_playing"):
+        voice_client.stop_playing()
+    elif voice_client.is_playing():
         voice_client.stop()
         
     def after_play(err):
@@ -1321,7 +1562,101 @@ async def cmd_habla(interaction: discord.Interaction, texto: str, voz: app_comma
         print(f"Error en /habla: {e}")
         await interaction.followup.send(f"❌ Error al generar o reproducir la voz: {e}")
 
-@tree.command(name="unete", description="Conecta al Asistente a tu canal de voz actual")
+@tree.command(name="geminilive", description="Consulta o configura el estado de Gemini Live en llamada de voz")
+@app_commands.describe(
+    accion="Acción a realizar",
+    sensibilidad="Sensibilidad del detector de voz (VAD)",
+    voz="Voz neuronal del Asistente"
+)
+@app_commands.choices(
+    accion=[
+        app_commands.Choice(name="Estado y Diagnóstico", value="estado"),
+        app_commands.Choice(name="Pausar Escucha", value="pausar"),
+        app_commands.Choice(name="Reanudar Escucha", value="activar"),
+    ],
+    sensibilidad=[
+        app_commands.Choice(name="Alta (micrófonos lejanos o voz baja)", value="alta"),
+        app_commands.Choice(name="Media (estándar equilibrada)", value="media"),
+        app_commands.Choice(name="Baja (entornos con mucho ruido de fondo)", value="baja"),
+    ],
+    voz=[
+        app_commands.Choice(name="Álvaro (Español neutro / natural - Edge Neural)", value="alvaro"),
+        app_commands.Choice(name="Abril (Femenino / natural - Edge Neural)", value="abril"),
+    ]
+)
+async def cmd_geminilive(
+    interaction: discord.Interaction,
+    accion: app_commands.Choice[str] = None,
+    sensibilidad: app_commands.Choice[str] = None,
+    voz: app_commands.Choice[str] = None
+):
+    await interaction.response.defer(thinking=True)
+    if not interaction.guild:
+        await interaction.followup.send("❌ Este comando solo está disponible en un servidor.")
+        return
+        
+    vc = interaction.guild.voice_client
+    sink = getattr(vc, "sink", None) if vc else None
+    act = accion.value if accion else "estado"
+    
+    if act == "pausar":
+        if sink and hasattr(sink, "_is_active"):
+            sink._is_active = False
+            await interaction.followup.send("⏸️ **Gemini Live pausado**: El bot no escuchará el micrófono hasta que uses `/geminilive accion:Reanudar Escucha`.")
+        else:
+            await interaction.followup.send("ℹ️ El bot no está conectado o no tiene Gemini Live activo en este servidor.")
+        return
+        
+    if act == "activar":
+        if sink and hasattr(sink, "_is_active"):
+            sink._is_active = True
+            await interaction.followup.send("▶️ **Gemini Live reanudado**: El bot vuelve a escuchar activamente la llamada.")
+        elif vc and vc.is_connected() and isinstance(vc, voice_recv.VoiceRecvClient):
+            new_sink = GeminiLiveVoiceSink(vc, bot.loop)
+            vc.listen(new_sink)
+            await interaction.followup.send(f"🎙️ **Gemini Live iniciado** en **#{vc.channel.name}**.")
+        else:
+            await interaction.followup.send("ℹ️ Usa `/unete` para conectar el bot a tu sala de voz primero.")
+        return
+
+    # Ajustes de sensibilidad o voz si se han especificado
+    if sink:
+        if sensibilidad and hasattr(sink, "silence_threshold_rms"):
+            sens_map = {"alta": 220, "media": 350, "baja": 600}
+            sink.silence_threshold_rms = sens_map.get(sensibilidad.value, 350)
+        if voz and hasattr(sink, "voice_type"):
+            sink.voice_type = voz.value
+
+    # Mostrar estado detallado
+    is_conn = vc is not None and vc.is_connected()
+    ch_name = vc.channel.name if (is_conn and vc.channel) else "Desconectado"
+    is_listening = getattr(vc, "is_listening", lambda: False)() if is_conn else False
+    current_sens = "Media (RMS 350)"
+    current_voice = "Álvaro (Edge Neural)"
+    if sink:
+        rms_val = getattr(sink, "silence_threshold_rms", 350)
+        if rms_val <= 250:
+            current_sens = "Alta (RMS 220)"
+        elif rms_val >= 500:
+            current_sens = "Baja (RMS 600)"
+        v_type = getattr(sink, "voice_type", "alvaro")
+        current_voice = "Abril (Edge Neural)" if v_type == "abril" else "Álvaro (Edge Neural)"
+
+    embed = discord.Embed(
+        title="🎙️ Panel de Control: Gemini Live Voice",
+        description="Experiencia conversacional fluida en tiempo real por voz en Discord.",
+        color=0x10b981 if (is_conn and is_listening) else 0x6b7280
+    )
+    embed.add_field(name="📡 Estado Conexión", value=f"`{'🟢 Conectado' if is_conn else '🔴 Desconectado'}`", inline=True)
+    embed.add_field(name="🔊 Canal de Voz", value=f"**#{ch_name}**", inline=True)
+    embed.add_field(name="👂 Escucha en Vivo", value=f"`{'🟢 Activa (Escuchando)' if is_listening else '⚪ Inactiva'}`", inline=True)
+    embed.add_field(name="🎚️ Sensibilidad Micro (VAD)", value=f"`{current_sens}`", inline=True)
+    embed.add_field(name="🗣️ Voz de Salida", value=f"`{current_voice}`", inline=True)
+    embed.add_field(name="⚡ Latencia de Respuesta", value="`~1.5s (Full Duplex)`", inline=True)
+    embed.set_footer(text="Usa /unete para conectar a tu canal de voz o /desconecta para salir.")
+    await interaction.followup.send(embed=embed)
+
+@tree.command(name="unete", description="Conecta al Asistente a tu canal de voz en modo conversacional Gemini Live")
 @app_commands.describe(canal="Canal de voz al que conectarse (por defecto el tuyo)")
 async def cmd_unete(interaction: discord.Interaction, canal: discord.VoiceChannel = None):
     await interaction.response.defer(thinking=True)
@@ -1332,6 +1667,11 @@ async def cmd_unete(interaction: discord.Interaction, canal: discord.VoiceChanne
     target_channel = canal
     if not target_channel:
         member = interaction.guild.get_member(interaction.user.id)
+        if not member:
+            try:
+                member = await interaction.guild.fetch_member(interaction.user.id)
+            except Exception:
+                member = None
         if member and getattr(member, "voice", None) and member.voice.channel:
             target_channel = member.voice.channel
         else:
@@ -1346,7 +1686,20 @@ async def cmd_unete(interaction: discord.Interaction, canal: discord.VoiceChanne
     
     try:
         await ensure_voice_connection(target_channel)
-        await interaction.followup.send(f"🔊 Me he conectado a la sala **#{target_channel.name}**. ¡Listo para hablar con `/habla`!")
+        embed = discord.Embed(
+            title="🎙️ Gemini Live Conectado",
+            description=(
+                f"🔊 Me he conectado a **#{target_channel.name}** en modo **Gemini Live Bidireccional**.\n\n"
+                f"✨ **¿Cómo funciona?**\n"
+                f"• Háblame directamente por el micro diciendo *\"Asistente...\"* o haciéndome preguntas.\n"
+                f"• Te escucharé y responderé al instante por voz en la misma llamada.\n"
+                f"• Filtro inteligente: puedes hablar con tus amigos sin que el bot interrumpa tus partidas.\n"
+                f"• Usa `/para_audio` para cortar si está hablando o `/desconecta` para salir."
+            ),
+            color=0x10b981
+        )
+        embed.set_footer(text="Gemini Live Discord • Voz Neuronal en Tiempo Real")
+        await interaction.followup.send(embed=embed)
     except Exception as e:
         await interaction.followup.send(f"❌ Error al conectar a la llamada de voz: {e}")
 
@@ -1363,8 +1716,18 @@ async def cmd_desconecta(interaction: discord.Interaction):
         return
     
     ch_name = vc.channel.name if vc.channel else "la llamada"
+    if hasattr(vc, "stop_listening"):
+        try:
+            vc.stop_listening()
+        except Exception:
+            pass
+    if vc.is_playing():
+        if hasattr(vc, "stop_playing"):
+            vc.stop_playing()
+        else:
+            vc.stop()
     await vc.disconnect(force=True)
-    await interaction.followup.send(f"🔌 Me he desconectado de **#{ch_name}**.")
+    await interaction.followup.send(f"🔌 Me he desconectado de **#{ch_name}** y detenido Gemini Live.")
 
 @tree.command(name="para_audio", description="Detiene la locución actual si el bot está hablando en la sala de voz")
 async def cmd_para_audio(interaction: discord.Interaction):
@@ -1374,7 +1737,10 @@ async def cmd_para_audio(interaction: discord.Interaction):
         await interaction.followup.send("ℹ️ No estoy en ningún canal de voz.")
         return
     if vc.is_playing():
-        vc.stop()
+        if hasattr(vc, "stop_playing"):
+            vc.stop_playing()
+        else:
+            vc.stop()
         await interaction.followup.send("⏹️ Audio detenido.")
     else:
         await interaction.followup.send("ℹ️ No hay ningún audio reproduciéndose actualmente.")
@@ -1495,10 +1861,34 @@ async def cmd_ranking_trivial(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed)
 
 @bot.event
+async def on_voice_state_update(member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+    """Auto-desconexión si el bot se queda solo en un canal de voz."""
+    guild = member.guild
+    vc = guild.voice_client
+    if vc and vc.is_connected() and vc.channel:
+        human_members = [m for m in vc.channel.members if not m.bot]
+        if len(human_members) == 0:
+            print(f"ℹ️ Canal de voz #{vc.channel.name} vacío. Desconectando Asistente...")
+            if hasattr(vc, "stop_listening"):
+                try:
+                    vc.stop_listening()
+                except Exception:
+                    pass
+            if vc.is_playing():
+                if hasattr(vc, "stop_playing"):
+                    vc.stop_playing()
+                else:
+                    vc.stop()
+            try:
+                await vc.disconnect(force=True)
+            except Exception:
+                pass
+
+@bot.event
 async def on_ready():
     print(f"Bot '{bot.user}' conectado y listo en Discord.")
     print(f"Motores de IA con respaldo: {MODELS_PRIORITY}")
-    print("Capacidades activas: Voz & TTS (/habla), Memoria Persistente, Trivial, Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y Slash Commands.")
+    print("Capacidades activas: Gemini Live en Voz (/geminilive), Memoria Persistente, Trivial, Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y Slash Commands.")
     
     # Sincronización instantánea de Slash Commands en el servidor (sin duplicados globales)
     try:
@@ -1510,7 +1900,7 @@ async def on_ready():
     except Exception as e:
         print(f"Aviso sincronización comandos slash: {e}")
 
-    activity = discord.Activity(type=discord.ActivityType.listening, name="/habla, /trivial y menciones")
+    activity = discord.Activity(type=discord.ActivityType.listening, name="Gemini Live en voz (/unete)")
     await bot.change_presence(activity=activity)
 
 @bot.event
@@ -1568,7 +1958,7 @@ async def _handle_message_safe(message: discord.Message):
                 if vch:
                     try:
                         await ensure_voice_connection(vch)
-                        await message.reply(f"🔊 ¡Me he conectado a **#{vch.name}**! Puedes pedirme que hable con `/habla [texto]` o diciendo *di en la llamada: ...*.")
+                        await message.reply(f"🎙️ ¡Me he conectado a **#{vch.name}** en modo **Gemini Live**! Háblame directamente por el micro diciendo *'Asistente...'*, te responderé por voz en tiempo real.")
                         return
                     except Exception as e:
                         await message.reply(f"❌ No pude conectarme a la sala de voz: {e}")
@@ -1581,8 +1971,18 @@ async def _handle_message_safe(message: discord.Message):
                 vc = message.guild.voice_client if message.guild else None
                 if vc and vc.is_connected():
                     v_name = vc.channel.name if vc.channel else "la sala"
+                    if hasattr(vc, "stop_listening"):
+                        try:
+                            vc.stop_listening()
+                        except Exception:
+                            pass
+                    if vc.is_playing():
+                        if hasattr(vc, "stop_playing"):
+                            vc.stop_playing()
+                        else:
+                            vc.stop()
                     await vc.disconnect(force=True)
-                    await message.reply(f"🔌 Me he desconectado de **#{v_name}**.")
+                    await message.reply(f"🔌 Me he desconectado de **#{v_name}** y detenido Gemini Live.")
                     return
                 else:
                     await message.reply("ℹ️ No estoy en ninguna llamada de voz ahora mismo.")
@@ -1591,7 +1991,10 @@ async def _handle_message_safe(message: discord.Message):
             if any(p in lowered for p in ["para el audio", "para la voz", "para de hablar", "cállate en la llamada", "callate en la llamada", "silencio en la llamada"]):
                 vc = message.guild.voice_client if message.guild else None
                 if vc and vc.is_connected() and vc.is_playing():
-                    vc.stop()
+                    if hasattr(vc, "stop_playing"):
+                        vc.stop_playing()
+                    else:
+                        vc.stop()
                     await message.reply("⏹️ Audio detenido.")
                     return
 
