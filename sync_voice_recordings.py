@@ -33,7 +33,7 @@ def sync_recordings():
                 zf.extractall(LOCAL_BACKUP_DIR)
                 file_list = zf.namelist()
                 
-            print(f"[✅] ¡Sincronización completada! {len(file_list)} archivos guardados en:")
+            print(f"[OK] Sincronizacion completada! {len(file_list)} archivos guardados en:")
             print(f"    {LOCAL_BACKUP_DIR}")
             for name in file_list:
                 print(f"    - {name}")
