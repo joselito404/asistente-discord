@@ -400,7 +400,6 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
         self.max_speech_frames = 450  # ~9.0s máximo por turno
         self.recent_turns = []
         self.last_bot_reply_time = 0.0
-        self.quiet_until = 0.0
         self.voice_type = "alvaro"
         self.processing_lock = asyncio.Lock()
         self.watchdog_task = self.loop.create_task(self._watchdog())
@@ -500,12 +499,6 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             if not client or not client.is_connected():
                 return
 
-            # Si el bot estaba terminando de reproducir un audio previo, esperar brevemente en vez de descartar
-            wait_count = 0
-            while client.is_playing() and wait_count < 15:
-                await asyncio.sleep(0.2)
-                wait_count += 1
-
             if user is None and getattr(client, "channel", None):
                 humans = [m for m in client.channel.members if not m.bot]
                 user = humans[0] if humans else None
@@ -527,8 +520,6 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             guild_name = getattr(getattr(client, "guild", None), "name", "Servidor")
             channel_members = getattr(getattr(client, "channel", None), "members", [])
             members_str = ", ".join([m.display_name for m in channel_members if not m.bot]) or user_name
-            now = time.time()
-            in_quiet = now < getattr(self, "quiet_until", 0.0)
             bot_log(f"🎙️ [Gemini Live Turno] Procesando audio de '{user_name}' ({len(frames)} tramas, {len(wav_bytes)} B)...")
 
             history_lines = []
@@ -537,32 +528,29 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                 history_lines.append(f"- Asistente: {b_txt}")
             hist_ctx = "\n".join(history_lines) if history_lines else "Sin diálogo reciente."
 
-            quiet_status = "ACTIVADO (el usuario te mandó callar)" if in_quiet else "Desactivado"
-
             prompt = (
-                f"Estás en vivo en el canal de voz '{channel_name}' en Discord (servidor de España: {guild_name}).\n"
-                f"Modo: Gemini Live Conversacional.\n"
+                f"Estás en vivo como asistente de voz en el canal '{channel_name}' en Discord (España: {guild_name}).\n"
+                f"Tu nombre es 'Asistente' (también respondes a 'bot').\n"
                 f"Gente en la sala: {members_str}.\n"
-                f"El usuario que acaba de hablar por el micro es: '{user_name}'.\n"
-                f"Estado del modo silencioso: {quiet_status}.\n\n"
-                f"HISTORIAL RECIENTE EN VOZ:\n{hist_ctx}\n\n"
-                f"🛑 REGLAS ESTRICTAS DE CONVIVENCIA Y ETIQUETA (¡NO SEAS PESADO!):\n"
-                f"1. ORDEN DE SILENCIO:\n"
-                f"   - Si el usuario te manda callar o te dice que pares ('cállate', 'silencio', 'cállate ya', 'cierra la boca', 'para ya', 'shh', 'pesado', 'para de hablar', 'calla'):\n"
+                f"El usuario que acaba de hablar por el micro es: '{user_name}'.\n\n"
+                f"HISTORIAL RECIENTE:\n{hist_ctx}\n\n"
+                f"INSTRUCCIONES CLAVE:\n"
+                f"1. ORDEN DE SILENCIO (MÁXIMA PRIORIDAD):\n"
+                f"   - Si el usuario te manda callar o parar ('cállate', 'silencio', 'cállate ya', 'cierra la boca', 'para ya', 'shh', 'pesado', 'para de hablar', 'basta', 'calla'):\n"
                 f"     RESPONDE EXACTAMENTE: [SILENCIO]\n\n"
-                f"2. FILTRO DE CONVERSACIÓN (POR DEFECTO [IGNORAR]):\n"
-                f"   - Los usuarios están jugando a videojuegos y charlando ENTRE ELLOS. NUNCA te metas en conversaciones ajenas.\n"
-                f"   - Si el modo silencioso está activo, debes responder [IGNORAR] salvo que digan explícitamente 'Asistente'.\n"
-                f"   - Si están hablando entre ellos, bromeando, riéndose, gritando al juego o soltando frases al aire (ej: 'vamos a B', 'qué malo eres', 'a lavar por culo', 'me están pegando', 'jaja mira esto'): RESPONDE EXACTAMENTE: [IGNORAR]\n"
-                f"   - SOLO debes intervenir si ocurre una de estas 3 condiciones:\n"
-                f"     a) Te llaman DIRECTAMENTE por tu nombre: 'Asistente...', 'oye bot...', 'Asistente, ¿tú qué opinas?'.\n"
-                f"     b) Te hacen una pregunta directa a ti (ej: '¿me escuchas?', '¿qué opinas?', 'explícame esto').\n"
-                f"     c) Hay un diálogo activo directo contigo de hace menos de 10 segundos donde tú acabas de hablar y ellos te están replicando a ti.\n"
-                f"   - ANTE LA MENOR DUDA de si te hablan a ti o a otro colega: RESPONDE SIEMPRE: [IGNORAR]\n\n"
-                f"3. TONO Y VOCABULARIO:\n"
-                f"   - Español de España coloquial, natural y de colegas (de San Vicente del Raspeig / Alicante).\n"
-                f"   - PROHIBIDAS expresiones latinoamericanas ('órale', 'tantito', 'caray', 'soltar la sopa', 'platicar'). Habla como un colega de España.\n"
-                f"   - Sé conciso, maduro y con buen rollo. NUNCA uses formato markdown ni emojis."
+                f"2. CUÁNDO RESPONDER:\n"
+                f"   - Si te llaman o mencionan ('Asistente', 'oye bot', 'bot').\n"
+                f"   - Si saludan o preguntan si estás/escuchas ('hola', 'buenas', '¿me escuchas?', '¿estás ahí?', '¿me oyes?').\n"
+                f"   - Si te hacen una pregunta directa, piden ayuda, opinión o consejo.\n"
+                f"   - Si es la réplica directa de una conversación activa que acabas de tener con ellos.\n\n"
+                f"3. CUÁNDO IGNORAR:\n"
+                f"   - Si los usuarios están jugando a videojuegos y hablando claramente ENTRE ELLOS de la partida (ej: 'vamos a B', 'pásame balas', 'qué malo eres', 'me han matado', 'tira flash', 'mira esto').\n"
+                f"   - Si son sólo risas, ruidos de fondo, toses o gritos al juego.\n"
+                f"   - En estos casos de charla entre colegas sin dirigirse a ti, RESPONDE EXACTAMENTE: [IGNORAR]\n\n"
+                f"4. ESTILO Y CONCISIÓN (¡CRÍTICO, NUNCA SEAS PESADO!):\n"
+                f"   - Respuestas MUY BREVES: 1 frase corta o máximo 2 (10 a 20 palabras como mucho). Jamás sueltes discursos ni párrafos largos.\n"
+                f"   - Español coloquial natural de España (Alicante / San Vicente). Prohibidas expresiones latinas ('órale', 'tantito').\n"
+                f"   - Sin formato markdown ni emojis (se leerá por sintetizador de voz)."
             )
 
             payload = {
@@ -573,8 +561,8 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                     ]
                 }],
                 "generationConfig": {
-                    "temperature": 0.6,
-                    "maxOutputTokens": 800
+                    "temperature": 0.5,
+                    "maxOutputTokens": 150
                 }
             }
             data = json.dumps(payload).encode("utf-8")
@@ -601,23 +589,14 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                     continue
 
             if "[SILENCIO]" in response_text or response_text.strip() == "SILENCIO":
-                bot_log(f"🤫 [Gemini Live Silencio] Orden de silencio recibida de '{user_name}'. Activando modo silencioso por 15 min.")
-                self.quiet_until = time.time() + 900
+                bot_log(f"🤫 [Gemini Live Silencio] Orden de silencio recibida de '{user_name}'. Cortando audio inmediatamente.")
                 if client.is_playing():
                     client.stop()
-                try:
-                    ack_file = await generate_speech_audio("Entendido, me callo.", voice_type=self.voice_type)
-                    play_audio_in_voice(client, ack_file)
-                except Exception:
-                    pass
                 return
 
             if not response_text or "[IGNORAR]" in response_text or response_text.strip() == "IGNORAR":
                 bot_log(f"🎙️ [Gemini Live] Audio de '{user_name}' filtrado como [IGNORAR]")
                 return
-
-            # Si el usuario habló directamente con el bot y no fue ignorado, resetear el modo silencioso
-            self.quiet_until = 0.0
 
             clean_resp = clean_text_for_tts(response_text)
             if not clean_resp:
@@ -630,6 +609,8 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                 self.recent_turns.pop(0)
 
             try:
+                if client.is_playing():
+                    client.stop()
                 audio_file = await generate_speech_audio(clean_resp, voice_type=self.voice_type)
                 play_audio_in_voice(client, audio_file)
                 bot_log(f"🔊 [Gemini Live] Audio enviado a #{channel_name}")
