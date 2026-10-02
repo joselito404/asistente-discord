@@ -1829,7 +1829,7 @@ async def cmd_geminilive(
     embed.set_footer(text="Usa /voz para cambiar de locutor o /desconecta para salir.")
     await interaction.followup.send(embed=embed)
 
-@tree.command(name="voz", description="Cambia la voz del Asistente en la llamada de voz (Gemini Live)")
+@tree.command(name="cambiar_voz", description="Cambia la voz del Asistente en la llamada de voz (Álvaro, Elvira o Ximena)")
 @app_commands.describe(tipo="Selecciona la voz neuronal")
 @app_commands.choices(
     tipo=[
@@ -1838,7 +1838,7 @@ async def cmd_geminilive(
         app_commands.Choice(name="Ximena (Femenina juvenil, España)", value="ximena"),
     ]
 )
-async def cmd_voz(interaction: discord.Interaction, tipo: app_commands.Choice[str]):
+async def cmd_cambiar_voz(interaction: discord.Interaction, tipo: app_commands.Choice[str]):
     await interaction.response.defer(thinking=True)
     if not interaction.guild:
         await interaction.followup.send("❌ Este comando solo está disponible en un servidor.")
@@ -1856,7 +1856,7 @@ async def cmd_voz(interaction: discord.Interaction, tipo: app_commands.Choice[st
         await interaction.followup.send(f"🎙️ **Voz cambiada**: A partir de ahora el Asistente responderá con la voz de **{lbl}**.\n*(También puedes cambiársela pidiéndole por voz 'ponte voz de chica' o 'ponte voz de chico')*.")
     else:
         channel_hint = interaction.user.voice.channel.name if getattr(interaction.user, 'voice', None) and interaction.user.voice.channel else "una sala de voz"
-        await interaction.followup.send(f"ℹ️ El Asistente no tiene una llamada activa ahora. Conéctalo a **#{channel_hint}** y podrás usar `/voz` o pedírselo por el micro.")
+        await interaction.followup.send(f"ℹ️ El Asistente no tiene una llamada activa ahora. Conéctalo a **#{channel_hint}** y podrás usar `/cambiar_voz` o pedírselo por el micro.")
 
 @tree.command(name="unete", description="Conecta al Asistente a tu canal de voz en modo conversacional Gemini Live")
 @app_commands.describe(canal="Canal de voz al que conectarse (por defecto el tuyo)")
