@@ -370,10 +370,55 @@ async def generate_speech_audio(text: str, voice_type: str = "alvaro") -> str:
     await comm.save(out_path)
     return out_path
 
-RECORDINGS_DIR = os.path.join(tempfile.gettempdir(), "discord_voice_recordings")
+import zipfile
+
+RECORDINGS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "recordings")
 os.makedirs(RECORDINGS_DIR, exist_ok=True)
-VOICE_TURNS_LOG = []
+METADATA_FILE = os.path.join(RECORDINGS_DIR, "recordings_metadata.json")
+RETENTION_SECONDS = 24 * 3600  # Retención de 24 horas completas (1 día)
+
 VOICE_TURNS_LOCK = threading.Lock()
+
+def load_recordings_metadata():
+    """Carga de disco el historial de grabaciones válidas de las últimas 24 horas."""
+    if not os.path.exists(METADATA_FILE):
+        return []
+    try:
+        with open(METADATA_FILE, "r", encoding="utf-8") as f:
+            entries = json.load(f)
+        now = time.time()
+        valid = []
+        for e in entries:
+            epoch = e.get("epoch", 0.0)
+            if (now - epoch) < RETENTION_SECONDS:
+                fpath = os.path.join(RECORDINGS_DIR, e.get("filename", ""))
+                if os.path.exists(fpath):
+                    valid.append(e)
+            else:
+                fpath = os.path.join(RECORDINGS_DIR, e.get("filename", ""))
+                if os.path.exists(fpath):
+                    try:
+                        os.remove(fpath)
+                    except Exception:
+                        pass
+        return valid
+    except Exception as ex:
+        bot_log(f"Aviso carga grabaciones: {ex}")
+        return []
+
+def save_recordings_metadata():
+    """Persiste de forma atómica el registro de grabaciones en recordings_metadata.json."""
+    try:
+        with VOICE_TURNS_LOCK:
+            data = list(VOICE_TURNS_LOG)
+        tmp = METADATA_FILE + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        os.replace(tmp, METADATA_FILE)
+    except Exception as ex:
+        bot_log(f"Aviso guardado grabaciones metadata: {ex}")
+
+VOICE_TURNS_LOG = load_recordings_metadata()
 
 def pcm_stereo_to_mono_48k(pcm_bytes: bytes) -> bytes:
     """Convierte audio PCM estéreo de 48kHz a mono puro a 48kHz con normalización de volumen para máxima claridad en Gemini."""
@@ -572,9 +617,11 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             except Exception as e_w:
                 bot_log(f"Aviso guardando archivo audio: {e_w}")
 
+            now = time.time()
             record_entry = {
                 "id": filename.replace(".wav", ""),
                 "timestamp": get_spain_now_str(),
+                "epoch": now,
                 "user": user_name,
                 "user_id": str(user_id) if user_id else None,
                 "duration_s": duration_s,
@@ -586,16 +633,8 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             }
             with VOICE_TURNS_LOCK:
                 VOICE_TURNS_LOG.append(record_entry)
-                if len(VOICE_TURNS_LOG) > 60:
-                    old = VOICE_TURNS_LOG.pop(0)
-                    old_path = os.path.join(RECORDINGS_DIR, old.get("filename", ""))
-                    if os.path.exists(old_path):
-                        try:
-                            os.remove(old_path)
-                        except Exception:
-                            pass
+            save_recordings_metadata()
 
-            now = time.time()
             time_since_last_reply = now - getattr(self, "last_bot_reply_time", 0.0)
             is_dialogue_active = time_since_last_reply < 25.0
 
@@ -688,6 +727,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             if "[SILENCIO]" in response_text or "[SILENCIO]" in bot_reply:
                 record_entry["status"] = "silenciado"
                 record_entry["bot_reply"] = "[SILENCIO]"
+                save_recordings_metadata()
                 bot_log(f"🤫 [Gemini Live Silencio] Orden de silencio de '{user_name}'. Cortando audio.")
                 if client.is_playing():
                     client.stop()
@@ -696,6 +736,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             if not bot_reply or "[IGNORAR]" in bot_reply or bot_reply.strip() == "IGNORAR" or "[ININTELIGIBLE]" in user_spoken:
                 record_entry["status"] = "ignorado"
                 record_entry["bot_reply"] = "[IGNORAR]"
+                save_recordings_metadata()
                 bot_log(f"🎙️ [Gemini Live] '{user_name}' ('{user_spoken}') -> [IGNORAR]")
                 return
 
@@ -745,6 +786,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             clean_resp = clean_text_for_tts(bot_reply)
             if not clean_resp:
                 record_entry["status"] = "vacio"
+                save_recordings_metadata()
                 return
 
             # Protección contra auto-interrupción: si ya está reproduciendo y el audio entrante fue muy breve, no cortar
@@ -756,6 +798,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
 
             record_entry["status"] = "respondido"
             record_entry["bot_reply"] = clean_resp
+            save_recordings_metadata()
             bot_log(f"🎙️ [Gemini Live] '{user_name}' dijo: \"{user_spoken}\" -> Asistente: \"{clean_resp}\"")
             self.last_bot_reply_time = time.time()
             self.recent_turns.append((user_name, clean_resp))
@@ -2254,6 +2297,37 @@ async def on_ready():
 
     bot.loop.create_task(_voice_channel_auto_watchdog())
 
+    # Tarea periódica de limpieza de grabaciones con más de 24 horas de antigüedad
+    async def _recordings_retention_cleaner():
+        await asyncio.sleep(60.0)
+        while not bot.is_closed():
+            try:
+                now = time.time()
+                with VOICE_TURNS_LOCK:
+                    valid = []
+                    for t in VOICE_TURNS_LOG:
+                        epoch = t.get("epoch", 0.0)
+                        if (now - epoch) < RETENTION_SECONDS:
+                            valid.append(t)
+                        else:
+                            fname = t.get("filename")
+                            if fname:
+                                fpath = os.path.join(RECORDINGS_DIR, fname)
+                                if os.path.exists(fpath):
+                                    try:
+                                        os.remove(fpath)
+                                    except Exception:
+                                        pass
+                    if len(valid) != len(VOICE_TURNS_LOG):
+                        VOICE_TURNS_LOG[:] = valid
+                        save_recordings_metadata()
+                        bot_log(f"🧹 [Grabaciones] Limpieza 24h completada. {len(valid)} grabaciones activas.")
+            except Exception as e:
+                bot_log(f"Aviso limpiador grabaciones: {e}")
+            await asyncio.sleep(600.0)
+
+    bot.loop.create_task(_recordings_retention_cleaner())
+
 @bot.event
 async def on_message(message: discord.Message):
     if message.author.bot:
@@ -2757,6 +2831,33 @@ def run_health_check_server():
                     self.send_header("Content-length", str(len(err_bytes)))
                     self.end_headers()
                     self.wfile.write(err_bytes)
+            elif parsed.path in ["/audios/zip", "/grabaciones/zip"]:
+                try:
+                    zip_buffer = io.BytesIO()
+                    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+                        if os.path.exists(METADATA_FILE):
+                            zf.write(METADATA_FILE, arcname="recordings_metadata.json")
+                        if os.path.exists(RECORDINGS_DIR):
+                            for fname in os.listdir(RECORDINGS_DIR):
+                                if fname.endswith(".wav"):
+                                    fpath = os.path.join(RECORDINGS_DIR, fname)
+                                    if os.path.isfile(fpath):
+                                        zf.write(fpath, arcname=fname)
+                    zip_data = zip_buffer.getvalue()
+                    now_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    zip_filename = f"grabaciones_24h_{now_str}.zip"
+                    self.send_response(200)
+                    self.send_header("Content-type", "application/zip")
+                    self.send_header("Content-Disposition", f'attachment; filename="{zip_filename}"')
+                    self.send_header("Content-length", str(len(zip_data)))
+                    self.end_headers()
+                    self.wfile.write(zip_data)
+                except Exception as ex_zip:
+                    err_b = f"Error generando ZIP: {ex_zip}".encode("utf-8")
+                    self.send_response(500)
+                    self.send_header("Content-type", "text/plain; charset=utf-8")
+                    self.end_headers()
+                    self.wfile.write(err_b)
             elif parsed.path in ["/audios", "/grabaciones"]:
                 try:
                     with VOICE_TURNS_LOCK:
@@ -2841,9 +2942,10 @@ audio {{ flex: 1; height: 36px; min-width: 220px; }}
   <header>
     <div class="title-group">
       <h1>🎙️ Grabaciones de Voz - Asistente Discord</h1>
-      <p>Escucha las intervenciones de los usuarios y las respuestas del Asistente en tiempo real.</p>
+      <p>Escucha las intervenciones de los usuarios y las respuestas del Asistente en tiempo real. <span style="background: rgba(87, 242, 135, 0.15); color: #57f287; border: 1px solid rgba(87, 242, 135, 0.3); border-radius: 4px; padding: 2px 6px; font-weight: 600; font-size: 11px; margin-left: 6px;">🕒 Retención: Últimas 24 Horas</span></p>
     </div>
     <div class="actions">
+      <a href="/audios/zip" class="btn" style="background:#23a55a;">📦 Descargar Todo (ZIP)</a>
       <a href="/audios" class="btn">🔄 Refrescar</a>
       <a href="/status" class="btn btn-secondary">📊 Estado</a>
       <a href="/logs" class="btn btn-secondary">📜 Logs</a>
