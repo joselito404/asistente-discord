@@ -1,0 +1,92 @@
+[
+  {
+    "id": 1,
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "¿Cómo se llama el protagonista de 'Solo Leveling' que asciende de Cazador Rango E a Monarca de las Sombras?",
+    "options": ["Sung Jin-woo", "Cha Hae-in", "Go Gun-hee", "Baek Yoon-ho"],
+    "correct": 0,
+    "explanation": "Sung Jin-woo es el legendario protagonista de Solo Leveling, el cazador más débil de la humanidad que obtiene el Sistema."
+  },
+  {
+    "id": 2,
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "En el manhwa favorito del server 'The Greatest Estate Developer', ¿en qué personaje de novela se reencarna Kim Su-ho?",
+    "options": ["Javier Asrahan", "Lloyd Frontera", "Alicia von Terran", "Barón Frontera"],
+    "correct": 1,
+    "explanation": "Se reencarna en Lloyd Frontera, el noble infame y endeudado, usando la ingeniería civil para salvar el feudo con caras inolvidables."
+  },
+  {
+    "id": 3,
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "¿Quién compone el tema 'Projection' del anime Jujutsu Kaisen Culling Game?",
+    "options": ["Hiroyuki Sawano", "Yoshimasa Terui", "Kenji Kawai", "Yuki Kajiura"],
+    "correct": 1,
+    "explanation": "Yoshimasa Terui es el compositor del apoteósico tema 'Projection'."
+  },
+  {
+    "id": 4,
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "¿Qué estudio japonés desarrolló Elden Ring, Bloodborne y la saga Dark Souls?",
+    "options": ["Capcom", "FromSoftware", "Team Ninja", "Square Enix"],
+    "correct": 1,
+    "explanation": "FromSoftware, dirigido por Hidetaka Miyazaki, es el creador del género Soulslike."
+  },
+  {
+    "id": 5,
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "En Brawl Stars, ¿cuál de los siguientes es un brawler legendario?",
+    "options": ["Colt", "Shelly", "Leon", "Poco"],
+    "correct": 2,
+    "explanation": "Leon es uno de los brawlers legendarios más icónicos del juego con su invisibilidad."
+  },
+  {
+    "id": 6,
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "¿Cuál es la web oficial de El Tribunal Gaming donde los magistrados analizan y puntúan videojuegos?",
+    "options": ["tribunal-gaming.vercel.app", "eltribunal.com", "tribunalgaming.es", "juegostribunal.net"],
+    "correct": 0,
+    "explanation": "La sede oficial online del proyecto es https://tribunal-gaming.vercel.app"
+  },
+  {
+    "id": 7,
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "En El Tribunal Gaming, ¿cómo se llama la sección donde van a parar los juegos cooperativos injugables, rotos o vetados?",
+    "options": ["Sala de Castigo", "El Muro de la Vergüenza", "Fosa Común", "El Limbo"],
+    "correct": 1,
+    "explanation": "El Muro de la Vergüenza es donde se exhiben los juegos cooperativos que fracasaron técnicamente."
+  },
+  {
+    "id": 8,
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "¿Qué rol y nivel de Cakey Bot se necesita para desbloquear el acceso exclusivo a la CATEGORÍA PRO?",
+    "options": ["Nivel 10 (Pendejo Medio)", "Nivel 20 (Pendejo Veterano)", "Nivel 30 (Pendejo Experimentado)", "Nivel 40 (Alto Rango)"],
+    "correct": 1,
+    "explanation": "Al alcanzar el Nivel 20 se desbloquea el rol 'Pendejo Veterano' y el acceso a la Categoría Pro."
+  },
+  {
+    "id": 9,
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "¿Quién es el miembro histórico del servidor célebre por haber acumulado casi 1.500 tiradas de tragaperras en el casino?",
+    "options": ["Joselito", "Carlitosmf", "Terreneiror (Lázaro)", "Omen2042"],
+    "correct": 2,
+    "explanation": "Terreneiror es la leyenda indiscutible del casino con casi 1.500 giros a las tragaperras."
+  },
+  {
+    "id": 10,
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿Cuál es el planeta más grande de nuestro sistema solar?",
+    "options": ["Saturno", "Neptuno", "Júpiter", "Urano"],
+    "correct": 2,
+    "explanation": "Júpiter es con diferencia el gigante gaseoso más masivo del sistema solar."
+  }
+]

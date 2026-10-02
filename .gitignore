@@ -7,6 +7,8 @@ config_discord.json
 *.json
 !slots_data.json
 !tribunal_data.json
+!user_memory.json
+!trivia_data.json
 CHAT_RAW.md
 HISTORIAL_CONVERSACION.md
 chat *.md

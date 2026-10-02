@@ -30,6 +30,8 @@ import discord
 from discord import app_commands
 import io
 import random
+import tempfile
+import edge_tts
 from datetime import datetime, timezone, timedelta
 
 if sys.platform == "win32":
@@ -80,11 +82,21 @@ SYSTEM_PROMPT = """Eres 'Asistente', la IA oficial y colega del servidor de Disc
 - ❌ CERO SPAM DE NIVELES Y XP: Habla de forma natural y humana. NO menciones niveles de Cakey Bot ni rangos en cada mensaje como un loro. Menciónalos ÚNICAMENTE si el usuario te pregunta explícitamente por su nivel, XP o el ranking.
 - PUEDES Y DEBES RESPONDER A CUALQUIER TIPO DE PREGUNTA: anime, manhwas, videojuegos, hardware, programación, ciencia, dilemas, bromas, actualidad, cine o salseo.
 
-🎙️ PROTOCOLO ESTRICTO DE ESTADO DE VOZ Y LLAMADAS:
+🎙️ PROTOCOLO ESTRICTO DE ESTADO DE VOZ Y LLAMADAS (AUDIO & TTS EN VIVO):
 - Consulta OBLIGATORIAMENTE el bloque [RADAR EN VIVO DE CANALES DE VOZ]. Es la verdad absoluta y en tiempo real del servidor.
 - Si un usuario aparece en el radar conectado a una sala, ESTÁ DENTRO. Revisa sus flags ([Micro activo/Hablando], [Silenciado/Mute], [Ensordecido], [Compartiendo pantalla]).
 - Si un usuario NO aparece en el radar de esa sala o figura como [FUERA DE LLAMADA], ESTÁ FUERA. NUNCA contradigas a quien te está hablando diciendo que alguien está dentro si no figura en el radar.
 - Si te preguntan si Joselito o cualquier otra persona está en la llamada, mira si su nombre aparece en la sala. Si no está, confirma claramente que no está en la llamada.
+- 🗣️ LOCUCIÓN Y VOZ EN DIRECTO: Tienes la capacidad de unirte a canales de voz y hablar en vivo con síntesis neuronal de voz en español mediante el comando `/habla [texto] [voz]`. También puedes unirte con `/unete`, salir con `/desconecta` o parar el audio con `/para_audio`. Si te piden en el chat "di en la llamada: ..." o "únete a la llamada", sabrás que puedes hablar directamente por voz.
+
+🧠 MEMORIA PERSISTENTE DE USUARIOS:
+- Cuentas con un sistema de memoria de largo plazo que recuerda los gustos, obras favoritas (manhwas, series, juegos), notas y puntos de trivial de cada usuario.
+- Cuando recibas el bloque [MEMORIA PERSISTENTE DE ESTE USUARIO], úsalo de forma natural para personalizar tus respuestas según sus gustos.
+- Puedes sugerir o usar `/recuerda` para guardar datos clave de cualquier colega.
+
+🎲 TRIVIAL Y MINIJUEGOS DEL SERVIDOR:
+- Dispones del comando interactivo `/trivial [categoria]` con botones dinámicos para competir en preguntas de Manhwas, Videojuegos, El Tribunal Gaming, Lore del Servidor y Cultura General (+10 pts por acierto).
+- Puedes consultar el podio del servidor con `/ranking_trivial`.
 
 🎵 MÚSICA Y REPRODUCCIÓN EN CANALES DE VOZ:
 - El bot oficial para poner música en el servidor es Cakey Bot.
@@ -111,7 +123,19 @@ SYSTEM_PROMPT = """Eres 'Asistente', la IA oficial y colega del servidor de Disc
 - Puedes consultar precios en tiempo real en euros, ofertas actuales, porcentaje de descuento y compatibilidad de juegos en Steam mediante el comando `/steam` o en el chat general.
 
 💻 COMANDOS SLASH ACTIVOS:
-- Dispones de comandos nativos de Discord con interfaz y autocompletado: `/voz` (radar en vivo de llamadas), `/musica [cancion]`, `/dibuja [prompt] [estilo]`, `/steam [juego]`, `/tribunal [accion] [juego]`, `/perfil [usuario]` y `/pregunta [duda]`. Anima a usarlos cuando sea oportuno.
+- Dispones de comandos nativos de Discord con interfaz y autocompletado:
+  * `/habla [texto] [voz]`: Entra al canal de voz y habla con voz neuronal (Álvaro, Abril, Puck, Charon).
+  * `/unete` y `/desconecta`: Control de conexión a salas de voz.
+  * `/para_audio`: Silencia el audio actual en la llamada.
+  * `/trivial [categoria]` y `/ranking_trivial`: Minijuego de preguntas del server con clasificación.
+  * `/recuerda [dato] [categoria] [usuario]`: Guarda memoria persistente de gustos y detalles.
+  * `/voz`: Radar en vivo de llamadas y quién está dentro.
+  * `/musica [cancion]`: Guía y enlace rápido para escuchar temas con Cakey Bot o YouTube.
+  * `/dibuja [prompt] [estilo]`: Generación de imágenes FLUX.1.
+  * `/steam [juego]`: Consulta precios, descuentos y notas de Steam.
+  * `/tribunal [accion] [juego]`: Catálogo de El Tribunal Gaming.
+  * `/perfil [usuario]`: Ficha de miembros con roles y niveles.
+  * `/pregunta [duda]`: Preguntas directas a la IA.
 
 👥 MIEMBROS CLAVE DEL SERVIDOR (Lore & Respeto):
 - Joselito (@joselito3499): Fundador, dueño y Administrador del servidor. Fanático de los manhwas (Olympus Scanlation, Asura Scans). En #cultura tiene anclado su top 69 manhwas.
@@ -160,6 +184,151 @@ def load_tribunal_data() -> dict:
     return {"coop": [], "single": []}
 
 tribunal_data = load_tribunal_data()
+
+USER_MEMORY_PATH = os.path.join(BASE_DIR, "user_memory.json")
+TRIVIA_DATA_PATH = os.path.join(BASE_DIR, "trivia_data.json")
+
+def load_user_memory() -> dict:
+    if os.path.exists(USER_MEMORY_PATH):
+        try:
+            with open(USER_MEMORY_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Aviso lectura user_memory.json: {e}")
+    return {}
+
+def save_user_memory(data: dict):
+    try:
+        with open(USER_MEMORY_PATH, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"Error guardando user_memory.json: {e}")
+
+user_memory = load_user_memory()
+
+def get_user_memory_ctx(user_id: int) -> str:
+    """Extrae la memoria persistente del usuario para inyectarla en el contexto del bot."""
+    mem = user_memory.get(str(user_id))
+    if not mem:
+        return ""
+    lines = []
+    if mem.get("name"):
+        lines.append(f"  * Nombre/Apodo conocido: {mem.get('name')}")
+    if mem.get("role_in_server"):
+        lines.append(f"  * Rol/Estatus: {mem.get('role_in_server')}")
+    if mem.get("fav_genres"):
+        lines.append(f"  * Gustos/Géneros favoritos: {', '.join(mem.get('fav_genres'))}")
+    if mem.get("fav_works"):
+        lines.append(f"  * Obras/Juegos favoritos: {', '.join(mem.get('fav_works'))}")
+    if mem.get("notes"):
+        lines.append(f"  * Notas clave: {'; '.join(mem.get('notes'))}")
+    pts = mem.get("trivia_points", 0)
+    if pts > 0:
+        lines.append(f"  * Puntuación en Trivial: {pts} pts")
+    if lines:
+        return "\n[MEMORIA PERSISTENTE DE ESTE USUARIO]:\n" + "\n".join(lines)
+    return ""
+
+def load_trivia_data() -> list:
+    if os.path.exists(TRIVIA_DATA_PATH):
+        try:
+            with open(TRIVIA_DATA_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Aviso lectura trivia_data.json: {e}")
+    return []
+
+def clean_text_for_tts(text: str) -> str:
+    """Limpia markdown, URLs, emojis de Discord y caracteres especiales para locución natural."""
+    clean = re.sub(r"\[ACTION_DRAW:\s*.*?\]", "", text, flags=re.DOTALL | re.IGNORECASE)
+    clean = re.sub(r"https?://[^\s<>\"']+", "", clean)
+    clean = re.sub(r"<@!?\d+>", "", clean)
+    clean = re.sub(r"<@&\d+>", "", clean)
+    clean = re.sub(r"<#\d+>", "", clean)
+    clean = re.sub(r"<:[^:]+:\d+>", "", clean)
+    clean = re.sub(r"[*_~`#>\[\]\(\)\{\}\\\^\$]", " ", clean)
+    clean = re.sub(r"\s+", " ", clean).strip()
+    return clean
+
+async def generate_speech_audio(text: str, voice_type: str = "alvaro") -> str:
+    """Genera archivo de audio temporal con Edge Neural TTS o Gemini Flash TTS con fallback automático."""
+    clean = clean_text_for_tts(text)
+    if not clean:
+        clean = "Hola, aquí estoy."
+    clean = clean[:450]
+    
+    temp_dir = tempfile.gettempdir()
+    
+    if voice_type in ["puck", "charon"]:
+        vname = "Puck" if voice_type == "puck" else "Charon"
+        out_path = os.path.join(temp_dir, f"speech_gemini_{int(time.time()*1000)}.wav")
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash-lite-tts:generateContent?key={GEMINI_KEY}"
+            payload = {
+                "contents": [{"parts": [{"text": clean}]}],
+                "generationConfig": {
+                    "responseModalities": ["AUDIO"],
+                    "speechConfig": {
+                        "voiceConfig": {
+                            "prebuiltVoiceConfig": {
+                                "voiceName": vname
+                            }
+                        }
+                    }
+                }
+            }
+            data = json.dumps(payload).encode("utf-8")
+            req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+            
+            def call_gemini_tts():
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    return json.loads(resp.read().decode("utf-8"))
+                    
+            res = await asyncio.to_thread(call_gemini_tts)
+            b64 = res['candidates'][0]['content']['parts'][0]['inlineData']['data']
+            raw = base64.b64decode(b64)
+            with open(out_path, "wb") as f:
+                f.write(raw)
+            return out_path
+        except Exception as e:
+            print(f"Aviso: Gemini TTS falló ({e}). Conmutando automáticamente a Edge Neural TTS...")
+            voice_type = "alvaro"
+            
+    voice_map = {
+        "alvaro": "es-ES-AlvaroNeural",
+        "abril": "es-ES-AbrilNeural"
+    }
+    edge_voice = voice_map.get(voice_type, "es-ES-AlvaroNeural")
+    out_path = os.path.join(temp_dir, f"speech_edge_{int(time.time()*1000)}.mp3")
+    comm = edge_tts.Communicate(clean, edge_voice)
+    await comm.save(out_path)
+    return out_path
+
+async def ensure_voice_connection(channel: discord.VoiceChannel) -> discord.VoiceClient:
+    """Asegura la conexión del bot a una sala de voz en el servidor."""
+    vc = channel.guild.voice_client
+    if vc is not None:
+        if vc.channel.id != channel.id:
+            await vc.move_to(channel)
+        return vc
+    return await channel.connect()
+
+def play_audio_in_voice(voice_client: discord.VoiceClient, audio_path: str):
+    """Reproduce el audio en el canal de voz usando FFmpegPCMAudio y elimina el archivo al terminar."""
+    if voice_client.is_playing():
+        voice_client.stop()
+        
+    def after_play(err):
+        if err:
+            print(f"Aviso reproducción de voz: {err}")
+        try:
+            if os.path.exists(audio_path):
+                os.remove(audio_path)
+        except Exception:
+            pass
+
+    audio_source = discord.FFmpegPCMAudio(audio_path)
+    voice_client.play(audio_source, after=after_play)
 
 def fetch_steam_game(query: str) -> dict:
     """Busca en Steam Store y devuelve ficha completa con precios en EUR, descuento y detalles."""
@@ -662,6 +831,84 @@ class TribunalView(discord.ui.View):
             msg = f"🎲 **Cooperativo Aleatorio:** **{title}** ({cat})\n⚙️ Rendimiento: {perf}"
         await interaction.response.send_message(msg, ephemeral=False)
 
+class TriviaView(discord.ui.View):
+    """Botonera interactiva para rondas de preguntas de Trivial."""
+    def __init__(self, question_data: dict, author_id: int):
+        super().__init__(timeout=60)
+        self.question_data = question_data
+        self.author_id = author_id
+        self.answered = False
+        
+        letters = ["A", "B", "C", "D"]
+        for i, opt in enumerate(question_data.get("options", [])[:4]):
+            btn = discord.ui.Button(
+                label=f"{letters[i]}: {opt[:70]}",
+                style=discord.ButtonStyle.primary,
+                custom_id=f"trivia_btn_{i}"
+            )
+            btn.callback = self.make_callback(i)
+            self.add_item(btn)
+
+    def make_callback(self, index: int):
+        async def callback(interaction: discord.Interaction):
+            if self.answered:
+                await interaction.response.send_message("⚠️ Esta pregunta ya ha sido respondida.", ephemeral=True)
+                return
+            self.answered = True
+            
+            for item in self.children:
+                item.disabled = True
+                
+            correct_idx = self.question_data.get("correct", 0)
+            is_correct = (index == correct_idx)
+            user = interaction.user
+            uid_str = str(user.id)
+            
+            if uid_str not in user_memory:
+                user_memory[uid_str] = {
+                    "name": user.display_name,
+                    "display_name": user.display_name,
+                    "username": user.name,
+                    "role_in_server": user.top_role.name if getattr(user, "top_role", None) else "Miembro",
+                    "fav_genres": [],
+                    "fav_works": [],
+                    "notes": [],
+                    "trivia_points": 0
+                }
+            
+            self.children[correct_idx].style = discord.ButtonStyle.success
+            if not is_correct and index < len(self.children):
+                self.children[index].style = discord.ButtonStyle.danger
+                
+            pts_gain = 10 if is_correct else 0
+            user_memory[uid_str]["trivia_points"] = user_memory[uid_str].get("trivia_points", 0) + pts_gain
+            save_user_memory(user_memory)
+            total_pts = user_memory[uid_str]["trivia_points"]
+            
+            color = 0x22c55e if is_correct else 0xef4444
+            title = "🎉 ¡RESPUESTA CORRECTA! (+10 pts)" if is_correct else "❌ ¡RESPUESTA INCORRECTA!"
+            status_desc = (
+                f"**{user.display_name}** acertó: **{self.question_data['options'][correct_idx]}**"
+                if is_correct
+                else f"**{user.display_name}** eligió '{self.question_data['options'][index]}', pero la correcta era: **{self.question_data['options'][correct_idx]}**"
+            )
+            
+            embed = discord.Embed(
+                title=title,
+                description=f"{status_desc}\n\n💡 **Explicación:** {self.question_data.get('explanation', '')}\n\n🏆 Puntos acumulados de {user.display_name}: **{total_pts} pts**",
+                color=color
+            )
+            embed.set_footer(text=f"Categoría: {self.question_data.get('category_name', 'Trivial')} • Usa /ranking_trivial")
+            await interaction.response.edit_message(embed=embed, view=self)
+            
+        return callback
+
+    async def on_timeout(self):
+        if not self.answered:
+            self.answered = True
+            for item in self.children:
+                item.disabled = True
+
 # ==========================================
 # COMANDOS SLASH NATIVOS (discord.app_commands)
 # ==========================================
@@ -990,11 +1237,216 @@ async def cmd_musica(interaction: discord.Interaction, cancion: str):
     embed.set_footer(text="Asistente de Música • Integración Cakey Bot & Streaming")
     await interaction.response.send_message(embed=embed)
 
+@tree.command(name="habla", description="El Asistente entra a tu canal de voz y habla con síntesis neuronal de voz")
+@app_commands.describe(
+    texto="El mensaje o frase que quieres que diga en la llamada",
+    voz="Motor y estilo de voz (por defecto Álvaro - Edge Neural)"
+)
+@app_commands.choices(voz=[
+    app_commands.Choice(name="Álvaro (Español neutro / natural - Edge Neural)", value="alvaro"),
+    app_commands.Choice(name="Abril (Femenino / natural - Edge Neural)", value="abril"),
+    app_commands.Choice(name="Puck (Gemini Flash TTS)", value="puck"),
+    app_commands.Choice(name="Charon (Gemini Flash TTS grave)", value="charon")
+])
+async def cmd_habla(interaction: discord.Interaction, texto: str, voz: app_commands.Choice[str] = None):
+    if not interaction.guild:
+        await interaction.response.send_message("Este comando solo está disponible en un servidor.", ephemeral=True)
+        return
+    
+    if not interaction.user.voice or not interaction.user.voice.channel:
+        await interaction.response.send_message("❌ Debes estar conectado a un canal de voz para que pueda hablar contigo.", ephemeral=True)
+        return
+    
+    voice_choice = voz.value if voz else "alvaro"
+    voice_channel = interaction.user.voice.channel
+    
+    await interaction.response.defer(thinking=True)
+    
+    try:
+        audio_file = await generate_speech_audio(texto, voice_choice)
+        vc = await ensure_voice_connection(voice_channel)
+        play_audio_in_voice(vc, audio_file)
+        
+        voice_labels = {
+            "alvaro": "Álvaro (Edge Neural)",
+            "abril": "Abril (Edge Neural)",
+            "puck": "Puck (Gemini Flash TTS)",
+            "charon": "Charon (Gemini Flash TTS)"
+        }
+        lbl = voice_labels.get(voice_choice, voice_choice)
+        
+        embed = discord.Embed(
+            title="🎙️ Locución en Canal de Voz",
+            description=f"🔊 Hablando en **#{voice_channel.name}**\n\n> *\"{texto[:300]}\"*\n\n🎙️ **Voz:** `{lbl}`",
+            color=0x3b82f6
+        )
+        embed.set_footer(text="Asistente de Voz Neuronal • Usa /para_audio para silenciar")
+        await interaction.followup.send(embed=embed)
+    except Exception as e:
+        print(f"Error en /habla: {e}")
+        await interaction.followup.send(f"❌ Error al generar o reproducir la voz: {e}")
+
+@tree.command(name="unete", description="Conecta al Asistente a tu canal de voz actual")
+@app_commands.describe(canal="Canal de voz al que conectarse (por defecto el tuyo)")
+async def cmd_unete(interaction: discord.Interaction, canal: discord.VoiceChannel = None):
+    target_channel = canal or (interaction.user.voice.channel if interaction.user.voice else None)
+    if not target_channel:
+        await interaction.response.send_message("❌ Debes estar conectado a una sala de voz o especificar una.", ephemeral=True)
+        return
+    
+    try:
+        vc = await ensure_voice_connection(target_channel)
+        await interaction.response.send_message(f"🔊 Me he conectado a la sala **#{target_channel.name}**. ¡Listo para hablar con `/habla`!")
+    except Exception as e:
+        await interaction.response.send_message(f"❌ Error al conectar a la llamada de voz: {e}", ephemeral=True)
+
+@tree.command(name="desconecta", description="Desconecta al Asistente del canal de voz")
+async def cmd_desconecta(interaction: discord.Interaction):
+    if not interaction.guild:
+        await interaction.response.send_message("Este comando solo está disponible en un servidor.", ephemeral=True)
+        return
+    
+    vc = interaction.guild.voice_client
+    if not vc or not vc.is_connected():
+        await interaction.response.send_message("ℹ️ No estoy conectado a ningún canal de voz en este servidor.", ephemeral=True)
+        return
+    
+    ch_name = vc.channel.name if vc.channel else "la llamada"
+    await vc.disconnect(force=True)
+    await interaction.response.send_message(f"🔌 Me he desconectado de **#{ch_name}**.")
+
+@tree.command(name="para_audio", description="Detiene la locución actual si el bot está hablando en la sala de voz")
+async def cmd_para_audio(interaction: discord.Interaction):
+    vc = interaction.guild.voice_client if interaction.guild else None
+    if not vc or not vc.is_connected():
+        await interaction.response.send_message("ℹ️ No estoy en ningún canal de voz.", ephemeral=True)
+        return
+    if vc.is_playing():
+        vc.stop()
+        await interaction.response.send_message("⏹️ Audio detenido.")
+    else:
+        await interaction.response.send_message("ℹ️ No hay ningún audio reproduciéndose actualmente.", ephemeral=True)
+
+@tree.command(name="recuerda", description="Guarda un gusto, nota o detalle en la memoria persistente de un usuario")
+@app_commands.describe(
+    dato="El dato a recordar (ej: 'Le flipa Solo Leveling y The Greatest Estate Developer')",
+    categoria="Categoría del recuerdo (obra favorita, género o nota)",
+    usuario="El miembro al que asociar este recuerdo (por defecto tú)"
+)
+@app_commands.choices(categoria=[
+    app_commands.Choice(name="Obra / Juego favorito (fav_works)", value="fav_works"),
+    app_commands.Choice(name="Género favorito (fav_genres)", value="fav_genres"),
+    app_commands.Choice(name="Nota / Lore personal (notes)", value="notes"),
+])
+async def cmd_recuerda(interaction: discord.Interaction, dato: str, categoria: app_commands.Choice[str] = None, usuario: discord.Member = None):
+    member = usuario or interaction.user
+    uid_str = str(member.id)
+    cat_key = categoria.value if categoria else "notes"
+    
+    if uid_str not in user_memory:
+        user_memory[uid_str] = {
+            "name": member.display_name,
+            "display_name": member.display_name,
+            "username": member.name,
+            "role_in_server": member.top_role.name if getattr(member, "top_role", None) else "Miembro",
+            "fav_genres": [],
+            "fav_works": [],
+            "notes": [],
+            "trivia_points": 0
+        }
+    
+    entry = user_memory[uid_str]
+    entry["display_name"] = member.display_name
+    entry["username"] = member.name
+    
+    if cat_key in ["fav_works", "fav_genres", "notes"]:
+        if cat_key not in entry:
+            entry[cat_key] = []
+        if dato not in entry[cat_key]:
+            entry[cat_key].append(dato)
+            
+    save_user_memory(user_memory)
+    
+    cat_name = categoria.name if categoria else "Nota personal"
+    embed = discord.Embed(
+        title="🧠 Recuerdo Guardado en Memoria",
+        description=f"He anotado el siguiente detalle para **{member.display_name}** (`@{member.name}`):\n\n> **{cat_name}:** {dato}\n\n*A partir de ahora lo tendré en cuenta en nuestras conversaciones.*",
+        color=0x8b5cf6
+    )
+    embed.set_footer(text="Memoria Persistente de Antigravity Asistente")
+    await interaction.response.send_message(embed=embed)
+
+@tree.command(name="trivial", description="Inicia una ronda de preguntas de Trivial (+10 pts al acertar)")
+@app_commands.describe(categoria="Categoría de las preguntas")
+@app_commands.choices(categoria=[
+    app_commands.Choice(name="Todas las categorías (Aleatorio)", value="all"),
+    app_commands.Choice(name="🎌 Manhwas & Anime", value="manhwa"),
+    app_commands.Choice(name="🎮 Videojuegos", value="gaming"),
+    app_commands.Choice(name="⚖️ El Tribunal Gaming", value="tribunal"),
+    app_commands.Choice(name="📜 Lore del Servidor & Colegas", value="lore"),
+    app_commands.Choice(name="🧠 Cultura General", value="general"),
+])
+async def cmd_trivial(interaction: discord.Interaction, categoria: app_commands.Choice[str] = None):
+    trivia_pool = load_trivia_data()
+    if not trivia_pool:
+        await interaction.response.send_message("❌ No hay preguntas de Trivial disponibles.", ephemeral=True)
+        return
+        
+    cat_val = categoria.value if categoria else "all"
+    if cat_val != "all":
+        pool = [q for q in trivia_pool if q.get("category") == cat_val]
+    else:
+        pool = trivia_pool
+        
+    if not pool:
+        pool = trivia_pool
+        
+    question = random.choice(pool)
+    letters = ["🇦", "🇧", "🇨", "🇩"]
+    opts_txt = "\n".join([f"{letters[i]} **{opt}**" for i, opt in enumerate(question["options"][:4])])
+    
+    embed = discord.Embed(
+        title=f"❓ Trivial: {question.get('category_name', 'Pregunta')}",
+        description=f"**{question['question']}**\n\n{opts_txt}\n\n*Pulsa el botón con la respuesta correcta abajo. ¡El primero en acertar se lleva 10 puntos!*",
+        color=0x3b82f6
+    )
+    embed.set_footer(text="Trivial Asistente • 60 segundos para responder • /ranking_trivial")
+    view = TriviaView(question, interaction.user.id)
+    await interaction.response.send_message(embed=embed, view=view)
+
+@tree.command(name="ranking_trivial", description="Muestra la tabla de clasificación y puntos de Trivial del servidor")
+async def cmd_ranking_trivial(interaction: discord.Interaction):
+    ranked = []
+    for uid, data in user_memory.items():
+        pts = data.get("trivia_points", 0)
+        if pts > 0:
+            name = data.get("display_name") or data.get("name") or uid
+            ranked.append((name, pts))
+    ranked.sort(key=lambda x: x[1], reverse=True)
+    
+    embed = discord.Embed(
+        title="🏆 Ranking de Trivial del Servidor",
+        color=0xf59e0b,
+        description="Puntuación acumulada respondiendo preguntas con `/trivial` (+10 pts por acierto):"
+    )
+    if not ranked:
+        embed.description += "\n\n*Aún nadie tiene puntos en el Trivial. ¡Sé el primero usando `/trivial`!*"
+    else:
+        medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
+        lines = []
+        for i, (name, pts) in enumerate(ranked[:10]):
+            m = medals[i] if i < len(medals) else f"{i+1}."
+            lines.append(f"{m} **{name}**: `{pts} pts`")
+        embed.description += "\n\n" + "\n".join(lines)
+    
+    embed.set_footer(text="El Trivial de Asistente • Preguntas de Manhwa, Gaming, Lore y Tribunal")
+    await interaction.response.send_message(embed=embed)
+
 @bot.event
 async def on_ready():
     print(f"Bot '{bot.user}' conectado y listo en Discord.")
     print(f"Motores de IA con respaldo: {MODELS_PRIORITY}")
-    print("Capacidades activas: Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y Slash Commands.")
+    print("Capacidades activas: Voz & TTS (/habla), Memoria Persistente, Trivial, Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y Slash Commands.")
     
     # Sincronización instantánea de Slash Commands en el servidor y global
     try:
@@ -1008,7 +1460,7 @@ async def on_ready():
     except Exception as e:
         print(f"Aviso sincronización comandos slash: {e}")
 
-    activity = discord.Activity(type=discord.ActivityType.listening, name="menciones, /dibuja y /steam")
+    activity = discord.Activity(type=discord.ActivityType.listening, name="/habla, /trivial y menciones")
     await bot.change_presence(activity=activity)
 
 @bot.event
@@ -1053,6 +1505,56 @@ async def _handle_message_safe(message: discord.Message):
             clean_text = re.sub(r"<@&1549789822191935561>", "", clean_text).strip()
             clean_text = re.sub(r"<@&?\d+>", "", clean_text).strip()
             lowered = clean_text.lower()
+
+            # Detección de acciones conversacionales directas en llamadas de voz
+            if any(p in lowered for p in ["únete a la llamada", "unete a la llamada", "entra a la llamada", "ven a la llamada", "conéctate a voz", "conectate a voz"]):
+                if message.author.voice and message.author.voice.channel:
+                    vch = message.author.voice.channel
+                    try:
+                        await ensure_voice_connection(vch)
+                        await message.reply(f"🔊 ¡Me he conectado a **#{vch.name}**! Puedes pedirme que hable con `/habla [texto]` o diciendo *di en la llamada: ...*.")
+                        return
+                    except Exception as e:
+                        await message.reply(f"❌ No pude conectarme a la sala de voz: {e}")
+                        return
+                else:
+                    await message.reply("❌ Debes estar conectado a una sala de voz para que me una a tu llamada.")
+                    return
+
+            if any(p in lowered for p in ["sal de la llamada", "desconéctate de la llamada", "desconectate de la llamada", "salte de la llamada", "abandona la llamada", "sal de voz"]):
+                vc = message.guild.voice_client if message.guild else None
+                if vc and vc.is_connected():
+                    v_name = vc.channel.name if vc.channel else "la sala"
+                    await vc.disconnect(force=True)
+                    await message.reply(f"🔌 Me he desconectado de **#{v_name}**.")
+                    return
+                else:
+                    await message.reply("ℹ️ No estoy en ninguna llamada de voz ahora mismo.")
+                    return
+
+            if any(p in lowered for p in ["para el audio", "para la voz", "para de hablar", "cállate en la llamada", "callate en la llamada", "silencio en la llamada"]):
+                vc = message.guild.voice_client if message.guild else None
+                if vc and vc.is_connected() and vc.is_playing():
+                    vc.stop()
+                    await message.reply("⏹️ Audio detenido.")
+                    return
+
+            say_match = re.search(r"(?:di en la llamada|di por voz|habla en la llamada|di en voz|suelta por voz)\s*[:,\-]?\s*(.+)", clean_text, re.IGNORECASE)
+            if say_match:
+                phrase = say_match.group(1).strip()
+                vch = message.author.voice.channel if (message.author.voice and message.author.voice.channel) else None
+                if not vch:
+                    await message.reply("❌ Para que hable en la llamada tienes que estar conectado a una sala de voz.")
+                    return
+                try:
+                    audio_file = await generate_speech_audio(phrase, "alvaro")
+                    vc = await ensure_voice_connection(vch)
+                    play_audio_in_voice(vc, audio_file)
+                    await message.reply(f"🎙️ Dicho en **#{vch.name}**:\n> *\"{phrase[:250]}\"*")
+                    return
+                except Exception as e:
+                    await message.reply(f"❌ Error al reproducir audio: {e}")
+                    return
 
             # 1. Historial amplio del canal (últimos 35 mensajes para contexto completo)
             raw_msgs = []
@@ -1279,7 +1781,8 @@ async def _handle_message_safe(message: discord.Message):
                 current_prompt_text = f"{message.author.display_name}: Hola"
 
             # Inyectar todo el paquete de contexto enriquecido
-            current_prompt_text += f"{server_live_ctx}{voice_radar_ctx}{user_live_ctx}{recent_channel_ctx}{music_ctx}{members_ctx}{dossier_context}{pins_context}{xp_calc_context}{web_search_context}{channel_lookup_ctx}{tribunal_ctx}{steam_ctx}"
+            user_memory_ctx = get_user_memory_ctx(message.author.id)
+            current_prompt_text += f"{user_memory_ctx}{server_live_ctx}{voice_radar_ctx}{user_live_ctx}{recent_channel_ctx}{music_ctx}{members_ctx}{dossier_context}{pins_context}{xp_calc_context}{web_search_context}{channel_lookup_ctx}{tribunal_ctx}{steam_ctx}"
 
             current_turn_parts = [{"text": current_prompt_text}] + attachment_parts
 
