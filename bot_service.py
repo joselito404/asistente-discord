@@ -496,8 +496,14 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             return
         async with self.processing_lock:
             client = self.vc or getattr(self, "voice_client", None)
-            if not client or not client.is_connected():
+            if not client or not (client.is_connected() or getattr(client, "is_listening", lambda: False)() or getattr(client, "channel", None)):
                 return
+            if hasattr(client, "_connection") and not client.is_connected():
+                try:
+                    from discord.voice_state import ConnectionFlowState
+                    client._connection.state = ConnectionFlowState.connected
+                except Exception:
+                    pass
 
             if user is None and getattr(client, "channel", None):
                 humans = [m for m in client.channel.members if not m.bot]
@@ -637,7 +643,13 @@ async def ensure_voice_connection(channel: discord.VoiceChannel) -> voice_recv.V
 
     vc = channel.guild.voice_client
     if vc is not None:
-        if isinstance(vc, voice_recv.VoiceRecvClient) and vc.is_connected():
+        if isinstance(vc, voice_recv.VoiceRecvClient) and (vc.is_connected() or getattr(vc, "is_listening", lambda: False)()):
+            if hasattr(vc, "_connection") and not vc.is_connected():
+                try:
+                    from discord.voice_state import ConnectionFlowState
+                    vc._connection.state = ConnectionFlowState.connected
+                except Exception:
+                    pass
             if vc.channel.id != channel.id:
                 bot_log(f"🎙️ [Voice Move] Moviendo Asistente de #{vc.channel.name} a #{channel.name}...")
                 await vc.move_to(channel)
@@ -661,6 +673,12 @@ async def ensure_voice_connection(channel: discord.VoiceChannel) -> voice_recv.V
 
     bot_log(f"🎙️ [Voice Connect] Conectando Asistente a #{channel.name} (ID: {channel.id})...")
     vc = await channel.connect(cls=voice_recv.VoiceRecvClient, timeout=15.0, reconnect=True, self_deaf=False)
+    if hasattr(vc, "_connection") and not vc.is_connected():
+        try:
+            from discord.voice_state import ConnectionFlowState
+            vc._connection.state = ConnectionFlowState.connected
+        except Exception:
+            pass
     sink = GeminiLiveVoiceSink(vc, bot.loop)
     vc.listen(sink)
     bot_log(f"🎙️ [Voice Connected] Conexión establecida y escuchando en #{channel.name}")
@@ -668,6 +686,13 @@ async def ensure_voice_connection(channel: discord.VoiceChannel) -> voice_recv.V
 
 def play_audio_in_voice(voice_client: discord.VoiceClient, audio_path: str):
     """Reproduce el audio en el canal de voz usando FFmpegPCMAudio y elimina el archivo al terminar."""
+    if hasattr(voice_client, "_connection") and not voice_client.is_connected():
+        try:
+            from discord.voice_state import ConnectionFlowState
+            voice_client._connection.state = ConnectionFlowState.connected
+        except Exception:
+            pass
+
     if hasattr(voice_client, "stop_playing"):
         voice_client.stop_playing()
     elif voice_client.is_playing():
