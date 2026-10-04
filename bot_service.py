@@ -59,7 +59,7 @@ try:
         def _patched_decode_packet(self, packet):
             try:
                 if packet and getattr(packet, "decrypted_data", None):
-                    vc = getattr(self.sink, "voice_client", None)
+                    vc = getattr(self.sink, "voice_client", None) or getattr(self.sink, "vc", None)
                     if vc:
                         conn = getattr(vc, "_connection", None)
                         dave = getattr(conn, "dave_session", None)
@@ -455,14 +455,14 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
         self.user_buffers = {}
         self._lock = threading.Lock()
         self._is_active = True
-        self.silence_threshold_rms = 55  # Sensibilidad equilibrada para Discord con Krisp
+        self.silence_threshold_rms = 45  # Sensibilidad excelente para captar voces suaves con Krisp
         self.silence_timeout = 0.85      # Ventana de 850ms para evitar cortar palabras a mitad de frase
-        self.min_speech_frames = 24      # ~0.48s (ignora clics mecánicos, toses o ruidos ultra-breves)
+        self.min_speech_frames = 12      # ~0.24s (no descarta frases cortas como 'Hola', 'Para', 'Vete')
         self.max_speech_frames = 450     # ~9.0s máximo por turno
         self.recent_turns = []
         self.last_bot_reply_time = 0.0
         self.voice_type = "alvaro"
-        self.processing_lock = asyncio.Lock()
+        self.playback_lock = asyncio.Lock()
         self.watchdog_task = self.loop.create_task(self._watchdog())
         ch_name = getattr(getattr(voice_client, "channel", None), "name", "llamada")
         bot_log(f"🎙️ [Gemini Live] Sink activado y escuchando en #{ch_name}")
@@ -481,11 +481,14 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             if not pcm:
                 return
 
-            # Si user no viene resuelto por el gateway, asociar al primer miembro humano en la sala
-            if user is None and client and getattr(client, "channel", None):
-                humans = [m for m in client.channel.members if not m.bot]
-                if humans:
-                    user = humans[0]
+            packet = getattr(data, "packet", None)
+            ssrc = getattr(packet, "ssrc", None) if packet else None
+
+            # Resolver user a través del SSRC en tiempo real si el gateway no lo incluyó
+            if user is None and client and ssrc:
+                uid = getattr(client, "_get_id_from_ssrc", lambda s: None)(ssrc)
+                if uid and getattr(client, "guild", None):
+                    user = client.guild.get_member(uid)
 
             count = len(pcm) // 2
             if count == 0:
@@ -493,7 +496,8 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             shorts = struct.unpack(f"<{count}h", pcm)
             rms = int(math.sqrt(sum(s * s for s in shorts) / count))
 
-            user_key = user.id if user else (getattr(getattr(data, "packet", None), "ssrc", None) or "speaker")
+            # Buffer aislado por usuario o por SSRC para que nunca se mezclen las voces de distintas personas
+            user_key = user.id if user else (f"ssrc_{ssrc}" if ssrc else "speaker")
 
             now = time.time()
             with self._lock:
@@ -501,9 +505,10 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                     "frames": [],
                     "last_speech_time": 0.0,
                     "in_speech": False,
-                    "user": user
+                    "user": user,
+                    "ssrc": ssrc
                 })
-                if user:
+                if user and not state.get("user"):
                     state["user"] = user
 
                 if rms >= self.silence_threshold_rms:
@@ -511,13 +516,13 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                     state["last_speech_time"] = now
                     if not state["in_speech"]:
                         state["in_speech"] = True
-                        u_name = getattr(user, "display_name", None) or getattr(user, "name", "Usuario")
+                        u_name = getattr(user, "display_name", None) or getattr(user, "name", f"Usuario_{ssrc or 'voz'}")
                         bot_log(f"🎙️ [Gemini Live VAD] Voz detectada de '{u_name}' (RMS: {rms})")
                     if len(state["frames"]) >= self.max_speech_frames:
                         frames = state["frames"][:]
                         state["frames"].clear()
                         state["in_speech"] = False
-                        asyncio.run_coroutine_threadsafe(self.process_speech_turn(state["user"], frames), self.loop)
+                        asyncio.run_coroutine_threadsafe(self.process_speech_turn(state["user"], frames, ssrc=state.get("ssrc")), self.loop)
                 elif state["in_speech"]:
                     if len(state["frames"]) < self.max_speech_frames:
                         state["frames"].append(pcm)
@@ -526,7 +531,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                         state["frames"].clear()
                         state["in_speech"] = False
                         if len(frames) >= self.min_speech_frames:
-                            asyncio.run_coroutine_threadsafe(self.process_speech_turn(state["user"], frames), self.loop)
+                            asyncio.run_coroutine_threadsafe(self.process_speech_turn(state["user"], frames, ssrc=state.get("ssrc")), self.loop)
         except Exception as e:
             bot_log(f"Aviso en GeminiLiveVoiceSink.write: {e}")
 
@@ -554,21 +559,22 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                             state["frames"].clear()
                             state["in_speech"] = False
                             user = state["user"]
+                            ssrc = state.get("ssrc")
                             if len(frames) >= self.min_speech_frames:
-                                turns.append((user, frames))
-                                u_name = getattr(user, "display_name", None) or getattr(user, "name", "Usuario")
-                                bot_log(f"🎙️ [VAD Fin Silencio] Turno completado para '{u_name}' ({len(frames)} tramas). Enviando a Gemini...")
-                for u, f in turns:
-                    asyncio.create_task(self.process_speech_turn(u, f))
+                                turns.append((user, frames, ssrc))
+                                u_name = getattr(user, "display_name", None) or getattr(user, "name", f"Usuario_{ssrc or 'voz'}")
+                                bot_log(f"🎙️ [VAD Fin Silencio] Turno completado para '{u_name}' ({len(frames)} tramas). Procesando...")
+                for u, f, s in turns:
+                    asyncio.create_task(self.process_speech_turn(u, f, ssrc=s))
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 bot_log(f"Aviso en watchdog de voz: {e}")
 
-    async def process_speech_turn(self, user: discord.Member, frames: list):
-        if not self._is_active or self.processing_lock.locked():
+    async def process_speech_turn(self, user: discord.Member, frames: list, ssrc: int = None):
+        if not self._is_active:
             return
-        async with self.processing_lock:
+        try:
             client = self.vc or getattr(self, "voice_client", None)
             if not client or not (client.is_connected() or getattr(client, "is_listening", lambda: False)() or getattr(client, "channel", None)):
                 return
@@ -579,9 +585,15 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                 except Exception:
                     pass
 
+            if user is None and client and ssrc:
+                uid = getattr(client, "_get_id_from_ssrc", lambda s: None)(ssrc)
+                if uid and getattr(client, "guild", None):
+                    user = client.guild.get_member(uid)
+
             if user is None and getattr(client, "channel", None):
                 humans = [m for m in client.channel.members if not m.bot]
-                user = humans[0] if humans else None
+                if len(humans) == 1:
+                    user = humans[0]
 
             raw_pcm = b"".join(frames)
             mono_pcm = pcm_stereo_to_mono_48k(raw_pcm)
@@ -597,7 +609,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             wav_bytes = wav_io.getvalue()
             b64_audio = base64.b64encode(wav_bytes).decode("utf-8")
 
-            user_name = getattr(user, "display_name", None) or getattr(user, "name", "Usuario")
+            user_name = getattr(user, "display_name", None) or getattr(user, "name", None) or f"Usuario_{ssrc or 'voz'}"
             user_id = getattr(user, "id", None)
             user_mem = get_user_memory_ctx(user_id) if user_id else ""
             channel_name = getattr(getattr(client, "channel", None), "name", "llamada")
@@ -850,10 +862,13 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
 
             try:
                 audio_file = await generate_speech_audio(clean_resp, voice_type=self.voice_type)
-                play_audio_in_voice(client, audio_file)
+                async with self.playback_lock:
+                    play_audio_in_voice(client, audio_file)
                 bot_log(f"🔊 [Gemini Live] Audio enviado a #{channel_name}")
             except Exception as ex:
                 bot_log(f"Error reproduciendo voz Gemini Live: {ex}")
+        except Exception as ex_turn:
+            bot_log(f"Aviso procesando turno de voz: {ex_turn}")
 
     def cleanup(self):
         self._is_active = False
