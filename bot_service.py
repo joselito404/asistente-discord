@@ -693,12 +693,12 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             }
             data = json.dumps(payload).encode("utf-8")
             response_text = ""
-            for model_name in ["gemini-3.6-flash", "gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-flash-lite-latest"]:
+            for model_name in ["gemini-3.5-flash-lite", "gemini-flash-lite-latest", "gemini-3.6-flash", "gemini-flash-latest"]:
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_KEY}"
                 try:
                     req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
                     def call_api():
-                        with urllib.request.urlopen(req, timeout=12) as resp:
+                        with urllib.request.urlopen(req, timeout=6) as resp:
                             return json.loads(resp.read().decode("utf-8"))
                     res = await asyncio.to_thread(call_api)
                     candidates = res.get("candidates", [])
@@ -2839,8 +2839,9 @@ import http.server
 import socketserver
 import threading
 
-class ReusableTCPServer(socketserver.TCPServer):
+class ReusableTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     allow_reuse_address = True
+    daemon_threads = True
 
 def run_health_check_server():
     port = int(os.getenv("PORT", 10000))
@@ -3063,12 +3064,15 @@ audio {{ flex: 1; height: 36px; min-width: 220px; }}
                 status_bytes = status.encode("utf-8")
                 self.send_response(200)
                 self.send_header("Content-type", "text/plain; charset=utf-8")
+                self.send_header("Connection", "close")
                 self.send_header("Content-length", str(len(status_bytes)))
                 self.end_headers()
                 self.wfile.write(status_bytes)
 
         def do_HEAD(self):
             self.send_response(200)
+            self.send_header("Content-type", "text/plain; charset=utf-8")
+            self.send_header("Connection", "close")
             self.end_headers()
 
         def log_message(self, format, *args):
