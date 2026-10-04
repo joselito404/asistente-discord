@@ -455,10 +455,10 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
         self.user_buffers = {}
         self._lock = threading.Lock()
         self._is_active = True
-        self.silence_threshold_rms = 50  # Sensibilidad para captar cualquier micrófono con Krisp
-        self.silence_timeout = 0.65
-        self.min_speech_frames = 14   # ~0.28s (ignora clics o ruidos ultra-breves)
-        self.max_speech_frames = 450  # ~9.0s máximo por turno
+        self.silence_threshold_rms = 55  # Sensibilidad equilibrada para Discord con Krisp
+        self.silence_timeout = 0.85      # Ventana de 850ms para evitar cortar palabras a mitad de frase
+        self.min_speech_frames = 24      # ~0.48s (ignora clics mecánicos, toses o ruidos ultra-breves)
+        self.max_speech_frames = 450     # ~9.0s máximo por turno
         self.recent_turns = []
         self.last_bot_reply_time = 0.0
         self.voice_type = "alvaro"
@@ -519,7 +519,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                         state["in_speech"] = False
                         asyncio.run_coroutine_threadsafe(self.process_speech_turn(state["user"], frames), self.loop)
                 elif state["in_speech"]:
-                    if len(state["frames"]) % 2 == 0 and len(state["frames"]) < self.max_speech_frames:
+                    if len(state["frames"]) < self.max_speech_frames:
                         state["frames"].append(pcm)
                     if (now - state["last_speech_time"]) >= self.silence_timeout:
                         frames = state["frames"][:]
@@ -654,28 +654,26 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                 f"LO QUE DIJISTE TÚ ANTERIORMENTE EN LA LLAMADA:\n{hist_ctx}\n\n"
                 f"INSTRUCCIONES CLAVE:\n"
                 f"1. PASO 1 - TRANSCRIBE EL AUDIO DEL USUARIO (MÁXIMA ATENCIÓN FONÉTICA EN ESPAÑOL DE ESPAÑA):\n"
-                f"   - Escucha con máxima atención el audio. Los usuarios hablan español de España por micrófonos de Discord mientras juegan o charlan.\n"
-                f"   - Transcribe exactamente las palabras que pronuncia '{user_name}', incluso si habla rápido, en voz baja, con modismos o con ruido de fondo o de partida.\n"
-                f"   - ÚNICAMENTE si el audio es 100% silencio absoluto, o un simple carraspeo o clic mecánico sin ninguna palabra humana, escribe: [ININTELIGIBLE]\n\n"
-                f"2. PASO 2 - DECIDE TU RESPUESTA:\n"
-                f"   - Si el usuario te pide desconectarte o salir de la llamada ('vete de la llamada', 'desconéctate', 'salte', 'vete', 'salte del canal', 'abandona la llamada'):\n"
-                f"     Escribe en Respuesta: [DESCONECTAR]\n"
-                f"   - Si el usuario te manda callar ('cállate', 'silencio', 'para ya', 'shh', 'cierra la boca', 'basta', 'calla'):\n"
-                f"     Escribe en Respuesta: [SILENCIO]\n"
-                f"   - Si transcribiste [ININTELIGIBLE], o los usuarios están jugando y hablando claramente ENTRE ELLOS del juego (ej: 'vamos a B', 'pásame balas', 'me han matado'):\n"
-                f"     Escribe en Respuesta: [IGNORAR]\n"
-                f"   - Si te piden buscar algo en internet (tiempo, noticias, estrenos, datos actuales):\n"
-                f"     Escribe en Respuesta: [BUSCAR: <términos de búsqueda>]\n"
-                f"   - Si te preguntan la fecha, día o la hora, indícala con total precisión usando la FECHA Y HORA ACTUAL EXACTA arriba indicada ({spain_now_str}).\n"
-                f"   - Si te saludan, preguntan, piden tu ayuda, opinión o continúan conversando contigo:\n"
-                f"     Responde de forma amable, cercana y natural en 1 o 2 frases breves (15-25 palabras).\n\n"
-                f"3. ACTITUD Y RESPETO OBLIGATORIO (CERO SARCASMO O MULETILLAS):\n"
-                f"   - Sé SIEMPRE amable, respetuoso, educado y con buena onda.\n"
-                f"   - NUNCA seas borde, arrogante ni vacilón. NUNCA mandes 'espabilar' a nadie ni digas que el usuario es lento o que te aburres.\n"
-                f"   - NO menciones datos de la memoria del usuario de la nada.\n"
-                f"   - NO repitas muletillas como 'para la partida con Omen' ni 'para vuestra partida' en cada frase; contesta de forma directa y variada a lo que pregunta la persona que te habla.\n\n"
+                f"   - Escucha con máxima atención el audio grabado de Discord en España.\n"
+                f"   - Transcribe exactamente las palabras que pronuncia '{user_name}', incluso si habla rápido, con modismos o con ruido de juego.\n"
+                f"   - Si el usuario se está riendo a carcajadas o entre risas, escribe: [Risas]\n"
+                f"   - Si solo se escucha un carraspeo, respiración fuerte, chasquido o ruido de fondo sin palabras, escribe: [Ruido]\n"
+                f"   - Si es silencio total o completamente inaudible, escribe: [Silencio]\n"
+                f"   - NUNCA pongas [ININTELIGIBLE] si se puede entender alguna palabra o frase hablada.\n\n"
+                f"2. PASO 2 - DECIDE TU RESPUESTA (MODO DISCRETO PARA NO MOLESTAR EN LA PARTIDA):\n"
+                f"   - Los usuarios están jugando a videojuegos y hablando entre ellos el 99% del tiempo.\n"
+                f"   - POR DEFECTO, escribe SIEMPRE en Respuesta: [IGNORAR]\n"
+                f"   - Si el audio es [Risas], [Ruido], [Silencio], o los usuarios hablan entre ellos del juego o de sus cosas, escribe en Respuesta: [IGNORAR]\n"
+                f"   - Si te piden callar o parar ('cállate', 'silencio', 'para ya', 'shh', 'cierra la boca', 'a la calle', 'basta', 'calla', 'otra más y te vas'): escribe en Respuesta: [SILENCIO]\n"
+                f"   - Si te piden salir de la llamada ('vete', 'desconéctate', 'salte', 'vete de la llamada', 'a la puta calle'): escribe en Respuesta: [DESCONECTAR]\n"
+                f"   - Si te piden buscar algo en internet ('busca...', 'qué tiempo hace', 'noticias'): escribe en Respuesta: [BUSCAR: <términos>]\n"
+                f"   - Si te preguntan la hora o fecha exacta, responde con la hora peninsular de España ({spain_now_str}).\n"
+                f"   - ÚNICAMENTE responde hablando con tu voz si se dirigen DIRECTAMENTE A TI ('Asistente...', 'Oye bot...', 'Asistente dime...'), o si es una respuesta directa a una pregunta que tú les hiciste hace menos de 20 segundos.\n\n"
+                f"3. ACTITUD Y RESPETO OBLIGATORIO:\n"
+                f"   - Sé amable, educado y con buena vibra. Respuestas breves y naturales (1 o 2 frases, 15-25 palabras).\n"
+                f"   - NUNCA seas borde ni vacilón. Cero muletillas repetitivas.\n\n"
                 f"4. FORMATO DE SALIDA ESTRICTO:\n"
-                f"Oído: <texto exacto pronunciado por el usuario o [ININTELIGIBLE]>\n"
+                f"Oído: <texto transcrito, o [Risas], o [Ruido], o [Silencio]>\n"
                 f"Respuesta: <tu respuesta para locutar, o [IGNORAR], o [SILENCIO], o [DESCONECTAR], o [BUSCAR: <términos>]>"
             )
 
@@ -687,13 +685,13 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                     ]
                 }],
                 "generationConfig": {
-                    "temperature": 0.3,
+                    "temperature": 0.2,
                     "maxOutputTokens": 600
                 }
             }
             data = json.dumps(payload).encode("utf-8")
             response_text = ""
-            for model_name in ["gemini-3.5-flash-lite", "gemini-flash-lite-latest", "gemini-3.6-flash", "gemini-flash-latest"]:
+            for model_name in ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-flash-lite-latest", "gemini-3.5-flash", "gemini-3.6-flash"]:
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_KEY}"
                 try:
                     req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
@@ -733,7 +731,8 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             disconnect_triggers = [
                 "vete de la llamada", "desconéctate", "desconectate", "salte de la llamada",
                 "salte del canal", "vete de aquí", "vete de aqui", "salte de aquí",
-                "salte ya", "vete ya", "abandona la llamada", "salte", "vete"
+                "salte ya", "vete ya", "abandona la llamada", "salte", "vete",
+                "a la puta calle", "a la calle", "lárgate", "largate"
             ]
             is_disconnect_cmd = (
                 "[DESCONECTAR]" in response_text or 
@@ -757,7 +756,17 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                     bot_log(f"Aviso al desconectar por voz: {ex_dc}")
                 return
 
-            if "[SILENCIO]" in response_text or "[SILENCIO]" in bot_reply:
+            silence_triggers = [
+                "cállate", "callate", "silencio", "para ya", "shh", "cierra el pico",
+                "cierra la boca", "basta", "calla", "para de hablar", "otra más y te vas"
+            ]
+            is_silence_cmd = (
+                "[SILENCIO]" in response_text or 
+                "[SILENCIO]" in bot_reply or 
+                any(t in u_clean for t in silence_triggers)
+            )
+
+            if is_silence_cmd:
                 record_entry["status"] = "silenciado"
                 record_entry["bot_reply"] = "[SILENCIO]"
                 save_recordings_metadata()
@@ -766,7 +775,8 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                     client.stop()
                 return
 
-            if not bot_reply or "[IGNORAR]" in bot_reply or bot_reply.strip() == "IGNORAR" or "[ININTELIGIBLE]" in user_spoken:
+            is_ignored_sound = any(tag in user_spoken for tag in ["[ININTELIGIBLE]", "[Risas]", "[Ruido]", "[Silencio]"])
+            if not bot_reply or "[IGNORAR]" in bot_reply or bot_reply.strip() == "IGNORAR" or is_ignored_sound:
                 record_entry["status"] = "ignorado"
                 record_entry["bot_reply"] = "[IGNORAR]"
                 save_recordings_metadata()

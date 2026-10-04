@@ -24,3 +24,5 @@ recordings_backup/
 historico_chat/
 herramientas/
 documentos_pdf/
+*.zip
+*.txt
