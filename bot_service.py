@@ -675,38 +675,30 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
 
             spain_now_str = get_spain_now_str()
             prompt = (
-                f"Estás en vivo como asistente de voz en el canal '{channel_name}' en Discord (servidor de España: {guild_name}).\n"
-                f"Tu nombre es 'Asistente' (también respondes si te dicen 'bot' o te hablan directamente).\n"
+                f"Eres el transcriptor acústico y asistente de voz del canal '{channel_name}' en Discord (España).\n"
+                f"Tu nombre es estrictamente 'Asistente' (también respondes si dicen 'bot').\n"
                 f"FECHA Y HORA ACTUAL EXACTA EN ESPAÑA: {spain_now_str}\n"
                 f"Gente en la sala de voz: {members_str}.\n"
-                f"El usuario que acaba de hablar por el micro es: '{user_name}'.\n\n"
-                f"LO QUE DIJISTE TÚ ANTERIORMENTE EN LA LLAMADA:\n{hist_ctx}\n\n"
+                f"El usuario que habla es: '{user_name}'.\n\n"
+                f"ÚLTIMAS INTERVENCIONES EN LA LLAMADA:\n{hist_ctx}\n\n"
                 f"INSTRUCCIONES CLAVE:\n"
-                f"1. PASO 1 - TRANSCRIBE EL AUDIO DEL USUARIO (MÁXIMA ATENCIÓN FONÉTICA EN ESPAÑOL DE ESPAÑA):\n"
-                f"   - Escucha con máxima atención el audio grabado de Discord en España.\n"
-                f"   - Transcribe exactamente todas las palabras pronunciadas por '{user_name}', incluso si habla rápido, con acento, modismos o baja calidad de micro.\n"
-                f"   - NUNCA pongas [Ruido] si hay palabras inteligibles habladas por una persona, transcribe el texto.\n"
-                f"   - Si el usuario se está riendo a carcajadas o entre risas sin palabras claras, escribe: [Risas]\n"
-                f"   - Si solo se escucha un carraspeo, respiración fuerte, chasquido o ruido mecánico de fondo sin voz, escribe: [Ruido]\n"
-                f"   - Si es silencio total o completamente inaudible, escribe: [Silencio]\n\n"
-                f"2. PASO 2 - DECIDE TU RESPUESTA:\n"
-                f"   - Los usuarios pueden estar jugando a videojuegos o charlando en la llamada.\n"
-                f"   - Escribe en Respuesta: [IGNORAR] si:\n"
-                f"     * El audio es solo [Risas], [Ruido], [Silencio].\n"
-                f"     * Es un comentario puramente interno del videojuego ('vamos a punto B', 'lo maté', 'cuidado a la izquierda', 'tira ulti', 'pásamela', 'gg').\n"
-                f"     * Es una conversación cerrada entre dos miembros sobre su juego sin relación con preguntas o charla general.\n"
-                f"   - RESPONDE HABLANDO en Respuesta si:\n"
-                f"     * Te nombran o aluden ('Asistente', 'Oye bot', 'el bot', etc.).\n"
-                f"     * Te hacen una pregunta directa, saludo, o piden una opinión o dato ('hola qué tal', 'qué hora es', 'quién es...', 'cuánto queda').\n"
-                f"     * Es una continuación natural de la conversación que tenías con ellos hace menos de 25 segundos.\n"
-                f"   - Si te piden callar explícitamente a ti ('cállate bot', 'cállate ya', 'silencio bot', 'para de hablar', 'shh'): escribe en Respuesta: [SILENCIO]\n"
-                f"   - Si te piden explícitamente abandonar la llamada ('asistente sal de la llamada', 'asistente vete', 'bot desconéctate', 'salte de la llamada'): escribe en Respuesta: [DESCONECTAR]\n"
-                f"   - Si te piden buscar algo en internet ('busca...', 'mira qué tiempo hace', 'qué pasó con...'): escribe en Respuesta: [BUSCAR: <términos>]\n"
-                f"   - Si te preguntan la hora o fecha exacta, responde con la hora peninsular de España ({spain_now_str}).\n\n"
-                f"3. ACTITUD Y RESPETO OBLIGATORIO:\n"
-                f"   - Sé amable, educado, natural y con buena vibra de colega español.\n"
-                f"   - Respuestas breves y naturales (1 o 2 frases, 15-25 palabras).\n"
-                f"   - Cero muletillas robóticas. Si te preguntan algo directo, da la respuesta al grano.\n\n"
+                f"1. PASO 1 - TRANSCRIBE EL AUDIO DEL USUARIO CON MÁXIMA PRECISIÓN ACÚSTICA:\n"
+                f"   - Escucha con extrema atención fonética cada fonema en español de España.\n"
+                f"   - Transcribe exactamente todas las palabras pronunciadas por '{user_name}', sin inventar ni rellenar.\n"
+                f"   - Si se escuchan palabras reales, transcríbelas todas. NUNCA pongas [Ruido] si hay voz humana.\n"
+                f"   - Si solo son risas o carcajadas sin palabras, escribe: [Risas]\n"
+                f"   - Si es un chasquido, respiración o ruido mecánico sin voz, escribe: [Ruido]\n"
+                f"   - Si no se escucha nada, escribe: [Silencio]\n\n"
+                f"2. PASO 2 - REGLA OBLIGATORIA DE INTERVENCIÓN:\n"
+                f"   - Los miembros del canal están jugando entre ellos.\n"
+                f"   - REGLA DE ORO: Si en la frase transcrita el usuario NO dice la palabra 'asistente' (ni 'bot'), DEBES poner obligatoriamente en Respuesta: [IGNORAR].\n"
+                f"   - Si dicen 'asistente' o 'bot', responde únicamente a lo que te pregunten o pidan.\n"
+                f"   - Si te piden callar explícitamente ('cállate asistente', 'silencio asistente', 'shh'): pon Respuesta: [SILENCIO]\n"
+                f"   - Si te piden salir de la llamada ('asistente sal de la llamada', 'asistente vete', 'bot desconéctate'): pon Respuesta: [DESCONECTAR]\n"
+                f"   - Si te piden buscar algo en la red ('asistente busca...', 'asistente qué tiempo hace'): pon Respuesta: [BUSCAR: <términos>]\n"
+                f"   - Si te preguntan la hora o fecha, dilas con la hora peninsular de España ({spain_now_str}).\n\n"
+                f"3. ACTITUD:\n"
+                f"   - Colega del servidor, amable, natural, directo (1 o 2 frases, 15-25 palabras).\n\n"
                 f"4. FORMATO DE SALIDA ESTRICTO:\n"
                 f"Oído: <texto transcrito, o [Risas], o [Ruido], o [Silencio]>\n"
                 f"Respuesta: <tu respuesta para locutar, o [IGNORAR], o [SILENCIO], o [DESCONECTAR], o [BUSCAR: <términos>]>"
@@ -720,18 +712,19 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                     ]
                 }],
                 "generationConfig": {
-                    "temperature": 0.2,
+                    "temperature": 0.15,
                     "maxOutputTokens": 600
                 }
             }
             data = json.dumps(payload).encode("utf-8")
             response_text = ""
-            for model_name in ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-flash-lite-latest", "gemini-3.5-flash", "gemini-3.6-flash"]:
+            # Modelos de máxima precisión acústica multimodal de Google Gemini
+            for model_name in ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.5-flash", "gemini-flash-latest", "gemini-3.5-flash-lite"]:
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_KEY}"
                 try:
                     req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
                     def call_api():
-                        with urllib.request.urlopen(req, timeout=6) as resp:
+                        with urllib.request.urlopen(req, timeout=7) as resp:
                             return json.loads(resp.read().decode("utf-8"))
                     res = await asyncio.to_thread(call_api)
                     candidates = res.get("candidates", [])
@@ -814,12 +807,15 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                     client.stop()
                 return
 
+            # REGLA ESTRICTA SOLICITADA POR EL USUARIO:
+            # Ignorar cualquier mensaje que no tenga la palabra 'asistente' o 'bot' en la frase transcrita
+            has_wake_word = bool(re.search(r"\b(asistente|bot)\b", u_clean))
             is_ignored_sound = any(tag in user_spoken for tag in ["[ININTELIGIBLE]", "[Risas]", "[Ruido]", "[Silencio]"])
-            if not bot_reply or "[IGNORAR]" in bot_reply or bot_reply.strip() == "IGNORAR" or is_ignored_sound:
+            if not has_wake_word or not bot_reply or "[IGNORAR]" in bot_reply or bot_reply.strip() == "IGNORAR" or is_ignored_sound:
                 record_entry["status"] = "ignorado"
                 record_entry["bot_reply"] = "[IGNORAR]"
                 save_recordings_metadata()
-                bot_log(f"🎙️ [Gemini Live] '{user_name}' ('{user_spoken}') -> [IGNORAR]")
+                bot_log(f"🎙️ [Gemini Live Filtro Asistente] '{user_name}' ('{user_spoken}') -> [IGNORAR] (Wake word: {has_wake_word})")
                 return
 
             # Manejo de búsqueda web en tiempo real por voz
