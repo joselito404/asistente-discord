@@ -419,7 +419,24 @@ def save_recordings_metadata():
         bot_log(f"Aviso guardado grabaciones metadata: {ex}")
 
 VOICE_TURNS_LOG = load_recordings_metadata()
-VOICE_MANUALLY_DISCONNECTED = set()
+# Mapeo de guild_id -> tiempo de expiración (para no quedarse bloqueado permanentemente si alguien dice 'salte' o hay desconexión temporal)
+VOICE_MANUALLY_DISCONNECTED = {}
+
+def set_voice_manually_disconnected(guild_id: int, duration_sec: int = 180):
+    if guild_id:
+        VOICE_MANUALLY_DISCONNECTED[guild_id] = time.time() + duration_sec
+
+def clear_voice_manually_disconnected(guild_id: int):
+    if guild_id:
+        VOICE_MANUALLY_DISCONNECTED.pop(guild_id, None)
+
+def is_voice_manually_disconnected(guild_id: int) -> bool:
+    if not guild_id or guild_id not in VOICE_MANUALLY_DISCONNECTED:
+        return False
+    if time.time() >= VOICE_MANUALLY_DISCONNECTED[guild_id]:
+        VOICE_MANUALLY_DISCONNECTED.pop(guild_id, None)
+        return False
+    return True
 
 def pcm_stereo_to_mono_48k(pcm_bytes: bytes) -> bytes:
     """Convierte audio PCM estéreo de 48kHz a mono puro a 48kHz con normalización de volumen para máxima claridad en Gemini."""
@@ -659,7 +676,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             spain_now_str = get_spain_now_str()
             prompt = (
                 f"Estás en vivo como asistente de voz en el canal '{channel_name}' en Discord (servidor de España: {guild_name}).\n"
-                f"Tu nombre es 'Asistente' (también respondes si te dicen 'bot').\n"
+                f"Tu nombre es 'Asistente' (también respondes si te dicen 'bot' o te hablan directamente).\n"
                 f"FECHA Y HORA ACTUAL EXACTA EN ESPAÑA: {spain_now_str}\n"
                 f"Gente en la sala de voz: {members_str}.\n"
                 f"El usuario que acaba de hablar por el micro es: '{user_name}'.\n\n"
@@ -667,23 +684,29 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                 f"INSTRUCCIONES CLAVE:\n"
                 f"1. PASO 1 - TRANSCRIBE EL AUDIO DEL USUARIO (MÁXIMA ATENCIÓN FONÉTICA EN ESPAÑOL DE ESPAÑA):\n"
                 f"   - Escucha con máxima atención el audio grabado de Discord en España.\n"
-                f"   - Transcribe exactamente las palabras que pronuncia '{user_name}', incluso si habla rápido, con modismos o con ruido de juego.\n"
-                f"   - Si el usuario se está riendo a carcajadas o entre risas, escribe: [Risas]\n"
-                f"   - Si solo se escucha un carraspeo, respiración fuerte, chasquido o ruido de fondo sin palabras, escribe: [Ruido]\n"
-                f"   - Si es silencio total o completamente inaudible, escribe: [Silencio]\n"
-                f"   - NUNCA pongas [ININTELIGIBLE] si se puede entender alguna palabra o frase hablada.\n\n"
-                f"2. PASO 2 - DECIDE TU RESPUESTA (MODO DISCRETO PARA NO MOLESTAR EN LA PARTIDA):\n"
-                f"   - Los usuarios están jugando a videojuegos y hablando entre ellos el 99% del tiempo.\n"
-                f"   - POR DEFECTO, escribe SIEMPRE en Respuesta: [IGNORAR]\n"
-                f"   - Si el audio es [Risas], [Ruido], [Silencio], o los usuarios hablan entre ellos del juego o de sus cosas, escribe en Respuesta: [IGNORAR]\n"
-                f"   - Si te piden callar o parar ('cállate', 'silencio', 'para ya', 'shh', 'cierra la boca', 'a la calle', 'basta', 'calla', 'otra más y te vas'): escribe en Respuesta: [SILENCIO]\n"
-                f"   - Si te piden salir de la llamada ('vete', 'desconéctate', 'salte', 'vete de la llamada', 'a la puta calle'): escribe en Respuesta: [DESCONECTAR]\n"
-                f"   - Si te piden buscar algo en internet ('busca...', 'qué tiempo hace', 'noticias'): escribe en Respuesta: [BUSCAR: <términos>]\n"
-                f"   - Si te preguntan la hora o fecha exacta, responde con la hora peninsular de España ({spain_now_str}).\n"
-                f"   - ÚNICAMENTE responde hablando con tu voz si se dirigen DIRECTAMENTE A TI ('Asistente...', 'Oye bot...', 'Asistente dime...'), o si es una respuesta directa a una pregunta que tú les hiciste hace menos de 20 segundos.\n\n"
+                f"   - Transcribe exactamente todas las palabras pronunciadas por '{user_name}', incluso si habla rápido, con acento, modismos o baja calidad de micro.\n"
+                f"   - NUNCA pongas [Ruido] si hay palabras inteligibles habladas por una persona, transcribe el texto.\n"
+                f"   - Si el usuario se está riendo a carcajadas o entre risas sin palabras claras, escribe: [Risas]\n"
+                f"   - Si solo se escucha un carraspeo, respiración fuerte, chasquido o ruido mecánico de fondo sin voz, escribe: [Ruido]\n"
+                f"   - Si es silencio total o completamente inaudible, escribe: [Silencio]\n\n"
+                f"2. PASO 2 - DECIDE TU RESPUESTA:\n"
+                f"   - Los usuarios pueden estar jugando a videojuegos o charlando en la llamada.\n"
+                f"   - Escribe en Respuesta: [IGNORAR] si:\n"
+                f"     * El audio es solo [Risas], [Ruido], [Silencio].\n"
+                f"     * Es un comentario puramente interno del videojuego ('vamos a punto B', 'lo maté', 'cuidado a la izquierda', 'tira ulti', 'pásamela', 'gg').\n"
+                f"     * Es una conversación cerrada entre dos miembros sobre su juego sin relación con preguntas o charla general.\n"
+                f"   - RESPONDE HABLANDO en Respuesta si:\n"
+                f"     * Te nombran o aluden ('Asistente', 'Oye bot', 'el bot', etc.).\n"
+                f"     * Te hacen una pregunta directa, saludo, o piden una opinión o dato ('hola qué tal', 'qué hora es', 'quién es...', 'cuánto queda').\n"
+                f"     * Es una continuación natural de la conversación que tenías con ellos hace menos de 25 segundos.\n"
+                f"   - Si te piden callar explícitamente a ti ('cállate bot', 'cállate ya', 'silencio bot', 'para de hablar', 'shh'): escribe en Respuesta: [SILENCIO]\n"
+                f"   - Si te piden explícitamente abandonar la llamada ('asistente sal de la llamada', 'asistente vete', 'bot desconéctate', 'salte de la llamada'): escribe en Respuesta: [DESCONECTAR]\n"
+                f"   - Si te piden buscar algo en internet ('busca...', 'mira qué tiempo hace', 'qué pasó con...'): escribe en Respuesta: [BUSCAR: <términos>]\n"
+                f"   - Si te preguntan la hora o fecha exacta, responde con la hora peninsular de España ({spain_now_str}).\n\n"
                 f"3. ACTITUD Y RESPETO OBLIGATORIO:\n"
-                f"   - Sé amable, educado y con buena vibra. Respuestas breves y naturales (1 o 2 frases, 15-25 palabras).\n"
-                f"   - NUNCA seas borde ni vacilón. Cero muletillas repetitivas.\n\n"
+                f"   - Sé amable, educado, natural y con buena vibra de colega español.\n"
+                f"   - Respuestas breves y naturales (1 o 2 frases, 15-25 palabras).\n"
+                f"   - Cero muletillas robóticas. Si te preguntan algo directo, da la respuesta al grano.\n\n"
                 f"4. FORMATO DE SALIDA ESTRICTO:\n"
                 f"Oído: <texto transcrito, o [Risas], o [Ruido], o [Silencio]>\n"
                 f"Respuesta: <tu respuesta para locutar, o [IGNORAR], o [SILENCIO], o [DESCONECTAR], o [BUSCAR: <términos>]>"
@@ -738,18 +761,19 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
 
             record_entry["transcription"] = user_spoken or "(audio procesado)"
 
-            # Detección de orden de desconexión por voz (explícita por modelo o frase directa en transcripción)
+            # Detección estricta de orden de desconexión por voz mediante patrones regex (evitar falsos positivos como 'salte de ahí' o 'vete al punto')
             u_clean = user_spoken.lower().strip()
-            disconnect_triggers = [
-                "vete de la llamada", "desconéctate", "desconectate", "salte de la llamada",
-                "salte del canal", "vete de aquí", "vete de aqui", "salte de aquí",
-                "salte ya", "vete ya", "abandona la llamada", "salte", "vete",
-                "a la puta calle", "a la calle", "lárgate", "largate"
+            disconnect_patterns = [
+                r"\b(vete|sal|salte|descon[eé]ctate|m[aá]rchate|l[aá]rgate)\s+(de\s+la\s+llamada|del\s+canal|de\s+voz|de\s+aqu[ií])\b",
+                r"\b(asistente|bot)\s+(salte|vete|descon[eé]ctate|l[aá]rgate)\b",
+                r"\b(abandona\s+la\s+llamada)\b",
+                r"\b(a\s+la\s+(puta\s+)?calle\s+bot)\b"
             ]
+            explicit_disconnect_intent = any(re.search(pat, u_clean) for pat in disconnect_patterns)
             is_disconnect_cmd = (
                 "[DESCONECTAR]" in response_text or 
                 "[DESCONECTAR]" in bot_reply or 
-                any(t in u_clean for t in disconnect_triggers)
+                explicit_disconnect_intent
             )
 
             if is_disconnect_cmd:
@@ -758,7 +782,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                 save_recordings_metadata()
                 guild_id = client.guild.id if hasattr(client, "guild") and client.guild else None
                 if guild_id:
-                    VOICE_MANUALLY_DISCONNECTED.add(guild_id)
+                    set_voice_manually_disconnected(guild_id, duration_sec=180)
                 bot_log(f"🔌 [Gemini Live Desconectar] '{user_name}' pidió desconectar ('{user_spoken}'). Saliendo de la sala.")
                 if client.is_playing():
                     client.stop()
@@ -768,14 +792,17 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                     bot_log(f"Aviso al desconectar por voz: {ex_dc}")
                 return
 
-            silence_triggers = [
-                "cállate", "callate", "silencio", "para ya", "shh", "cierra el pico",
-                "cierra la boca", "basta", "calla", "para de hablar", "otra más y te vas"
+            # Detección estricta de silencio (evitar falsos positivos con 'dispara', 'bastante', 'callao', etc.)
+            silence_patterns = [
+                r"\b(c[aá]llate|silencio|shh+|calla|para\s+ya|para\s+de\s+hablar|cierra\s+el\s+pico|cierra\s+la\s+boca)\b",
+                r"\b(asistente|bot)\s+(c[aá]llate|silencio|calla|para)\b",
+                r"\b(otra\s+m[aá]s\s+y\s+te\s+vas)\b"
             ]
+            explicit_silence_intent = any(re.search(pat, u_clean) for pat in silence_patterns)
             is_silence_cmd = (
                 "[SILENCIO]" in response_text or 
                 "[SILENCIO]" in bot_reply or 
-                any(t in u_clean for t in silence_triggers)
+                explicit_silence_intent
             )
 
             if is_silence_cmd:
@@ -880,7 +907,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
 async def ensure_voice_connection(channel: discord.VoiceChannel) -> voice_recv.VoiceRecvClient:
     """Asegura la conexión del bot a una sala de voz con Gemini Live bidireccional activo."""
     if channel and channel.guild:
-        VOICE_MANUALLY_DISCONNECTED.discard(channel.guild.id)
+        clear_voice_manually_disconnected(channel.guild.id)
     if not discord.opus.is_loaded():
         for opus_lib in ["libopus.so.0", "libopus.so", "opus", "libopus-0.x86_64.so"]:
             try:
@@ -1885,7 +1912,7 @@ async def cmd_habla(interaction: discord.Interaction, texto: str, voz: app_comma
         await interaction.followup.send("❌ Este comando solo está disponible dentro de un servidor.")
         return
     
-    VOICE_MANUALLY_DISCONNECTED.discard(interaction.guild.id)
+    clear_voice_manually_disconnected(interaction.guild.id)
     
     # 1. Resolver el canal de voz del usuario con múltiples fallbacks robustos
     voice_channel = None
@@ -2070,7 +2097,7 @@ async def cmd_unete(interaction: discord.Interaction, canal: discord.VoiceChanne
         await interaction.followup.send("❌ Este comando solo está disponible en un servidor.")
         return
     
-    VOICE_MANUALLY_DISCONNECTED.discard(interaction.guild.id)
+    clear_voice_manually_disconnected(interaction.guild.id)
         
     target_channel = canal
     if not target_channel:
@@ -2140,9 +2167,9 @@ async def cmd_desconecta(interaction: discord.Interaction):
             vc.stop_playing()
         else:
             vc.stop()
-    VOICE_MANUALLY_DISCONNECTED.add(interaction.guild.id)
+    set_voice_manually_disconnected(interaction.guild.id, duration_sec=300)
     await vc.disconnect(force=True)
-    await interaction.followup.send(f"🔌 Me he desconectado de **#{ch_name}** y detenido Gemini Live.\n*(Auto-conexión pausada; usa `/unete` cuando quieras que vuelva)*.")
+    await interaction.followup.send(f"🔌 Me he desconectado de **#{ch_name}** y detenido Gemini Live.\n*(Auto-conexión pausada durante 5 minutos o hasta que uses `/unete`)*.")
 
 @tree.command(name="para_audio", description="Detiene la locución actual si el bot está hablando en la sala de voz")
 async def cmd_para_audio(interaction: discord.Interaction):
@@ -2281,8 +2308,8 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
     # Si el propio bot fue desconectado de una sala de voz (desconexión manual por usuario en Discord o kick)
     if bot.user and member.id == bot.user.id:
         if before.channel is not None and after.channel is None:
-            VOICE_MANUALLY_DISCONNECTED.add(guild.id)
-            bot_log(f"🔌 [Voice] Asistente fue desconectado de #{before.channel.name}. Auto-conexión pausada hasta /unete.")
+            set_voice_manually_disconnected(guild.id, duration_sec=180)
+            bot_log(f"🔌 [Voice] Asistente fue desconectado de #{before.channel.name}. Auto-conexión pausada durante 3 minutos o hasta /unete.")
         return
 
     if member.bot:
@@ -2295,10 +2322,10 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
         any(not m.bot for m in ch.members) for ch in guild.voice_channels
     )
     if not all_humans:
-        VOICE_MANUALLY_DISCONNECTED.discard(guild.id)
+        clear_voice_manually_disconnected(guild.id)
 
-    # Si el bot fue desconectado manualmente en esta llamada, respetar la orden y no auto-conectarse
-    if guild.id in VOICE_MANUALLY_DISCONNECTED:
+    # Si el bot fue desconectado manualmente en esta llamada, respetar la orden temporal y no auto-conectarse
+    if is_voice_manually_disconnected(guild.id):
         return
 
     # Si un usuario humano entra a una sala de voz o se mueve de sala
@@ -2360,7 +2387,7 @@ async def on_ready():
         while not bot.is_closed():
             try:
                 for g in bot.guilds:
-                    if g.id in VOICE_MANUALLY_DISCONNECTED:
+                    if is_voice_manually_disconnected(g.id):
                         continue
                     vc = g.voice_client
                     target_channel = None
