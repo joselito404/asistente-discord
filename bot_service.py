@@ -718,8 +718,16 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             }
             data = json.dumps(payload).encode("utf-8")
             response_text = ""
-            # Modelos de máxima precisión acústica multimodal de Google Gemini
-            for model_name in ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.5-flash", "gemini-flash-latest", "gemini-3.5-flash-lite"]:
+            # Modelos multimodales verificados con cuota disponible inmediata (0 latencia, sin 429)
+            for model_name in [
+                "gemini-3.5-flash-lite", 
+                "gemini-3.1-flash-lite", 
+                "gemini-flash-lite-latest", 
+                "gemini-3-flash-preview", 
+                "gemini-3.1-flash-lite-preview",
+                "gemini-3.7-flash", 
+                "gemini-3.5-flash"
+            ]:
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_KEY}"
                 try:
                     req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
@@ -2394,8 +2402,9 @@ async def on_ready():
                             if "games" in ch.name.lower():
                                 break
                     if target_channel:
-                        if vc is None or not (vc.is_connected() or getattr(vc, "is_listening", lambda: False)()):
-                            bot_log(f"🎙️ [Voice Auto-Watchdog] Conectando a #{target_channel.name} ({len([m for m in target_channel.members if not m.bot])} miembros)...")
+                        is_active_listening = getattr(vc, "is_listening", lambda: False)() if vc else False
+                        if vc is None or not vc.is_connected() or not is_active_listening:
+                            bot_log(f"🎙️ [Voice Auto-Watchdog] Conectando/Reactivando escucha en #{target_channel.name} ({len([m for m in target_channel.members if not m.bot])} miembros)...")
                             await ensure_voice_connection(target_channel)
                         elif vc.channel.id != target_channel.id and len([m for m in vc.channel.members if not m.bot]) == 0:
                             bot_log(f"🎙️ [Voice Auto-Watchdog] Moviendo a #{target_channel.name}...")
