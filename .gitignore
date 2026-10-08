@@ -26,3 +26,6 @@ herramientas/
 documentos_pdf/
 *.zip
 *.txt
+*.exe
+CLAUDE.md
+.agents/

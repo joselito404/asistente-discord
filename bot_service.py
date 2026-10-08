@@ -117,7 +117,7 @@ def get_spain_now_str() -> str:
     return f"{dia_sem}, {spain_time.day} de {mes} de {spain_time.year} - {spain_time.strftime('%H:%M')} (Hora de España)"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CONFIG_PATH = os.path.join(BASE_DIR, "config_discord.json")
+CONFIG_PATH = os.path.join(BASE_DIR, "config", "config_discord.json")
 
 def load_config():
     if os.path.exists(CONFIG_PATH):
@@ -234,7 +234,7 @@ intents.voice_states = True
 bot = discord.Client(intents=intents)
 tree = app_commands.CommandTree(bot)
 
-TRIBUNAL_DATA_PATH = os.path.join(BASE_DIR, "tribunal_data.json")
+TRIBUNAL_DATA_PATH = os.path.join(BASE_DIR, "datos", "tribunal_data.json")
 
 def load_tribunal_data() -> dict:
     if os.path.exists(TRIBUNAL_DATA_PATH):
@@ -247,8 +247,8 @@ def load_tribunal_data() -> dict:
 
 tribunal_data = load_tribunal_data()
 
-USER_MEMORY_PATH = os.path.join(BASE_DIR, "user_memory.json")
-TRIVIA_DATA_PATH = os.path.join(BASE_DIR, "trivia_data.json")
+USER_MEMORY_PATH = os.path.join(BASE_DIR, "datos", "user_memory.json")
+TRIVIA_DATA_PATH = os.path.join(BASE_DIR, "datos", "trivia_data.json")
 
 def load_user_memory() -> dict:
     if os.path.exists(USER_MEMORY_PATH):

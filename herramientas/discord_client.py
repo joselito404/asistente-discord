@@ -16,8 +16,8 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CONFIG_PATH = os.path.join(BASE_DIR, "config_discord.json")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CONFIG_PATH = os.path.join(BASE_DIR, "config", "config_discord.json")
 
 def load_config():
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
@@ -74,7 +74,7 @@ def create_role(name, color=0, hoist=False, mentionable=False):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Uso: python discord_client.py [channels|messages <cid>|roles]")
+        print("Uso: python herramientas/discord_client.py [channels|messages <cid>|roles]")
         sys.exit(0)
     cmd = sys.argv[1]
     if cmd == "channels":

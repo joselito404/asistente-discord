@@ -13,7 +13,7 @@ import io
 from datetime import datetime
 
 RENDER_BASE_URL = "https://asistente-discord-sj3k.onrender.com"
-LOCAL_BACKUP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "recordings_backup")
+LOCAL_BACKUP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "datos_locales", "recordings_backup")
 
 def sync_recordings():
     os.makedirs(LOCAL_BACKUP_DIR, exist_ok=True)
