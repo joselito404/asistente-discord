@@ -421,10 +421,22 @@ def save_recordings_metadata():
 VOICE_TURNS_LOG = load_recordings_metadata()
 # Mapeo de guild_id -> tiempo de expiración (para no quedarse bloqueado permanentemente si alguien dice 'salte' o hay desconexión temporal)
 VOICE_MANUALLY_DISCONNECTED = {}
+# Mapeo de guild_id -> instante de una desconexión iniciada por el propio bot (limpieza interna), que NO debe bloquear la auto-conexión
+VOICE_INTERNAL_DISCONNECT = {}
 
-def set_voice_manually_disconnected(guild_id: int, duration_sec: int = 180):
+def set_voice_manually_disconnected(guild_id: int, duration_sec: float = None):
+    """Bloquea la auto-conexión. Sin duración el bloqueo es indefinido: solo se levanta con /unete, una orden de unirse
+    o cuando la sala se queda sin humanos (así un kick no se deshace solo a los 3 minutos)."""
     if guild_id:
-        VOICE_MANUALLY_DISCONNECTED[guild_id] = time.time() + duration_sec
+        VOICE_MANUALLY_DISCONNECTED[guild_id] = float("inf") if duration_sec is None else time.time() + duration_sec
+
+def mark_internal_voice_disconnect(guild_id: int):
+    if guild_id:
+        VOICE_INTERNAL_DISCONNECT[guild_id] = time.time()
+
+def consume_internal_voice_disconnect(guild_id: int) -> bool:
+    ts = VOICE_INTERNAL_DISCONNECT.pop(guild_id, None)
+    return ts is not None and (time.time() - ts) < 15.0
 
 def clear_voice_manually_disconnected(guild_id: int):
     if guild_id:
@@ -783,7 +795,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                 save_recordings_metadata()
                 guild_id = client.guild.id if hasattr(client, "guild") and client.guild else None
                 if guild_id:
-                    set_voice_manually_disconnected(guild_id, duration_sec=180)
+                    set_voice_manually_disconnected(guild_id)
                 bot_log(f"🔌 [Gemini Live Desconectar] '{user_name}' pidió desconectar ('{user_spoken}'). Saliendo de la sala.")
                 if client.is_playing():
                     client.stop()
@@ -908,9 +920,10 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
         with self._lock:
             self.user_buffers.clear()
 
-async def ensure_voice_connection(channel: discord.VoiceChannel) -> voice_recv.VoiceRecvClient:
-    """Asegura la conexión del bot a una sala de voz con Gemini Live bidireccional activo."""
-    if channel and channel.guild:
+async def ensure_voice_connection(channel: discord.VoiceChannel, auto: bool = False) -> voice_recv.VoiceRecvClient:
+    """Asegura la conexión del bot a una sala de voz con Gemini Live bidireccional activo.
+    auto=True para las uniones automáticas (watchdog, auto-join): respetan el bloqueo y no lo levantan."""
+    if channel and channel.guild and not auto:
         clear_voice_manually_disconnected(channel.guild.id)
     if not discord.opus.is_loaded():
         for opus_lib in ["libopus.so.0", "libopus.so", "opus", "libopus-0.x86_64.so"]:
@@ -946,6 +959,7 @@ async def ensure_voice_connection(channel: discord.VoiceChannel) -> voice_recv.V
                         vc.stop_playing()
                     else:
                         vc.stop()
+                mark_internal_voice_disconnect(channel.guild.id)
                 await vc.disconnect(force=True)
             except Exception:
                 pass
@@ -2171,9 +2185,9 @@ async def cmd_desconecta(interaction: discord.Interaction):
             vc.stop_playing()
         else:
             vc.stop()
-    set_voice_manually_disconnected(interaction.guild.id, duration_sec=300)
+    set_voice_manually_disconnected(interaction.guild.id)
     await vc.disconnect(force=True)
-    await interaction.followup.send(f"🔌 Me he desconectado de **#{ch_name}** y detenido Gemini Live.\n*(Auto-conexión pausada durante 5 minutos o hasta que uses `/unete`)*.")
+    await interaction.followup.send(f"🔌 Me he desconectado de **#{ch_name}** y detenido Gemini Live.\n*(No volveré solo hasta que uses `/unete`)*.")
 
 @tree.command(name="para_audio", description="Detiene la locución actual si el bot está hablando en la sala de voz")
 async def cmd_para_audio(interaction: discord.Interaction):
@@ -2312,8 +2326,10 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
     # Si el propio bot fue desconectado de una sala de voz (desconexión manual por usuario en Discord o kick)
     if bot.user and member.id == bot.user.id:
         if before.channel is not None and after.channel is None:
-            set_voice_manually_disconnected(guild.id, duration_sec=180)
-            bot_log(f"🔌 [Voice] Asistente fue desconectado de #{before.channel.name}. Auto-conexión pausada durante 3 minutos o hasta /unete.")
+            if consume_internal_voice_disconnect(guild.id):
+                return
+            set_voice_manually_disconnected(guild.id)
+            bot_log(f"🔌 [Voice] Asistente fue desconectado de #{before.channel.name}. Auto-conexión bloqueada hasta /unete o hasta que la sala se vacíe.")
         return
 
     if member.bot:
@@ -2341,7 +2357,7 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
         if vc is None or not vc.is_connected() or bot_alone:
             try:
                 bot_log(f"🎙️ [Voice Auto-Join] '{member.display_name}' entró a #{after.channel.name}. Conectando Asistente...")
-                await ensure_voice_connection(after.channel)
+                await ensure_voice_connection(after.channel, auto=True)
             except Exception as e:
                 bot_log(f"Error al auto-unirse a #{after.channel.name}: {e}")
         return
@@ -2351,6 +2367,7 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
         human_members = [m for m in vc.channel.members if not m.bot]
         if len(human_members) == 0:
             bot_log(f"ℹ️ Canal de voz #{vc.channel.name} vacío. Desconectando Asistente...")
+            mark_internal_voice_disconnect(guild.id)
             if hasattr(vc, "stop_listening"):
                 try:
                     vc.stop_listening()
@@ -2405,10 +2422,10 @@ async def on_ready():
                         is_active_listening = getattr(vc, "is_listening", lambda: False)() if vc else False
                         if vc is None or not vc.is_connected() or not is_active_listening:
                             bot_log(f"🎙️ [Voice Auto-Watchdog] Conectando/Reactivando escucha en #{target_channel.name} ({len([m for m in target_channel.members if not m.bot])} miembros)...")
-                            await ensure_voice_connection(target_channel)
+                            await ensure_voice_connection(target_channel, auto=True)
                         elif vc.channel.id != target_channel.id and len([m for m in vc.channel.members if not m.bot]) == 0:
                             bot_log(f"🎙️ [Voice Auto-Watchdog] Moviendo a #{target_channel.name}...")
-                            await ensure_voice_connection(target_channel)
+                            await ensure_voice_connection(target_channel, auto=True)
             except Exception as e:
                 bot_log(f"Aviso en _voice_channel_auto_watchdog: {e}")
             await asyncio.sleep(15.0)
@@ -2524,8 +2541,9 @@ async def _handle_message_safe(message: discord.Message):
                             vc.stop_playing()
                         else:
                             vc.stop()
+                    set_voice_manually_disconnected(message.guild.id)
                     await vc.disconnect(force=True)
-                    await message.reply(f"🔌 Me he desconectado de **#{v_name}** y detenido Gemini Live.")
+                    await message.reply(f"🔌 Me he desconectado de **#{v_name}** y detenido Gemini Live. *(No volveré solo hasta que me pidas unirme.)*")
                     return
                 else:
                     await message.reply("ℹ️ No estoy en ninguna llamada de voz ahora mismo.")
