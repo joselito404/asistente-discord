@@ -807,7 +807,9 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             record_entry["transcription"] = user_spoken or "(audio procesado)"
 
             # Detección estricta de orden de desconexión por voz mediante patrones regex (evitar falsos positivos como 'salte de ahí' o 'vete al punto')
-            u_clean = user_spoken.lower().strip()
+            # Se quitan las etiquetas del transcriptor ([Silencio], [Ruido], [Risas]): no son palabras del usuario y
+            # '[Silencio]' casaba con el patrón de orden de silencio, cortando el audio del bot en cada turno sin voz
+            u_clean = re.sub(r"\[[^\]]*\]", " ", user_spoken).lower().strip()
             disconnect_patterns = [
                 r"\b(vete|sal|salte|descon[eé]ctate|m[aá]rchate|l[aá]rgate)\s+(de\s+la\s+llamada|del\s+canal|de\s+voz|de\s+aqu[ií])\b",
                 r"\b(asistente|bot)\s+(salte|vete|descon[eé]ctate|l[aá]rgate)\b",
