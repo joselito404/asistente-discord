@@ -186,7 +186,7 @@ SYSTEM_PROMPT = """Eres 'Asistente', la IA oficial y colega del servidor de Disc
 
 💻 COMANDOS SLASH ACTIVOS:
 - Dispones de comandos nativos de Discord con interfaz y autocompletado:
-  * `/habla [texto] [voz]`: Entra al canal de voz y habla con voz neuronal (Álvaro, Abril, Puck, Charon).
+  * `/habla [texto] [voz]`: Entra al canal de voz y habla con voz neuronal (25 voces: acentos de España, México, Argentina, Colombia, Perú y Cuba, efectos Ardilla/Demonio y 13 voces Gemini).
   * `/unete` y `/desconecta`: Control de conexión a salas de voz.
   * `/para_audio`: Silencia el audio actual en la llamada.
   * `/trivial [categoria]` y `/ranking_trivial`: Minijuego de preguntas del server con clasificación.
@@ -314,6 +314,37 @@ def clean_text_for_tts(text: str) -> str:
     clean = re.sub(r"\s+", " ", clean).strip()
     return clean
 
+# Catálogo único de voces de /habla: clave -> (etiqueta, motor, voz, tono, velocidad). Discord admite 25 opciones como máximo.
+TTS_VOICES = {
+    "alvaro":    ("Álvaro (España)", "edge", "es-ES-AlvaroNeural", "+0Hz", "+0%"),
+    "elvira":    ("Elvira (España, femenina)", "edge", "es-ES-ElviraNeural", "+0Hz", "+0%"),
+    "ximena":    ("Ximena (España, juvenil)", "edge", "es-ES-XimenaNeural", "+0Hz", "+0%"),
+    "jorge":     ("Jorge (México)", "edge", "es-MX-JorgeNeural", "+0Hz", "+0%"),
+    "dalia":     ("Dalia (México, femenina)", "edge", "es-MX-DaliaNeural", "+0Hz", "+0%"),
+    "tomas":     ("Tomás (Argentina)", "edge", "es-AR-TomasNeural", "+0Hz", "+0%"),
+    "elena":     ("Elena (Argentina, femenina)", "edge", "es-AR-ElenaNeural", "+0Hz", "+0%"),
+    "gonzalo":   ("Gonzalo (Colombia)", "edge", "es-CO-GonzaloNeural", "+0Hz", "+0%"),
+    "camila":    ("Camila (Perú, femenina)", "edge", "es-PE-CamilaNeural", "+0Hz", "+0%"),
+    "manuel":    ("Manuel (Cuba)", "edge", "es-CU-ManuelNeural", "+0Hz", "+0%"),
+    "ardilla":   ("Ardilla (aguda y rápida)", "edge", "es-ES-AlvaroNeural", "+80Hz", "+30%"),
+    "demonio":   ("Demonio (grave y lenta)", "edge", "es-ES-AlvaroNeural", "-45Hz", "-20%"),
+    "puck":      ("Puck (Gemini, animada)", "gemini", "Puck", None, None),
+    "charon":    ("Charon (Gemini, grave)", "gemini", "Charon", None, None),
+    "kore":      ("Kore (Gemini, firme femenina)", "gemini", "Kore", None, None),
+    "fenrir":    ("Fenrir (Gemini, excitable)", "gemini", "Fenrir", None, None),
+    "zephyr":    ("Zephyr (Gemini, brillante femenina)", "gemini", "Zephyr", None, None),
+    "leda":      ("Leda (Gemini, juvenil femenina)", "gemini", "Leda", None, None),
+    "orus":      ("Orus (Gemini, seria)", "gemini", "Orus", None, None),
+    "aoede":     ("Aoede (Gemini, desenfadada femenina)", "gemini", "Aoede", None, None),
+    "enceladus": ("Enceladus (Gemini, susurrante)", "gemini", "Enceladus", None, None),
+    "algenib":   ("Algenib (Gemini, rasgada)", "gemini", "Algenib", None, None),
+    "gacrux":    ("Gacrux (Gemini, madura femenina)", "gemini", "Gacrux", None, None),
+    "sadachbia": ("Sadachbia (Gemini, vivaz)", "gemini", "Sadachbia", None, None),
+    "sulafat":   ("Sulafat (Gemini, cálida femenina)", "gemini", "Sulafat", None, None),
+}
+# Alias de claves antiguas
+TTS_VOICE_ALIASES = {"abril": "elvira"}
+
 async def generate_speech_audio(text: str, voice_type: str = "alvaro") -> str:
     """Genera archivo de audio temporal con Edge Neural TTS o Gemini Flash TTS con fallback automático."""
     clean = clean_text_for_tts(text)
@@ -322,9 +353,10 @@ async def generate_speech_audio(text: str, voice_type: str = "alvaro") -> str:
     clean = clean[:2500]
     
     temp_dir = tempfile.gettempdir()
+    voice_type = TTS_VOICE_ALIASES.get(voice_type, voice_type)
+    _, engine, vname, pitch, rate = TTS_VOICES.get(voice_type, TTS_VOICES["alvaro"])
     
-    if voice_type in ["puck", "charon"]:
-        vname = "Puck" if voice_type == "puck" else "Charon"
+    if engine == "gemini":
         out_path = os.path.join(temp_dir, f"speech_gemini_{int(time.time()*1000)}.wav")
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash-lite-tts:generateContent?key={GEMINI_KEY}"
@@ -356,18 +388,18 @@ async def generate_speech_audio(text: str, voice_type: str = "alvaro") -> str:
             return out_path
         except Exception as e:
             print(f"Aviso: Gemini TTS falló ({e}). Conmutando automáticamente a Edge Neural TTS...")
-            voice_type = "alvaro"
+            _, engine, vname, pitch, rate = TTS_VOICES["alvaro"]
             
-    voice_map = {
-        "alvaro": "es-ES-AlvaroNeural",
-        "elvira": "es-ES-ElviraNeural",
-        "ximena": "es-ES-XimenaNeural",
-        "abril": "es-ES-ElviraNeural",
-    }
-    edge_voice = voice_map.get(voice_type, "es-ES-AlvaroNeural")
     out_path = os.path.join(temp_dir, f"speech_edge_{int(time.time()*1000)}.mp3")
-    comm = edge_tts.Communicate(clean, edge_voice)
-    await comm.save(out_path)
+    try:
+        comm = edge_tts.Communicate(clean, vname, pitch=pitch, rate=rate)
+        await comm.save(out_path)
+    except Exception as e:
+        if vname == "es-ES-AlvaroNeural" and pitch == "+0Hz":
+            raise
+        print(f"Aviso: voz Edge '{vname}' falló ({e}). Conmutando a Álvaro...")
+        comm = edge_tts.Communicate(clean, "es-ES-AlvaroNeural")
+        await comm.save(out_path)
     return out_path
 
 import zipfile
@@ -1914,14 +1946,9 @@ async def cmd_musica(interaction: discord.Interaction, cancion: str):
 @tree.command(name="habla", description="El Asistente entra a tu canal de voz y habla con síntesis neuronal de voz")
 @app_commands.describe(
     texto="El mensaje o frase que quieres que diga en la llamada",
-    voz="Motor y estilo de voz (por defecto Álvaro - Edge Neural)"
+    voz="Voz de la locución: acentos, efectos o voces Gemini (por defecto Álvaro)"
 )
-@app_commands.choices(voz=[
-    app_commands.Choice(name="Álvaro (Español neutro / natural - Edge Neural)", value="alvaro"),
-    app_commands.Choice(name="Abril (Femenino / natural - Edge Neural)", value="abril"),
-    app_commands.Choice(name="Puck (Gemini Flash TTS)", value="puck"),
-    app_commands.Choice(name="Charon (Gemini Flash TTS grave)", value="charon")
-])
+@app_commands.choices(voz=[app_commands.Choice(name=v[0], value=k) for k, v in TTS_VOICES.items()])
 async def cmd_habla(interaction: discord.Interaction, texto: str, voz: app_commands.Choice[str] = None):
     # Defer inmediato para evitar cualquier timeout de 3 segundos en Discord
     await interaction.response.defer(thinking=True)
@@ -1963,13 +1990,10 @@ async def cmd_habla(interaction: discord.Interaction, texto: str, voz: app_comma
         vc = await ensure_voice_connection(voice_channel)
         play_audio_in_voice(vc, audio_file)
         
-        voice_labels = {
-            "alvaro": "Álvaro (Edge Neural)",
-            "abril": "Abril (Edge Neural)",
-            "puck": "Puck (Gemini Flash TTS)",
-            "charon": "Charon (Gemini Flash TTS)"
-        }
-        lbl = voice_labels.get(voice_choice, voice_choice)
+        lbl = TTS_VOICES.get(voice_choice, TTS_VOICES["alvaro"])[0]
+        # Si Gemini TTS falló (cuota), el audio salió con la voz de respaldo: no anunciar la voz pedida
+        if TTS_VOICES.get(voice_choice, ("", "edge"))[1] == "gemini" and os.path.basename(audio_file).startswith("speech_edge_"):
+            lbl = f"{TTS_VOICES['alvaro'][0]} — {lbl} no disponible ahora"
         
         embed = discord.Embed(
             title="🎙️ Locución en Canal de Voz",
