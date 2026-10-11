@@ -188,6 +188,7 @@ SYSTEM_PROMPT = """Eres 'Asistente', la IA oficial y colega del servidor de Disc
 - Dispones de comandos nativos de Discord con interfaz y autocompletado:
   * `/habla [texto] [voz]`: Entra al canal de voz y habla con voz neuronal (25 voces: acentos de España, México, Argentina, Colombia, Perú y Cuba, efectos Ardilla/Demonio y 13 voces Gemini).
   * `/unete` y `/desconecta`: Control de conexión a salas de voz.
+  * `/ajedrez [rival] [color]`: Partida de ajedrez contra ti (Gemini) o contra Stockfish; se juega con menús o escribiendo la jugada en el canal.
   * `/para_audio`: Silencia el audio actual en la llamada.
   * `/trivial [categoria]` y `/ranking_trivial`: Minijuego de preguntas del server con clasificación.
   * `/recuerda [dato] [categoria] [usuario]`: Guarda memoria persistente de gustos y detalles.
@@ -2415,6 +2416,7 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
 async def on_ready():
     bot_log(f"Bot '{bot.user}' conectado y listo en Discord.")
     bot_log(f"Motores de IA con respaldo: {MODELS_PRIORITY}")
+    bot_log(f"Ajedrez: python-chess {'OK' if chess else 'NO disponible'} | Stockfish {'OK' if os.path.exists(STOCKFISH_PATH) else 'NO encontrado'} ({STOCKFISH_PATH})")
     bot_log("Capacidades activas: Gemini Live en Voz (/geminilive), Memoria Persistente, Trivial, Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y Slash Commands.")
     
     # Sincronización instantánea de Slash Commands en el servidor (sin duplicados globales)
@@ -2491,11 +2493,426 @@ async def on_ready():
 
     bot.loop.create_task(_recordings_retention_cleaner())
 
+# ==========================================
+# AJEDREZ CONTRA ASISTENTE (python-chess + Stockfish)
+# ==========================================
+try:
+    import chess
+    import chess.engine
+except Exception as _chess_import_err:
+    chess = None
+    print(f"Aviso: python-chess no disponible ({_chess_import_err}). /ajedrez desactivado.")
+
+import shutil
+
+STOCKFISH_PATH = shutil.which("stockfish") or "/usr/games/stockfish"
+# Partidas en memoria: user_id -> ChessGame (un reinicio del servicio las borra)
+CHESS_GAMES = {}
+CHESS_PIECE_NAMES = {1: "Peón", 2: "Caballo", 3: "Alfil", 4: "Torre", 5: "Dama", 6: "Rey"}
+CHESS_ICONS_WHITE = {1: "♙", 2: "♘", 3: "♗", 4: "♖", 5: "♕", 6: "♔"}
+CHESS_ICONS_BLACK = {1: "♟", 2: "♞", 3: "♝", 4: "♜", 5: "♛", 6: "♚"}
+# clave -> (etiqueta, nivel de habilidad de Stockfish o None si juega Gemini)
+CHESS_RIVALS = {
+    "gemini": ("Asistente (Gemini, comenta la partida)", None),
+    "sf_facil": ("Stockfish fácil", 0),
+    "sf_medio": ("Stockfish medio", 8),
+    "sf_max": ("Stockfish máximo", 20),
+}
+CHESS_TYPED_MOVE_RE = re.compile(r"^[a-hRNBQKDTACOo0x=+#\-1-8]{2,7}$")
+CHESS_SPANISH_PIECES = {"R": "K", "D": "Q", "T": "R", "A": "B", "C": "N"}
+
+def chess_icon(piece) -> str:
+    return (CHESS_ICONS_WHITE if piece.color else CHESS_ICONS_BLACK)[piece.piece_type]
+
+def chess_board_url(board, player_white: bool) -> str:
+    """Imagen del tablero servida por Lichess, orientada hacia el jugador y con la última jugada resaltada."""
+    params = {"fen": board.fen(), "color": "white" if player_white else "black"}
+    if board.move_stack:
+        params["lastMove"] = board.move_stack[-1].uci()[:4]
+    if board.is_check():
+        params["check"] = chess.square_name(board.king(board.turn))
+    return "https://lichess1.org/export/fen.gif?" + urllib.parse.urlencode(params)
+
+def chess_parse_typed(board, text: str):
+    """Interpreta una jugada escrita en el chat: notación algebraica (inglesa o española) o coordenadas (e2e4)."""
+    txt = text.strip()
+    if not CHESS_TYPED_MOVE_RE.match(txt):
+        return None
+    txt = txt.replace("0", "O").replace("o", "O")
+    # Variante española: inicial de la pieza (Cf3) y pieza de coronación (a8=D)
+    spanish = re.sub(r"=([DTAC])", lambda m: "=" + CHESS_SPANISH_PIECES[m.group(1)], txt)
+    if spanish[0] in CHESS_SPANISH_PIECES:
+        spanish = CHESS_SPANISH_PIECES[spanish[0]] + spanish[1:]
+    candidates = [txt] if spanish == txt else [txt, spanish]
+    for cand in candidates:
+        try:
+            return board.parse_san(cand)
+        except Exception:
+            pass
+    try:
+        low = text.strip().lower()
+        move = chess.Move.from_uci(low)
+        if move in board.legal_moves:
+            return move
+        # Coronación sin indicar pieza: dama por defecto
+        queen = chess.Move.from_uci(low + "q")
+        if queen in board.legal_moves:
+            return queen
+    except Exception:
+        pass
+    return None
+
+def chess_piece_options(board) -> list:
+    """Piezas del bando que mueve con alguna jugada legal: [(etiqueta, descripción, casilla)]."""
+    counts = collections.OrderedDict()
+    for mv in board.legal_moves:
+        counts[mv.from_square] = counts.get(mv.from_square, 0) + 1
+    opts = []
+    for sq in sorted(counts, key=lambda s: (-board.piece_at(s).piece_type, s)):
+        piece = board.piece_at(sq)
+        n = counts[sq]
+        opts.append((f"{chess_icon(piece)} {CHESS_PIECE_NAMES[piece.piece_type]} {chess.square_name(sq)}",
+                     f"{n} jugada{'s' if n != 1 else ''}", chess.square_name(sq)))
+    return opts
+
+def chess_dest_options(board, from_square: int) -> list:
+    """Destinos legales de una pieza: [(etiqueta, uci)]."""
+    opts = []
+    piece = board.piece_at(from_square)
+    for mv in board.legal_moves:
+        if mv.from_square != from_square:
+            continue
+        if board.is_castling(mv):
+            label = "Enroque corto" if board.is_kingside_castling(mv) else "Enroque largo"
+        else:
+            label = f"{chess_icon(piece)} → {chess.square_name(mv.to_square)}"
+            if board.is_en_passant(mv):
+                label += " ✕ Peón (al paso)"
+            elif board.is_capture(mv):
+                label += f" ✕ {CHESS_PIECE_NAMES[board.piece_at(mv.to_square).piece_type]}"
+            if mv.promotion:
+                label += f" = {CHESS_PIECE_NAMES[mv.promotion]}"
+        if board.gives_check(mv):
+            label += " (jaque)"
+        opts.append((label, mv.uci()))
+    return opts
+
+def chess_moves_text(board, max_chars: int = 220) -> str:
+    """Lista numerada de la partida, recortada a las últimas jugadas."""
+    if not board.move_stack:
+        return ""
+    txt = chess.Board().variation_san(board.move_stack)
+    if len(txt) > max_chars:
+        txt = "… " + txt[-max_chars:].split(" ", 1)[-1]
+    return txt
+
+def chess_result_text(board, player_white: bool, player_name: str):
+    """Texto de final de partida, o None si sigue en juego."""
+    outcome = board.outcome(claim_draw=True)
+    if outcome is None:
+        return None
+    if outcome.winner is None:
+        reasons = {
+            chess.Termination.STALEMATE: "rey ahogado",
+            chess.Termination.INSUFFICIENT_MATERIAL: "material insuficiente",
+            chess.Termination.THREEFOLD_REPETITION: "triple repetición",
+            chess.Termination.FIVEFOLD_REPETITION: "repetición",
+            chess.Termination.FIFTY_MOVES: "regla de los 50 movimientos",
+            chess.Termination.SEVENTYFIVE_MOVES: "regla de los 75 movimientos",
+        }
+        return f"🤝 **Tablas** por {reasons.get(outcome.termination, 'acuerdo')}."
+    if outcome.winner == player_white:
+        return f"🏆 **Jaque mate. Gana {player_name}.**"
+    return "💀 **Jaque mate. Gana Asistente.**"
+
+class ChessGame:
+    def __init__(self, user_id: int, user_name: str, player_white: bool, rival: str):
+        self.user_id = user_id
+        self.user_name = user_name
+        self.player_white = player_white
+        self.rival = rival
+        self.board = chess.Board()
+        self.message = None
+        self.comment = ""
+        self.selected = None  # casilla de la pieza elegida en el menú
+        self.busy = False
+        self.finished = False
+        self.result = ""
+        self.lock = asyncio.Lock()
+
+def chess_build_embed(game: "ChessGame") -> discord.Embed:
+    board = game.board
+    rival_label = CHESS_RIVALS[game.rival][0]
+    lines = []
+    if game.finished:
+        lines.append(game.result)
+    elif game.busy:
+        lines.append("⏳ **Asistente está pensando...**")
+    else:
+        color = "blancas" if game.player_white else "negras"
+        lines.append(f"🎯 **Te toca, {game.user_name}** (juegas con {color})" + (" — **estás en jaque**" if board.is_check() else ""))
+    if game.comment:
+        lines.append(f"💬 *{game.comment[:300]}*")
+    moves = chess_moves_text(board)
+    if moves:
+        lines.append(f"`{moves}`")
+    embed = discord.Embed(
+        title=f"♟️ Ajedrez — {game.user_name} vs {rival_label}",
+        description="\n\n".join(lines),
+        color=0x57f287 if game.finished else 0x3b82f6
+    )
+    embed.set_image(url=chess_board_url(board, game.player_white))
+    if not game.finished:
+        embed.set_footer(text="Elige pieza y destino en los menús, o escribe la jugada en este canal (e4, Cf3, e2e4)")
+    return embed
+
+class ChessView(discord.ui.View):
+    """Menús de la partida: primero la pieza, después su destino."""
+    def __init__(self, game: "ChessGame"):
+        super().__init__(timeout=None)
+        self.game = game
+        board = game.board
+        if game.busy:
+            self.add_item(discord.ui.Button(label="Asistente está pensando...", style=discord.ButtonStyle.secondary, disabled=True))
+            return
+        if game.selected is None:
+            select = discord.ui.Select(
+                placeholder="1. Elige la pieza que quieres mover",
+                options=[discord.SelectOption(label=l, description=d, value=v) for l, d, v in chess_piece_options(board)][:25]
+            )
+            select.callback = self.on_piece
+            self.add_item(select)
+        else:
+            piece = board.piece_at(game.selected)
+            dests = chess_dest_options(board, game.selected)
+            # Discord admite 25 opciones por menú; una dama puede tener hasta 27 destinos
+            for i in range(0, len(dests), 25):
+                chunk = dests[i:i + 25]
+                select = discord.ui.Select(
+                    placeholder=f"2. ¿A dónde va {CHESS_PIECE_NAMES[piece.piece_type]} {chess.square_name(game.selected)}?" + (" (más)" if i else ""),
+                    options=[discord.SelectOption(label=l, value=v) for l, v in chunk]
+                )
+                select.callback = self.on_dest
+                self.add_item(select)
+            back = discord.ui.Button(label="Cambiar pieza", style=discord.ButtonStyle.secondary, emoji="↩️")
+            back.callback = self.on_back
+            self.add_item(back)
+        resign = discord.ui.Button(label="Rendirse", style=discord.ButtonStyle.danger, emoji="🏳️")
+        resign.callback = self.on_resign
+        self.add_item(resign)
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id != self.game.user_id:
+            await interaction.response.send_message("⚠️ Esta partida no es tuya. Empieza la tuya con `/ajedrez`.", ephemeral=True)
+            return False
+        if self.game.finished or CHESS_GAMES.get(self.game.user_id) is not self.game:
+            await interaction.response.send_message("ℹ️ Esta partida ya ha terminado.", ephemeral=True)
+            return False
+        return True
+
+    async def on_piece(self, interaction: discord.Interaction):
+        self.game.selected = chess.parse_square(interaction.data["values"][0])
+        await interaction.response.edit_message(embed=chess_build_embed(self.game), view=ChessView(self.game))
+
+    async def on_back(self, interaction: discord.Interaction):
+        self.game.selected = None
+        await interaction.response.edit_message(embed=chess_build_embed(self.game), view=ChessView(self.game))
+
+    async def on_dest(self, interaction: discord.Interaction):
+        move = chess.Move.from_uci(interaction.data["values"][0])
+        if not await chess_play_player_move(self.game, move, interaction):
+            if not interaction.response.is_done():
+                self.game.selected = None
+                await interaction.response.edit_message(embed=chess_build_embed(self.game), view=ChessView(self.game))
+
+    async def on_resign(self, interaction: discord.Interaction):
+        chess_finish(self.game, f"🏳️ **{self.game.user_name} se rinde. Gana Asistente.**")
+        await interaction.response.edit_message(embed=chess_build_embed(self.game), view=None)
+
+def chess_finish(game: "ChessGame", result: str):
+    game.finished = True
+    game.busy = False
+    game.selected = None
+    game.result = result
+    if CHESS_GAMES.get(game.user_id) is game:
+        CHESS_GAMES.pop(game.user_id, None)
+
+def chess_gemini_pick(fen: str, bot_color: str, legal_sans: list, history: str, user_name: str):
+    """Pide a Gemini una jugada de la lista de legales y un comentario. Devuelve (san, comentario) o (None, '')."""
+    prompt = (
+        f"Eres 'Asistente', el bot colega de un servidor de Discord, jugando al ajedrez con {bot_color} contra {user_name}.\n"
+        f"Posición (FEN): {fen}\n"
+        f"Partida hasta ahora: {history or 'acaba de empezar'}\n"
+        f"Jugadas legales: {', '.join(legal_sans)}\n\n"
+        f"Elige la mejor jugada, copiada EXACTAMENTE de la lista de jugadas legales, y añade un comentario breve "
+        f"en español de España con pique sano de colegas (sin insultos, máximo 20 palabras).\n"
+        f"Formato de salida estricto:\nJugada: <jugada>\nComentario: <comentario>"
+    )
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.5, "maxOutputTokens": 120}
+    }
+    data = json.dumps(payload).encode("utf-8")
+    for model_name in get_available_models()[:3]:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_KEY}"
+        try:
+            req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                res = json.loads(resp.read().decode("utf-8"))
+            text = res["candidates"][0]["content"]["parts"][0]["text"]
+            m_move = re.search(r"Jugada:\s*([^\s]+)", text)
+            m_comment = re.search(r"Comentario:\s*(.+)", text)
+            if m_move:
+                return m_move.group(1).strip().strip("*`."), (m_comment.group(1).strip() if m_comment else "")
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 503):
+                mark_model_cooldown(model_name, 60)
+        except Exception as e:
+            print(f"Aviso Gemini ajedrez ({model_name}): {e}")
+    return None, ""
+
+async def chess_stockfish_move(board, skill: int):
+    transport, engine = await chess.engine.popen_uci(STOCKFISH_PATH)
+    try:
+        await engine.configure({"Skill Level": skill, "Threads": 1, "Hash": 16})
+        result = await asyncio.wait_for(engine.play(board, chess.engine.Limit(time=0.4)), timeout=20)
+        return result.move
+    finally:
+        try:
+            await asyncio.wait_for(engine.quit(), timeout=5)
+        except Exception:
+            pass
+
+async def chess_bot_move(game: "ChessGame"):
+    """Devuelve (jugada, comentario) del rival configurado. Siempre devuelve una jugada legal."""
+    board = game.board
+    legal = list(board.legal_moves)
+    skill = CHESS_RIVALS[game.rival][1]
+    if skill is not None:
+        # En fácil, Stockfish regala alguna jugada al azar: su nivel mínimo sigue siendo fuerte para un aficionado
+        if skill == 0 and random.random() < 0.3:
+            return random.choice(legal), ""
+        try:
+            move = await chess_stockfish_move(board, skill)
+            if move in legal:
+                return move, ""
+        except Exception as e:
+            bot_log(f"Aviso Stockfish no disponible ({e}). Jugando con Gemini.")
+    legal_sans = [board.san(m) for m in legal]
+    san, comment = await asyncio.to_thread(
+        chess_gemini_pick, board.fen(), "blancas" if board.turn else "negras", legal_sans, chess_moves_text(board, 600), game.user_name
+    )
+    if san:
+        try:
+            return board.parse_san(san), comment
+        except Exception:
+            pass
+    return random.choice(legal), ""
+
+async def chess_run_bot_turn(game: "ChessGame"):
+    """Turno del rival: muestra 'pensando', juega y refresca el mensaje de la partida."""
+    try:
+        move, comment = await chess_bot_move(game)
+        if game.finished:
+            return
+        game.board.push(move)
+        game.comment = comment
+    finally:
+        game.busy = False
+    result = chess_result_text(game.board, game.player_white, game.user_name)
+    if result:
+        chess_finish(game, result)
+    await game.message.edit(embed=chess_build_embed(game), view=None if game.finished else ChessView(game))
+
+async def chess_play_player_move(game: "ChessGame", move, interaction: discord.Interaction = None) -> bool:
+    """Aplica la jugada del jugador (desde menú o escrita) y lanza la respuesta del rival."""
+    async with game.lock:
+        board = game.board
+        if game.finished or game.busy or board.turn != game.player_white or move not in board.legal_moves:
+            return False
+        board.push(move)
+        game.selected = None
+        game.comment = ""
+        result = chess_result_text(board, game.player_white, game.user_name)
+        if result:
+            chess_finish(game, result)
+        else:
+            game.busy = True
+        embed = chess_build_embed(game)
+        view = None if game.finished else ChessView(game)
+        if interaction is not None:
+            await interaction.response.edit_message(embed=embed, view=view)
+        else:
+            await game.message.edit(embed=embed, view=view)
+        if not game.finished:
+            await chess_run_bot_turn(game)
+        return True
+
+async def chess_try_typed_move(message: discord.Message) -> bool:
+    """Si el autor tiene partida en este canal y el mensaje es una jugada legal, la juega. Devuelve True si lo era."""
+    game = CHESS_GAMES.get(message.author.id)
+    if not game or game.finished or game.busy or not game.message or game.message.channel.id != message.channel.id:
+        return False
+    if game.board.turn != game.player_white:
+        return False
+    move = chess_parse_typed(game.board, message.content)
+    if move is None:
+        return False
+    try:
+        await message.delete()
+    except Exception:
+        pass
+    return await chess_play_player_move(game, move)
+
+@tree.command(name="ajedrez", description="Juega una partida de ajedrez contra Asistente (menús o escribiendo la jugada)")
+@app_commands.describe(
+    rival="Contra quién juegas (por defecto Asistente con Gemini, que comenta la partida)",
+    color="Con qué color juegas (por defecto blancas)"
+)
+@app_commands.choices(
+    rival=[app_commands.Choice(name=v[0], value=k) for k, v in CHESS_RIVALS.items()],
+    color=[
+        app_commands.Choice(name="Blancas (mueves primero)", value="blancas"),
+        app_commands.Choice(name="Negras", value="negras"),
+        app_commands.Choice(name="Al azar", value="azar"),
+    ]
+)
+async def cmd_ajedrez(interaction: discord.Interaction, rival: app_commands.Choice[str] = None, color: app_commands.Choice[str] = None):
+    if chess is None:
+        await interaction.response.send_message("❌ El módulo de ajedrez no está disponible en este despliegue.", ephemeral=True)
+        return
+    await interaction.response.defer()
+    old = CHESS_GAMES.get(interaction.user.id)
+    if old:
+        chess_finish(old, f"🚪 **Partida abandonada por {old.user_name}.**")
+        try:
+            await old.message.edit(embed=chess_build_embed(old), view=None)
+        except Exception:
+            pass
+
+    color_value = color.value if color else "blancas"
+    player_white = random.choice([True, False]) if color_value == "azar" else color_value == "blancas"
+    game = ChessGame(interaction.user.id, interaction.user.display_name, player_white, rival.value if rival else "gemini")
+    game.busy = not player_white
+    CHESS_GAMES[interaction.user.id] = game
+    sent = await interaction.followup.send(embed=chess_build_embed(game), view=ChessView(game), wait=True)
+    # El mensaje de la interacción solo se puede editar 15 minutos; se recupera como mensaje normal para toda la partida
+    try:
+        game.message = await interaction.channel.fetch_message(sent.id)
+    except Exception:
+        game.message = sent
+    bot_log(f"♟️ [Ajedrez] '{game.user_name}' empieza partida contra {CHESS_RIVALS[game.rival][0]} ({'blancas' if player_white else 'negras'}).")
+    if not player_white:
+        async with game.lock:
+            await chess_run_bot_turn(game)
+
 @bot.event
 async def on_message(message: discord.Message):
     if message.author.bot:
         return
     try:
+        if chess is not None and await chess_try_typed_move(message):
+            return
         await _handle_message_safe(message)
     except Exception as e:
         print(f"Error procesando mensaje: {e}")
