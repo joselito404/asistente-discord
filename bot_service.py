@@ -188,7 +188,7 @@ SYSTEM_PROMPT = """Eres 'Asistente', la IA oficial y colega del servidor de Disc
 - Dispones de comandos nativos de Discord con interfaz y autocompletado:
   * `/habla [texto] [voz]`: Entra al canal de voz y habla con voz neuronal (25 voces: acentos de España, México, Argentina, Colombia, Perú y Cuba, efectos Ardilla/Demonio y 13 voces Gemini).
   * `/unete` y `/desconecta`: Control de conexión a salas de voz.
-  * `/ajedrez [rival] [color]`: Partida de ajedrez contra ti (Gemini) o contra Stockfish; se juega con menús o escribiendo la jugada en el canal.
+  * `/ajedrez [dificultad] [color]`: Partida de ajedrez contra ti en 4 niveles (Fácil ~800, Medio 1400, Difícil 1900, Máximo 3000+ ELO); se juega con menús o escribiendo la jugada en el canal.
   * `/para_audio`: Silencia el audio actual en la llamada.
   * `/trivial [categoria]` y `/ranking_trivial`: Minijuego de preguntas del server con clasificación.
   * `/recuerda [dato] [categoria] [usuario]`: Guarda memoria persistente de gustos y detalles.
@@ -2511,12 +2511,14 @@ CHESS_GAMES = {}
 CHESS_PIECE_NAMES = {1: "Peón", 2: "Caballo", 3: "Alfil", 4: "Torre", 5: "Dama", 6: "Rey"}
 CHESS_ICONS_WHITE = {1: "♙", 2: "♘", 3: "♗", 4: "♖", 5: "♕", 6: "♔"}
 CHESS_ICONS_BLACK = {1: "♟", 2: "♞", 3: "♝", 4: "♜", 5: "♛", 6: "♚"}
-# clave -> (etiqueta, nivel de habilidad de Stockfish o None si juega Gemini)
-CHESS_RIVALS = {
-    "gemini": ("Asistente (Gemini, comenta la partida)", None),
-    "sf_facil": ("Stockfish fácil", 0),
-    "sf_medio": ("Stockfish medio", 8),
-    "sf_max": ("Stockfish máximo", 20),
+# Dificultades de Asistente: clave -> (etiqueta, ELO de Stockfish, segundos por jugada).
+# ELO None en fácil: la jugada la elige Gemini sola (sin motor), así que su nivel es orientativo.
+# ELO 0 en máximo: Stockfish sin límite de fuerza. En todos los niveles Gemini pone el comentario.
+CHESS_LEVELS = {
+    "facil": ("Fácil (~800 ELO, Gemini juega sola)", None, 0),
+    "medio": ("Medio (1400 ELO)", 1400, 0.3),
+    "dificil": ("Difícil (1900 ELO)", 1900, 0.5),
+    "maximo": ("Máximo (3000+ ELO)", 0, 1.0),
 }
 CHESS_TYPED_MOVE_RE = re.compile(r"^[a-hRNBQKDTACOo0x=+#\-1-8]{2,7}$")
 CHESS_SPANISH_PIECES = {"R": "K", "D": "Q", "T": "R", "A": "B", "C": "N"}
@@ -2642,7 +2644,7 @@ class ChessGame:
 
 def chess_build_embed(game: "ChessGame") -> discord.Embed:
     board = game.board
-    rival_label = CHESS_RIVALS[game.rival][0]
+    rival_label = "Asistente · " + CHESS_LEVELS[game.rival][0].split(" (")[0]
     lines = []
     if game.finished:
         lines.append(game.result)
@@ -2737,14 +2739,21 @@ def chess_finish(game: "ChessGame", result: str):
     if CHESS_GAMES.get(game.user_id) is game:
         CHESS_GAMES.pop(game.user_id, None)
 
-def chess_gemini_pick(fen: str, bot_color: str, legal_sans: list, history: str, user_name: str):
-    """Pide a Gemini una jugada de la lista de legales y un comentario. Devuelve (san, comentario) o (None, '')."""
+def chess_gemini_pick(fen: str, bot_color: str, legal_sans: list, history: str, user_name: str, played_san: str = None):
+    """Pide a Gemini una jugada de la lista de legales y un comentario. Devuelve (san, comentario) o (None, '').
+    Con played_san la jugada ya la eligió el motor y Gemini solo la comenta."""
+    if played_san:
+        task = f"Acabas de jugar {played_san}. Repite esa jugada y añade un comentario breve "
+    else:
+        task = (
+            f"Jugadas legales: {', '.join(legal_sans)}\n\n"
+            f"Elige la mejor jugada, copiada EXACTAMENTE de la lista de jugadas legales, y añade un comentario breve "
+        )
     prompt = (
         f"Eres 'Asistente', el bot colega de un servidor de Discord, jugando al ajedrez con {bot_color} contra {user_name}.\n"
         f"Posición (FEN): {fen}\n"
         f"Partida hasta ahora: {history or 'acaba de empezar'}\n"
-        f"Jugadas legales: {', '.join(legal_sans)}\n\n"
-        f"Elige la mejor jugada, copiada EXACTAMENTE de la lista de jugadas legales, y añade un comentario breve "
+        f"{task}"
         f"en español de España con pique sano de colegas (sin insultos, máximo 20 palabras).\n"
         f"Formato de salida estricto:\nJugada: <jugada>\nComentario: <comentario>"
     )
@@ -2771,11 +2780,18 @@ def chess_gemini_pick(fen: str, bot_color: str, legal_sans: list, history: str, 
             print(f"Aviso Gemini ajedrez ({model_name}): {e}")
     return None, ""
 
-async def chess_stockfish_move(board, skill: int):
+async def chess_stockfish_move(board, elo: int, seconds: float):
+    """Jugada de Stockfish limitado al ELO indicado (0 = fuerza completa)."""
     transport, engine = await chess.engine.popen_uci(STOCKFISH_PATH)
     try:
-        await engine.configure({"Skill Level": skill, "Threads": 1, "Hash": 16})
-        result = await asyncio.wait_for(engine.play(board, chess.engine.Limit(time=0.4)), timeout=20)
+        options = {"Threads": 1, "Hash": 16}
+        if elo and "UCI_Elo" in engine.options:
+            # El rango admitido depende de la versión instalada (mínimo en torno a 1320)
+            opt = engine.options["UCI_Elo"]
+            options["UCI_LimitStrength"] = True
+            options["UCI_Elo"] = max(opt.min, min(opt.max, elo))
+        await engine.configure(options)
+        result = await asyncio.wait_for(engine.play(board, chess.engine.Limit(time=seconds)), timeout=20)
         return result.move
     finally:
         try:
@@ -2787,20 +2803,21 @@ async def chess_bot_move(game: "ChessGame"):
     """Devuelve (jugada, comentario) del rival configurado. Siempre devuelve una jugada legal."""
     board = game.board
     legal = list(board.legal_moves)
-    skill = CHESS_RIVALS[game.rival][1]
-    if skill is not None:
-        # En fácil, Stockfish regala alguna jugada al azar: su nivel mínimo sigue siendo fuerte para un aficionado
-        if skill == 0 and random.random() < 0.3:
-            return random.choice(legal), ""
+    _, elo, seconds = CHESS_LEVELS[game.rival]
+    bot_color = "blancas" if board.turn else "negras"
+    if elo is not None:
         try:
-            move = await chess_stockfish_move(board, skill)
+            move = await chess_stockfish_move(board, elo, seconds)
             if move in legal:
-                return move, ""
+                _, comment = await asyncio.to_thread(
+                    chess_gemini_pick, board.fen(), bot_color, [], chess_moves_text(board, 600), game.user_name, board.san(move)
+                )
+                return move, comment
         except Exception as e:
             bot_log(f"Aviso Stockfish no disponible ({e}). Jugando con Gemini.")
     legal_sans = [board.san(m) for m in legal]
     san, comment = await asyncio.to_thread(
-        chess_gemini_pick, board.fen(), "blancas" if board.turn else "negras", legal_sans, chess_moves_text(board, 600), game.user_name
+        chess_gemini_pick, board.fen(), bot_color, legal_sans, chess_moves_text(board, 600), game.user_name
     )
     if san:
         try:
@@ -2866,18 +2883,18 @@ async def chess_try_typed_move(message: discord.Message) -> bool:
 
 @tree.command(name="ajedrez", description="Juega una partida de ajedrez contra Asistente (menús o escribiendo la jugada)")
 @app_commands.describe(
-    rival="Contra quién juegas (por defecto Asistente con Gemini, que comenta la partida)",
+    dificultad="Nivel de Asistente (por defecto Medio, 1400 ELO)",
     color="Con qué color juegas (por defecto blancas)"
 )
 @app_commands.choices(
-    rival=[app_commands.Choice(name=v[0], value=k) for k, v in CHESS_RIVALS.items()],
+    dificultad=[app_commands.Choice(name=v[0], value=k) for k, v in CHESS_LEVELS.items()],
     color=[
         app_commands.Choice(name="Blancas (mueves primero)", value="blancas"),
         app_commands.Choice(name="Negras", value="negras"),
         app_commands.Choice(name="Al azar", value="azar"),
     ]
 )
-async def cmd_ajedrez(interaction: discord.Interaction, rival: app_commands.Choice[str] = None, color: app_commands.Choice[str] = None):
+async def cmd_ajedrez(interaction: discord.Interaction, dificultad: app_commands.Choice[str] = None, color: app_commands.Choice[str] = None):
     if chess is None:
         await interaction.response.send_message("❌ El módulo de ajedrez no está disponible en este despliegue.", ephemeral=True)
         return
@@ -2892,7 +2909,7 @@ async def cmd_ajedrez(interaction: discord.Interaction, rival: app_commands.Choi
 
     color_value = color.value if color else "blancas"
     player_white = random.choice([True, False]) if color_value == "azar" else color_value == "blancas"
-    game = ChessGame(interaction.user.id, interaction.user.display_name, player_white, rival.value if rival else "gemini")
+    game = ChessGame(interaction.user.id, interaction.user.display_name, player_white, dificultad.value if dificultad else "medio")
     game.busy = not player_white
     CHESS_GAMES[interaction.user.id] = game
     sent = await interaction.followup.send(embed=chess_build_embed(game), view=ChessView(game), wait=True)
@@ -2901,7 +2918,7 @@ async def cmd_ajedrez(interaction: discord.Interaction, rival: app_commands.Choi
         game.message = await interaction.channel.fetch_message(sent.id)
     except Exception:
         game.message = sent
-    bot_log(f"♟️ [Ajedrez] '{game.user_name}' empieza partida contra {CHESS_RIVALS[game.rival][0]} ({'blancas' if player_white else 'negras'}).")
+    bot_log(f"♟️ [Ajedrez] '{game.user_name}' empieza partida en dificultad {CHESS_LEVELS[game.rival][0]} ({'blancas' if player_white else 'negras'}).")
     if not player_white:
         async with game.lock:
             await chess_run_bot_turn(game)
