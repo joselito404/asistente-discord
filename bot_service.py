@@ -409,7 +409,9 @@ os.makedirs(RECORDINGS_DIR, exist_ok=True)
 METADATA_FILE = os.path.join(RECORDINGS_DIR, "recordings_metadata.json")
 RETENTION_SECONDS = 24 * 3600  # Retención de 24 horas completas (1 día)
 
-VOICE_TURNS_LOCK = threading.Lock()
+# Reentrante: el limpiador de grabaciones llama a save_recordings_metadata() con el candado ya tomado;
+# con un Lock normal eso se bloqueaba a sí mismo y congelaba todo el bot
+VOICE_TURNS_LOCK = threading.RLock()
 
 def load_recordings_metadata():
     """Carga de disco el historial de grabaciones válidas de las últimas 24 horas."""
