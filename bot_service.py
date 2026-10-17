@@ -812,12 +812,17 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                         if response_text:
                             break
                 except urllib.error.HTTPError as e:
-                    if e.code in (429, 503):
+                    if e.code in (429, 500, 503):
                         mark_model_cooldown(model_name, 60)
+                    else:
+                        bot_log(f"Aviso HTTP {e.code} API Gemini Live ({model_name}): {e}")
                     continue
                 except Exception as e:
                     bot_log(f"Aviso API Gemini Live ({model_name}): {e}")
                     continue
+
+            if not response_text:
+                bot_log("⚠️ [Gemini Live] Ningún modelo respondió satisfactoriamente para la intervención de voz.")
 
             user_spoken = ""
             bot_reply = response_text
@@ -933,8 +938,10 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                                         search_summary_done = True
                                         break
                             except urllib.error.HTTPError as e_http:
-                                if e_http.code in (429, 503):
+                                if e_http.code in (429, 500, 503):
                                     mark_model_cooldown(s_model, 60)
+                                else:
+                                    bot_log(f"Aviso HTTP {e_http.code} resumen búsqueda voz ({s_model}): {e_http}")
                                 continue
                             except Exception as e_sum:
                                 bot_log(f"Aviso resumen búsqueda voz ({s_model}): {e_sum}")
@@ -1142,38 +1149,49 @@ IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 _LIVE_LEVELS_CACHE = {}
 _LIVE_LEVELS_CACHE_TIME = 0.0
 _LIVE_LEVELS_TTL = 300.0
+_LIVE_LEVELS_LOCK = asyncio.Lock()
 
 async def get_live_levels_dict(guild: discord.Guild) -> dict:
-    """Lee el canal #bots para extraer los niveles reales de Cakey Bot de cada usuario (con caché en memoria de 300s)."""
+    """Lee el canal #bots para extraer los niveles reales de Cakey Bot de cada usuario (con caché en memoria de 300s y protección de concurrencia)."""
     global _LIVE_LEVELS_CACHE, _LIVE_LEVELS_CACHE_TIME
     if not guild:
         return {}
     now = time.time()
-    if _LIVE_LEVELS_CACHE and (now - _LIVE_LEVELS_CACHE_TIME < _LIVE_LEVELS_TTL):
-        return _LIVE_LEVELS_CACHE
+    # Fast-path sin lock si la caché está vigente
+    if _LIVE_LEVELS_CACHE_TIME > 0 and (now - _LIVE_LEVELS_CACHE_TIME < _LIVE_LEVELS_TTL):
+        return dict(_LIVE_LEVELS_CACHE)
 
-    bots_channel = discord.utils.find(lambda c: "bots" in c.name.lower(), guild.text_channels)
-    if not bots_channel:
-        return _LIVE_LEVELS_CACHE if _LIVE_LEVELS_CACHE else {}
-    levels = {}
-    try:
-        async for m in bots_channel.history(limit=120):
-            if m.author.bot and m.content:
-                # Patrón: ¡Enhorabuena <@ID>! Has alcanzado el nivel X o ¡Ascenso para <@ID>! Ya estás en nivel X
-                match = re.search(r"<@(\d+)>.*?nivel\s+(\d+)", m.content, re.IGNORECASE)
-                if match:
-                    uid = int(match.group(1))
-                    lvl = int(match.group(2))
-                    if uid not in levels or lvl > levels[uid]:
-                        levels[uid] = lvl
-        if levels:
-            _LIVE_LEVELS_CACHE = levels
+    async with _LIVE_LEVELS_LOCK:
+        now = time.time()
+        # Doble verificación dentro del lock por si otra corrutina ya actualizó la caché
+        if _LIVE_LEVELS_CACHE_TIME > 0 and (now - _LIVE_LEVELS_CACHE_TIME < _LIVE_LEVELS_TTL):
+            return dict(_LIVE_LEVELS_CACHE)
+
+        bots_channel = discord.utils.find(lambda c: "bots" in c.name.lower(), guild.text_channels)
+        if not bots_channel:
+            return dict(_LIVE_LEVELS_CACHE)
+        levels = {}
+        try:
+            async for m in bots_channel.history(limit=120):
+                if m.author.bot and m.content:
+                    # Patrón: ¡Enhorabuena <@ID>! Has alcanzado el nivel X o ¡Ascenso para <@ID>! Ya estás en nivel X
+                    match = re.search(r"<@!?(\d+)>.*?nivel\s*(\d+)", m.content, re.IGNORECASE)
+                    if match:
+                        uid = int(match.group(1))
+                        lvl = int(match.group(2))
+                        if uid not in levels or lvl > levels[uid]:
+                            levels[uid] = lvl
+            # Fusión acumulativa: no borrar usuarios conocidos de turnos previos
+            for uid, lvl in levels.items():
+                if uid not in _LIVE_LEVELS_CACHE or lvl > _LIVE_LEVELS_CACHE[uid]:
+                    _LIVE_LEVELS_CACHE[uid] = lvl
+            # Registrar marca temporal aunque el canal estuviera silencioso para no martillear la API
             _LIVE_LEVELS_CACHE_TIME = now
-    except Exception as e:
-        print(f"Aviso lectura niveles #bots: {e}")
-        if _LIVE_LEVELS_CACHE:
-            return _LIVE_LEVELS_CACHE
-    return _LIVE_LEVELS_CACHE if _LIVE_LEVELS_CACHE else levels
+        except Exception as e:
+            bot_log(f"Aviso lectura niveles #bots: {e}")
+            if _LIVE_LEVELS_CACHE:
+                return dict(_LIVE_LEVELS_CACHE)
+        return dict(_LIVE_LEVELS_CACHE)
 
 def search_web_lite(query: str, max_results: int = 5) -> str:
     """Busca en internet en tiempo real y devuelve los mejores resultados con título y snippet."""
@@ -1226,7 +1244,7 @@ def build_search_query(current_text: str, raw_msgs: list) -> str:
 
 def calculate_xp_gap(start_lvl: int, target_lvl: int) -> str:
     """Calcula matemáticamente el XP exacto necesario entre dos niveles y desglosa por canales estándar y con boost."""
-    if start_lvl >= target_lvl or target_lvl > 100:
+    if start_lvl < 0 or start_lvl >= target_lvl or target_lvl > 100:
         return ""
     total = sum(5 * (lvl ** 2) + 50 * lvl + 100 for lvl in range(start_lvl, target_lvl))
     msgs_base = round(total / 225)
@@ -3451,7 +3469,7 @@ async def _handle_message_safe(message: discord.Message):
                 s_lvl = int(xp_match.group(1))
                 t_lvl = int(xp_match.group(2))
                 xp_calc_context = calculate_xp_gap(s_lvl, t_lvl)
-            elif "cuanto me falta" in lowered or "cuánto me falta" in lowered:
+            elif any(p in lowered for p in ["cuanto me falta", "cuánto me falta", "cuanta xp", "cuánta xp", "cuanta experiencia", "cuánta experiencia", "cuanto me queda", "cuánto me queda", "cuanto necesito", "cuánto necesito", "xp para", "experiencia para"]):
                 target_match = re.search(r"(?:para|al?)\s+(?:nivel\s+)?(\d+)", lowered)
                 if target_match:
                     t_lvl = int(target_match.group(1))
