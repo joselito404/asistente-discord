@@ -637,14 +637,19 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             try:
                 await asyncio.sleep(0.15)
                 client = self.vc or getattr(self, "voice_client", None)
-                if client and getattr(client, "channel", None) and hasattr(client, "is_listening"):
-                    if not client.is_listening():
-                        bot_log("⚠️ [Gemini Live Watchdog] AudioReader detenido. Reactivando escucha automáticamente...")
-                        try:
-                            client.listen(self)
-                            bot_log("✅ [Gemini Live Watchdog] Escucha reactivada con éxito.")
-                        except Exception as ex:
-                            bot_log(f"Error reactivando listener de voz: {ex}")
+                if not client or not client.is_connected() or not getattr(client, "channel", None):
+                    continue
+                guild_id = getattr(getattr(client, "guild", None), "id", None)
+                if guild_id and is_voice_manually_disconnected(guild_id):
+                    self.cleanup()
+                    break
+                if hasattr(client, "is_listening") and not client.is_listening():
+                    bot_log("⚠️ [Gemini Live Watchdog] AudioReader detenido. Reactivando escucha automáticamente...")
+                    try:
+                        client.listen(self)
+                        bot_log("✅ [Gemini Live Watchdog] Escucha reactivada con éxito.")
+                    except Exception as ex:
+                        bot_log(f"Error reactivando listener de voz: {ex}")
 
                 now = time.time()
                 turns = []
@@ -3469,7 +3474,19 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
             if consume_internal_voice_disconnect(guild.id):
                 return
             set_voice_manually_disconnected(guild.id)
-            bot_log(f"🔌 [Voice] Asistente fue desconectado de #{before.channel.name}. Auto-conexión bloqueada hasta /unete o hasta que la sala se vacíe.")
+            vc = guild.voice_client
+            if vc:
+                if hasattr(vc, "stop_listening"):
+                    try:
+                        vc.stop_listening()
+                    except Exception:
+                        pass
+                if vc.is_playing():
+                    if hasattr(vc, "stop_playing"):
+                        vc.stop_playing()
+                    else:
+                        vc.stop()
+            bot_log(f"🔌 [Voice] Asistente fue desconectado de #{before.channel.name}. Auto-conexión bloqueada hasta orden explícita (/unete).")
         return
 
     if member.bot:
@@ -3524,6 +3541,14 @@ async def on_ready():
         while not bot.is_closed():
             try:
                 for g in bot.guilds:
+                    if is_voice_manually_disconnected(g.id):
+                        vc = g.voice_client
+                        if vc and (vc.is_connected() or getattr(vc, "is_listening", lambda: False)()):
+                            try:
+                                await vc.disconnect(force=True)
+                            except Exception:
+                                pass
+                        continue
                     vc = g.voice_client
                     if vc and vc.is_connected() and vc.channel:
                         humans = [m for m in vc.channel.members if m and not getattr(m, "bot", False)]
@@ -4071,6 +4096,11 @@ async def _handle_message_safe(message: discord.Message):
                 "entra a llamada", "entra en llamada", "ven a la llamada", "ven a llamada",
                 "conéctate a la llamada", "conectate a la llamada", "conéctate a llamada", "conectate a llamada",
                 "conéctate a voz", "conectate a voz", "conéctate al canal de voz", "conectate al canal de voz",
+                "únete al canal de voz", "unete al canal de voz", "entra al canal de voz", "entra en el canal de voz",
+                "métete al canal de voz", "metete al canal de voz", "métete en el canal de voz", "metete en el canal de voz",
+                "únete a la sala de voz", "unete a la sala de voz", "entra a la sala de voz", "entra en la sala de voz",
+                "únete a la sala", "unete a la sala", "entra a la sala", "entra en la sala",
+                "métete a la sala", "metete a la sala", "métete en la sala", "metete en la sala",
                 "ven a voz", "entra a voz", "ven al canal de voz", "métete a la llamada", "metete a la llamada",
                 "métete en la llamada", "metete en la llamada", "únete a voz", "unete a voz"
             ]
@@ -4094,7 +4124,14 @@ async def _handle_message_safe(message: discord.Message):
                     await message.reply("❌ Debes estar conectado a una sala de voz para que me una a tu llamada.")
                     return
 
-            if any(p in lowered for p in ["sal de la llamada", "desconéctate de la llamada", "desconectate de la llamada", "salte de la llamada", "abandona la llamada", "sal de voz"]):
+            disconnect_phrases = [
+                "sal de la llamada", "desconéctate de la llamada", "desconectate de la llamada",
+                "salte de la llamada", "abandona la llamada", "sal de voz", "salte de voz",
+                "sal del canal", "salte del canal", "vete de la llamada", "vete de voz",
+                "vete del canal", "desconéctate de voz", "desconectate de voz",
+                "desconéctate del canal", "desconectate del canal"
+            ]
+            if any(p in lowered for p in disconnect_phrases):
                 vc = message.guild.voice_client if message.guild else None
                 if vc and vc.is_connected():
                     v_name = vc.channel.name if vc.channel else "la sala"
@@ -4553,8 +4590,9 @@ async def _handle_message_safe(message: discord.Message):
                 file_idx += len(chunk_files)
                 await message.reply(files=chunk_files)
 
-        # Chat-to-Voice: Solo conectar y locutar si se pide explícitamente en el texto
-        # o si el bot YA está conectado a esa misma sala de voz y no fue desconectado manualmente
+        # Chat-to-Voice: Solo locutar si se pide explícitamente en el texto
+        # Y si el bot YA está conectado a esa misma sala de voz y no fue desconectado manualmente.
+        # NUNCA iniciar conexión a voz desde este bloque de chat general.
         vch = None
         if message.author and hasattr(message.author, "voice") and message.author.voice and message.author.voice.channel:
             vch = message.author.voice.channel
@@ -4575,20 +4613,12 @@ async def _handle_message_safe(message: discord.Message):
         ]
         explicit_voice_request = any(p in lowered for p in voice_triggers)
 
-        already_in_room = bool(vc and vc.is_connected() and vch and vc.channel == vch and not manually_dc)
-
-        should_speak_in_voice = False
-
-        if explicit_voice_request and vch:
-            if not vc or not vc.is_connected() or vc.channel != vch:
-                try:
-                    bot_log(f"🎙️ [Chat-to-Voice Explícito] Solicitado por '{message.author.display_name}'. Conectando a #{vch.name}...")
-                    vc = await ensure_voice_connection(vch)
-                except Exception as e:
-                    bot_log(f"Aviso conectando a voz desde texto: {e}")
-            should_speak_in_voice = bool(vc and vc.is_connected())
-        elif already_in_room:
-            should_speak_in_voice = True
+        # Regla estricta: NUNCA auto-unirse a llamadas desde texto en este bloque.
+        # Solo locutar si el bot YA está conectado a la misma sala del usuario, no ha sido desconectado manualmente,
+        # Y el usuario pidió explícitamente locución por voz en este mensaje.
+        should_speak_in_voice = bool(
+            explicit_voice_request and vc and vc.is_connected() and vch and vc.channel == vch and not manually_dc
+        )
 
         if should_speak_in_voice and vc and vc.is_connected():
             try:
