@@ -1404,6 +1404,59 @@ async def get_pins_context(channel: discord.TextChannel) -> str:
     except Exception:
         return ""
 
+def extract_action_block(text: str, tag_name: str):
+    """
+    Extrae bloques de acción [TAG_NAME: ...] soportando corchetes anidados
+    (como arr[0] en código o [a, b] en fórmulas LaTeX y Mermaid).
+    Devuelve (full_match_str, content_str) o None si no existe la etiqueta.
+    """
+    prefix = f"[{tag_name.upper()}:"
+    lower_text = text.lower()
+    lower_prefix = prefix.lower()
+    start_pos = lower_text.find(lower_prefix)
+    if start_pos == -1:
+        return None
+    
+    content_start = start_pos + len(prefix)
+    depth = 1
+    end_pos = -1
+    in_quote = None
+    escaped = False
+    track_quotes = tag_name.upper() in ("ACTION_CODE", "ACTION_CHART")
+    
+    for idx in range(content_start, len(text)):
+        ch = text[idx]
+        if escaped:
+            escaped = False
+            continue
+        if ch == '\\':
+            escaped = True
+            continue
+        if track_quotes:
+            if in_quote:
+                if ch == in_quote:
+                    in_quote = None
+                continue
+            elif ch in ('"', "'"):
+                in_quote = ch
+                continue
+        if ch == '[':
+            depth += 1
+        elif ch == ']':
+            depth -= 1
+            if depth == 0:
+                end_pos = idx
+                break
+                
+    if end_pos != -1:
+        return text[start_pos : end_pos + 1], text[content_start : end_pos]
+    else:
+        last_bracket = text.rfind(']')
+        if last_bracket > content_start:
+            return text[start_pos : last_bracket + 1], text[content_start : last_bracket]
+        else:
+            return text[start_pos:], text[content_start:]
+
 def generate_image_flux(prompt: str, width: int = 1024, height: int = 1024) -> bytes:
     """Genera una imagen en alta resolución usando el clúster libre de FLUX.1 / Stable Diffusion."""
     encoded_prompt = urllib.parse.quote(prompt.strip())
@@ -3457,13 +3510,14 @@ async def _handle_message_safe(message: discord.Message):
             response_text = await asyncio.to_thread(call_gemini_multiturn, turns)
 
             # 8. Interceptar acciones visuales y gráficas generadas por IA
-            file_to_send = None
+            files_to_send = []
 
             # A. Acción de dibujo FLUX.1
-            draw_match = re.search(r"\[ACTION_DRAW:\s*(.*?)\]", response_text, re.DOTALL | re.IGNORECASE)
-            if draw_match:
-                prompt_flux = draw_match.group(1).strip()
-                clean_response = re.sub(r"\[ACTION_DRAW:\s*.*?\]", "", response_text, flags=re.DOTALL | re.IGNORECASE).strip()
+            draw_block = extract_action_block(response_text, "ACTION_DRAW")
+            if draw_block:
+                full_draw, prompt_flux = draw_block
+                prompt_flux = prompt_flux.strip()
+                clean_response = response_text.replace(full_draw, "").strip()
                 try:
                     print(f"[FLUX.1] Generando imagen para prompt: '{prompt_flux}'")
                     img_bytes = await asyncio.to_thread(generate_image_flux, prompt_flux)
@@ -3481,62 +3535,88 @@ async def _handle_message_safe(message: discord.Message):
                     return
 
             # B. Acción de renderizado matemático (LaTeX PNG)
-            math_match = re.search(r"\[ACTION_MATH:\s*(.*?)\]", response_text, re.DOTALL | re.IGNORECASE)
-            if math_match:
-                raw_latex = math_match.group(1).strip()
-                response_text = re.sub(r"\[ACTION_MATH:\s*.*?\]", "", response_text, flags=re.DOTALL | re.IGNORECASE).strip()
+            while True:
+                math_block = extract_action_block(response_text, "ACTION_MATH")
+                if not math_block:
+                    break
+                full_math, raw_latex = math_block
+                raw_latex = raw_latex.strip()
                 try:
                     img_bytes = await asyncio.to_thread(render_math_image, raw_latex)
-                    file_to_send = discord.File(io.BytesIO(img_bytes), filename="formula_matematica.png")
+                    files_to_send.append(discord.File(io.BytesIO(img_bytes), filename=f"formula_{len(files_to_send)+1}.png"))
+                    response_text = response_text.replace(full_math, "", 1).strip()
                 except Exception as e:
                     print(f"Error generando fórmula matemática: {e}")
-            elif "$$" in response_text:
+                    clean_formula = sanitize_discord_math_text(raw_latex)
+                    response_text = response_text.replace(full_math, f"**{clean_formula}**", 1).strip()
+
+            if "$$" in response_text:
                 # Fallback automático: detectar fórmulas en bloque $$...$$ si no emitió la etiqueta explícita
                 block_match = re.search(r"\$\$([^\$]+)\$\$", response_text)
                 if block_match:
                     formula = block_match.group(1).strip()
                     try:
                         img_bytes = await asyncio.to_thread(render_math_image, formula)
-                        file_to_send = discord.File(io.BytesIO(img_bytes), filename="formula_matematica.png")
+                        files_to_send.append(discord.File(io.BytesIO(img_bytes), filename=f"formula_{len(files_to_send)+1}.png"))
+                        response_text = re.sub(r"\$\$[^\$]+\$\$", "", response_text, count=1).strip()
                     except Exception as e:
                         print(f"Error generando fórmula matemática automática: {e}")
 
             # C. Acción de gráfico estadístico o función (QuickChart)
-            chart_match = re.search(r"\[ACTION_CHART:\s*(\{.*?\})\]", response_text, re.DOTALL | re.IGNORECASE)
-            if chart_match:
-                chart_json = chart_match.group(1).strip()
-                response_text = re.sub(r"\[ACTION_CHART:\s*\{.*?\}\]", "", response_text, flags=re.DOTALL | re.IGNORECASE).strip()
+            while True:
+                chart_block = extract_action_block(response_text, "ACTION_CHART")
+                if not chart_block:
+                    break
+                full_chart, chart_json = chart_block
+                chart_json = chart_json.strip()
                 try:
                     img_bytes = await asyncio.to_thread(render_chart_image, chart_json)
-                    file_to_send = discord.File(io.BytesIO(img_bytes), filename="grafico_estadistico.png")
+                    files_to_send.append(discord.File(io.BytesIO(img_bytes), filename=f"grafico_{len(files_to_send)+1}.png"))
+                    response_text = response_text.replace(full_chart, "", 1).strip()
                 except Exception as e:
                     print(f"Error generando gráfico estadístico: {e}")
+                    response_text = response_text.replace(full_chart, "", 1).strip()
 
             # D. Acción de diagrama conceptual / flujo (Mermaid)
-            diagram_match = re.search(r"\[ACTION_DIAGRAM:\s*(.*?)\]", response_text, re.DOTALL | re.IGNORECASE)
-            if diagram_match:
-                mermaid_code = diagram_match.group(1).strip()
-                response_text = re.sub(r"\[ACTION_DIAGRAM:\s*.*?\]", "", response_text, flags=re.DOTALL | re.IGNORECASE).strip()
+            while True:
+                diagram_block = extract_action_block(response_text, "ACTION_DIAGRAM")
+                if not diagram_block:
+                    break
+                full_diag, mermaid_code = diagram_block
+                mermaid_code = mermaid_code.strip()
                 try:
                     img_bytes = await asyncio.to_thread(render_diagram_image, mermaid_code)
-                    file_to_send = discord.File(io.BytesIO(img_bytes), filename="diagrama.png")
+                    files_to_send.append(discord.File(io.BytesIO(img_bytes), filename=f"diagrama_{len(files_to_send)+1}.png"))
+                    response_text = response_text.replace(full_diag, "", 1).strip()
                 except Exception as e:
                     print(f"Error generando diagrama Mermaid: {e}")
+                    clean_diag = mermaid_code.strip().replace("```mermaid", "").replace("```", "").strip()
+                    response_text = response_text.replace(full_diag, f"```mermaid\n{clean_diag}\n```", 1).strip()
 
             # E. Acción de tarjeta de código destacada (Pillow Terminal Card)
-            code_match = re.search(r"\[ACTION_CODE:\s*(.*?)\]", response_text, re.DOTALL | re.IGNORECASE)
-            if code_match:
-                code_content = code_match.group(1).strip()
-                response_text = re.sub(r"\[ACTION_CODE:\s*.*?\]", "", response_text, flags=re.DOTALL | re.IGNORECASE).strip()
+            while True:
+                code_block = extract_action_block(response_text, "ACTION_CODE")
+                if not code_block:
+                    break
+                full_code, code_content = code_block
+                code_content = code_content.strip()
                 try:
                     img_bytes = await asyncio.to_thread(render_code_card_image, code_content)
-                    file_to_send = discord.File(io.BytesIO(img_bytes), filename="tarjeta_codigo.png")
+                    files_to_send.append(discord.File(io.BytesIO(img_bytes), filename=f"tarjeta_codigo_{len(files_to_send)+1}.png"))
+                    response_text = response_text.replace(full_code, "", 1).strip()
                 except Exception as e:
                     print(f"Error generando tarjeta de código: {e}")
+                    # Fallback crítico: si falla Pillow o el renderizado, NUNCA perder el código
+                    clean_code = code_content.strip()
+                    if clean_code.startswith("```"):
+                        fallback_code = clean_code
+                    else:
+                        fallback_code = f"```python\n{clean_code}\n```"
+                    response_text = response_text.replace(full_code, fallback_code, 1).strip()
 
             # Fallback de seguridad para dibujo directo si el usuario dijo "dibuja..." y la IA no emitió ACTION_DRAW
             direct_draw_prefix = ("dibuja ", "dibújame ", "dibujame ", "crea una imagen de ", "genera una imagen de ", "haz un dibujo de ", "hazme un dibujo de ")
-            if any(lowered.startswith(p) for p in direct_draw_prefix) and not file_to_send:
+            if any(lowered.startswith(p) for p in direct_draw_prefix) and not files_to_send:
                 try:
                     enhanced = await asyncio.to_thread(enhance_image_prompt, clean_text, message.author.display_name)
                     print(f"[FLUX.1 Fallback] Generando imagen para: '{enhanced}'")
@@ -3551,13 +3631,13 @@ async def _handle_message_safe(message: discord.Message):
 
             # Sanitizar cualquier resto de código LaTeX en el texto plano para evitar "chino" en Discord
             response_text = sanitize_discord_math_text(response_text)
-            if not response_text and file_to_send:
+            if not response_text and files_to_send:
                 response_text = "Aquí tienes la representación visual:"
         
-        # Enviar respuesta respetando límite de 2.000 caracteres de Discord
+        # Enviar respuesta respetando límite de 2.000 caracteres de Discord y adjuntando archivos acumulados
         if len(response_text) <= 1900:
-            if file_to_send:
-                await message.reply(content=response_text, file=file_to_send)
+            if files_to_send:
+                await message.reply(content=response_text, files=files_to_send[:10])
             else:
                 await message.reply(response_text)
         else:
@@ -3574,26 +3654,46 @@ async def _handle_message_safe(message: discord.Message):
             if remaining:
                 chunks.append(remaining)
             for i, chunk in enumerate(chunks):
-                if i == 0 and file_to_send:
-                    await message.reply(content=chunk, file=file_to_send)
+                if i == 0 and files_to_send:
+                    await message.reply(content=chunk, files=files_to_send[:10])
                 else:
                     await message.reply(chunk)
 
-        # Si el autor del mensaje está en un canal de voz o el bot ya está en llamada, asegurar conexión y locución
+        # Chat-to-Voice: Solo conectar y locutar si se pide explícitamente en el texto
+        # o si el bot YA está conectado a esa misma sala de voz y no fue desconectado manualmente
         vch = None
         if message.author and hasattr(message.author, "voice") and message.author.voice and message.author.voice.channel:
             vch = message.author.voice.channel
         
         vc = message.guild.voice_client if message.guild else None
-        if not vc or not vc.is_connected():
-            if vch:
+        guild_id = message.guild.id if message.guild else 0
+        manually_dc = is_voice_manually_disconnected(guild_id)
+
+        voice_triggers = [
+            "di en la llamada", "habla en la llamada", "únete a la llamada", "unete a la llamada",
+            "habla por voz", "respóndeme por voz", "respondeme por voz", "dilo en la llamada",
+            "dilo por voz", "dilo en voz alta", "cuéntamelo por voz", "cuentamelo por voz",
+            "entra a la llamada", "conéctate a la llamada", "conectate a la llamada",
+            "ven a la llamada", "lee en voz alta", "léelo en voz alta"
+        ]
+        explicit_voice_request = any(p in lowered for p in voice_triggers)
+
+        already_in_room = bool(vc and vc.is_connected() and vch and vc.channel == vch and not manually_dc)
+
+        should_speak_in_voice = False
+
+        if explicit_voice_request and vch:
+            if not vc or not vc.is_connected() or vc.channel != vch:
                 try:
-                    bot_log(f"🎙️ [Chat-to-Voice] '{message.author.display_name}' habló en texto estando en #{vch.name}. Conectando voz...")
+                    bot_log(f"🎙️ [Chat-to-Voice Explícito] Solicitado por '{message.author.display_name}'. Conectando a #{vch.name}...")
                     vc = await ensure_voice_connection(vch)
                 except Exception as e:
                     bot_log(f"Aviso conectando a voz desde texto: {e}")
+            should_speak_in_voice = bool(vc and vc.is_connected())
+        elif already_in_room:
+            should_speak_in_voice = True
 
-        if vc and vc.is_connected():
+        if should_speak_in_voice and vc and vc.is_connected():
             try:
                 clean_for_speech = re.sub(r"\[ACTION_[A-Z]+:\s*.*?\]", "", response_text, flags=re.DOTALL | re.IGNORECASE).strip()
                 clean_for_speech = re.sub(r"```.*?```", "", clean_for_speech, flags=re.DOTALL).strip()
