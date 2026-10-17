@@ -1,92 +1,1542 @@
 [
   {
-    "id": 1,
     "category": "manhwa",
     "category_name": "🎌 Manhwas & Anime",
     "question": "¿Cómo se llama el protagonista de 'Solo Leveling' que asciende de Cazador Rango E a Monarca de las Sombras?",
-    "options": ["Sung Jin-woo", "Cha Hae-in", "Go Gun-hee", "Baek Yoon-ho"],
+    "options": [
+      "Sung Jin-woo",
+      "Cha Hae-in",
+      "Go Gun-hee",
+      "Baek Yoon-ho"
+    ],
     "correct": 0,
-    "explanation": "Sung Jin-woo es el legendario protagonista de Solo Leveling, el cazador más débil de la humanidad que obtiene el Sistema."
+    "explanation": "Sung Jin-woo es el legendario protagonista de Solo Leveling, el cazador más débil de la humanidad que obtiene el Sistema.",
+    "id": 1
   },
   {
-    "id": 2,
     "category": "manhwa",
     "category_name": "🎌 Manhwas & Anime",
     "question": "En el manhwa favorito del server 'The Greatest Estate Developer', ¿en qué personaje de novela se reencarna Kim Su-ho?",
-    "options": ["Javier Asrahan", "Lloyd Frontera", "Alicia von Terran", "Barón Frontera"],
+    "options": [
+      "Javier Asrahan",
+      "Lloyd Frontera",
+      "Alicia von Terran",
+      "Barón Frontera"
+    ],
     "correct": 1,
-    "explanation": "Se reencarna en Lloyd Frontera, el noble infame y endeudado, usando la ingeniería civil para salvar el feudo con caras inolvidables."
+    "explanation": "Se reencarna en Lloyd Frontera, el noble infame y endeudado, usando la ingeniería civil para salvar el feudo con caras inolvidables.",
+    "id": 2
   },
   {
-    "id": 3,
     "category": "manhwa",
     "category_name": "🎌 Manhwas & Anime",
     "question": "¿Quién compone el tema 'Projection' del anime Jujutsu Kaisen Culling Game?",
-    "options": ["Hiroyuki Sawano", "Yoshimasa Terui", "Kenji Kawai", "Yuki Kajiura"],
+    "options": [
+      "Hiroyuki Sawano",
+      "Yoshimasa Terui",
+      "Kenji Kawai",
+      "Yuki Kajiura"
+    ],
     "correct": 1,
-    "explanation": "Yoshimasa Terui es el compositor del apoteósico tema 'Projection'."
+    "explanation": "Yoshimasa Terui es el compositor del apoteósico tema 'Projection'.",
+    "id": 3
   },
   {
-    "id": 4,
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "En 'Solo Leveling', ¿cuál es la famosa palabra que pronuncia Sung Jin-woo para invocar a los muertos como sus sombras?",
+    "options": [
+      "Wake Up",
+      "Arise (Surge)",
+      "Levántate",
+      "Shadow Rise"
+    ],
+    "correct": 1,
+    "explanation": "'Arise' (Surge en español) es el comando legendario del Monarca de las Sombras.",
+    "id": 4
+  },
+  {
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "En 'Omniscient Reader's Viewpoint' (ORV), ¿cómo se titula la novela web que solo Kim Dokja leyó hasta el final?",
+    "options": [
+      "Tres Formas de Sobrevivir en un Mundo Arruinado",
+      "El Regresor Infinito",
+      "Apocalipsis de Seúl",
+      "El Testamento de Yoo Joonghyuk"
+    ],
+    "correct": 0,
+    "explanation": "La novela de más de 3.000 capítulos se titula 'Tres Formas de Sobrevivir en un Mundo Arruinado' (Ways of Survival).",
+    "id": 5
+  },
+  {
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "En 'Tower of God', ¿qué personaje traiciona a Baam empujándolo al vacío durante la prueba submarina del piso de pruebas?",
+    "options": [
+      "Endorsi Zahard",
+      "Rachel",
+      "Yuri Zahard",
+      "Hwaryun"
+    ],
+    "correct": 1,
+    "explanation": "Rachel comete la traición más infame del manhwa empujando a Baam para ascender la Torre por sí misma.",
+    "id": 6
+  },
+  {
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "En 'Return of the Mount Hua Sect', ¿cuál es el apodo de Chung Myung en su vida pasada como maestro de la espada?",
+    "options": [
+      "Santo de la Espada de la Flor de Ciruelo",
+      "Dragón Divino de Shaanxi",
+      "Tigre de Jade",
+      "Monarca Celestial"
+    ],
+    "correct": 0,
+    "explanation": "Chung Myung era conocido como el Santo de la Espada de la Flor de Ciruelo antes de reencarnar 100 años después.",
+    "id": 7
+  },
+  {
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "En 'Lookism', ¿cuál es el secreto principal de Park Hyung-suk (Daniel Park)?",
+    "options": [
+      "Tiene superpoderes de telequinesis",
+      "Posee dos cuerpos con los que alterna al dormirse",
+      "Es un clon genético militar",
+      "Viene de un viaje en el tiempo"
+    ],
+    "correct": 1,
+    "explanation": "Daniel Park despierta un segundo cuerpo atlético y perfecto, alternando entre ambos al quedarse dormido.",
+    "id": 8
+  },
+  {
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "En 'The Greatest Estate Developer', ¿quién es el fiel caballero espadachín de cabello blanco que acompaña a Lloyd Frontera?",
+    "options": [
+      "Javier Asrahan",
+      "Podong",
+      "Bangul",
+      "Conde Magentano"
+    ],
+    "correct": 0,
+    "explanation": "Javier Asrahan es el genial espadachín maestro de la novela original y mano derecha indispensable de Lloyd.",
+    "id": 9
+  },
+  {
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "En 'Nano Machine', ¿qué le inyecta a Cheon Yeo-woon su descendiente venido del futuro para salvarle la vida?",
+    "options": [
+      "Una píldora milagrosa de dragón",
+      "Nanomáquinas inteligentes",
+      "ADN de bestia divina",
+      "Un chip de inteligencia artificial"
+    ],
+    "correct": 1,
+    "explanation": "Su descendiente le inyecta nanomáquinas militares avanzadas que escanean su cuerpo y optimizan sus artes marciales.",
+    "id": 10
+  },
+  {
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "En 'Wind Breaker', ¿qué tipo de bicicleta pilota Jay Jo en las competiciones callejeras de la League of Street?",
+    "options": [
+      "Bicicleta Fixie (piñón fijo sin frenos)",
+      "Mountain Bike con doble suspensión",
+      "Bicicleta eléctrica BMX",
+      "Bicicleta tándem de carreras"
+    ],
+    "correct": 0,
+    "explanation": "Jay Jo domina las carreras pilotando una bicicleta de piñón fijo (Fixie) con derrapes milimétricos.",
+    "id": 11
+  },
+  {
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "En 'SSS-Class Suicide Hunter', ¿cuál es la habilidad inicial de Rango F que obtiene Kim Gong-ja?",
+    "options": [
+      "Resucitar 24 horas antes tras morir y copiar una habilidad de quien lo mató",
+      "Teletransportarse a cualquier mazmorra",
+      "Inmunidad total a ataques mágicos",
+      "Multiplicar el oro ganado por 100"
+    ],
+    "correct": 0,
+    "explanation": "Su habilidad le permite retroceder 24 horas en el tiempo al morir y arrebatar una habilidad de su asesino.",
+    "id": 12
+  },
+  {
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "En 'Eleceed', ¿en qué animal se transforma el poderoso 'Awakener' Kayden Break para ocultarse y recuperarse?",
+    "options": [
+      "En un cuervo negro",
+      "En un gato callejero gordo y naranja",
+      "En un perro pug",
+      "En un hurón blanco"
+    ],
+    "correct": 1,
+    "explanation": "Kayden adopta la cómica forma de un gato gordo callejero mientras se hospeda en casa de Jiwoo.",
+    "id": 13
+  },
+  {
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "En 'Jujutsu Kaisen', ¿cuál es el nombre de la Expansión de Dominio de Satoru Gojo?",
+    "options": [
+      "Santuario Malevolente",
+      "Vacío Inconmensurable (Muryōkūsho)",
+      "Jardín de Quimeras Sombrías",
+      "Ataúd de la Montaña de Hierro"
+    ],
+    "correct": 1,
+    "explanation": "El dominio de Gojo es el Vacío Inconmensurable, que satura el cerebro del enemigo con información infinita.",
+    "id": 14
+  },
+  {
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "En 'Sousou no Frieren', ¿qué tipo de magia ordinaria de ataque desarrolló la humanidad gracias a desarmar la técnica de los demonios?",
+    "options": [
+      "Zoltraak",
+      "Fulgur",
+      "Apocalipsis Ígneo",
+      "Aura Bell"
+    ],
+    "correct": 0,
+    "explanation": "Zoltraak, originalmente la magia devoradora de demonios de Qual, fue adaptada por los humanos como magia ordinaria de ataque.",
+    "id": 15
+  },
+  {
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "En 'Chainsaw Man', ¿qué demonio reside en el corazón de Denji permitiéndole transformarse?",
+    "options": [
+      "Pochita (Demonio de la Motosierra)",
+      "Demonio Pistola",
+      "Demonio de la Sangre",
+      "Demonio de la Oscuridad"
+    ],
+    "correct": 0,
+    "explanation": "Pochita se fusiona con el corazón de Denji tras hacer un pacto para permitirle cumplir sus sueños.",
+    "id": 16
+  },
+  {
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "En 'Shingeki no Kyojin' (Attack on Titan), ¿cuál es la isla donde se encuentran las tres murallas habitadas por los eldianos?",
+    "options": [
+      "Isla Marley",
+      "Isla Paradis",
+      "Isla Hizuru",
+      "Isla Shiganshina"
+    ],
+    "correct": 1,
+    "explanation": "Isla Paradis es el territorio donde el rey Fritz construyó los muros María, Rose y Sina con titanes colosales.",
+    "id": 17
+  },
+  {
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "En 'Kimetsu no Yaiba', ¿cuál es la respiración legendaria y originaria de la que derivan todas las demás?",
+    "options": [
+      "Respiración del Agua",
+      "Respiración de la Luna",
+      "Respiración del Sol (Hinokami Kagura)",
+      "Respiración del Rayo"
+    ],
+    "correct": 2,
+    "explanation": "La Respiración del Sol, creada por Yoriichi Tsugikuni, es el origen primordial de todos los estilos de respiración.",
+    "id": 18
+  },
+  {
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "En 'One Piece', ¿cómo se llama el dios del sol y la legendaria forma despertada de la fruta de Luffy (Gear 5)?",
+    "options": [
+      "Joy Boy / Nika",
+      "Kalgara",
+      "Enel",
+      "Wyper"
+    ],
+    "correct": 0,
+    "explanation": "La Hito Hito no Mi: Modelo Nika representa al Guerrero de la Liberación, el Dios del Sol Nika.",
+    "id": 19
+  },
+  {
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "En 'Berserk', ¿cómo se llama la colosal y pesada espada de hierro que empuña Guts para matar apóstoles?",
+    "options": [
+      "Excalibur",
+      "Matadragones (Dragonslayer)",
+      "Griffith's Rapier",
+      "Balmung"
+    ],
+    "correct": 1,
+    "explanation": "La Matadragones forjada por Godot es descrita como una masa enorme de hierro demasiado grande para ser llamada espada.",
+    "id": 20
+  },
+  {
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "En 'Hunter x Hunter', ¿cuál es la condición extrema que se impuso Kurapika para usar su técnica 'Chain Jail' exclusivamente contra el Gen'ei Ryodan?",
+    "options": [
+      "Ceguera permanente si falla",
+      "Si la usa contra alguien que no sea de la Araña, su corazón morirá",
+      "Pérdida de la memoria de su clan",
+      "Gastar 10 años de su vida por uso"
+    ],
+    "correct": 1,
+    "explanation": "Kurapika clavó una espada de juramento en su corazón: si usa Chain Jail contra cualquiera ajeno al Ryodan, morirá en el acto.",
+    "id": 21
+  },
+  {
+    "category": "manhwa",
+    "category_name": "🎌 Manhwas & Anime",
+    "question": "En 'Vinland Saga', ¿qué frase trascendental le dice Thors a su hijo Thorfinn antes de morir?",
+    "options": [
+      "Un guerrero nunca retrocede",
+      "No tienes enemigos. Nadie en el mundo tiene enemigos.",
+      "La venganza te hará libre",
+      "El acero es tu única familia"
+    ],
+    "correct": 1,
+    "explanation": "'No tienes enemigos. Nadie en el mundo tiene enemigos' es el pilar filosófico de Vinland Saga.",
+    "id": 22
+  },
+  {
     "category": "gaming",
     "category_name": "🎮 Videojuegos",
     "question": "¿Qué estudio japonés desarrolló Elden Ring, Bloodborne y la saga Dark Souls?",
-    "options": ["Capcom", "FromSoftware", "Team Ninja", "Square Enix"],
+    "options": [
+      "Capcom",
+      "FromSoftware",
+      "Team Ninja",
+      "Square Enix"
+    ],
     "correct": 1,
-    "explanation": "FromSoftware, dirigido por Hidetaka Miyazaki, es el creador del género Soulslike."
+    "explanation": "FromSoftware, dirigido por Hidetaka Miyazaki, es el creador del género Soulslike.",
+    "id": 23
   },
   {
-    "id": 5,
     "category": "gaming",
     "category_name": "🎮 Videojuegos",
     "question": "En Brawl Stars, ¿cuál de los siguientes es un brawler legendario?",
-    "options": ["Colt", "Shelly", "Leon", "Poco"],
+    "options": [
+      "Colt",
+      "Shelly",
+      "Leon",
+      "Poco"
+    ],
     "correct": 2,
-    "explanation": "Leon es uno de los brawlers legendarios más icónicos del juego con su invisibilidad."
+    "explanation": "Leon es uno de los brawlers legendarios más icónicos del juego con su invisibilidad.",
+    "id": 24
   },
   {
-    "id": 6,
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "¿Cómo se llama el reino subterráneo en ruinas donde se desarrolla la aventura de 'Hollow Knight'?",
+    "options": [
+      "Lordran",
+      "Hallownest",
+      "Yharnam",
+      "Deepnest"
+    ],
+    "correct": 1,
+    "explanation": "Hallownest es el vasto y melancólico reino de insectos creado por el Rey Pálido en Hollow Knight.",
+    "id": 25
+  },
+  {
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "En 'The Witcher 3: Wild Hunt', ¿a qué escuela de brujos pertenece Geralt de Rivia?",
+    "options": [
+      "Escuela del Gato",
+      "Escuela de la Víbora",
+      "Escuela del Lobo",
+      "Escuela del Grifo"
+    ],
+    "correct": 2,
+    "explanation": "Geralt de Rivia fue entrenado en Kaer Morhen bajo la prestigiosa Escuela del Lobo.",
+    "id": 26
+  },
+  {
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "En 'Elden Ring', ¿cuál es el nombre de la semidiosa que nunca conoció la derrota y custodia el Árbol Hierático?",
+    "options": [
+      "Ranni la Bruja",
+      "Malenia, Espada de Miquella",
+      "Marika la Eterna",
+      "Rennala de la Luna Llena"
+    ],
+    "correct": 1,
+    "explanation": "Malenia, Espada de Miquella, es famosa por su letal danza de las espada y la putrefacción roja.",
+    "id": 27
+  },
+  {
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "¿Qué estudio belga desarrolló el aclamado RPG del año 'Baldur's Gate 3'?",
+    "options": [
+      "BioWare",
+      "Obsidian Entertainment",
+      "Bethesda",
+      "Larian Studios"
+    ],
+    "correct": 3,
+    "explanation": "Larian Studios, creadores de Divinity: Original Sin, desarrollaron magistralmente Baldur's Gate 3.",
+    "id": 28
+  },
+  {
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "En 'Cyberpunk 2077', ¿qué personaje legendario del rock vive en el biochip dentro de la cabeza de V?",
+    "options": [
+      "Jackie Welles",
+      "Johnny Silverhand",
+      "Goro Takemura",
+      "Adam Smasher"
+    ],
+    "correct": 1,
+    "explanation": "Johnny Silverhand, interpretado por Keanu Reeves, es el rockero rebelde de los Samurai en el constructo relic.",
+    "id": 29
+  },
+  {
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "En 'Minecraft', ¿qué jefe final debes derrotar en la dimensión del Fin para completar los créditos del juego?",
+    "options": [
+      "Wither",
+      "Ender Dragon (Dragón del Fin)",
+      "Guardián Anciano",
+      "Warden"
+    ],
+    "correct": 1,
+    "explanation": "El Ender Dragon custodia la dimensión del End y libera el poema de créditos al ser vencido.",
+    "id": 30
+  },
+  {
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "En 'The Legend of Zelda: Breath of the Wild', ¿cuántos santuarios (shrines) hay repartidos por el mapa base de Hyrule?",
+    "options": [
+      "100",
+      "120",
+      "150",
+      "90"
+    ],
+    "correct": 1,
+    "explanation": "El juego base de BOTW cuenta con exactamente 120 santuarios ancestrales de los Sheikah.",
+    "id": 31
+  },
+  {
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "¿Cómo se llama el icónico dragón volador apodado 'Rey de los Cielos' en la saga Monster Hunter de Capcom?",
+    "options": [
+      "Tigrex",
+      "Zinogre",
+      "Rathalos",
+      "Nargacuga"
+    ],
+    "correct": 2,
+    "explanation": "Rathalos es el monstruo insignia más representativo y clásico de la franquicia Monster Hunter.",
+    "id": 32
+  },
+  {
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "En 'Grand Theft Auto V', ¿cuáles son los tres protagonistas jugables de la historia?",
+    "options": [
+      "CJ, Tommy Vercetti y Claude",
+      "Michael, Trevor y Franklin",
+      "Niko Bellic, Roman y Luis Lopez",
+      "Arthur Morgan, John Marston y Dutch"
+    ],
+    "correct": 1,
+    "explanation": "Michael De Santa, Trevor Philips y Franklin Clinton forman el trío protagonista de GTA V.",
+    "id": 33
+  },
+  {
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "En 'Portal 2', ¿cómo se llama la inteligencia artificial sarcástica que controla las instalaciones de Aperture Science?",
+    "options": [
+      "SHODAN",
+      "GLaDOS",
+      "Cortana",
+      "HAL 9000"
+    ],
+    "correct": 1,
+    "explanation": "GLaDOS (Genetic Lifeform and Disk Operating System) somete a los sujetos de prueba a retos con portales y tarta.",
+    "id": 34
+  },
+  {
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "En 'Left 4 Dead 2', ¿cuál es el infectado especial femenino que llora en la oscuridad y ataca furiosamente si la iluminas?",
+    "options": [
+      "Spitter",
+      "Boomer",
+      "Witch",
+      "Charger"
+    ],
+    "correct": 2,
+    "explanation": "La Witch es el peligroso infectado que llora y no debe ser asustada ni apuntada con linternas.",
+    "id": 35
+  },
+  {
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "En 'Sekiro: Shadows Die Twice', ¿qué prótesis utiliza el protagonista Lobo en sustitución de su brazo izquierdo cortado?",
+    "options": [
+      "Brazo Shinobi Mecánico con herramientas",
+      "Un cañón de pólvora fija",
+      "Un gancho pirata de bronce",
+      "Una cuchilla retráctil de obsidiana"
+    ],
+    "correct": 0,
+    "explanation": "El Escultor le implanta la Prótesis Shinobi, permitiéndole usar el gancho y herramientas ninja.",
+    "id": 36
+  },
+  {
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "En 'Terraria', ¿qué colosal enemigo debes invocar en el Inframundo para desbloquear el Modo Difícil (Hardmode)?",
+    "options": [
+      "Ojo de Cthulhu",
+      "Esqueletrón",
+      "Muro de Carne (Wall of Flesh)",
+      "Devorador de Mundos"
+    ],
+    "correct": 2,
+    "explanation": "Al arrojar el muñeco vudú del guía a la lava en el infierno surge el Muro de Carne, activando el Hardmode.",
+    "id": 37
+  },
+  {
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "En 'Super Mario 64', ¿cuántas Estrellas de Poder secretas existen en total repartidas en el castillo de la Princesa Peach?",
+    "options": [
+      "100",
+      "120",
+      "150",
+      "96"
+    ],
+    "correct": 1,
+    "explanation": "Conseguir las 120 estrellas desbloquea el cañón del patio exterior para subir al tejado y ver a Yoshi.",
+    "id": 38
+  },
+  {
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "En 'Resident Evil 4', ¿a qué país europeo viaja el agente Leon S. Kennedy para rescatar a Ashley Graham?",
+    "options": [
+      "Italia",
+      "Rumanía",
+      "España",
+      "Portugal"
+    ],
+    "correct": 2,
+    "explanation": "Leon viaja a una remota región rural de España controlada por la secta de Los Iluminados.",
+    "id": 39
+  },
+  {
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "¿Qué mítica frase de condicionamiento mental utiliza Atlas en 'BioShock' para obligar a Jack a obedecer órdenes?",
+    "options": [
+      "¿Serías tan amable? (Would you kindly?)",
+      "Por el bien común",
+      "Rapture te necesita",
+      "Despierta y huele las cenizas"
+    ],
+    "correct": 0,
+    "explanation": "'¿Serías tan amable?' (Would you kindly?) es el disparador hipnótico de control mental de BioShock.",
+    "id": 40
+  },
+  {
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "En 'Red Dead Redemption 2', ¿cómo se llama el leal forajido protagonista y mano derecha de Dutch van der Linde?",
+    "options": [
+      "John Marston",
+      "Arthur Morgan",
+      "Micah Bell",
+      "Sadie Adler"
+    ],
+    "correct": 1,
+    "explanation": "Arthur Morgan es el aclamado protagonista cuya redención emociona a lo largo del oeste americano.",
+    "id": 41
+  },
+  {
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "¿Cuál es la emblemática arma de energía pesada de la saga DOOM capaz de aniquilar salas enteras de demonios de un disparo?",
+    "options": [
+      "Railgun",
+      "BFG 9000",
+      "Cañón Gauss",
+      "Plasma Rifle"
+    ],
+    "correct": 1,
+    "explanation": "La Big Fucking Gun 9000 (BFG 9000) dispara una gigantesca bola verde de plasma devastadora.",
+    "id": 42
+  },
+  {
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "En 'Fallout: New Vegas', ¿qué corporación controla a los Securitrones y el Strip de New Vegas bajo el liderazgo de Robert House?",
+    "options": [
+      "RobCo Industries",
+      "Vault-Tec",
+      "Enclave",
+      "Hermandad del Acero"
+    ],
+    "correct": 0,
+    "explanation": "Robert House, genio y fundador de RobCo Industries, gobierna New Vegas protegido por sus robots.",
+    "id": 43
+  },
+  {
+    "category": "gaming",
+    "category_name": "🎮 Videojuegos",
+    "question": "¿Qué compositor australiano creó la memorable banda sonora de 'Hollow Knight'?",
+    "options": [
+      "Christopher Larkin",
+      "Austin Wintory",
+      "Mick Gordon",
+      "Gareth Coker"
+    ],
+    "correct": 0,
+    "explanation": "Christopher Larkin compuso la conmovedora e inmersiva música orquestal de Hollow Knight.",
+    "id": 44
+  },
+  {
     "category": "tribunal",
     "category_name": "⚖️ El Tribunal Gaming",
     "question": "¿Cuál es la web oficial de El Tribunal Gaming donde los magistrados analizan y puntúan videojuegos?",
-    "options": ["tribunal-gaming.vercel.app", "eltribunal.com", "tribunalgaming.es", "juegostribunal.net"],
+    "options": [
+      "tribunal-gaming.vercel.app",
+      "eltribunal.com",
+      "tribunalgaming.es",
+      "juegostribunal.net"
+    ],
     "correct": 0,
-    "explanation": "La sede oficial online del proyecto es https://tribunal-gaming.vercel.app"
+    "explanation": "La sede oficial online del proyecto es https://tribunal-gaming.vercel.app",
+    "id": 45
   },
   {
-    "id": 7,
     "category": "tribunal",
     "category_name": "⚖️ El Tribunal Gaming",
     "question": "En El Tribunal Gaming, ¿cómo se llama la sección donde van a parar los juegos cooperativos injugables, rotos o vetados?",
-    "options": ["Sala de Castigo", "El Muro de la Vergüenza", "Fosa Común", "El Limbo"],
+    "options": [
+      "Sala de Castigo",
+      "El Muro de la Vergüenza",
+      "Fosa Común",
+      "El Limbo"
+    ],
     "correct": 1,
-    "explanation": "El Muro de la Vergüenza es donde se exhiben los juegos cooperativos que fracasaron técnicamente."
+    "explanation": "El Muro de la Vergüenza es donde se exhiben los juegos cooperativos que fracasaron técnicamente.",
+    "id": 46
   },
   {
-    "id": 8,
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "¿Quiénes son los dos magistrados fundadores y jueces supremos de El Tribunal Gaming?",
+    "options": [
+      "Jose e Iván (racerwasp)",
+      "Joselito y Carlitos",
+      "Lázaro y Terreneiror",
+      "Cakey Bot y UnbelievaBoat"
+    ],
+    "correct": 0,
+    "explanation": "Jose e Iván (racerwasp / RobaAbuelas) son los cofundadores y magistrados que juzgan los juegos.",
+    "id": 47
+  },
+  {
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "¿Aproximadamente cuántos videojuegos en total tiene evaluados y catalogados El Tribunal Gaming en su base de datos?",
+    "options": [
+      "50 juegos",
+      "120 juegos",
+      "Más de 260 juegos (264)",
+      "1.000 juegos"
+    ],
+    "correct": 2,
+    "explanation": "El Tribunal Gaming cuenta con 264 juegos auditados minuciosamente (113 cooperativos y 151 individuales).",
+    "id": 48
+  },
+  {
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "De los 264 juegos catalogados en El Tribunal Gaming, ¿cuántos pertenecen específicamente a la categoría cooperativa?",
+    "options": [
+      "113 juegos",
+      "45 juegos",
+      "200 juegos",
+      "80 juegos"
+    ],
+    "correct": 0,
+    "explanation": "Exactamente 113 juegos cooperativos han sido testeados para verificar su diversión y estabilidad grupal.",
+    "id": 49
+  },
+  {
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "¿Qué famoso shooter cooperativo de atracos fue fulminado en El Tribunal Gaming tras su desastroso lanzamiento sin servidores?",
+    "options": [
+      "Payday 3",
+      "Left 4 Dead 2",
+      "Deep Rock Galactic",
+      "Borderlands 3"
+    ],
+    "correct": 0,
+    "explanation": "Payday 3 sufrió un lanzamiento caótico con matchmaking inoperativo durante días, condenándolo al tribunal.",
+    "id": 50
+  },
+  {
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "¿Qué plataforma de estimación de duración de campañas está integrada en las fichas técnicas del Tribunal Gaming?",
+    "options": [
+      "HowLongToBeat (HLTB)",
+      "Speedrun.com",
+      "IGN Database",
+      "GameSpot Time"
+    ],
+    "correct": 0,
+    "explanation": "HowLongToBeat (HLTB) proporciona las horas medias para la historia principal, extras y completista.",
+    "id": 51
+  },
+  {
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "¿Cuál de los siguientes juegos cooperativos ostenta el estatus de obra maestra unánime en el Tribunal?",
+    "options": [
+      "It Takes Two",
+      "Gollum",
+      "The Day Before",
+      "Redfall"
+    ],
+    "correct": 0,
+    "explanation": "It Takes Two de Josef Fares (Hazelight) es considerado uno de los pináculos del cooperativo moderno.",
+    "id": 52
+  },
+  {
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "¿Cuál es el comando slash de Discord para consultar expedientes, catálogo cooperativo y vetados del Tribunal?",
+    "options": [
+      "/juegos",
+      "/tribunal",
+      "/sentencia",
+      "/muro"
+    ],
+    "correct": 1,
+    "explanation": "El comando `/tribunal` permite buscar fichas, explorar el catálogo cooperativo, el muro de la vergüenza y los tops.",
+    "id": 53
+  },
+  {
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "¿Qué criterio técnico provoca la apertura inmediata de un expediente de baneo en El Tribunal Gaming?",
+    "options": [
+      "Crasheos constantes o desconexiones en los primeros 15 minutos de sesión",
+      "Tener gráficos pixel art",
+      "No tener doblaje en español",
+      "Durar más de 20 horas"
+    ],
+    "correct": 0,
+    "explanation": "La inestabilidad de red, crasheos al escritorio y bugs bloqueantes en coop son castigados con la máxima severidad.",
+    "id": 54
+  },
+  {
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "¿En qué canal de texto del servidor se debaten y notifican las sentencias sobre nuevos lanzamientos?",
+    "options": [
+      "#tribunal-gaming",
+      "#general",
+      "#memes",
+      "#bienvenida"
+    ],
+    "correct": 0,
+    "explanation": "El canal `#tribunal-gaming` es el estrado oficial donde los magistrados deliberan sobre los juegos.",
+    "id": 55
+  },
+  {
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "¿Qué requisito es indispensable para conceder el indulto a un juego encarcelado en El Muro de la Vergüenza?",
+    "options": [
+      "Unanimidad de ambos magistrados tras parches demostrados",
+      "Que cueste menos de 5 euros",
+      "Una encuesta de Twitter",
+      "Que un suscriptor lo pida"
+    ],
+    "correct": 0,
+    "explanation": "Solo la unanimidad de Jose e Iván tras verificar parches de estabilidad reales puede revocar una condena.",
+    "id": 56
+  },
+  {
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "¿Cuál es la misión principal autoproclamada de El Tribunal Gaming?",
+    "options": [
+      "Proteger el tiempo y la cartera del grupo evitando estafas de la industria",
+      "Ganar dinero con patrocinios",
+      "Hacer reviews para empresas triples A",
+      "Criticar sin jugar"
+    ],
+    "correct": 0,
+    "explanation": "El Tribunal existe para blindar el tiempo y dinero de los colegas mediante veredictos 100% sinceros.",
+    "id": 57
+  },
+  {
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "En las fichas de El Tribunal Gaming, ¿qué agregador de notas de la prensa y usuarios se utiliza como referencia crítica?",
+    "options": [
+      "Metacritic",
+      "Rotten Tomatoes",
+      "FilmAffinity",
+      "IMDb"
+    ],
+    "correct": 0,
+    "explanation": "Metacritic (Metascore y User Score) acompaña a la valoración de los magistrados.",
+    "id": 58
+  },
+  {
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "¿Qué famoso juego cooperativo de dos reclusos fugándose de prisión desarrollado por Hazelight figura con alta recomendación?",
+    "options": [
+      "A Way Out",
+      "Prison Architect",
+      "The Escapists",
+      "Dead by Daylight"
+    ],
+    "correct": 0,
+    "explanation": "A Way Out (Vincent y Leo) es una de las aventuras narrativas a pantalla dividida más celebradas.",
+    "id": 59
+  },
+  {
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "En el catálogo del Tribunal, ¿cuál es la categoría que identifica a juegos que requieren cautela por rendimiento o precio elevado?",
+    "options": [
+      "Precaución / Condicional",
+      "Joya Oculta",
+      "Premio Platino",
+      "Totalmente Gratis"
+    ],
+    "correct": 0,
+    "explanation": "La etiqueta 'Precaución' alerta al grupo sobre posibles bugs o problemas de optimización antes de comprar.",
+    "id": 60
+  },
+  {
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "¿Qué subcomando de `/tribunal` permite obtener recomendaciones aleatorias instantáneas de juegos cooperativos verificados?",
+    "options": [
+      "/tribunal accion:coop",
+      "/tribunal accion:muro",
+      "/tribunal accion:buscar",
+      "/tribunal accion:top"
+    ],
+    "correct": 0,
+    "explanation": "Con `/tribunal accion:coop` el bot ofrece filtrado por categorías y sugerencias de cooperativos aprobados.",
+    "id": 61
+  },
+  {
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "¿Qué título de enanos espaciales mineros cooperativo de Ghost Ship Games goza de elogios unánimes en el Tribunal?",
+    "options": [
+      "Deep Rock Galactic (Rock and Stone!)",
+      "Space Engineers",
+      "No Man's Sky",
+      "Helldivers 1"
+    ],
+    "correct": 0,
+    "explanation": "Deep Rock Galactic es adorado por su generación procedural, clases balanceadas y el grito ¡Rock and Stone!",
+    "id": 62
+  },
+  {
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "¿Qué ocurre si un miembro del servidor insiste en comprar un juego declarado 'Basura Injugable' en El Muro de la Vergüenza?",
+    "options": [
+      "Se somete a mofa comunitaria amistosa por tirar los billetes",
+      "Se le banea de Discord",
+      "Se le cobra una tasa en euros",
+      "Se le borra la cuenta"
+    ],
+    "correct": 0,
+    "explanation": "El escarnio público y las risas en llamada ante su inevitable arrepentimiento forman parte del lore del server.",
+    "id": 63
+  },
+  {
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "¿Qué dato de Steam suele verificar el Tribunal antes de organizar una sesión cooperativa masiva?",
+    "options": [
+      "Número máximo de jugadores por sala y si soporta juego cruzado (crossplay)",
+      "El peso del ejecutable en kilobytes",
+      "El país de los desarrolladores",
+      "Si tiene cartas coleccionables"
+    ],
+    "correct": 0,
+    "explanation": "El soporte para 4 o más jugadores y la presencia de crossplay son vitales para reunir al grupo.",
+    "id": 64
+  },
+  {
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "Además de juegos cooperativos, ¿cuántos juegos individuales (Single Player) audita el Tribunal en su base de datos?",
+    "options": [
+      "151 juegos",
+      "20 juegos",
+      "90 juegos",
+      "300 juegos"
+    ],
+    "correct": 0,
+    "explanation": "Cuenta con 151 títulos monojugador evaluados para aquellos momentos en que los colegas no están en llamada.",
+    "id": 65
+  },
+  {
+    "category": "tribunal",
+    "category_name": "⚖️ El Tribunal Gaming",
+    "question": "¿Qué tecnología frontend aloja la web interactiva de El Tribunal Gaming a coste 0€?",
+    "options": [
+      "Vercel Cloud",
+      "WordPress de pago",
+      "Geocities",
+      "Hostinger compartido"
+    ],
+    "correct": 0,
+    "explanation": "La aplicación web estática de alto rendimiento está desplegada globalmente en la infraestructura serverless de Vercel.",
+    "id": 66
+  },
+  {
     "category": "lore",
     "category_name": "🏰 Lore del Servidor",
     "question": "¿Qué rol y nivel de Cakey Bot se necesita para desbloquear el acceso exclusivo a la CATEGORÍA PRO?",
-    "options": ["Nivel 10 (Pendejo Medio)", "Nivel 20 (Pendejo Veterano)", "Nivel 30 (Pendejo Experimentado)", "Nivel 40 (Alto Rango)"],
+    "options": [
+      "Nivel 10 (Pendejo Medio)",
+      "Nivel 20 (Pendejo Veterano)",
+      "Nivel 30 (Pendejo Experimentado)",
+      "Nivel 40 (Alto Rango)"
+    ],
     "correct": 1,
-    "explanation": "Al alcanzar el Nivel 20 se desbloquea el rol 'Pendejo Veterano' y el acceso a la Categoría Pro."
+    "explanation": "Al alcanzar el Nivel 20 se desbloquea el rol 'Pendejo Veterano' y el acceso a la Categoría Pro.",
+    "id": 67
   },
   {
-    "id": 9,
     "category": "lore",
     "category_name": "🏰 Lore del Servidor",
     "question": "¿Quién es el miembro histórico del servidor célebre por haber acumulado casi 1.500 tiradas de tragaperras en el casino?",
-    "options": ["Joselito", "Carlitosmf", "Terreneiror (Lázaro)", "Omen2042"],
+    "options": [
+      "Joselito",
+      "Carlitosmf",
+      "Terreneiror (Lázaro)",
+      "Omen2042"
+    ],
     "correct": 2,
-    "explanation": "Terreneiror es la leyenda indiscutible del casino con casi 1.500 giros a las tragaperras."
+    "explanation": "Terreneiror es la leyenda indiscutible del casino con casi 1.500 giros a las tragaperras.",
+    "id": 68
   },
   {
-    "id": 10,
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "¿Cuál es el nombre oficial y completo del servidor de Discord de la comunidad?",
+    "options": [
+      "LOS MONGOLOS DEL SANVI Y SUS AMIGOS",
+      "El Tribunal Gaming Oficial",
+      "Sanvi Gaming Club",
+      "La Taberna de Jose e Iván"
+    ],
+    "correct": 0,
+    "explanation": "'LOS MONGOLOS DEL SANVI Y SUS AMIGOS' es el nombre canónico del servidor.",
+    "id": 69
+  },
+  {
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "¿Qué título ostenta formalmente Iván (racerwasp / RobaAbuelas) en el servidor según las directrices constitucionales?",
+    "options": [
+      "Co-Administrador del servidor y Magistrado de El Tribunal Gaming",
+      "El impostor rebelde",
+      "Dueño supremo del bot",
+      "Moderador de prueba"
+    ],
+    "correct": 0,
+    "explanation": "Iván es Co-Administrador del servidor y Magistrado del Tribunal Gaming, con trato de respeto y colega.",
+    "id": 70
+  },
+  {
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "¿En qué canal de texto del servidor se registran los comandos del casino, música y avisos de subida de nivel de Cakey Bot?",
+    "options": [
+      "#bots",
+      "#general",
+      "#memes",
+      "#clips-gaming"
+    ],
+    "correct": 0,
+    "explanation": "El canal `#bots` es la sala habilitada para la actividad de bots de economía y niveles.",
+    "id": 71
+  },
+  {
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "¿Qué comando de UnbelievaBoat permite ingresar tus monedas en el banco para evitar que te las roben con `!rob`?",
+    "options": [
+      "!dep all",
+      "!bank save",
+      "!guardar todo",
+      "!lock cash"
+    ],
+    "correct": 0,
+    "explanation": "Con `!dep all` guardas todo el dinero en efectivo dentro del banco donde los ladrones no pueden tocarlo.",
+    "id": 72
+  },
+  {
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "¿Qué canal de texto tiene activo el multiplicador más alto de experiencia de Cakey Bot (+15% XP de boost)?",
+    "options": [
+      "#recomendaciones-gaming",
+      "#la-shit-de-todos-los-dias",
+      "🔊games🔊",
+      "#bots"
+    ],
+    "correct": 0,
+    "explanation": "#recomendaciones-gaming otorga un generoso boost del +15% de XP por cada mensaje constructivo sobre videojuegos.",
+    "id": 73
+  },
+  {
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "¿Qué porcentaje de bonificación de XP ofrece el canal `#la-shit-de-todos-los-dias` según las reglas de nivel?",
+    "options": [
+      "+10% XP",
+      "+5% XP",
+      "+25% XP",
+      "+50% XP"
+    ],
+    "correct": 0,
+    "explanation": "#la-shit-de-todos-los-dias premia la charla cotidiana activa con un boost del +10% de experiencia.",
+    "id": 74
+  },
+  {
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "¿Cómo se llama el modelo generativo gratuito y sin censura utilizado por Asistente para crear imágenes con `/dibuja`?",
+    "options": [
+      "FLUX.1 (vía Pollinations)",
+      "DALL-E 3",
+      "Midjourney v6",
+      "Stable Diffusion 1.5"
+    ],
+    "correct": 0,
+    "explanation": "El bot utiliza el clúster libre de difusión FLUX.1 a 1024x1024 a coste 0€ mediante Pollinations.",
+    "id": 75
+  },
+  {
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "¿Qué voz neuronal masculina española es la voz por defecto del bot Asistente en salas de llamada?",
+    "options": [
+      "Álvaro (es-ES-AlvaroNeural)",
+      "Elvira",
+      "Ximena",
+      "Jorge"
+    ],
+    "correct": 0,
+    "explanation": "Álvaro es la voz neuronal nativa de España que proporciona la dicción más natural y fluida.",
+    "id": 76
+  },
+  {
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "¿Qué comando permite guardar información personal, gustos u obras favoritas en la memoria persistente del bot Asistente?",
+    "options": [
+      "/recuerda",
+      "/apunta",
+      "/guardar",
+      "/lore"
+    ],
+    "correct": 0,
+    "explanation": "`/recuerda [dato] [categoria]` archiva notas permanentes en `datos/user_memory.json` que el bot recuerda siempre.",
+    "id": 77
+  },
+  {
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "En el sistema de niveles de Cakey Bot, ¿a qué nivel se desbloquea el rol inicial de 'Pendejo Medio'?",
+    "options": [
+      "Nivel 10",
+      "Nivel 5",
+      "Nivel 15",
+      "Nivel 1"
+    ],
+    "correct": 0,
+    "explanation": "Al alcanzar el Nivel 10 el usuario asciende de Pendejo Novato a Pendejo Medio.",
+    "id": 78
+  },
+  {
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "¿Qué miembro del servidor es célebre por sus anécdotas diarias, comentarios legendarios y presencia habitual en las llamadas nocturnas?",
+    "options": [
+      "Joselito",
+      "El Bot de Música",
+      "El Moderador Oculto",
+      "El Fantasma de Sanvi"
+    ],
+    "correct": 0,
+    "explanation": "Joselito es una figura indispensable de la tertulia del servidor con infinitas historias que contar.",
+    "id": 79
+  },
+  {
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "¿En qué plataforma en la nube se encuentra desplegado y alojado 24/7 el servicio del bot Asistente a coste 0€?",
+    "options": [
+      "Render Cloud",
+      "AWS EC2",
+      "Google Cloud Compute",
+      "Azure Virtual Machines"
+    ],
+    "correct": 0,
+    "explanation": "El bot opera en un Web Service Debian de Render Cloud protegido contra suspensiones mediante health-checks.",
+    "id": 80
+  },
+  {
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "¿Cuál es la frecuencia del cron job en la nube que envía pings HTTP al bot para evitar que Render lo apague por inactividad?",
+    "options": [
+      "Cada 5 minutos exactos",
+      "Cada 30 minutos",
+      "Cada hora",
+      "Una vez al día"
+    ],
+    "correct": 0,
+    "explanation": "Se ejecutan peticiones GET cada 5 minutos para superar el umbral de suspensión de 15 minutos del Free Tier.",
+    "id": 81
+  },
+  {
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "¿Qué juego de tablero clásico milenario tiene integrado el bot Asistente para jugar con `/ajedrez` contra Stockfish y Gemini?",
+    "options": [
+      "Ajedrez",
+      "Damas",
+      "Tres en Raya",
+      "Póker"
+    ],
+    "correct": 0,
+    "explanation": "El motor `/ajedrez` permite retar al bot en 4 dificultades con integración de Stockfish y comentarios de Gemini.",
+    "id": 82
+  },
+  {
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "¿Qué comando slash calcula la cantidad exacta de mensajes y horas necesarias para subir a un nivel objetivo en Cakey Bot?",
+    "options": [
+      "/xp",
+      "/calculadora",
+      "/lvl",
+      "/progreso"
+    ],
+    "correct": 0,
+    "explanation": "`/xp [nivel_objetivo]` resuelve la progresión cuadrática mostrando los cálculos con y sin canales de boost.",
+    "id": 83
+  },
+  {
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "¿Qué juego de casino de UnbelievaBoat permite duplicar tu apuesta pidiendo cartas intentando sumar 21?",
+    "options": [
+      "!blackjack",
+      "!roulette",
+      "!slots",
+      "!cockfight"
+    ],
+    "correct": 0,
+    "explanation": "El blackjack (`!bj`) es uno de los juegos más viciados para apostar monedas del servidor.",
+    "id": 84
+  },
+  {
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "¿Qué canal de voz tiene un boost de experiencia del +5% de XP para quienes charlan mientras juegan?",
+    "options": [
+      "🔊games🔊",
+      "🔊charla🔊",
+      "🔊afk🔊",
+      "🔊musica🔊"
+    ],
+    "correct": 0,
+    "explanation": "El canal de voz 🔊games🔊 cuenta con un boost del +5% para incentivar las partidas en grupo.",
+    "id": 85
+  },
+  {
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "¿Cuántos puntos se suman en el ranking de Trivial por cada respuesta correcta en `/trivial`?",
+    "options": [
+      "+10 puntos",
+      "+1 punto",
+      "+50 puntos",
+      "+100 puntos"
+    ],
+    "correct": 0,
+    "explanation": "Cada acierto otorga +10 puntos acumulables consultables en la tabla de `/ranking_trivial`.",
+    "id": 86
+  },
+  {
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "¿Qué hardware CPU y GPU de última generación equipa el PC AM5 de Jose en su setup gaming?",
+    "options": [
+      "AMD Ryzen 5 7600X y NVIDIA RTX 5060 8GB GDDR7",
+      "Intel i9 14900K y RTX 4090",
+      "AMD Ryzen 5 5600X y RX 6600",
+      "Intel i5 12400F y GTX 1660"
+    ],
+    "correct": 0,
+    "explanation": "El equipo AM5 monta un procesador Ryzen 5 7600X junto a la tarjeta gráfica Palit RTX 5060 GDDR7.",
+    "id": 87
+  },
+  {
+    "category": "lore",
+    "category_name": "🏰 Lore del Servidor",
+    "question": "¿Qué política estricta rige la actitud y personalidad del bot Asistente al interactuar con el grupo?",
+    "options": [
+      "Trato de colega, de igual a igual, cero peloteo y cero toxicidad",
+      "Sumisión y llamar 'Amo' a los moderadores",
+      "Insultar a los miembros en cada respuesta",
+      "Hablar como un mayordomo victoriano"
+    ],
+    "correct": 0,
+    "explanation": "La constitución del bot impone un trato de colega maduro, directo y de igual a igual sin servilismos ni toxicidad.",
+    "id": 88
+  },
+  {
     "category": "general",
     "category_name": "🧠 Cultura General",
     "question": "¿Cuál es el planeta más grande de nuestro sistema solar?",
-    "options": ["Saturno", "Neptuno", "Júpiter", "Urano"],
+    "options": [
+      "Saturno",
+      "Neptuno",
+      "Júpiter",
+      "Urano"
+    ],
     "correct": 2,
-    "explanation": "Júpiter es con diferencia el gigante gaseoso más masivo del sistema solar."
+    "explanation": "Júpiter es con diferencia el gigante gaseoso más masivo del sistema solar.",
+    "id": 89
+  },
+  {
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿Cuál es el elemento químico más abundante en todo el universo conocido?",
+    "options": [
+      "Oxígeno",
+      "Hidrógeno",
+      "Carbono",
+      "Helio"
+    ],
+    "correct": 1,
+    "explanation": "El hidrógeno compone aproximadamente el 75% de toda la materia bariónica del universo.",
+    "id": 90
+  },
+  {
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿Qué significan las siglas 'CPU' en la arquitectura de ordenadores?",
+    "options": [
+      "Central Processing Unit",
+      "Computer Power Utility",
+      "Core Program Universal",
+      "Central Performance Unit"
+    ],
+    "correct": 0,
+    "explanation": "CPU son las siglas de Central Processing Unit (Unidad Central de Procesamiento).",
+    "id": 91
+  },
+  {
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿Quién creó el kernel de Linux original en el año 1991 como proyecto de software libre?",
+    "options": [
+      "Steve Jobs",
+      "Bill Gates",
+      "Linus Torvalds",
+      "Richard Stallman"
+    ],
+    "correct": 2,
+    "explanation": "Linus Torvalds publicó la primera versión del núcleo Linux mientras estudiaba en la Universidad de Helsinki.",
+    "id": 92
+  },
+  {
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿Qué científico británico descubrió accidentalmente la penicilina en 1928 revolucionando la medicina?",
+    "options": [
+      "Louis Pasteur",
+      "Alexander Fleming",
+      "Edward Jenner",
+      "Robert Koch"
+    ],
+    "correct": 1,
+    "explanation": "Alexander Fleming descubrió las propiedades antibióticas del hongo Penicillium notatum.",
+    "id": 93
+  },
+  {
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿Cuál es la capital oficial de Australia?",
+    "options": [
+      "Sídney",
+      "Melbourne",
+      "Canberra",
+      "Brisbane"
+    ],
+    "correct": 2,
+    "explanation": "Canberra fue elegida como capital de compromiso en 1908 para zanjar la rivalidad entre Sídney y Melbourne.",
+    "id": 94
+  },
+  {
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿Cuál es el río más largo y caudaloso del planeta Tierra?",
+    "options": [
+      "Río Nilo",
+      "Río Misisipi",
+      "Río Amazonas",
+      "Río Yangtsé"
+    ],
+    "correct": 2,
+    "explanation": "El río Amazonas en Sudamérica es el más largo y transporta más agua que los siguientes siete ríos combinados.",
+    "id": 95
+  },
+  {
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿A qué velocidad aproximada viaja la luz en el vacío?",
+    "options": [
+      "150.000 km/s",
+      "300.000 km/s (exactamente 299.792 km/s)",
+      "1.000.000 km/s",
+      "50.000 km/s"
+    ],
+    "correct": 1,
+    "explanation": "La velocidad de la luz en el vacío es una constante física fundamental de aproximadamente 300.000 km/s.",
+    "id": 96
+  },
+  {
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿Quién es considerada la primera programadora de computadoras de la historia por sus notas sobre la Máquina Analítica?",
+    "options": [
+      "Grace Hopper",
+      "Ada Lovelace",
+      "Marie Curie",
+      "Hedy Lamarr"
+    ],
+    "correct": 1,
+    "explanation": "Ada Lovelace describió el primer algoritmo destinado a ser procesado por la máquina de Charles Babbage en 1843.",
+    "id": 97
+  },
+  {
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿Quién escribió la célebre novela 'Don Quijote de la Mancha' publicada en 1605?",
+    "options": [
+      "Lope de Vega",
+      "Francisco de Quevedo",
+      "Miguel de Cervantes",
+      "Federico García Lorca"
+    ],
+    "correct": 2,
+    "explanation": "Miguel de Cervantes Saavedra escribió la obra cumbre de la literatura española y universal.",
+    "id": 98
+  },
+  {
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿Cuál es el océano de mayor extensión y profundidad de la superficie terrestre?",
+    "options": [
+      "Océano Atlántico",
+      "Océano Índico",
+      "Océano Pacífico",
+      "Océano Ártico"
+    ],
+    "correct": 2,
+    "explanation": "El océano Pacífico cubre más de un tercio de la superficie del planeta y alberga la fosa de las Marianas.",
+    "id": 99
+  },
+  {
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿Cuál es el hueso más largo y fuerte del esqueleto humano?",
+    "options": [
+      "Tibia",
+      "Fémur",
+      "Húmero",
+      "Peroné"
+    ],
+    "correct": 1,
+    "explanation": "El fémur, ubicado en el muslo, es el hueso más largo, denso y resistente del cuerpo humano.",
+    "id": 100
+  },
+  {
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿En qué año alunizó por primera vez el ser humano con la misión Apolo 11 comandada por Neil Armstrong?",
+    "options": [
+      "1965",
+      "1969",
+      "1972",
+      "1961"
+    ],
+    "correct": 1,
+    "explanation": "El 20 de julio de 1969 el módulo lunar Eagle aterrizó en el Mar de la Tranquilidad.",
+    "id": 101
+  },
+  {
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿Cuál es la montaña más alta del mundo sobre el nivel del mar con 8.848 metros de altitud?",
+    "options": [
+      "K2",
+      "Kangchenjunga",
+      "Monte Everest",
+      "Annapurna"
+    ],
+    "correct": 2,
+    "explanation": "El Monte Everest, situado en la cordillera del Himalaya en la frontera entre Nepal y China, es el pico más alto.",
+    "id": 102
+  },
+  {
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿Cuál es el país con mayor superficie territorial del mundo con más de 17 millones de km²?",
+    "options": [
+      "Canadá",
+      "China",
+      "Estados Unidos",
+      "Rusia"
+    ],
+    "correct": 3,
+    "explanation": "Rusia abarca más de una octava parte de la superficie habitable de la Tierra a través de Europa del Este y el norte de Asia.",
+    "id": 103
+  },
+  {
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿Qué partícula subatómica elemental orbita alrededor del núcleo del átomo y posee carga eléctrica negativa?",
+    "options": [
+      "Protón",
+      "Neutrón",
+      "Electrón",
+      "Fotón"
+    ],
+    "correct": 2,
+    "explanation": "Los electrones orbitan el núcleo atómico cargado positivamente con una carga fundamental de -1.",
+    "id": 104
+  },
+  {
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿Qué maestro polímata del Renacimiento pintó 'La Gioconda' (Mona Lisa) y 'La última cena'?",
+    "options": [
+      "Miguel Ángel",
+      "Rafael Sanzio",
+      "Leonardo da Vinci",
+      "Donatello"
+    ],
+    "correct": 2,
+    "explanation": "Leonardo da Vinci es el genio renacentista autor del retrato más famoso del Museo del Louvre.",
+    "id": 105
+  },
+  {
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿Cuál es la divisa o moneda oficial de Japón?",
+    "options": [
+      "Won",
+      "Yuan",
+      "Yen",
+      "Ringgit"
+    ],
+    "correct": 2,
+    "explanation": "El Yen japonés (JPY, ¥) es la tercera moneda más negociada del mercado de divisas mundial.",
+    "id": 106
+  },
+  {
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿Qué gas atmosférico absorben las plantas durante el proceso de fotosíntesis para liberar oxígeno?",
+    "options": [
+      "Monóxido de carbono",
+      "Dióxido de carbono (CO2)",
+      "Nitrógeno",
+      "Metano"
+    ],
+    "correct": 1,
+    "explanation": "Las plantas absorben dióxido de carbono y agua para producir carbohidratos mediante la clorofila, liberando O2.",
+    "id": 107
+  },
+  {
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿En qué año cayó el Muro de Berlín precipitando la reunificación alemana y el colapso del bloque soviético?",
+    "options": [
+      "1985",
+      "1989",
+      "1991",
+      "1975"
+    ],
+    "correct": 1,
+    "explanation": "La noche del 9 de noviembre de 1989 cayó el Muro de Berlín tras casi tres décadas dividiendo la ciudad.",
+    "id": 108
+  },
+  {
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿Qué compañía tecnológica adquirió el sistema operativo móvil Android en 2005 impulsando su desarrollo global?",
+    "options": [
+      "Microsoft",
+      "Apple",
+      "Google",
+      "Samsung"
+    ],
+    "correct": 2,
+    "explanation": "Google compró Android Inc. en julio de 2005 bajo la dirección de Andy Rubin.",
+    "id": 109
+  },
+  {
+    "category": "general",
+    "category_name": "🧠 Cultura General",
+    "question": "¿Cuál es la distancia media aproximada que separa a la Tierra de nuestra estrella, el Sol?",
+    "options": [
+      "150 millones de kilómetros (1 UA)",
+      "50 millones de kilómetros",
+      "384.000 kilómetros",
+      "1 año luz"
+    ],
+    "correct": 0,
+    "explanation": "Una Unidad Astronómica (UA) equivale a aproximadamente 149.6 millones de km, tardando la luz unos 8 minutos y 20 segundos en llegar.",
+    "id": 110
   }
 ]

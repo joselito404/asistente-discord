@@ -1870,6 +1870,98 @@ class TribunalView(discord.ui.View):
             msg = f"🎲 **Cooperativo Aleatorio:** **{title}** ({cat})\n⚙️ Rendimiento: {perf}"
         await interaction.response.send_message(msg, ephemeral=False)
 
+RECENT_TRIVIA_IDS = collections.deque(maxlen=40)
+
+CATEGORY_ALIASES = {
+    "all": "all",
+    "manhwa": "manhwa",
+    "manhwas": "manhwa",
+    "anime": "manhwa",
+    "gaming": "gaming",
+    "videojuegos": "gaming",
+    "juegos": "gaming",
+    "tribunal": "tribunal",
+    "lore": "lore",
+    "servidor": "lore",
+    "general": "general",
+    "cultura": "general"
+}
+
+TRIVIA_CATEGORIES_INFO = {
+    "all": ("todas las categorías de cultura pop, videojuegos, anime, manhwas y curiosidades generales", "🎲 Trivial General"),
+    "manhwa": ("manhwas coreanos (Solo Leveling, The Greatest Estate Developer, Omniscient Reader, Tower of God, Lookism) y series icónicas de anime", "🎌 Manhwas & Anime"),
+    "gaming": ("videojuegos célebres, FromSoftware (Elden Ring, Dark Souls), Hollow Knight, Brawl Stars, Nintendo, RPGs y clásicos", "🎮 Videojuegos"),
+    "tribunal": ("El Tribunal Gaming (juegos cooperativos, Muro de la Vergüenza, rendimiento técnico, Iván racerwasp y Jose)", "⚖️ El Tribunal Gaming"),
+    "lore": ("lore y anécdotas del servidor de Discord 'LOS MONGOLOS DEL SANVI', Terreneiror (Lázaro) y la tragaperras, Joselito, Iván, Cakey Bot y UnbelievaBoat", "📜 Lore del Servidor & Colegas"),
+    "general": ("cultura general, ciencia, astronomía, historia, tecnología y geografía mundial", "🧠 Cultura General"),
+}
+
+def generate_gemini_trivia_question(category_key: str = "all") -> dict | None:
+    """Genera dinámicamente con IA de Gemini una pregunta inédita de opción múltiple estructurada en JSON."""
+    cat_key_clean = CATEGORY_ALIASES.get(category_key.lower(), category_key.lower())
+    cat_desc, cat_name = TRIVIA_CATEGORIES_INFO.get(cat_key_clean, TRIVIA_CATEGORIES_INFO["all"])
+
+    prompt = (
+        f"Eres el creador de preguntas de trivial para el servidor de Discord 'LOS MONGOLOS DEL SANVI'.\n"
+        f"Genera exactamente UNA pregunta inédita, entretenida y de dificultad media/alta sobre la temática: {cat_desc}.\n"
+        f"Requisitos obligatorios:\n"
+        f"1. La pregunta debe ser clara y en español.\n"
+        f"2. Debe tener exactamente 4 opciones de respuesta verosímiles en una lista de texto (ninguna repetida).\n"
+        f"3. Solo una opción es la correcta.\n"
+        f"4. Proporciona una explicación breve (1-2 frases) del porqué de la respuesta correcta.\n"
+        f"5. Devuelve EXCLUSIVAMENTE un objeto JSON válido con los campos:\n"
+        f"   {{\n"
+        f"     \"category\": \"{cat_key_clean if cat_key_clean != 'all' else 'general'}\",\n"
+        f"     \"category_name\": \"{cat_name}\",\n"
+        f"     \"question\": \"¿Texto de la pregunta?\",\n"
+        f"     \"options\": [\"Opción A\", \"Opción B\", \"Opción C\", \"Opción D\"],\n"
+        f"     \"correct\": 0,\n"
+        f"     \"explanation\": \"Explicación concisa.\"\n"
+        f"   }}\n"
+        f"NO incluyas bloques de código markdown, comillas de inicio ni texto adicional fuera del JSON."
+    )
+
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "temperature": 0.8,
+            "maxOutputTokens": 600,
+            "responseMimeType": "application/json"
+        }
+    }
+    data = json.dumps(payload).encode("utf-8")
+
+    for model_name in get_available_models():
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_KEY}"
+        try:
+            req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                res = json.loads(resp.read().decode("utf-8"))
+            text = res.get("candidates", [])[0]["content"]["parts"][0]["text"].strip()
+            if text.startswith("```"):
+                text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
+                text = re.sub(r"\s*```$", "", text)
+            q_data = json.loads(text)
+            if (
+                isinstance(q_data, dict)
+                and "question" in q_data
+                and isinstance(q_data.get("options"), list)
+                and len(q_data["options"]) == 4
+                and isinstance(q_data.get("correct"), int)
+                and 0 <= q_data["correct"] <= 3
+                and "explanation" in q_data
+            ):
+                q_data["category_name"] = cat_name
+                q_data["category"] = cat_key_clean if cat_key_clean != "all" else "general"
+                return q_data
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 503):
+                mark_model_cooldown(model_name, 60)
+        except Exception:
+            pass
+
+    return None
+
 class TriviaView(discord.ui.View):
     """Botonera interactiva para rondas de preguntas de Trivial."""
     def __init__(self, question_data: dict, author_id: int):
@@ -1877,7 +1969,8 @@ class TriviaView(discord.ui.View):
         self.question_data = question_data
         self.author_id = author_id
         self.answered = False
-        
+        self.message: discord.Message = None
+
         letters = ["A", "B", "C", "D"]
         for i, opt in enumerate(question_data.get("options", [])[:4]):
             btn = discord.ui.Button(
@@ -1894,15 +1987,15 @@ class TriviaView(discord.ui.View):
                 await interaction.response.send_message("⚠️ Esta pregunta ya ha sido respondida.", ephemeral=True)
                 return
             self.answered = True
-            
+
             for item in self.children:
                 item.disabled = True
-                
+
             correct_idx = self.question_data.get("correct", 0)
             is_correct = (index == correct_idx)
             user = interaction.user
             uid_str = str(user.id)
-            
+
             if uid_str not in user_memory:
                 user_memory[uid_str] = {
                     "name": user.display_name,
@@ -1914,16 +2007,16 @@ class TriviaView(discord.ui.View):
                     "notes": [],
                     "trivia_points": 0
                 }
-            
+
             self.children[correct_idx].style = discord.ButtonStyle.success
             if not is_correct and index < len(self.children):
                 self.children[index].style = discord.ButtonStyle.danger
-                
+
             pts_gain = 10 if is_correct else 0
             user_memory[uid_str]["trivia_points"] = user_memory[uid_str].get("trivia_points", 0) + pts_gain
             save_user_memory(user_memory)
             total_pts = user_memory[uid_str]["trivia_points"]
-            
+
             color = 0x22c55e if is_correct else 0xef4444
             title = "🎉 ¡RESPUESTA CORRECTA! (+10 pts)" if is_correct else "❌ ¡RESPUESTA INCORRECTA!"
             status_desc = (
@@ -1931,7 +2024,7 @@ class TriviaView(discord.ui.View):
                 if is_correct
                 else f"**{user.display_name}** eligió '{self.question_data['options'][index]}', pero la correcta era: **{self.question_data['options'][correct_idx]}**"
             )
-            
+
             embed = discord.Embed(
                 title=title,
                 description=f"{status_desc}\n\n💡 **Explicación:** {self.question_data.get('explanation', '')}\n\n🏆 Puntos acumulados de {user.display_name}: **{total_pts} pts**",
@@ -1939,7 +2032,7 @@ class TriviaView(discord.ui.View):
             )
             embed.set_footer(text=f"Categoría: {self.question_data.get('category_name', 'Trivial')} • Usa /ranking_trivial")
             await interaction.response.edit_message(embed=embed, view=self)
-            
+
         return callback
 
     async def on_timeout(self):
@@ -1947,6 +2040,486 @@ class TriviaView(discord.ui.View):
             self.answered = True
             for item in self.children:
                 item.disabled = True
+            correct_idx = self.question_data.get("correct", 0)
+            if correct_idx < len(self.children):
+                self.children[correct_idx].style = discord.ButtonStyle.success
+            if self.message:
+                try:
+                    embed = discord.Embed(
+                        title="⌛ Tiempo Agotado",
+                        description=f"Se acabaron los 60 segundos.\n\nLa respuesta correcta era: **{self.question_data['options'][correct_idx]}**\n\n💡 **Explicación:** {self.question_data.get('explanation', '')}",
+                        color=0x6b7280
+                    )
+                    embed.set_footer(text=f"Categoría: {self.question_data.get('category_name', 'Trivial')} • Usa /ranking_trivial")
+                    await self.message.edit(embed=embed, view=self)
+                except Exception:
+                    pass
+
+# ==========================================
+# MOTOR INTERACTIVO DE TRES EN RAYA (TIC-TAC-TOE)
+# ==========================================
+
+def check_ttt_winner_and_line(board: list) -> tuple:
+    """Comprueba si hay 3 en raya en el tablero y devuelve (ganador, tupla_linea)."""
+    lines = [
+        (0, 1, 2), (3, 4, 5), (6, 7, 8),  # Filas
+        (0, 3, 6), (1, 4, 7), (2, 5, 8),  # Columnas
+        (0, 4, 8), (2, 4, 6)              # Diagonales
+    ]
+    for a, b, c in lines:
+        if board[a] and board[a] == board[b] == board[c]:
+            return board[a], (a, b, c)
+    return None, None
+
+def tictactoe_minimax(board: list, is_maximizing: bool) -> int:
+    """Evaluación Minimax exhaustiva para IA de Tres en Raya."""
+    winner, _ = check_ttt_winner_and_line(board)
+    if winner == "O":
+        return 10
+    elif winner == "X":
+        return -10
+    elif "" not in board:
+        return 0
+
+    if is_maximizing:
+        best = -1000
+        for i in range(9):
+            if board[i] == "":
+                board[i] = "O"
+                val = tictactoe_minimax(board, False)
+                board[i] = ""
+                best = max(best, val)
+        return best
+    else:
+        best = 1000
+        for i in range(9):
+            if board[i] == "":
+                board[i] = "X"
+                val = tictactoe_minimax(board, True)
+                board[i] = ""
+                best = min(best, val)
+        return best
+
+def get_tictactoe_bot_move(board: list) -> int:
+    """Devuelve la mejor casilla para el bot (O) usando victoria inmediata, bloqueo y Minimax."""
+    # 1. Comprobar victoria inmediata del bot
+    for i in range(9):
+        if board[i] == "":
+            board[i] = "O"
+            if check_ttt_winner_and_line(board)[0] == "O":
+                board[i] = ""
+                return i
+            board[i] = ""
+
+    # 2. Bloquear victoria inmediata del rival (X)
+    for i in range(9):
+        if board[i] == "":
+            board[i] = "X"
+            if check_ttt_winner_and_line(board)[0] == "X":
+                board[i] = ""
+                return i
+            board[i] = ""
+
+    # 3. Minimax
+    best_score = -1000
+    best_move = -1
+    for i in range(9):
+        if board[i] == "":
+            board[i] = "O"
+            score = tictactoe_minimax(board, False)
+            board[i] = ""
+            if score > best_score:
+                best_score = score
+                best_move = i
+    return best_move if best_move != -1 else board.index("")
+
+class TicTacToeButton(discord.ui.Button):
+    def __init__(self, index: int, row: int):
+        super().__init__(style=discord.ButtonStyle.secondary, label="\u200b", row=row)
+        self.index = index
+
+    async def callback(self, interaction: discord.Interaction):
+        view: TicTacToeView = self.view
+        await view.process_click(interaction, self.index)
+
+class TicTacToeView(discord.ui.View):
+    """Botonera interactiva en cuadrícula 3x3 para Tres en Raya."""
+    def __init__(self, player_x: discord.User | discord.Member, player_o: discord.User | discord.Member | None):
+        super().__init__(timeout=120)
+        self.player_x = player_x
+        self.player_o = player_o
+        self.is_pve = (player_o is None)
+        self.board = [""] * 9
+        self.current_turn = "X"
+        self.finished = False
+        self.winner = None
+        self.winning_line = None
+        self.message: discord.Message = None
+
+        for i in range(9):
+            row = i // 3
+            self.add_item(TicTacToeButton(i, row))
+
+    def build_embed(self) -> discord.Embed:
+        if self.is_pve:
+            rival_desc = f"❌ **{self.player_x.display_name}** vs ⭕ **Asistente (IA)**"
+        else:
+            rival_desc = f"❌ **{self.player_x.display_name}** vs ⭕ **{self.player_o.display_name}**"
+
+        if self.finished:
+            if self.winner == "X":
+                title = f"🏆 ¡Victoria de {self.player_x.display_name}!"
+                desc = f"{rival_desc}\n\n🎉 ¡**{self.player_x.display_name}** (❌) ha ganado la partida formando 3 en raya!"
+                color = 0x22c55e
+            elif self.winner == "O":
+                winner_name = "Asistente" if self.is_pve else self.player_o.display_name
+                title = f"🏆 ¡Victoria de {winner_name}!"
+                desc = f"{rival_desc}\n\n🎉 ¡**{winner_name}** (⭕) ha ganado la partida formando 3 en raya!"
+                color = 0x3b82f6
+            elif self.winner == "tie":
+                title = "🤝 ¡Empate!"
+                desc = f"{rival_desc}\n\nTablero completo sin ganador. ¡Tablas bien disputadas!"
+                color = 0xf59e0b
+            else:
+                title = "⌛ Partida finalizada"
+                desc = f"{rival_desc}\n\nLa partida ha finalizado."
+                color = 0x6b7280
+        else:
+            turn_name = self.player_x.display_name if self.current_turn == "X" else ("Asistente" if self.is_pve else self.player_o.display_name)
+            symbol = "❌" if self.current_turn == "X" else "⭕"
+            title = f"🎮 Tres en Raya — Turno de {symbol} {turn_name}"
+            desc = f"{rival_desc}\n\nEs el turno de **{turn_name}** ({symbol}). Pulsa una casilla vacía para mover."
+            color = 0x8b5cf6
+
+        embed = discord.Embed(title=title, description=desc, color=color)
+        embed.set_footer(text="Tres en Raya interactivo • /tres_en_raya • 120s de inactividad")
+        return embed
+
+    def update_buttons(self):
+        for item in self.children:
+            if isinstance(item, TicTacToeButton):
+                val = self.board[item.index]
+                if val == "X":
+                    item.label = "❌"
+                    item.style = discord.ButtonStyle.danger
+                    item.disabled = True
+                elif val == "O":
+                    item.label = "⭕"
+                    item.style = discord.ButtonStyle.primary
+                    item.disabled = True
+                else:
+                    item.label = "\u200b"
+                    item.style = discord.ButtonStyle.secondary
+                    item.disabled = self.finished
+
+        if self.winning_line:
+            for idx in self.winning_line:
+                self.children[idx].style = discord.ButtonStyle.success
+
+    async def process_click(self, interaction: discord.Interaction, index: int):
+        if self.finished:
+            await interaction.response.send_message("⚠️ Esta partida ya ha concluido.", ephemeral=True)
+            return
+
+        if self.current_turn == "X":
+            if interaction.user.id != self.player_x.id:
+                await interaction.response.send_message(f"❌ No es tu turno. Le toca a {self.player_x.display_name} (❌).", ephemeral=True)
+                return
+        else:
+            if self.is_pve:
+                await interaction.response.send_message("❌ Es el turno del bot Asistente.", ephemeral=True)
+                return
+            if interaction.user.id != self.player_o.id:
+                await interaction.response.send_message(f"❌ No es tu turno. Le toca a {self.player_o.display_name} (⭕).", ephemeral=True)
+                return
+
+        if self.board[index] != "":
+            await interaction.response.send_message("❌ Esa casilla ya está ocupada.", ephemeral=True)
+            return
+
+        self.board[index] = self.current_turn
+        win, line = check_ttt_winner_and_line(self.board)
+        if win:
+            self.finished = True
+            self.winner = win
+            self.winning_line = line
+        elif "" not in self.board:
+            self.finished = True
+            self.winner = "tie"
+        else:
+            if self.current_turn == "X":
+                self.current_turn = "O"
+                if self.is_pve:
+                    bot_move = get_tictactoe_bot_move(self.board)
+                    if bot_move is not None:
+                        self.board[bot_move] = "O"
+                        bot_win, bot_line = check_ttt_winner_and_line(self.board)
+                        if bot_win:
+                            self.finished = True
+                            self.winner = bot_win
+                            self.winning_line = bot_line
+                        elif "" not in self.board:
+                            self.finished = True
+                            self.winner = "tie"
+                        else:
+                            self.current_turn = "X"
+            else:
+                self.current_turn = "X"
+
+        self.update_buttons()
+        embed = self.build_embed()
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    async def on_timeout(self):
+        if not self.finished:
+            self.finished = True
+            self.winner = "timeout"
+            for item in self.children:
+                item.disabled = True
+            embed = self.build_embed()
+            embed.title = "⌛ Partida Cancelada por Inactividad"
+            embed.description += "\n\n*Han transcurrido 2 minutos sin jugadas.*"
+            if self.message:
+                try:
+                    await self.message.edit(embed=embed, view=self)
+                except Exception:
+                    pass
+
+# ==========================================
+# MOTOR INTERACTIVO DE CONECTA 4
+# ==========================================
+
+def check_connect4_winner(board: list) -> tuple:
+    """Comprueba 4 en raya (horizontal, vertical, diagonal) y devuelve (ganador, celdas_ganadoras)."""
+    # Horizontal
+    for r in range(6):
+        for c in range(4):
+            if board[r][c] != 0 and board[r][c] == board[r][c+1] == board[r][c+2] == board[r][c+3]:
+                return board[r][c], [(r, c), (r, c+1), (r, c+2), (r, c+3)]
+    # Vertical
+    for r in range(3):
+        for c in range(7):
+            if board[r][c] != 0 and board[r][c] == board[r+1][c] == board[r+2][c] == board[r+3][c]:
+                return board[r][c], [(r, c), (r+1, c), (r+2, c), (r+3, c)]
+    # Diagonal \
+    for r in range(3):
+        for c in range(4):
+            if board[r][c] != 0 and board[r][c] == board[r+1][c+1] == board[r+2][c+2] == board[r+3][c+3]:
+                return board[r][c], [(r, c), (r+1, c+1), (r+2, c+2), (r+3, c+3)]
+    # Diagonal /
+    for r in range(3, 6):
+        for c in range(4):
+            if board[r][c] != 0 and board[r][c] == board[r-1][c+1] == board[r-2][c+2] == board[r-3][c+3]:
+                return board[r][c], [(r, c), (r-1, c+1), (r-2, c+2), (r-3, c+3)]
+    return 0, None
+
+def drop_connect4_piece(board: list, col: int, player: int) -> int:
+    """Deja caer una ficha en la columna indicada. Devuelve la fila ocupada o -1 si está llena."""
+    if col < 0 or col >= 7 or board[0][col] != 0:
+        return -1
+    for r in range(5, -1, -1):
+        if board[r][col] == 0:
+            board[r][col] = player
+            return r
+    return -1
+
+def get_connect4_bot_move(board: list, bot_player: int = 2, human_player: int = 1) -> int:
+    """IA heurística estratégica para Conecta 4: victoria inmediata, bloqueo y ponderación central."""
+    valid_cols = [c for c in range(7) if board[0][c] == 0]
+    if not valid_cols:
+        return -1
+
+    # 1. Comprobar victoria inmediata del bot
+    for c in valid_cols:
+        r = drop_connect4_piece(board, c, bot_player)
+        win, _ = check_connect4_winner(board)
+        board[r][c] = 0
+        if win == bot_player:
+            return c
+
+    # 2. Bloquear victoria inmediata del rival humano
+    for c in valid_cols:
+        r = drop_connect4_piece(board, c, human_player)
+        win, _ = check_connect4_winner(board)
+        board[r][c] = 0
+        if win == human_player:
+            return c
+
+    # 3. Filtrar columnas donde poner ficha permita al rival ganar justo encima en su siguiente turno
+    safe_cols = []
+    for c in valid_cols:
+        r = drop_connect4_piece(board, c, bot_player)
+        rival_wins_above = False
+        if r > 0:
+            board[r-1][c] = human_player
+            w, _ = check_connect4_winner(board)
+            if w == human_player:
+                rival_wins_above = True
+            board[r-1][c] = 0
+        board[r][c] = 0
+        if not rival_wins_above:
+            safe_cols.append(c)
+
+    candidates = safe_cols if safe_cols else valid_cols
+
+    # 4. Ponderación posicional clásica (columna 3 central > adyacentes > extremos)
+    col_weights = {3: 8, 2: 5, 4: 5, 1: 3, 5: 3, 0: 1, 6: 1}
+    best_c = candidates[0]
+    best_val = -100
+    for c in candidates:
+        score = col_weights.get(c, 0)
+        if score > best_val:
+            best_val = score
+            best_c = c
+    return best_c
+
+class Connect4Button(discord.ui.Button):
+    def __init__(self, col: int, row_pos: int):
+        super().__init__(style=discord.ButtonStyle.primary, label=f"{col+1}", row=row_pos)
+        self.col = col
+
+    async def callback(self, interaction: discord.Interaction):
+        view: Connect4View = self.view
+        await view.process_drop(interaction, self.col)
+
+class Connect4View(discord.ui.View):
+    """Botonera y tablero interactivo de Conecta 4 (6 filas x 7 columnas)."""
+    def __init__(self, player_1: discord.User | discord.Member, player_2: discord.User | discord.Member | None):
+        super().__init__(timeout=120)
+        self.player_1 = player_1  # 🔴
+        self.player_2 = player_2  # 🟡
+        self.is_pve = (player_2 is None)
+        self.board = [[0 for _ in range(7)] for _ in range(6)]
+        self.current_turn = 1
+        self.finished = False
+        self.winner = 0
+        self.winning_cells = None
+        self.message: discord.Message = None
+
+        for c in range(7):
+            row_pos = 0 if c < 4 else 1
+            self.add_item(Connect4Button(c, row_pos))
+
+    def render_board_str(self) -> str:
+        header = "1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣ 6️⃣ 7️⃣\n"
+        symbols = {0: "⬛", 1: "🔴", 2: "🟡"}
+        lines = []
+        for r in range(6):
+            row_str = ""
+            for c in range(7):
+                if self.winning_cells and (r, c) in self.winning_cells:
+                    row_str += "⭐ "
+                else:
+                    row_str += f"{symbols[self.board[r][c]]} "
+            lines.append(row_str.strip())
+        return header + "\n".join(lines)
+
+    def build_embed(self) -> discord.Embed:
+        p2_name = "Asistente (IA)" if self.is_pve else self.player_2.display_name
+        players_header = f"🔴 **{self.player_1.display_name}** vs 🟡 **{p2_name}**"
+
+        if self.finished:
+            if self.winner == 1:
+                title = f"🏆 ¡Victoria de {self.player_1.display_name}!"
+                desc = f"{players_header}\n\n{self.render_board_str()}\n\n🎉 ¡**{self.player_1.display_name}** (🔴) ha conectado 4 en raya!"
+                color = 0xef4444
+            elif self.winner == 2:
+                title = f"🏆 ¡Victoria de {p2_name}!"
+                desc = f"{players_header}\n\n{self.render_board_str()}\n\n🎉 ¡**{p2_name}** (🟡) ha conectado 4 en raya!"
+                color = 0xf59e0b
+            elif self.winner == -1:
+                title = "🤝 ¡Empate en Conecta 4!"
+                desc = f"{players_header}\n\n{self.render_board_str()}\n\nTablero completamente lleno sin 4 en raya. ¡Partida muy reñida!"
+                color = 0x3b82f6
+            else:
+                title = "⌛ Partida Finalizada"
+                desc = f"{players_header}\n\n{self.render_board_str()}\n\nPartida terminada."
+                color = 0x6b7280
+        else:
+            turn_name = self.player_1.display_name if self.current_turn == 1 else p2_name
+            turn_sym = "🔴" if self.current_turn == 1 else "🟡"
+            title = f"🔴🟡 Conecta 4 — Turno de {turn_sym} {turn_name}"
+            desc = f"{players_header}\n\n{self.render_board_str()}\n\nTurno de **{turn_name}** ({turn_sym}). Pulsa el número de la columna para soltar la ficha."
+            color = 0x8b5cf6
+
+        embed = discord.Embed(title=title, description=desc, color=color)
+        embed.set_footer(text="Conecta 4 interactivo • /conecta4 • 120s de inactividad")
+        return embed
+
+    def update_buttons(self):
+        for item in self.children:
+            if isinstance(item, Connect4Button):
+                is_full = (self.board[0][item.col] != 0)
+                item.disabled = (self.finished or is_full)
+
+    async def process_drop(self, interaction: discord.Interaction, col: int):
+        if self.finished:
+            await interaction.response.send_message("⚠️ Esta partida ya ha finalizado.", ephemeral=True)
+            return
+
+        if self.current_turn == 1:
+            if interaction.user.id != self.player_1.id:
+                await interaction.response.send_message(f"❌ No es tu turno. Le toca a {self.player_1.display_name} (🔴).", ephemeral=True)
+                return
+        else:
+            if self.is_pve:
+                await interaction.response.send_message("❌ Es el turno del bot Asistente.", ephemeral=True)
+                return
+            if interaction.user.id != self.player_2.id:
+                await interaction.response.send_message(f"❌ No es tu turno. Le toca a {self.player_2.display_name} (🟡).", ephemeral=True)
+                return
+
+        r = drop_connect4_piece(self.board, col, self.current_turn)
+        if r == -1:
+            await interaction.response.send_message("❌ Esa columna ya está completa. Elige otra.", ephemeral=True)
+            return
+
+        winner, winning_cells = check_connect4_winner(self.board)
+        if winner != 0:
+            self.finished = True
+            self.winner = winner
+            self.winning_cells = winning_cells
+        elif all(self.board[0][c] != 0 for c in range(7)):
+            self.finished = True
+            self.winner = -1
+        else:
+            if self.current_turn == 1:
+                self.current_turn = 2
+                if self.is_pve:
+                    bot_col = get_connect4_bot_move(self.board, bot_player=2, human_player=1)
+                    if bot_col != -1:
+                        drop_connect4_piece(self.board, bot_col, 2)
+                        b_winner, b_cells = check_connect4_winner(self.board)
+                        if b_winner != 0:
+                            self.finished = True
+                            self.winner = b_winner
+                            self.winning_cells = b_cells
+                        elif all(self.board[0][c] != 0 for c in range(7)):
+                            self.finished = True
+                            self.winner = -1
+                        else:
+                            self.current_turn = 1
+            else:
+                self.current_turn = 1
+
+        self.update_buttons()
+        embed = self.build_embed()
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    async def on_timeout(self):
+        if not self.finished:
+            self.finished = True
+            self.winner = 0
+            for item in self.children:
+                item.disabled = True
+            embed = self.build_embed()
+            embed.title = "⌛ Partida Cancelada por Inactividad"
+            embed.description += "\n\n*Han transcurrido 2 minutos sin jugadas.*"
+            if self.message:
+                try:
+                    await self.message.edit(embed=embed, view=self)
+                except Exception:
+                    pass
 
 # ==========================================
 # COMANDOS SLASH NATIVOS (discord.app_commands)
@@ -2612,7 +3185,10 @@ async def cmd_recuerda(interaction: discord.Interaction, dato: str, categoria: a
     await interaction.response.send_message(embed=embed)
 
 @tree.command(name="trivial", description="Inicia una ronda de preguntas de Trivial (+10 pts al acertar)")
-@app_commands.describe(categoria="Categoría de las preguntas")
+@app_commands.describe(
+    categoria="Categoría de las preguntas",
+    modo="Modo de obtención de la pregunta (Banco oficial o Generada por IA)"
+)
 @app_commands.choices(categoria=[
     app_commands.Choice(name="Todas las categorías (Aleatorio)", value="all"),
     app_commands.Choice(name="🎌 Manhwas & Anime", value="manhwa"),
@@ -2621,33 +3197,71 @@ async def cmd_recuerda(interaction: discord.Interaction, dato: str, categoria: a
     app_commands.Choice(name="📜 Lore del Servidor & Colegas", value="lore"),
     app_commands.Choice(name="🧠 Cultura General", value="general"),
 ])
-async def cmd_trivial(interaction: discord.Interaction, categoria: app_commands.Choice[str] = None):
+@app_commands.choices(modo=[
+    app_commands.Choice(name="📚 Banco oficial (110+ preguntas)", value="local"),
+    app_commands.Choice(name="✨ Generada en vivo por IA (Gemini)", value="ia"),
+])
+async def cmd_trivial(interaction: discord.Interaction, categoria: app_commands.Choice[str] = None, modo: app_commands.Choice[str] = None):
     trivia_pool = load_trivia_data()
-    if not trivia_pool:
-        await interaction.response.send_message("❌ No hay preguntas de Trivial disponibles.", ephemeral=True)
-        return
-        
-    cat_val = categoria.value if categoria else "all"
-    if cat_val != "all":
-        pool = [q for q in trivia_pool if q.get("category") == cat_val]
-    else:
-        pool = trivia_pool
-        
-    if not pool:
-        pool = trivia_pool
-        
-    question = random.choice(pool)
+    raw_cat = categoria.value if categoria else "all"
+    cat_val = CATEGORY_ALIASES.get(raw_cat.lower(), raw_cat.lower())
+    use_ia = (modo and modo.value == "ia")
+
+    question = None
+    ia_notice = ""
+    if use_ia:
+        await interaction.response.defer()
+        gemini_q = await asyncio.to_thread(generate_gemini_trivia_question, cat_val)
+        if gemini_q:
+            question = gemini_q
+            ia_notice = "✨ *Pregunta inédita generada en tiempo real por Gemini IA*\n\n"
+        else:
+            ia_notice = "⚠️ *IA en cooldown temporal. Obteniendo pregunta del banco oficial...*\n\n"
+
+    if not question:
+        if not trivia_pool:
+            if interaction.response.is_done():
+                await interaction.followup.send("❌ No hay preguntas de Trivial disponibles.", ephemeral=True)
+            else:
+                await interaction.response.send_message("❌ No hay preguntas de Trivial disponibles.", ephemeral=True)
+            return
+
+        if cat_val != "all":
+            pool = [q for q in trivia_pool if CATEGORY_ALIASES.get(q.get("category", "").lower(), q.get("category", "").lower()) == cat_val]
+        else:
+            pool = trivia_pool
+
+        if not pool:
+            pool = trivia_pool
+
+        unplayed = [q for q in pool if q.get("id") not in RECENT_TRIVIA_IDS]
+        if unplayed:
+            question = random.choice(unplayed)
+        else:
+            question = random.choice(pool)
+
+        if "id" in question:
+            RECENT_TRIVIA_IDS.append(question["id"])
+
     letters = ["🇦", "🇧", "🇨", "🇩"]
     opts_txt = "\n".join([f"{letters[i]} **{opt}**" for i, opt in enumerate(question["options"][:4])])
-    
+
     embed = discord.Embed(
         title=f"❓ Trivial: {question.get('category_name', 'Pregunta')}",
-        description=f"**{question['question']}**\n\n{opts_txt}\n\n*Pulsa el botón con la respuesta correcta abajo. ¡El primero en acertar se lleva 10 puntos!*",
+        description=f"{ia_notice}**{question['question']}**\n\n{opts_txt}\n\n*Pulsa el botón con la respuesta correcta abajo. ¡El primero en acertar se lleva 10 puntos!*",
         color=0x3b82f6
     )
     embed.set_footer(text="Trivial Asistente • 60 segundos para responder • /ranking_trivial")
     view = TriviaView(question, interaction.user.id)
-    await interaction.response.send_message(embed=embed, view=view)
+    if interaction.response.is_done():
+        msg = await interaction.followup.send(embed=embed, view=view, wait=True)
+        view.message = msg
+    else:
+        await interaction.response.send_message(embed=embed, view=view)
+        try:
+            view.message = await interaction.original_response()
+        except Exception:
+            pass
 
 @tree.command(name="ranking_trivial", description="Muestra la tabla de clasificación y puntos de Trivial del servidor")
 async def cmd_ranking_trivial(interaction: discord.Interaction):
@@ -2658,7 +3272,7 @@ async def cmd_ranking_trivial(interaction: discord.Interaction):
             name = data.get("display_name") or data.get("name") or uid
             ranked.append((name, pts))
     ranked.sort(key=lambda x: x[1], reverse=True)
-    
+
     embed = discord.Embed(
         title="🏆 Ranking de Trivial del Servidor",
         color=0xf59e0b,
@@ -2673,8 +3287,73 @@ async def cmd_ranking_trivial(interaction: discord.Interaction):
             m = medals[i] if i < len(medals) else f"{i+1}."
             lines.append(f"{m} **{name}**: `{pts} pts`")
         embed.description += "\n\n" + "\n".join(lines)
-    
-    embed.set_footer(text="El Trivial de Asistente • Preguntas de Manhwa, Gaming, Lore y Tribunal")
+
+    embed.set_footer(text="El Trivial de Asistente • 110+ Preguntas de Manhwa, Gaming, Lore y Tribunal")
+    await interaction.response.send_message(embed=embed)
+
+@tree.command(name="tres_en_raya", description="Juega al Tres en Raya interactivo (PvE contra Asistente o PvP contra un colega)")
+@app_commands.describe(rival="El miembro al que deseas retar (dejar vacío para jugar contra la IA de Asistente)")
+async def cmd_tres_en_raya(interaction: discord.Interaction, rival: discord.Member = None):
+    target_rival = rival
+    if target_rival and (target_rival.bot or target_rival.id == interaction.user.id):
+        target_rival = None
+
+    view = TicTacToeView(interaction.user, target_rival)
+    embed = view.build_embed()
+    await interaction.response.send_message(embed=embed, view=view)
+    try:
+        view.message = await interaction.original_response()
+    except Exception:
+        pass
+    p2_txt = target_rival.display_name if target_rival else "Asistente (IA)"
+    bot_log(f"🎮 [Tres en Raya] '{interaction.user.display_name}' inicia partida vs '{p2_txt}'.")
+
+@tree.command(name="conecta4", description="Juega a Conecta 4 interactivo (PvE contra Asistente o PvP contra un colega)")
+@app_commands.describe(rival="El miembro al que deseas retar (dejar vacío para jugar contra la IA de Asistente)")
+async def cmd_conecta4(interaction: discord.Interaction, rival: discord.Member = None):
+    target_rival = rival
+    if target_rival and (target_rival.bot or target_rival.id == interaction.user.id):
+        target_rival = None
+
+    view = Connect4View(interaction.user, target_rival)
+    embed = view.build_embed()
+    await interaction.response.send_message(embed=embed, view=view)
+    try:
+        view.message = await interaction.original_response()
+    except Exception:
+        pass
+    p2_txt = target_rival.display_name if target_rival else "Asistente (IA)"
+    bot_log(f"🔴🟡 [Conecta 4] '{interaction.user.display_name}' inicia partida vs '{p2_txt}'.")
+
+@tree.command(name="xp", description="Calcula la XP y mensajes necesarios para alcanzar un nivel objetivo en Cakey Bot")
+@app_commands.describe(
+    nivel_objetivo="Nivel que deseas alcanzar (ej. 20 para Categoría Pro)",
+    nivel_actual="Tu nivel actual (por defecto se consulta tu nivel real en el servidor)"
+)
+async def cmd_xp(interaction: discord.Interaction, nivel_objetivo: int, nivel_actual: int = None):
+    start_lvl = nivel_actual
+    if start_lvl is None:
+        if interaction.guild:
+            live_levels = await get_live_levels_dict(interaction.guild)
+            start_lvl = live_levels.get(interaction.user.id, 1)
+        else:
+            start_lvl = 1
+
+    if nivel_objetivo <= start_lvl:
+        await interaction.response.send_message(f"⚠️ El nivel objetivo ({nivel_objetivo}) debe ser superior a tu nivel actual ({start_lvl}).", ephemeral=True)
+        return
+
+    res = calculate_xp_gap(start_lvl, nivel_objetivo)
+    if not res:
+        await interaction.response.send_message("❌ Rango de niveles inválido.", ephemeral=True)
+        return
+
+    embed = discord.Embed(
+        title=f"📊 Calculadora de XP de Cakey Bot: Lvl {start_lvl} ➔ Lvl {nivel_objetivo}",
+        description=f"Progreso calculado para **{interaction.user.display_name}**:\n\n{res}",
+        color=0x3b82f6
+    )
+    embed.set_footer(text="Motor Matemático Cuadrático de Cakey Bot • Antigravity Asistente")
     await interaction.response.send_message(embed=embed)
 
 @bot.event
