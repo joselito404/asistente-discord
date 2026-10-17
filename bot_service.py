@@ -3477,34 +3477,9 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
 
     vc = guild.voice_client
 
-    # Si todos los canales de voz del servidor se quedan sin humanos, reseteamos el bloqueo para la siguiente sesión
-    all_humans = any(
-        any(not m.bot for m in ch.members) for ch in guild.voice_channels
-    )
-    if not all_humans:
-        clear_voice_manually_disconnected(guild.id)
-
-    # Si el bot fue desconectado manualmente en esta llamada, respetar la orden temporal y no auto-conectarse
-    if is_voice_manually_disconnected(guild.id):
-        return
-
-    # Si un usuario humano entra a una sala de voz o se mueve de sala
-    if after.channel is not None and (before.channel is None or before.channel.id != after.channel.id):
-        # Si el bot no está conectado o está solo en otro canal, unirse a donde está la gente
-        bot_alone = False
-        if vc and vc.is_connected() and vc.channel:
-            bot_alone = len([m for m in vc.channel.members if not m.bot]) == 0
-        if vc is None or not vc.is_connected() or bot_alone:
-            try:
-                bot_log(f"🎙️ [Voice Auto-Join] '{member.display_name}' entró a #{after.channel.name}. Conectando Asistente...")
-                await ensure_voice_connection(after.channel, auto=True)
-            except Exception as e:
-                bot_log(f"Error al auto-unirse a #{after.channel.name}: {e}")
-        return
-
-    # Si un usuario se va y el canal del bot se queda vacío
+    # Si un usuario se va y el canal del bot se queda sin humanos, desconectar para no consumir recursos
     if vc and vc.is_connected() and vc.channel:
-        human_members = [m for m in vc.channel.members if not m.bot]
+        human_members = [m for m in vc.channel.members if m and not getattr(m, "bot", False)]
         if len(human_members) == 0:
             bot_log(f"ℹ️ Canal de voz #{vc.channel.name} vacío. Desconectando Asistente...")
             mark_internal_voice_disconnect(guild.id)
@@ -3543,35 +3518,46 @@ async def on_ready():
     activity = discord.Activity(type=discord.ActivityType.listening, name="Gemini Live en voz (/unete)")
     await bot.change_presence(activity=activity)
 
-    # Tarea de vigilancia continua para auto-conectar y mantener la llamada activa si hay humanos en sala
-    async def _voice_channel_auto_watchdog():
-        await asyncio.sleep(3.0)
+    # Tarea de vigilancia para canales de voz: solo supervisa llamadas donde el bot YA fue conectado explícitamente
+    async def _voice_channel_watchdog():
+        await asyncio.sleep(5.0)
         while not bot.is_closed():
             try:
                 for g in bot.guilds:
-                    if is_voice_manually_disconnected(g.id):
-                        continue
                     vc = g.voice_client
-                    target_channel = None
-                    for ch in g.voice_channels:
-                        humans = [m for m in ch.members if not m.bot]
-                        if humans:
-                            target_channel = ch
-                            if "games" in ch.name.lower():
-                                break
-                    if target_channel:
-                        is_active_listening = getattr(vc, "is_listening", lambda: False)() if vc else False
-                        if vc is None or not vc.is_connected() or not is_active_listening:
-                            bot_log(f"🎙️ [Voice Auto-Watchdog] Conectando/Reactivando escucha en #{target_channel.name} ({len([m for m in target_channel.members if not m.bot])} miembros)...")
-                            await ensure_voice_connection(target_channel, auto=True)
-                        elif vc.channel.id != target_channel.id and len([m for m in vc.channel.members if not m.bot]) == 0:
-                            bot_log(f"🎙️ [Voice Auto-Watchdog] Moviendo a #{target_channel.name}...")
-                            await ensure_voice_connection(target_channel, auto=True)
+                    if vc and vc.is_connected() and vc.channel:
+                        humans = [m for m in vc.channel.members if m and not getattr(m, "bot", False)]
+                        if not humans:
+                            bot_log(f"ℹ️ [Voice Watchdog] Canal #{vc.channel.name} sin humanos. Desconectando Asistente...")
+                            mark_internal_voice_disconnect(g.id)
+                            if hasattr(vc, "stop_listening"):
+                                try:
+                                    vc.stop_listening()
+                                except Exception:
+                                    pass
+                            if vc.is_playing():
+                                if hasattr(vc, "stop_playing"):
+                                    vc.stop_playing()
+                                else:
+                                    vc.stop()
+                            try:
+                                await vc.disconnect(force=True)
+                            except Exception:
+                                pass
+                        else:
+                            is_active_listening = getattr(vc, "is_listening", lambda: False)()
+                            if not is_active_listening:
+                                bot_log(f"🎙️ [Voice Watchdog] Reactivando escucha en #{vc.channel.name}...")
+                                try:
+                                    sink = GeminiLiveVoiceSink(vc, bot.loop)
+                                    vc.listen(sink)
+                                except Exception as ex_sink:
+                                    bot_log(f"Aviso reactivando sink en watchdog: {ex_sink}")
             except Exception as e:
-                bot_log(f"Aviso en _voice_channel_auto_watchdog: {e}")
+                bot_log(f"Aviso en _voice_channel_watchdog: {e}")
             await asyncio.sleep(15.0)
 
-    bot.loop.create_task(_voice_channel_auto_watchdog())
+    bot.loop.create_task(_voice_channel_watchdog())
 
     # Tarea periódica de limpieza de grabaciones con más de 24 horas de antigüedad
     async def _recordings_retention_cleaner():
@@ -4080,7 +4066,15 @@ async def _handle_message_safe(message: discord.Message):
             lowered = clean_text.lower()
 
             # Detección de acciones conversacionales directas en llamadas de voz
-            if any(p in lowered for p in ["únete a la llamada", "unete a la llamada", "entra a la llamada", "ven a la llamada", "conéctate a voz", "conectate a voz", "ven a voz", "entra a voz"]):
+            join_voice_phrases = [
+                "únete a la llamada", "unete a la llamada", "entra a la llamada", "entra en la llamada",
+                "entra a llamada", "entra en llamada", "ven a la llamada", "ven a llamada",
+                "conéctate a la llamada", "conectate a la llamada", "conéctate a llamada", "conectate a llamada",
+                "conéctate a voz", "conectate a voz", "conéctate al canal de voz", "conectate al canal de voz",
+                "ven a voz", "entra a voz", "ven al canal de voz", "métete a la llamada", "metete a la llamada",
+                "métete en la llamada", "metete en la llamada", "únete a voz", "unete a voz"
+            ]
+            if any(p in lowered for p in join_voice_phrases):
                 vch = getattr(message.author, "voice", None) and message.author.voice.channel
                 if not vch and message.guild:
                     for c in message.guild.voice_channels:
