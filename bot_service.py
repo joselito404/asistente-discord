@@ -553,7 +553,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
         self._is_active = True
         self.silence_threshold_rms = 45  # Sensibilidad excelente para captar voces suaves con Krisp
         self.silence_timeout = 0.85      # Ventana de 850ms para evitar cortar palabras a mitad de frase
-        self.min_speech_frames = 12      # ~0.24s (no descarta frases cortas como 'Hola', 'Para', 'Vete')
+        self.min_speech_frames = 16      # ~0.32s mínimo para filtrar micro-chasquidos y pops de micrófono
         self.max_speech_frames = 450     # ~9.0s máximo por turno
         self.recent_turns = []
         self.last_bot_reply_time = 0.0
@@ -672,6 +672,58 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             except Exception as e:
                 bot_log(f"Aviso en watchdog de voz: {e}")
 
+    async def send_dictation_to_channel(self, client, user: discord.Member, text: str, user_spoken: str = "") -> bool:
+        """Envía un mensaje dictado por voz desde Gemini Live al chat de texto correspondiente."""
+        try:
+            guild = getattr(client, "guild", None)
+            target_ch = None
+
+            # Si el usuario nombró un canal de texto existente por su nombre (ej: "en el chat general", "en el canal torneos")
+            if guild and user_spoken:
+                u_spoken_lower = user_spoken.lower()
+                for tch in getattr(guild, "text_channels", []):
+                    c_clean = re.sub(r'[^a-zA-Z0-9]', '', tch.name.lower())
+                    if len(c_clean) >= 4 and re.search(r'\b(?:canal|chat)\s+(?:de\s+)?' + re.escape(c_clean) + r'\b', u_spoken_lower):
+                        target_ch = tch
+                        break
+
+            # Si no especificó otro canal, el destino por defecto es el canal de la llamada actual
+            if not target_ch:
+                target_ch = getattr(client, "channel", None)
+
+            u_name = getattr(user, "display_name", None) or getattr(user, "name", "Usuario")
+            msg_content = f"🎙️ **{u_name}** *(vía Gemini Live)*: {text}"
+
+            sent = False
+            if target_ch and hasattr(target_ch, "send"):
+                try:
+                    await target_ch.send(msg_content)
+                    sent = True
+                    bot_log(f"💬 [Gemini Live Chat] Dictado de '{u_name}' enviado a #{target_ch.name}: \"{text}\"")
+                except Exception as ex_send:
+                    bot_log(f"Aviso enviando dictado a #{getattr(target_ch, 'name', '')}: {ex_send}")
+
+            # Fallback si el canal de voz no acepta mensajes o dio error
+            if not sent and guild:
+                fallback_ch = None
+                v_ch = getattr(client, "channel", None)
+                if v_ch and getattr(v_ch, "category", None):
+                    for tch in v_ch.category.text_channels:
+                        fallback_ch = tch
+                        break
+                if not fallback_ch:
+                    fallback_ch = guild.system_channel or (guild.text_channels[0] if guild.text_channels else None)
+
+                if fallback_ch and hasattr(fallback_ch, "send"):
+                    await fallback_ch.send(msg_content)
+                    bot_log(f"💬 [Gemini Live Chat Fallback] Dictado de '{u_name}' enviado a #{fallback_ch.name}: \"{text}\"")
+                    sent = True
+
+            return sent
+        except Exception as e:
+            bot_log(f"Error enviando dictado a chat: {e}")
+            return False
+
     async def process_speech_turn(self, user: discord.Member, frames: list, ssrc: int = None):
         if not self._is_active:
             return
@@ -701,6 +753,16 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             if not mono_pcm:
                 return
 
+            duration_s = round(len(mono_pcm) / (48000 * 2), 2)
+            if duration_s < 0.35:
+                return
+
+            count_m = len(mono_pcm) // 2
+            shorts_m = struct.unpack(f"<{count_m}h", mono_pcm)
+            max_amp = max(abs(s) for s in shorts_m) if count_m > 0 else 0
+            if max_amp < 350 and duration_s < 0.8:
+                return
+
             wav_io = io.BytesIO()
             with wave.open(wav_io, "wb") as wf:
                 wf.setnchannels(1)
@@ -717,7 +779,6 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             guild_name = getattr(getattr(client, "guild", None), "name", "Servidor")
             channel_members = getattr(getattr(client, "channel", None), "members", [])
             members_str = ", ".join([m.display_name for m in channel_members if not m.bot]) or user_name
-            duration_s = round(len(mono_pcm) / (48000 * 2), 2)
             bot_log(f"🎙️ [Gemini Live Turno] Procesando audio de '{user_name}' ({len(frames)} tramas, {duration_s}s, {len(wav_bytes)} B)...")
 
             # Guardar el audio en disco para que el usuario y el agente puedan escucharlo/auditarlo
@@ -753,39 +814,41 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             is_dialogue_active = time_since_last_reply < 25.0
 
             history_lines = []
-            for spk, b_txt in self.recent_turns[-4:]:
-                history_lines.append(f"- Asistente (hablando con {spk}): {b_txt}")
+            for item in self.recent_turns[-3:]:
+                if len(item) == 3:
+                    u_n, u_t, b_txt = item
+                    history_lines.append(f"- {u_n}: \"{u_t}\" -> Asistente: \"{b_txt}\"")
+                elif len(item) == 2:
+                    spk, b_txt = item
+                    history_lines.append(f"- Asistente (con {spk}): {b_txt}")
             hist_ctx = "\n".join(history_lines) if history_lines else "Sin intervenciones previas recientes."
 
             spain_now_str = get_spain_now_str()
             prompt = (
-                f"Eres el transcriptor acústico y asistente de voz del canal '{channel_name}' en Discord (España).\n"
+                f"Eres el transcriptor acústico y asistente de voz en tiempo real del canal '{channel_name}' en Discord (España).\n"
                 f"Tu nombre es estrictamente 'Asistente' (también respondes si dicen 'bot').\n"
-                f"FECHA Y HORA ACTUAL EXACTA EN ESPAÑA: {spain_now_str}\n"
                 f"Gente en la sala de voz: {members_str}.\n"
-                f"El usuario que habla es: '{user_name}'.\n\n"
+                f"Usuario en este turno de voz: '{user_name}'.\n\n"
                 f"ÚLTIMAS INTERVENCIONES EN LA LLAMADA:\n{hist_ctx}\n\n"
                 f"INSTRUCCIONES CLAVE:\n"
-                f"1. PASO 1 - TRANSCRIBE EL AUDIO DEL USUARIO CON MÁXIMA PRECISIÓN ACÚSTICA:\n"
-                f"   - Escucha con extrema atención fonética cada fonema en español de España.\n"
-                f"   - Transcribe exactamente todas las palabras pronunciadas por '{user_name}', sin inventar ni rellenar.\n"
-                f"   - Si se escuchan palabras reales, transcríbelas todas. NUNCA pongas [Ruido] si hay voz humana.\n"
-                f"   - Si solo son risas o carcajadas sin palabras, escribe: [Risas]\n"
-                f"   - Si es un chasquido, respiración o ruido mecánico sin voz, escribe: [Ruido]\n"
-                f"   - Si no se escucha nada, escribe: [Silencio]\n\n"
+                f"1. PASO 1 - TRANSCRIBE EL AUDIO DEL USUARIO CON MÁXIMA FIDELIDAD ACÚSTICA:\n"
+                f"   - Escucha de forma estrictamente literal lo que suena en el archivo de audio.\n"
+                f"   - Transcribe únicamente las palabras reales pronunciadas por '{user_name}'.\n"
+                f"   - ESTRICTAMENTE PROHIBIDO inventar palabras, completar frases inexistentes o asumir preguntas habituales (como la hora o saludos) si no se oyen con total claridad fonética en el audio.\n"
+                f"   - Si es un chasquido, respiración, ruido de fondo, golpe de micro, teclado o silencio, transcribe exactamente: [Ruido] o [Silencio].\n"
+                f"   - Si solo son risas o carcajadas sin palabras, escribe: [Risas]\n\n"
                 f"2. PASO 2 - REGLA OBLIGATORIA DE INTERVENCIÓN:\n"
-                f"   - Los miembros del canal están jugando entre ellos.\n"
-                f"   - REGLA DE ORO: Si en la frase transcrita el usuario NO dice la palabra 'asistente' (ni 'bot'), DEBES poner obligatoriamente en Respuesta: [IGNORAR].\n"
-                f"   - Si dicen 'asistente' o 'bot', responde únicamente a lo que te pregunten o pidan.\n"
+                f"   - Los miembros del canal suelen estar jugando o hablando entre ellos.\n"
+                f"   - REGLA DE ORO: Si en la frase transcrita el usuario NO menciona explícitamente la palabra 'asistente' o 'bot', tu Respuesta DEBE ser estrictamente: [IGNORAR].\n"
+                f"   - Si dicen 'asistente' o 'bot', responde de forma concisa, útil y directa a lo que soliciten (1-2 frases).\n"
                 f"   - Si te piden callar explícitamente ('cállate asistente', 'silencio asistente', 'shh'): pon Respuesta: [SILENCIO]\n"
                 f"   - Si te piden salir de la llamada ('asistente sal de la llamada', 'asistente vete', 'bot desconéctate'): pon Respuesta: [DESCONECTAR]\n"
-                f"   - Si te piden buscar algo en la red ('asistente busca...', 'asistente qué tiempo hace'): pon Respuesta: [BUSCAR: <términos>]\n"
-                f"   - Si te preguntan la hora o fecha, dilas con la hora peninsular de España ({spain_now_str}).\n\n"
-                f"3. ACTITUD:\n"
-                f"   - Colega del servidor, amable, natural, directo (1 o 2 frases, 15-25 palabras).\n\n"
-                f"4. FORMATO DE SALIDA ESTRICTO:\n"
+                f"   - Si te piden buscar algo en internet ('asistente busca...', 'asistente qué tiempo hace'): pon Respuesta: [BUSCAR: <términos>]\n"
+                f"   - Si te piden escribir o enviar un mensaje al chat ('asistente pon en el chat...', 'asistente escribe en el chat...', 'bot manda al chat...'): pon Respuesta: [CHAT: <mensaje exacto a enviar>] acompañado de una confirmación hablada breve (ej: [CHAT: voy en 5 minutos] Ya lo he puesto en el chat).\n\n"
+                f"3. FORMATO DE SALIDA ESTRICTO:\n"
                 f"Oído: <texto transcrito, o [Risas], o [Ruido], o [Silencio]>\n"
-                f"Respuesta: <tu respuesta para locutar, o [IGNORAR], o [SILENCIO], o [DESCONECTAR], o [BUSCAR: <términos>]>"
+                f"Respuesta: <respuesta para locutar, o [IGNORAR], o [SILENCIO], o [DESCONECTAR], o [BUSCAR: <términos>], o [CHAT: <mensaje>]>\n\n"
+                f"[DATOS DE REFERENCIA SI PREGUNTAN]: Hora peninsular de España actual: {spain_now_str}."
             )
 
             payload = {
@@ -965,6 +1028,30 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                         bot_log(f"🎙️ [Gemini Live Voz] Voz cambiada en llamada a '{self.voice_type}' por orden de '{user_name}'")
                 bot_reply = re.sub(r"\[VOZ:\s*([a-zA-Z0-9_-]+)\]", "", bot_reply).strip()
 
+            # Manejo de dictado a chat de texto por voz ("asistente pon en el chat...", "escribe en el chat...")
+            chat_patterns = [
+                r"\b(?:pon|escribe|manda|env[ií]a|di|dile)\s+(?:en\s+el|al|por\s+el)\s+chat\b",
+                r"\b(?:pon|escribe|manda|env[ií]a)\s+(?:un\s+mensaje|esto)\s+(?:en\s+el|al)\s+chat\b",
+                r"\b(?:escribe|manda|env[ií]a)\s+al\s+canal\b",
+            ]
+            has_chat_pattern = any(re.search(pat, u_clean) for pat in chat_patterns)
+            if "[CHAT:" in bot_reply or has_chat_pattern:
+                chat_msg_to_send = ""
+                m_chat = re.search(r"\[CHAT:\s*([^\]]+)\]", bot_reply, re.IGNORECASE)
+                if m_chat:
+                    chat_msg_to_send = m_chat.group(1).strip()
+                    bot_reply = re.sub(r"\[CHAT:\s*([^\]]+)\]", "", bot_reply).strip()
+                elif has_chat_pattern:
+                    m_ext = re.search(r"(?:chat|canal)\s*(?:que\s+|:\s*|\s+)?(.*)", u_clean, re.IGNORECASE)
+                    if m_ext and m_ext.group(1).strip():
+                        chat_msg_to_send = m_ext.group(1).strip()
+
+                if chat_msg_to_send:
+                    chat_msg_to_send = chat_msg_to_send.strip(' "\'')
+                    await self.send_dictation_to_channel(client, user, chat_msg_to_send, user_spoken=user_spoken)
+                    if not bot_reply or bot_reply.strip() == "":
+                        bot_reply = "Listo, ya lo he puesto en el chat."
+
             clean_resp = clean_text_for_tts(bot_reply)
             if not clean_resp:
                 record_entry["status"] = "vacio"
@@ -983,7 +1070,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             save_recordings_metadata()
             bot_log(f"🎙️ [Gemini Live] '{user_name}' dijo: \"{user_spoken}\" -> Asistente: \"{clean_resp}\"")
             self.last_bot_reply_time = time.time()
-            self.recent_turns.append((user_name, clean_resp))
+            self.recent_turns.append((user_name, user_spoken, clean_resp))
             if len(self.recent_turns) > 8:
                 self.recent_turns.pop(0)
 
