@@ -1407,7 +1407,8 @@ async def get_pins_context(channel: discord.TextChannel) -> str:
 def extract_action_block(text: str, tag_name: str):
     """
     Extrae bloques de acción [TAG_NAME: ...] soportando corchetes anidados
-    (como arr[0] en código o [a, b] en fórmulas LaTeX y Mermaid).
+    (como arr[0] en código o [a, b] en fórmulas LaTeX y Mermaid) sin truncamientos accidentales.
+    Delimita la búsqueda antes de cualquier acción posterior para evitar contaminación cruzada.
     Devuelve (full_match_str, content_str) o None si no existe la etiqueta.
     """
     prefix = f"[{tag_name.upper()}:"
@@ -1418,28 +1419,71 @@ def extract_action_block(text: str, tag_name: str):
         return None
     
     content_start = start_pos + len(prefix)
+    
+    # Buscar el inicio de cualquier acción posterior para no rebasarla nunca
+    next_action_match = re.search(r"\[ACTION_[A-Z_]+:", text[content_start:], re.IGNORECASE)
+    search_limit = content_start + next_action_match.start() if next_action_match else len(text)
+    search_text = text[:search_limit]
+
     depth = 1
     end_pos = -1
     in_quote = None
+    in_comment = False
     escaped = False
-    track_quotes = tag_name.upper() in ("ACTION_CODE", "ACTION_CHART")
+    is_code = tag_name.upper() in ("ACTION_CODE", "ACTION_CHART")
     
-    for idx in range(content_start, len(text)):
-        ch = text[idx]
+    idx = content_start
+    while idx < search_limit:
+        ch = search_text[idx]
         if escaped:
             escaped = False
+            idx += 1
             continue
         if ch == '\\':
             escaped = True
+            idx += 1
             continue
-        if track_quotes:
-            if in_quote:
-                if ch == in_quote:
-                    in_quote = None
+
+        if is_code:
+            # Comentarios de código: ignorar caracteres y comillas hasta el fin de línea
+            if in_comment:
+                if ch == '\n':
+                    in_comment = False
+                idx += 1
                 continue
-            elif ch in ('"', "'"):
-                in_quote = ch
+            elif ch == '#' and in_quote is None:
+                in_comment = True
+                idx += 1
                 continue
+
+            # Strings literales en código
+            if in_quote is not None:
+                if len(in_quote) == 3:
+                    if search_text.startswith(in_quote, idx):
+                        idx += 3
+                        in_quote = None
+                        continue
+                else:
+                    if ch == in_quote:
+                        in_quote = None
+                    elif ch == '\n':
+                        in_quote = None
+                idx += 1
+                continue
+            else:
+                if search_text.startswith('"""', idx):
+                    in_quote = '"""'
+                    idx += 3
+                    continue
+                elif search_text.startswith("'''", idx):
+                    in_quote = "'''"
+                    idx += 3
+                    continue
+                elif ch in ('"', "'"):
+                    in_quote = ch
+                    idx += 1
+                    continue
+
         if ch == '[':
             depth += 1
         elif ch == ']':
@@ -1447,15 +1491,17 @@ def extract_action_block(text: str, tag_name: str):
             if depth == 0:
                 end_pos = idx
                 break
+        idx += 1
                 
     if end_pos != -1:
         return text[start_pos : end_pos + 1], text[content_start : end_pos]
     else:
-        last_bracket = text.rfind(']')
-        if last_bracket > content_start:
+        # Fallback acotado estrictamente antes de la siguiente acción
+        last_bracket = text.rfind(']', content_start, search_limit)
+        if last_bracket != -1:
             return text[start_pos : last_bracket + 1], text[content_start : last_bracket]
         else:
-            return text[start_pos:], text[content_start:]
+            return text[start_pos : search_limit], text[content_start : search_limit]
 
 def generate_image_flux(prompt: str, width: int = 1024, height: int = 1024) -> bytes:
     """Genera una imagen en alta resolución usando el clúster libre de FLUX.1 / Stable Diffusion."""
@@ -1516,9 +1562,19 @@ def replace_frac(text: str) -> str:
     return text
 
 def sanitize_discord_math_text(text: str) -> str:
-    """Sustituye código LaTeX residual por símbolos legibles en Discord para evitar aspecto de 'chino'."""
+    """Sustituye código LaTeX residual por símbolos legibles en Discord para evitar aspecto de 'chino'.
+    Protege bloques de código (```...``` y `...`) para que el código fuente nunca sea alterado."""
     if not text:
         return text
+
+    placeholders = []
+    def repl_code(match):
+        idx = len(placeholders)
+        placeholders.append(match.group(0))
+        return f"\x00CODE_BLOCK_{idx}\x00"
+
+    protected_text = re.sub(r"```[\s\S]*?```|`[^`\n]+`", repl_code, text)
+
     replacements = [
         (r"\\cdot", "·"),
         (r"\\times", "×"),
@@ -1550,7 +1606,7 @@ def sanitize_discord_math_text(text: str) -> str:
         (r"\\Delta", "Δ"),
         (r"\\Omega", "Ω"),
     ]
-    res = text
+    res = protected_text
     for pat, rep in replacements:
         res = re.sub(pat, rep, res)
     res = replace_frac(res)
@@ -1560,7 +1616,12 @@ def sanitize_discord_math_text(text: str) -> str:
     res = re.sub(r"\{([^{}]+)\}", r"\1", res)
     res = re.sub(r"\$\$([^\$]+)\$\$", r"\1", res)
     res = re.sub(r"(?<!\w)\$([^\$\n]+)\$(?!\w)", r"\1", res)
+
+    for idx, block in enumerate(placeholders):
+        res = res.replace(f"\x00CODE_BLOCK_{idx}\x00", block)
+
     return res
+
 
 def render_math_image(latex_code: str) -> bytes:
     """Convierte una fórmula LaTeX en una tarjeta gráfica PNG de alta resolución con fondo oscuro para Discord."""
@@ -3638,6 +3699,8 @@ async def _handle_message_safe(message: discord.Message):
         if len(response_text) <= 1900:
             if files_to_send:
                 await message.reply(content=response_text, files=files_to_send[:10])
+                for extra_idx in range(10, len(files_to_send), 10):
+                    await message.reply(files=files_to_send[extra_idx : extra_idx + 10])
             else:
                 await message.reply(response_text)
         else:
@@ -3653,11 +3716,18 @@ async def _handle_message_safe(message: discord.Message):
                 remaining = remaining[split_at:].strip()
             if remaining:
                 chunks.append(remaining)
+            file_idx = 0
             for i, chunk in enumerate(chunks):
-                if i == 0 and files_to_send:
-                    await message.reply(content=chunk, files=files_to_send[:10])
+                chunk_files = files_to_send[file_idx : file_idx + 10] if file_idx < len(files_to_send) else []
+                file_idx += len(chunk_files)
+                if chunk_files:
+                    await message.reply(content=chunk, files=chunk_files)
                 else:
                     await message.reply(chunk)
+            while file_idx < len(files_to_send):
+                chunk_files = files_to_send[file_idx : file_idx + 10]
+                file_idx += len(chunk_files)
+                await message.reply(files=chunk_files)
 
         # Chat-to-Voice: Solo conectar y locutar si se pide explícitamente en el texto
         # o si el bot YA está conectado a esa misma sala de voz y no fue desconectado manualmente
@@ -3673,8 +3743,11 @@ async def _handle_message_safe(message: discord.Message):
             "di en la llamada", "habla en la llamada", "únete a la llamada", "unete a la llamada",
             "habla por voz", "respóndeme por voz", "respondeme por voz", "dilo en la llamada",
             "dilo por voz", "dilo en voz alta", "cuéntamelo por voz", "cuentamelo por voz",
-            "entra a la llamada", "conéctate a la llamada", "conectate a la llamada",
-            "ven a la llamada", "lee en voz alta", "léelo en voz alta"
+            "entra a la llamada", "entra en la llamada", "entra a llamada",
+            "conéctate a la llamada", "conectate a la llamada", "conéctate al canal de voz", "conectate al canal de voz",
+            "ven a la llamada", "ven al canal de voz", "métete a la llamada", "metete a la llamada",
+            "métete en la llamada", "metete en la llamada", "habla en llamada", "dilo en llamada",
+            "lee en voz alta", "léelo en voz alta"
         ]
         explicit_voice_request = any(p in lowered for p in voice_triggers)
 
