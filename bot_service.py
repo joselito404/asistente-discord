@@ -1931,6 +1931,9 @@ def generate_gemini_trivia_question(category_key: str = "all") -> dict | None:
     }
     data = json.dumps(payload).encode("utf-8")
 
+    if not GEMINI_KEY:
+        return None
+
     for model_name in get_available_models():
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_KEY}"
         try:
@@ -1955,19 +1958,69 @@ def generate_gemini_trivia_question(category_key: str = "all") -> dict | None:
                 q_data["category"] = cat_key_clean if cat_key_clean != "all" else "general"
                 return q_data
         except urllib.error.HTTPError as e:
-            if e.code in (429, 503):
+            if e.code in (429, 500, 503):
                 mark_model_cooldown(model_name, 60)
         except Exception:
             pass
 
     return None
 
+async def handle_next_trivia(interaction: discord.Interaction, category_key: str = "all"):
+    """Lanza la siguiente pregunta de trivial con soporte dinámico de IA si se agota el banco local."""
+    await interaction.response.defer()
+    trivia_pool = load_trivia_data()
+    cat_val = CATEGORY_ALIASES.get(category_key.lower(), category_key.lower())
+    
+    question = None
+    ia_notice = ""
+
+    if cat_val != "all":
+        pool = [q for q in trivia_pool if CATEGORY_ALIASES.get(q.get("category", "").lower(), q.get("category", "").lower()) == cat_val]
+    else:
+        pool = trivia_pool
+
+    if not pool:
+        pool = trivia_pool
+
+    unplayed = [q for q in pool if q.get("id") not in RECENT_TRIVIA_IDS]
+    if unplayed:
+        question = random.choice(unplayed)
+    else:
+        # Fallback dinámico a Gemini al agotarse las preguntas inéditas locales
+        gemini_q = await asyncio.to_thread(generate_gemini_trivia_question, cat_val)
+        if gemini_q:
+            question = gemini_q
+            ia_notice = "✨ *Preguntas locales agotadas recientemente. ¡Pregunta inédita generada en vivo por Gemini IA!*\n\n"
+        elif pool:
+            question = random.choice(pool)
+
+    if not question:
+        await interaction.followup.send("❌ No se pudo cargar una nueva pregunta de Trivial.", ephemeral=True)
+        return
+
+    if "id" in question:
+        RECENT_TRIVIA_IDS.append(question["id"])
+
+    letters = ["🇦", "🇧", "🇨", "🇩"]
+    opts_txt = "\n".join([f"{letters[i]} **{opt}**" for i, opt in enumerate(question["options"][:4])])
+
+    embed = discord.Embed(
+        title=f"❓ Trivial: {question.get('category_name', 'Pregunta')}",
+        description=f"{ia_notice}**{question['question']}**\n\n{opts_txt}\n\n*Pulsa el botón con la respuesta correcta abajo. ¡El primero en acertar se lleva 10 puntos!*",
+        color=0x3b82f6
+    )
+    embed.set_footer(text="Trivial Asistente • 60 segundos para responder • /ranking_trivial")
+    new_view = TriviaView(question, interaction.user.id, category_key)
+    msg = await interaction.followup.send(embed=embed, view=new_view, wait=True)
+    new_view.message = msg
+
 class TriviaView(discord.ui.View):
     """Botonera interactiva para rondas de preguntas de Trivial."""
-    def __init__(self, question_data: dict, author_id: int):
+    def __init__(self, question_data: dict, author_id: int, category_key: str = "all"):
         super().__init__(timeout=60)
         self.question_data = question_data
         self.author_id = author_id
+        self.category_key = category_key
         self.answered = False
         self.message: discord.Message = None
 
@@ -1975,14 +2028,15 @@ class TriviaView(discord.ui.View):
         for i, opt in enumerate(question_data.get("options", [])[:4]):
             btn = discord.ui.Button(
                 label=f"{letters[i]}: {opt[:70]}",
-                style=discord.ButtonStyle.primary,
-                custom_id=f"trivia_btn_{i}"
+                style=discord.ButtonStyle.primary
             )
             btn.callback = self.make_callback(i)
             self.add_item(btn)
 
     def make_callback(self, index: int):
         async def callback(interaction: discord.Interaction):
+            if not self.message and interaction.message:
+                self.message = interaction.message
             if self.answered:
                 await interaction.response.send_message("⚠️ Esta pregunta ya ha sido respondida.", ephemeral=True)
                 return
@@ -2007,8 +2061,12 @@ class TriviaView(discord.ui.View):
                     "notes": [],
                     "trivia_points": 0
                 }
+            else:
+                user_memory[uid_str]["display_name"] = user.display_name
+                user_memory[uid_str]["name"] = user.display_name
 
-            self.children[correct_idx].style = discord.ButtonStyle.success
+            if correct_idx < len(self.children):
+                self.children[correct_idx].style = discord.ButtonStyle.success
             if not is_correct and index < len(self.children):
                 self.children[index].style = discord.ButtonStyle.danger
 
@@ -2025,12 +2083,24 @@ class TriviaView(discord.ui.View):
                 else f"**{user.display_name}** eligió '{self.question_data['options'][index]}', pero la correcta era: **{self.question_data['options'][correct_idx]}**"
             )
 
+            # Botón interactivo para continuar jugando con la siguiente pregunta
+            next_btn = discord.ui.Button(label="🔄 Siguiente Pregunta", style=discord.ButtonStyle.secondary, row=2)
+            async def next_callback(next_interaction: discord.Interaction):
+                next_btn.disabled = True
+                try:
+                    await next_interaction.message.edit(view=self)
+                except Exception:
+                    pass
+                await handle_next_trivia(next_interaction, self.category_key)
+            next_btn.callback = next_callback
+            self.add_item(next_btn)
+
             embed = discord.Embed(
                 title=title,
                 description=f"{status_desc}\n\n💡 **Explicación:** {self.question_data.get('explanation', '')}\n\n🏆 Puntos acumulados de {user.display_name}: **{total_pts} pts**",
                 color=color
             )
-            embed.set_footer(text=f"Categoría: {self.question_data.get('category_name', 'Trivial')} • Usa /ranking_trivial")
+            embed.set_footer(text=f"Categoría: {self.question_data.get('category_name', 'Trivial')} • Usa /ranking_trivial o pulsa Siguiente Pregunta")
             await interaction.response.edit_message(embed=embed, view=self)
 
         return callback
@@ -2043,6 +2113,18 @@ class TriviaView(discord.ui.View):
             correct_idx = self.question_data.get("correct", 0)
             if correct_idx < len(self.children):
                 self.children[correct_idx].style = discord.ButtonStyle.success
+
+            next_btn = discord.ui.Button(label="🔄 Siguiente Pregunta", style=discord.ButtonStyle.secondary, row=2)
+            async def next_callback(next_interaction: discord.Interaction):
+                next_btn.disabled = True
+                try:
+                    await next_interaction.message.edit(view=self)
+                except Exception:
+                    pass
+                await handle_next_trivia(next_interaction, self.category_key)
+            next_btn.callback = next_callback
+            self.add_item(next_btn)
+
             if self.message:
                 try:
                     embed = discord.Embed(
@@ -2050,7 +2132,7 @@ class TriviaView(discord.ui.View):
                         description=f"Se acabaron los 60 segundos.\n\nLa respuesta correcta era: **{self.question_data['options'][correct_idx]}**\n\n💡 **Explicación:** {self.question_data.get('explanation', '')}",
                         color=0x6b7280
                     )
-                    embed.set_footer(text=f"Categoría: {self.question_data.get('category_name', 'Trivial')} • Usa /ranking_trivial")
+                    embed.set_footer(text=f"Categoría: {self.question_data.get('category_name', 'Trivial')} • Usa /ranking_trivial o pulsa Siguiente Pregunta")
                     await self.message.edit(embed=embed, view=self)
                 except Exception:
                     pass
@@ -2071,13 +2153,13 @@ def check_ttt_winner_and_line(board: list) -> tuple:
             return board[a], (a, b, c)
     return None, None
 
-def tictactoe_minimax(board: list, is_maximizing: bool) -> int:
-    """Evaluación Minimax exhaustiva para IA de Tres en Raya."""
+def tictactoe_minimax(board: list, is_maximizing: bool, depth: int = 0) -> int:
+    """Evaluación Minimax exhaustiva para IA de Tres en Raya con ponderación de profundidad."""
     winner, _ = check_ttt_winner_and_line(board)
     if winner == "O":
-        return 10
+        return 10 - depth
     elif winner == "X":
-        return -10
+        return depth - 10
     elif "" not in board:
         return 0
 
@@ -2086,7 +2168,7 @@ def tictactoe_minimax(board: list, is_maximizing: bool) -> int:
         for i in range(9):
             if board[i] == "":
                 board[i] = "O"
-                val = tictactoe_minimax(board, False)
+                val = tictactoe_minimax(board, False, depth + 1)
                 board[i] = ""
                 best = max(best, val)
         return best
@@ -2095,7 +2177,7 @@ def tictactoe_minimax(board: list, is_maximizing: bool) -> int:
         for i in range(9):
             if board[i] == "":
                 board[i] = "X"
-                val = tictactoe_minimax(board, True)
+                val = tictactoe_minimax(board, True, depth + 1)
                 board[i] = ""
                 best = min(best, val)
         return best
@@ -2126,7 +2208,7 @@ def get_tictactoe_bot_move(board: list) -> int:
     for i in range(9):
         if board[i] == "":
             board[i] = "O"
-            score = tictactoe_minimax(board, False)
+            score = tictactoe_minimax(board, False, depth=1)
             board[i] = ""
             if score > best_score:
                 best_score = score
@@ -2217,6 +2299,8 @@ class TicTacToeView(discord.ui.View):
                 self.children[idx].style = discord.ButtonStyle.success
 
     async def process_click(self, interaction: discord.Interaction, index: int):
+        if not self.message and interaction.message:
+            self.message = interaction.message
         if self.finished:
             await interaction.response.send_message("⚠️ Esta partida ya ha concluido.", ephemeral=True)
             return
@@ -2362,14 +2446,25 @@ def get_connect4_bot_move(board: list, bot_player: int = 2, human_player: int = 
 
     candidates = safe_cols if safe_cols else valid_cols
 
-    # 4. Ponderación posicional clásica (columna 3 central > adyacentes > extremos)
+    # 4. Ponderación posicional y evaluación táctica de amenazas futuras
     col_weights = {3: 8, 2: 5, 4: 5, 1: 3, 5: 3, 0: 1, 6: 1}
+    best_score = -1000
     best_c = candidates[0]
-    best_val = -100
     for c in candidates:
+        r = drop_connect4_piece(board, c, bot_player)
         score = col_weights.get(c, 0)
-        if score > best_val:
-            best_val = score
+        # Bonificación si esta jugada crea una amenaza de 4 en raya para el bot en su siguiente turno
+        threats = 0
+        for next_c in [nc for nc in range(7) if board[0][nc] == 0]:
+            nr = drop_connect4_piece(board, next_c, bot_player)
+            w, _ = check_connect4_winner(board)
+            board[nr][next_c] = 0
+            if w == bot_player:
+                threats += 1
+        score += threats * 15
+        board[r][c] = 0
+        if score > best_score:
+            best_score = score
             best_c = c
     return best_c
 
@@ -2453,6 +2548,8 @@ class Connect4View(discord.ui.View):
                 item.disabled = (self.finished or is_full)
 
     async def process_drop(self, interaction: discord.Interaction, col: int):
+        if not self.message and interaction.message:
+            self.message = interaction.message
         if self.finished:
             await interaction.response.send_message("⚠️ Esta partida ya ha finalizado.", ephemeral=True)
             return
@@ -3238,9 +3335,16 @@ async def cmd_trivial(interaction: discord.Interaction, categoria: app_commands.
         if unplayed:
             question = random.choice(unplayed)
         else:
-            question = random.choice(pool)
+            if not interaction.response.is_done():
+                await interaction.response.defer()
+            gemini_q = await asyncio.to_thread(generate_gemini_trivia_question, cat_val)
+            if gemini_q:
+                question = gemini_q
+                ia_notice = "✨ *Preguntas locales agotadas recientemente. ¡Pregunta inédita generada en vivo por Gemini IA!*\n\n"
+            else:
+                question = random.choice(pool)
 
-        if "id" in question:
+        if question and "id" in question:
             RECENT_TRIVIA_IDS.append(question["id"])
 
     letters = ["🇦", "🇧", "🇨", "🇩"]
@@ -3252,7 +3356,7 @@ async def cmd_trivial(interaction: discord.Interaction, categoria: app_commands.
         color=0x3b82f6
     )
     embed.set_footer(text="Trivial Asistente • 60 segundos para responder • /ranking_trivial")
-    view = TriviaView(question, interaction.user.id)
+    view = TriviaView(question, interaction.user.id, raw_cat)
     if interaction.response.is_done():
         msg = await interaction.followup.send(embed=embed, view=view, wait=True)
         view.message = msg
