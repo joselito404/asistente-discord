@@ -133,7 +133,7 @@ TOKEN = os.getenv("DISCORD_TOKEN") or cfg.get("token")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY") or cfg.get("gemini_api_key")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL") or cfg.get("gemini_model", "gemini-3.6-flash")
 
-SYSTEM_PROMPT = """Eres 'Asistente', la IA oficial y colega del servidor de Discord 'LOS MONGOLOS DEL SANVI Y SUS AMIGOS'.
+SYSTEM_PROMPT = r"""Eres 'Asistente', la IA oficial y colega del servidor de Discord 'LOS MONGOLOS DEL SANVI Y SUS AMIGOS'.
 
 🎯 PERSONALIDAD Y TONO DE COLEGA:
 - Eres un colega más del grupo, maduro, cercano, divertido, resolutivo y con buen rollo de Discord.
@@ -168,14 +168,24 @@ SYSTEM_PROMPT = """Eres 'Asistente', la IA oficial y colega del servidor de Disc
   3. Si Cakey Bot está atascado con spam de 'queue empty' o la cola está vacía, indica que se desatasca con `/skip`, `/stop` o lanzando una nueva canción con `/play`.
   4. Facilita siempre el enlace directo de búsqueda de YouTube para que puedan escucharla al instante con un clic.
 
-🎨 MOTOR DE GENERACIÓN Y EDICIÓN DE IMÁGENES (FLUX.1):
-- Tienes capacidad nativa de generar imágenes y dibujos en alta resolución desde cero o adaptando imágenes adjuntas.
-- CUÁNDO GENERAR: Si el usuario te pide dibujar algo, generar una imagen, o define la escena que quiere pintar (incluso en mensajes de seguimiento tipo "dibújalo", "hazlo", "era robando a joselito..."), DEBES incluir en cualquier parte de tu respuesta la etiqueta especial:
-  [ACTION_DRAW: <detailed English visual prompt for FLUX.1 (max 40 words, subject, art style, lighting, cinematic)>]
-  Acompaña la etiqueta con un comentario breve y natural de colega (ej: "¡Marchando!", "A ver qué tal sale esta joyita:", etc.).
-- 🔄 EDICIÓN MULTIMODAL (Image-to-Image): Si el usuario adjunta una imagen o responde citando una foto pidiendo transformarla ("hazlo anime", "ponle un gorro de pirata", "haz una versión cyberpunk", "hazlo pixel art"): analiza la imagen original para identificar el sujeto y composición, aplica la transformación solicitada y emite la etiqueta [ACTION_DRAW: <detailed English prompt transforming the original subject with the new style/features>].
-- PREGUNTAS SOBRE CAPACIDAD: Si el usuario solo pregunta si eres capaz de dibujar ("¿sabes dibujar?", "¿puedes hacer imágenes?"), responde normalmente explicando con buen rollo que sí puedes y cómo pedírtelo (o que pueden usar el comando `/dibuja`), SIN incluir la etiqueta [ACTION_DRAW].
-- ❌ PROHIBIDO SIMULAR IMÁGENES EN TEXTO: NUNCA digas "Aquí tienes la imagen generada", "Aquí está el dibujo" ni describas con texto una escena fingiendo que la has dibujado si tu mensaje no incluye [ACTION_DRAW].
+🎨 MOTOR GRÁFICO MULTIMODAL & GENERACIÓN VISUAL:
+1. 🖼️ DIBUJO ARTÍSTICO (FLUX.1):
+   - Si te piden dibujar o pintar una escena, incluye la etiqueta:
+     [ACTION_DRAW: <detailed English visual prompt for FLUX.1 (max 40 words, subject, art style, lighting, cinematic)>]
+2. 📐 FÓRMULAS MATEMÁTICAS EN IMAGEN (LaTeX Render):
+   - ❌ NUNCA escribas fórmulas matemáticas en texto plano con código LaTeX (`$...$`, `$$...$$`, `\frac`, `\lim`, etc.): Discord no renderiza LaTeX y a los usuarios les aparece como código ilegible ("chino").
+   - SIEMPRE que una explicación requiera una o varias fórmulas matemáticas formales (límites, derivadas, integrales, matrices, teoremas), explica el concepto con palabras en español llano y emite la etiqueta especial:
+     [ACTION_MATH: <fórmula matemática pura en LaTeX limpia sin dólares, ej: \lim_{n \to \infty} \frac{a_n - a_{n-1}}{b_n - b_{n-1}}>]
+     El sistema renderizará la fórmula automáticamente como una tarjeta gráfica PNG oscura y nítida de alta resolución y la adjuntará a tu respuesta.
+3. 📊 GRÁFICAS ESTADÍSTICAS Y FUNCIONES:
+   - Si piden graficar una función f(x), comparar datos numéricos o mostrar estadísticas, emite la etiqueta:
+     [ACTION_CHART: {"type": "line|bar|pie", "data": {"labels": [...], "datasets": [{"label": "...", "data": [...]}]}}]
+4. 🗺️ DIAGRAMAS DE FLUJO Y ESQUEMAS:
+   - Para mapas conceptuales, algoritmos o flujos paso a paso, emite la etiqueta:
+     [ACTION_DIAGRAM: <código mermaid, ej: graph TD; A[Inicio] --> B{Decisión}; B -->|Sí| C[Fin]>]
+5. 💻 TARJETAS DE CÓDIGO ESTILIZADAS:
+   - Si piden código de programación destacado, además de tu explicación puedes emitir:
+     [ACTION_CODE: <código limpio sin backticks>]
 
 ⚖️ EL TRIBUNAL GAMING (tribunal-gaming.vercel.app):
 - Conoces al dedillo la base de datos oficial de El Tribunal Gaming (113 juegos cooperativos catalogados por categorías como Salvavidas o Guerreros con notas de rendimiento, 151 títulos evaluados con Metacritic y HowLongToBeat, y el Muro de la Vergüenza).
@@ -1402,6 +1412,163 @@ def generate_image_flux(prompt: str, width: int = 1024, height: int = 1024) -> b
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
     with urllib.request.urlopen(req, timeout=35) as resp:
         return resp.read()
+
+def _parse_latex_braces(s: str, start: int):
+    """Parsea llaves anidadas en LaTeX para extraer de forma segura numeradores y denominadores."""
+    if start >= len(s) or s[start] != '{':
+        return None, start
+    depth = 0
+    content = []
+    i = start
+    while i < len(s):
+        if s[i] == '{':
+            depth += 1
+            if depth > 1:
+                content.append('{')
+        elif s[i] == '}':
+            depth -= 1
+            if depth == 0:
+                return "".join(content), i + 1
+            else:
+                content.append('}')
+        else:
+            content.append(s[i])
+        i += 1
+    return None, start
+
+def replace_frac(text: str) -> str:
+    """Convierte comandos \\frac{num}{den} en expresiones legibles (num)/(den)."""
+    idx = 0
+    while True:
+        pos = text.find(r"\frac", idx)
+        if pos == -1:
+            break
+        first_brace = text.find('{', pos)
+        if first_brace == -1 or text[pos+5:first_brace].strip() != "":
+            idx = pos + 5
+            continue
+        num, next_pos = _parse_latex_braces(text, first_brace)
+        if num is None:
+            idx = pos + 5
+            continue
+        while next_pos < len(text) and text[next_pos].isspace():
+            next_pos += 1
+        den, end_pos = _parse_latex_braces(text, next_pos)
+        if den is None:
+            idx = pos + 5
+            continue
+        replacement = f"({num.strip()})/({den.strip()})"
+        text = text[:pos] + replacement + text[end_pos:]
+        idx = pos + len(replacement)
+    return text
+
+def sanitize_discord_math_text(text: str) -> str:
+    """Sustituye código LaTeX residual por símbolos legibles en Discord para evitar aspecto de 'chino'."""
+    if not text:
+        return text
+    replacements = [
+        (r"\\cdot", "·"),
+        (r"\\times", "×"),
+        (r"\\div", "÷"),
+        (r"\\pm", "±"),
+        (r"\\mp", "∓"),
+        (r"\\infty", "∞"),
+        (r"\\neq", "≠"),
+        (r"\\leq", "≤"),
+        (r"\\geq", "≥"),
+        (r"\\approx", "≈"),
+        (r"\\in", "∈"),
+        (r"\\notin", "∉"),
+        (r"\\forall", "∀"),
+        (r"\\exists", "∃"),
+        (r"\\to", "→"),
+        (r"\\rightarrow", "→"),
+        (r"\\leftarrow", "←"),
+        (r"\\Rightarrow", "⇒"),
+        (r"\\Leftarrow", "⇐"),
+        (r"\\iff", "⇔"),
+        (r"\\alpha", "α"),
+        (r"\\beta", "β"),
+        (r"\\gamma", "γ"),
+        (r"\\theta", "θ"),
+        (r"\\pi", "π"),
+        (r"\\sigma", "σ"),
+        (r"\\lambda", "λ"),
+        (r"\\Delta", "Δ"),
+        (r"\\Omega", "Ω"),
+    ]
+    res = text
+    for pat, rep in replacements:
+        res = re.sub(pat, rep, res)
+    res = replace_frac(res)
+    res = re.sub(r"\\sqrt\{([^{}]+)\}", r"√(\1)", res)
+    res = re.sub(r"\\lim_\{([^{}]+)\}", r"lím(\1)", res)
+    res = re.sub(r"\\text\{([^{}]+)\}", r"\1", res)
+    res = re.sub(r"\{([^{}]+)\}", r"\1", res)
+    res = re.sub(r"\$\$([^\$]+)\$\$", r"\1", res)
+    res = re.sub(r"(?<!\w)\$([^\$\n]+)\$(?!\w)", r"\1", res)
+    return res
+
+def render_math_image(latex_code: str) -> bytes:
+    """Convierte una fórmula LaTeX en una tarjeta gráfica PNG de alta resolución con fondo oscuro para Discord."""
+    clean_latex = latex_code.strip().strip("$")
+    encoded = urllib.parse.quote(clean_latex)
+    # Renderizado 200 DPI con fondo Discord #1e1f22 y texto blanco nítido
+    url = f"https://latex.codecogs.com/png.image?\\dpi{{200}}\\bg{{1e1f22}}\\color{{white}}{encoded}"
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        return resp.read()
+
+def render_chart_image(chart_json_str: str) -> bytes:
+    """Genera un gráfico estadístico o función matemática (líneas, barras, tarta) mediante QuickChart."""
+    config = json.loads(chart_json_str) if isinstance(chart_json_str, str) else chart_json_str
+    # Añadir estilo oscuro por defecto si no lo tiene
+    if "options" not in config:
+        config["options"] = {}
+    config["options"]["legend"] = config["options"].get("legend", {})
+    config["options"]["legend"]["labels"] = {"fontColor": "#ffffff"}
+    
+    url = "https://quickchart.io/chart"
+    payload = {"chart": config, "backgroundColor": "#1e1f22", "width": 800, "height": 450}
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json", "User-Agent": "Mozilla/5.0"}
+    )
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        return resp.read()
+
+def render_diagram_image(mermaid_code: str) -> bytes:
+    """Genera un diagrama de flujo o esquema a partir de código Mermaid."""
+    clean_code = mermaid_code.strip().replace("```mermaid", "").replace("```", "").strip()
+    code_b64 = base64.b64encode(clean_code.encode("utf-8")).decode("ascii")
+    url = f"https://mermaid.ink/img/{code_b64}?bgColor=1e1f22"
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        return resp.read()
+
+def render_code_card_image(code_str: str) -> bytes:
+    """Renderiza una tarjeta gráfica de código limpia estilo ventana terminal con Pillow."""
+    from PIL import Image, ImageDraw
+    lines = code_str.strip().replace("```", "").strip().split("\n")[:25]
+    max_len = max(len(l) for l in lines) if lines else 20
+    w = max(550, min(1000, 40 + max_len * 9))
+    h = 45 + len(lines) * 22
+    img = Image.new("RGB", (w, h), color="#1e1f22")
+    draw = ImageDraw.Draw(img)
+    # Botones terminal estilo macOS
+    draw.ellipse((14, 12, 24, 22), fill="#ed6a5e")
+    draw.ellipse((30, 12, 40, 22), fill="#f5bf4f")
+    draw.ellipse((46, 12, 56, 22), fill="#62c554")
+    draw.line([(0, 32), (w, 32)], fill="#2b2d31", width=1)
+    
+    y = 40
+    for l in lines:
+        draw.text((20, y), l, fill="#e0e0e0")
+        y += 22
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
 
 def enhance_image_prompt(user_text: str, author_name: str = "") -> str:
     """Traduce y optimiza el prompt del usuario al inglés con detalles visuales cinematográficos."""
@@ -3289,7 +3456,10 @@ async def _handle_message_safe(message: discord.Message):
             
             response_text = await asyncio.to_thread(call_gemini_multiturn, turns)
 
-            # 8. Interceptar acción de dibujo generada por IA (FLUX.1)
+            # 8. Interceptar acciones visuales y gráficas generadas por IA
+            file_to_send = None
+
+            # A. Acción de dibujo FLUX.1
             draw_match = re.search(r"\[ACTION_DRAW:\s*(.*?)\]", response_text, re.DOTALL | re.IGNORECASE)
             if draw_match:
                 prompt_flux = draw_match.group(1).strip()
@@ -3310,9 +3480,63 @@ async def _handle_message_safe(message: discord.Message):
                     await message.reply(err_msg.strip())
                     return
 
-            # Fallback de seguridad: si el usuario usó un comando imperativo explícito ("dibuja X", "genera una imagen de X") y la IA no emitió la etiqueta
+            # B. Acción de renderizado matemático (LaTeX PNG)
+            math_match = re.search(r"\[ACTION_MATH:\s*(.*?)\]", response_text, re.DOTALL | re.IGNORECASE)
+            if math_match:
+                raw_latex = math_match.group(1).strip()
+                response_text = re.sub(r"\[ACTION_MATH:\s*.*?\]", "", response_text, flags=re.DOTALL | re.IGNORECASE).strip()
+                try:
+                    img_bytes = await asyncio.to_thread(render_math_image, raw_latex)
+                    file_to_send = discord.File(io.BytesIO(img_bytes), filename="formula_matematica.png")
+                except Exception as e:
+                    print(f"Error generando fórmula matemática: {e}")
+            elif "$$" in response_text:
+                # Fallback automático: detectar fórmulas en bloque $$...$$ si no emitió la etiqueta explícita
+                block_match = re.search(r"\$\$([^\$]+)\$\$", response_text)
+                if block_match:
+                    formula = block_match.group(1).strip()
+                    try:
+                        img_bytes = await asyncio.to_thread(render_math_image, formula)
+                        file_to_send = discord.File(io.BytesIO(img_bytes), filename="formula_matematica.png")
+                    except Exception as e:
+                        print(f"Error generando fórmula matemática automática: {e}")
+
+            # C. Acción de gráfico estadístico o función (QuickChart)
+            chart_match = re.search(r"\[ACTION_CHART:\s*(\{.*?\})\]", response_text, re.DOTALL | re.IGNORECASE)
+            if chart_match:
+                chart_json = chart_match.group(1).strip()
+                response_text = re.sub(r"\[ACTION_CHART:\s*\{.*?\}\]", "", response_text, flags=re.DOTALL | re.IGNORECASE).strip()
+                try:
+                    img_bytes = await asyncio.to_thread(render_chart_image, chart_json)
+                    file_to_send = discord.File(io.BytesIO(img_bytes), filename="grafico_estadistico.png")
+                except Exception as e:
+                    print(f"Error generando gráfico estadístico: {e}")
+
+            # D. Acción de diagrama conceptual / flujo (Mermaid)
+            diagram_match = re.search(r"\[ACTION_DIAGRAM:\s*(.*?)\]", response_text, re.DOTALL | re.IGNORECASE)
+            if diagram_match:
+                mermaid_code = diagram_match.group(1).strip()
+                response_text = re.sub(r"\[ACTION_DIAGRAM:\s*.*?\]", "", response_text, flags=re.DOTALL | re.IGNORECASE).strip()
+                try:
+                    img_bytes = await asyncio.to_thread(render_diagram_image, mermaid_code)
+                    file_to_send = discord.File(io.BytesIO(img_bytes), filename="diagrama.png")
+                except Exception as e:
+                    print(f"Error generando diagrama Mermaid: {e}")
+
+            # E. Acción de tarjeta de código destacada (Pillow Terminal Card)
+            code_match = re.search(r"\[ACTION_CODE:\s*(.*?)\]", response_text, re.DOTALL | re.IGNORECASE)
+            if code_match:
+                code_content = code_match.group(1).strip()
+                response_text = re.sub(r"\[ACTION_CODE:\s*.*?\]", "", response_text, flags=re.DOTALL | re.IGNORECASE).strip()
+                try:
+                    img_bytes = await asyncio.to_thread(render_code_card_image, code_content)
+                    file_to_send = discord.File(io.BytesIO(img_bytes), filename="tarjeta_codigo.png")
+                except Exception as e:
+                    print(f"Error generando tarjeta de código: {e}")
+
+            # Fallback de seguridad para dibujo directo si el usuario dijo "dibuja..." y la IA no emitió ACTION_DRAW
             direct_draw_prefix = ("dibuja ", "dibújame ", "dibujame ", "crea una imagen de ", "genera una imagen de ", "haz un dibujo de ", "hazme un dibujo de ")
-            if any(lowered.startswith(p) for p in direct_draw_prefix):
+            if any(lowered.startswith(p) for p in direct_draw_prefix) and not file_to_send:
                 try:
                     enhanced = await asyncio.to_thread(enhance_image_prompt, clean_text, message.author.display_name)
                     print(f"[FLUX.1 Fallback] Generando imagen para: '{enhanced}'")
@@ -3324,10 +3548,18 @@ async def _handle_message_safe(message: discord.Message):
                     return
                 except Exception as e:
                     print(f"Error en fallback directo de dibujo: {e}")
+
+            # Sanitizar cualquier resto de código LaTeX en el texto plano para evitar "chino" en Discord
+            response_text = sanitize_discord_math_text(response_text)
+            if not response_text and file_to_send:
+                response_text = "Aquí tienes la representación visual:"
         
         # Enviar respuesta respetando límite de 2.000 caracteres de Discord
         if len(response_text) <= 1900:
-            await message.reply(response_text)
+            if file_to_send:
+                await message.reply(content=response_text, file=file_to_send)
+            else:
+                await message.reply(response_text)
         else:
             chunks = []
             remaining = response_text
@@ -3341,8 +3573,11 @@ async def _handle_message_safe(message: discord.Message):
                 remaining = remaining[split_at:].strip()
             if remaining:
                 chunks.append(remaining)
-            for chunk in chunks:
-                await message.reply(chunk)
+            for i, chunk in enumerate(chunks):
+                if i == 0 and file_to_send:
+                    await message.reply(content=chunk, file=file_to_send)
+                else:
+                    await message.reply(chunk)
 
         # Si el autor del mensaje está en un canal de voz o el bot ya está en llamada, asegurar conexión y locución
         vch = None
@@ -3360,7 +3595,7 @@ async def _handle_message_safe(message: discord.Message):
 
         if vc and vc.is_connected():
             try:
-                clean_for_speech = re.sub(r"\[ACTION_DRAW:\s*.*?\]", "", response_text, flags=re.DOTALL | re.IGNORECASE).strip()
+                clean_for_speech = re.sub(r"\[ACTION_[A-Z]+:\s*.*?\]", "", response_text, flags=re.DOTALL | re.IGNORECASE).strip()
                 clean_for_speech = re.sub(r"```.*?```", "", clean_for_speech, flags=re.DOTALL).strip()
                 clean_for_speech = re.sub(r"`.*?`", "", clean_for_speech).strip()
                 # Permitir hasta 2500 caracteres para leer todos los párrafos de forma completa y natural
