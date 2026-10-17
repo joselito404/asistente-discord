@@ -672,7 +672,7 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             except Exception as e:
                 bot_log(f"Aviso en watchdog de voz: {e}")
 
-    async def send_dictation_to_channel(self, client, user: discord.Member, text: str, user_spoken: str = "") -> bool:
+    async def send_dictation_to_channel(self, client, user: discord.Member, text: str, user_spoken: str = "") -> tuple[bool, str]:
         """Envía un mensaje dictado por voz desde Gemini Live al chat de texto correspondiente."""
         try:
             guild = getattr(client, "guild", None)
@@ -695,11 +695,13 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             msg_content = f"🎙️ **{u_name}** *(vía Gemini Live)*: {text}"
 
             sent = False
+            sent_ch_name = ""
             if target_ch and hasattr(target_ch, "send"):
                 try:
                     await target_ch.send(msg_content)
                     sent = True
-                    bot_log(f"💬 [Gemini Live Chat] Dictado de '{u_name}' enviado a #{target_ch.name}: \"{text}\"")
+                    sent_ch_name = getattr(target_ch, "name", "")
+                    bot_log(f"💬 [Gemini Live Chat] Dictado de '{u_name}' enviado a #{sent_ch_name}: \"{text}\"")
                 except Exception as ex_send:
                     bot_log(f"Aviso enviando dictado a #{getattr(target_ch, 'name', '')}: {ex_send}")
 
@@ -716,13 +718,14 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
 
                 if fallback_ch and hasattr(fallback_ch, "send"):
                     await fallback_ch.send(msg_content)
-                    bot_log(f"💬 [Gemini Live Chat Fallback] Dictado de '{u_name}' enviado a #{fallback_ch.name}: \"{text}\"")
+                    sent_ch_name = getattr(fallback_ch, "name", "")
+                    bot_log(f"💬 [Gemini Live Chat Fallback] Dictado de '{u_name}' enviado a #{sent_ch_name}: \"{text}\"")
                     sent = True
 
-            return sent
+            return sent, sent_ch_name
         except Exception as e:
             bot_log(f"Error enviando dictado a chat: {e}")
-            return False
+            return False, ""
 
     async def process_speech_turn(self, user: discord.Member, frames: list, ssrc: int = None):
         if not self._is_active:
@@ -811,16 +814,17 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             save_recordings_metadata()
 
             time_since_last_reply = now - getattr(self, "last_bot_reply_time", 0.0)
-            is_dialogue_active = time_since_last_reply < 25.0
+            is_dialogue_active = time_since_last_reply < 35.0
 
             history_lines = []
-            for item in self.recent_turns[-3:]:
-                if len(item) == 3:
-                    u_n, u_t, b_txt = item
-                    history_lines.append(f"- {u_n}: \"{u_t}\" -> Asistente: \"{b_txt}\"")
-                elif len(item) == 2:
-                    spk, b_txt = item
-                    history_lines.append(f"- Asistente (con {spk}): {b_txt}")
+            if is_dialogue_active:
+                for item in self.recent_turns[-3:]:
+                    if len(item) == 3:
+                        u_n, u_t, b_txt = item
+                        history_lines.append(f"- {u_n}: \"{u_t}\" -> Asistente: \"{b_txt}\"")
+                    elif len(item) == 2:
+                        spk, b_txt = item
+                        history_lines.append(f"- Asistente (con {spk}): {b_txt}")
             hist_ctx = "\n".join(history_lines) if history_lines else "Sin intervenciones previas recientes."
 
             spain_now_str = get_spain_now_str()
@@ -910,6 +914,9 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             # Se quitan las etiquetas del transcriptor ([Silencio], [Ruido], [Risas]): no son palabras del usuario y
             # '[Silencio]' casaba con el patrón de orden de silencio, cortando el audio del bot en cada turno sin voz
             u_clean = re.sub(r"\[[^\]]*\]", " ", user_spoken).lower().strip()
+            has_wake_word = bool(re.search(r"\b(asistente|bot)\b", u_clean))
+            is_ignored_sound = any(tag in user_spoken for tag in ["[ININTELIGIBLE]", "[Risas]", "[Ruido]", "[Silencio]"])
+
             disconnect_patterns = [
                 r"\b(vete|sal|salte|descon[eé]ctate|m[aá]rchate|l[aá]rgate)\s+(de\s+la\s+llamada|del\s+canal|de\s+voz|de\s+aqu[ií])\b",
                 r"\b(asistente|bot)\s+(salte|vete|descon[eé]ctate|l[aá]rgate)\b",
@@ -918,9 +925,8 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             ]
             explicit_disconnect_intent = any(re.search(pat, u_clean) for pat in disconnect_patterns)
             is_disconnect_cmd = (
-                "[DESCONECTAR]" in response_text or 
                 "[DESCONECTAR]" in bot_reply or 
-                explicit_disconnect_intent
+                (has_wake_word and explicit_disconnect_intent)
             )
 
             if is_disconnect_cmd:
@@ -947,9 +953,9 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             ]
             explicit_silence_intent = any(re.search(pat, u_clean) for pat in silence_patterns)
             is_silence_cmd = (
-                "[SILENCIO]" in response_text or 
                 "[SILENCIO]" in bot_reply or 
-                explicit_silence_intent
+                (has_wake_word and explicit_silence_intent) or 
+                (client.is_playing() and explicit_silence_intent)
             )
 
             if is_silence_cmd:
@@ -961,16 +967,56 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                     client.stop()
                 return
 
+            # Manejo de dictado a chat de texto por voz ("asistente pon en el chat...", "escribe en el chat...")
+            chat_patterns = [
+                r"\b(?:pon|escribe|manda|env[ií]a|di|dile)\s+(?:en\s+el|al|por\s+el)\s+chat\b",
+                r"\b(?:pon|escribe|manda|env[ií]a)\s+(?:un\s+mensaje|esto)\s+(?:en\s+el|al)\s+chat\b",
+                r"\b(?:escribe|manda|env[ií]a)\s+al\s+canal\b",
+            ]
+            has_chat_pattern = any(re.search(pat, u_clean) for pat in chat_patterns)
+            is_dictation = has_wake_word and ("[CHAT:" in bot_reply or has_chat_pattern)
+
             # REGLA ESTRICTA SOLICITADA POR EL USUARIO:
             # Ignorar cualquier mensaje que no tenga la palabra 'asistente' o 'bot' en la frase transcrita
-            has_wake_word = bool(re.search(r"\b(asistente|bot)\b", u_clean))
-            is_ignored_sound = any(tag in user_spoken for tag in ["[ININTELIGIBLE]", "[Risas]", "[Ruido]", "[Silencio]"])
-            if not has_wake_word or not bot_reply or "[IGNORAR]" in bot_reply or bot_reply.strip() == "IGNORAR" or is_ignored_sound:
-                record_entry["status"] = "ignorado"
-                record_entry["bot_reply"] = "[IGNORAR]"
-                save_recordings_metadata()
-                bot_log(f"🎙️ [Gemini Live Filtro Asistente] '{user_name}' ('{user_spoken}') -> [IGNORAR] (Wake word: {has_wake_word})")
-                return
+            if not is_dictation:
+                if not has_wake_word or not bot_reply or "[IGNORAR]" in bot_reply or bot_reply.strip() == "IGNORAR" or is_ignored_sound:
+                    record_entry["status"] = "ignorado"
+                    record_entry["bot_reply"] = "[IGNORAR]"
+                    save_recordings_metadata()
+                    bot_log(f"🎙️ [Gemini Live Filtro Asistente] '{user_name}' ('{user_spoken}') -> [IGNORAR] (Wake word: {has_wake_word})")
+                    return
+
+            if is_dictation:
+                chat_msg_to_send = ""
+                m_chat = re.search(r"\[CHAT:\s*([^\]]+)\]", bot_reply, re.IGNORECASE)
+                if m_chat:
+                    chat_msg_to_send = m_chat.group(1).strip()
+                    bot_reply = re.sub(r"\[CHAT:\s*([^\]]+)\]", "", bot_reply).strip()
+                elif has_chat_pattern:
+                    guild = getattr(client, "guild", None)
+                    known_channels = [tch.name.lower() for tch in getattr(guild, "text_channels", [])] if guild else []
+                    target_ch_name = None
+                    for ch in known_channels:
+                        if len(ch) >= 4 and re.search(r'\b(?:canal|chat)\s+(?:de\s+)?' + re.escape(ch) + r'\b', u_clean):
+                            target_ch_name = ch
+                            break
+                    ch_spec = r'(?:\s+(?:de\s+)?' + re.escape(target_ch_name) + r')?' if target_ch_name else r'(?:\s+de\s+(?:texto|voz))?'
+                    pat = r'^(?:asistente|bot)?.*?\b(?:pon|escribe|manda|env[ií]a|di|dile)\s+(?:un\s+mensaje\s+)?(?:en\s+el|al|por\s+el)\s+(?:chat|canal)' + ch_spec + r'\s*(?:que\s+|:\s*|\s+)?(.*)$'
+                    m_ext = re.search(pat, u_clean, re.I)
+                    if m_ext and m_ext.group(1).strip():
+                        chat_msg_to_send = m_ext.group(1).strip()
+
+                if chat_msg_to_send:
+                    chat_msg_to_send = chat_msg_to_send.strip(' "\'')
+                    if chat_msg_to_send.lower().startswith("que "):
+                        chat_msg_to_send = chat_msg_to_send[4:].strip()
+                    sent_ok, ch_name = await self.send_dictation_to_channel(client, user, chat_msg_to_send, user_spoken=user_spoken)
+                    if sent_ok:
+                        if not bot_reply or bot_reply.strip() in ("", "[IGNORAR]"):
+                            target_ref = f"#{ch_name}" if ch_name else "el chat"
+                            bot_reply = f"Listo, ya lo he puesto en {target_ref}."
+                    else:
+                        bot_reply = "No he podido enviar el mensaje al chat, comprueba los permisos del canal."
 
             # Manejo de búsqueda web en tiempo real por voz
             if "[BUSCAR:" in bot_reply:
@@ -1028,29 +1074,6 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                         bot_log(f"🎙️ [Gemini Live Voz] Voz cambiada en llamada a '{self.voice_type}' por orden de '{user_name}'")
                 bot_reply = re.sub(r"\[VOZ:\s*([a-zA-Z0-9_-]+)\]", "", bot_reply).strip()
 
-            # Manejo de dictado a chat de texto por voz ("asistente pon en el chat...", "escribe en el chat...")
-            chat_patterns = [
-                r"\b(?:pon|escribe|manda|env[ií]a|di|dile)\s+(?:en\s+el|al|por\s+el)\s+chat\b",
-                r"\b(?:pon|escribe|manda|env[ií]a)\s+(?:un\s+mensaje|esto)\s+(?:en\s+el|al)\s+chat\b",
-                r"\b(?:escribe|manda|env[ií]a)\s+al\s+canal\b",
-            ]
-            has_chat_pattern = any(re.search(pat, u_clean) for pat in chat_patterns)
-            if "[CHAT:" in bot_reply or has_chat_pattern:
-                chat_msg_to_send = ""
-                m_chat = re.search(r"\[CHAT:\s*([^\]]+)\]", bot_reply, re.IGNORECASE)
-                if m_chat:
-                    chat_msg_to_send = m_chat.group(1).strip()
-                    bot_reply = re.sub(r"\[CHAT:\s*([^\]]+)\]", "", bot_reply).strip()
-                elif has_chat_pattern:
-                    m_ext = re.search(r"(?:chat|canal)\s*(?:que\s+|:\s*|\s+)?(.*)", u_clean, re.IGNORECASE)
-                    if m_ext and m_ext.group(1).strip():
-                        chat_msg_to_send = m_ext.group(1).strip()
-
-                if chat_msg_to_send:
-                    chat_msg_to_send = chat_msg_to_send.strip(' "\'')
-                    await self.send_dictation_to_channel(client, user, chat_msg_to_send, user_spoken=user_spoken)
-                    if not bot_reply or bot_reply.strip() == "":
-                        bot_reply = "Listo, ya lo he puesto en el chat."
 
             clean_resp = clean_text_for_tts(bot_reply)
             if not clean_resp:
