@@ -513,6 +513,28 @@ def pcm_stereo_to_mono_48k(pcm_bytes: bytes) -> bytes:
         mono_shorts = [(shorts[i*2] + shorts[i*2+1]) // 2 for i in range(count)]
         return struct.pack(f"<{count}h", *mono_shorts)
 
+# Modelos verificados en orden de respuesta (<0.7s) y cuota gratuita amplia
+MODELS_PRIORITY = [
+    "gemini-flash-lite-latest",
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-3.6-flash",
+    "gemini-3.8-flash",
+    "gemini-flash-latest"
+]
+model_cooldowns = {}
+
+def get_available_models():
+    """Devuelve los modelos disponibles que no están en cooldown por error 429/503."""
+    now = time.time()
+    available = [m for m in MODELS_PRIORITY if now >= model_cooldowns.get(m, 0)]
+    return available if available else MODELS_PRIORITY
+
+def mark_model_cooldown(model_name: str, duration_sec: int = 60):
+    """Aplica cooldown temporal a un modelo saturado para conmutar sin latencia."""
+    model_cooldowns[model_name] = time.time() + duration_sec
+    bot_log(f"⚡ [Circuit Breaker] Modelo '{model_name}' en cooldown por {duration_sec}s.")
+
 class GeminiLiveVoiceSink(voice_recv.AudioSink):
     """
     Sink de audio bidireccional en tiempo real (estilo Gemini Live) para llamadas de Discord.
@@ -775,21 +797,13 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
             }
             data = json.dumps(payload).encode("utf-8")
             response_text = ""
-            # Modelos multimodales verificados con cuota disponible inmediata (0 latencia, sin 429)
-            for model_name in [
-                "gemini-3.5-flash-lite", 
-                "gemini-3.1-flash-lite", 
-                "gemini-flash-lite-latest", 
-                "gemini-3-flash-preview", 
-                "gemini-3.1-flash-lite-preview",
-                "gemini-3.7-flash", 
-                "gemini-3.5-flash"
-            ]:
+            # Modelos multimodales verificados con cuota disponible inmediata (respetando Circuit Breaker)
+            for model_name in get_available_models():
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_KEY}"
                 try:
                     req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-                    def call_api():
-                        with urllib.request.urlopen(req, timeout=7) as resp:
+                    def call_api(r=req):
+                        with urllib.request.urlopen(r, timeout=7) as resp:
                             return json.loads(resp.read().decode("utf-8"))
                     res = await asyncio.to_thread(call_api)
                     candidates = res.get("candidates", [])
@@ -903,18 +917,29 @@ class GeminiLiveVoiceSink(voice_recv.AudioSink):
                             "contents": [{"parts": [{"text": search_summary_prompt}]}],
                             "generationConfig": {"temperature": 0.4, "maxOutputTokens": 300}
                         }
-                        try:
-                            s_data = json.dumps(sum_payload).encode("utf-8")
-                            s_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key={GEMINI_KEY}"
+                        s_data = json.dumps(sum_payload).encode("utf-8")
+                        search_summary_done = False
+                        for s_model in get_available_models():
+                            s_url = f"https://generativelanguage.googleapis.com/v1beta/models/{s_model}:generateContent?key={GEMINI_KEY}"
                             s_req = urllib.request.Request(s_url, data=s_data, headers={"Content-Type": "application/json"})
-                            def _call_s():
-                                with urllib.request.urlopen(s_req, timeout=10) as r:
-                                    return json.loads(r.read().decode("utf-8"))
-                            s_res = await asyncio.to_thread(_call_s)
-                            if s_res.get("candidates") and "content" in s_res["candidates"][0]:
-                                bot_reply = s_res["candidates"][0]["content"]["parts"][0]["text"].strip()
-                        except Exception as e_sum:
-                            bot_log(f"Aviso resumen búsqueda voz: {e_sum}")
+                            try:
+                                def _call_s(r=s_req):
+                                    with urllib.request.urlopen(r, timeout=8) as r_resp:
+                                        return json.loads(r_resp.read().decode("utf-8"))
+                                s_res = await asyncio.to_thread(_call_s)
+                                if s_res.get("candidates") and "content" in s_res["candidates"][0]:
+                                    bot_reply = s_res["candidates"][0]["content"]["parts"][0]["text"].strip()
+                                    if bot_reply:
+                                        search_summary_done = True
+                                        break
+                            except urllib.error.HTTPError as e_http:
+                                if e_http.code in (429, 503):
+                                    mark_model_cooldown(s_model, 60)
+                                continue
+                            except Exception as e_sum:
+                                bot_log(f"Aviso resumen búsqueda voz ({s_model}): {e_sum}")
+                                continue
+                        if not search_summary_done:
                             bot_reply = f"He buscado sobre {search_q}, pero no he podido sintetizar los resultados en este instante."
                     else:
                         bot_reply = f"He buscado en internet sobre {search_q}, pero no he encontrado datos claros ahora mismo."
@@ -1108,41 +1133,28 @@ def get_steam_query_ctx(text: str) -> str:
 user_cooldowns = {}
 COOLDOWN_SECONDS = 3
 
-# Modelos verificados en orden de respuesta (<0.7s) y cuota gratuita amplia
-MODELS_PRIORITY = [
-    "gemini-flash-lite-latest",
-    "gemini-3.5-flash-lite",
-    "gemini-3.1-flash-lite",
-    "gemini-3.6-flash",
-    "gemini-3.8-flash",
-    "gemini-flash-latest"
-]
-model_cooldowns = {}
-
-def get_available_models():
-    """Devuelve los modelos disponibles que no están en cooldown por error 429/503."""
-    now = time.time()
-    available = [m for m in MODELS_PRIORITY if now >= model_cooldowns.get(m, 0)]
-    return available if available else MODELS_PRIORITY
-
-def mark_model_cooldown(model_name: str, duration_sec: int = 60):
-    """Aplica cooldown temporal a un modelo saturado para conmutar sin latencia."""
-    model_cooldowns[model_name] = time.time() + duration_sec
-    print(f"⚡ [Circuit Breaker] Modelo '{model_name}' en cooldown por {duration_sec}s.")
-
 TEXT_EXTENSIONS = {
     ".txt", ".py", ".js", ".ts", ".json", ".csv", ".md", ".cpp", ".c", ".h",
     ".java", ".html", ".css", ".xml", ".yaml", ".yml", ".sh", ".bat", ".ps1", ".log"
 }
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 
+_LIVE_LEVELS_CACHE = {}
+_LIVE_LEVELS_CACHE_TIME = 0.0
+_LIVE_LEVELS_TTL = 300.0
+
 async def get_live_levels_dict(guild: discord.Guild) -> dict:
-    """Lee el canal #bots para extraer los niveles reales de Cakey Bot de cada usuario."""
+    """Lee el canal #bots para extraer los niveles reales de Cakey Bot de cada usuario (con caché en memoria de 300s)."""
+    global _LIVE_LEVELS_CACHE, _LIVE_LEVELS_CACHE_TIME
     if not guild:
         return {}
+    now = time.time()
+    if _LIVE_LEVELS_CACHE and (now - _LIVE_LEVELS_CACHE_TIME < _LIVE_LEVELS_TTL):
+        return _LIVE_LEVELS_CACHE
+
     bots_channel = discord.utils.find(lambda c: "bots" in c.name.lower(), guild.text_channels)
     if not bots_channel:
-        return {}
+        return _LIVE_LEVELS_CACHE if _LIVE_LEVELS_CACHE else {}
     levels = {}
     try:
         async for m in bots_channel.history(limit=120):
@@ -1154,9 +1166,14 @@ async def get_live_levels_dict(guild: discord.Guild) -> dict:
                     lvl = int(match.group(2))
                     if uid not in levels or lvl > levels[uid]:
                         levels[uid] = lvl
+        if levels:
+            _LIVE_LEVELS_CACHE = levels
+            _LIVE_LEVELS_CACHE_TIME = now
     except Exception as e:
         print(f"Aviso lectura niveles #bots: {e}")
-    return levels
+        if _LIVE_LEVELS_CACHE:
+            return _LIVE_LEVELS_CACHE
+    return _LIVE_LEVELS_CACHE if _LIVE_LEVELS_CACHE else levels
 
 def search_web_lite(query: str, max_results: int = 5) -> str:
     """Busca en internet en tiempo real y devuelve los mejores resultados con título y snippet."""
@@ -1208,16 +1225,28 @@ def build_search_query(current_text: str, raw_msgs: list) -> str:
     return clean_no_punct
 
 def calculate_xp_gap(start_lvl: int, target_lvl: int) -> str:
-    """Calcula matemáticamente el XP exacto necesario entre dos niveles."""
+    """Calcula matemáticamente el XP exacto necesario entre dos niveles y desglosa por canales estándar y con boost."""
     if start_lvl >= target_lvl or target_lvl > 100:
         return ""
     total = sum(5 * (lvl ** 2) + 50 * lvl + 100 for lvl in range(start_lvl, target_lvl))
-    mins_txt = round(total / 225)
-    hours_voice = round(total / 1500, 1)
+    msgs_base = round(total / 225)
+    hours_voice_base = round(total / 1500, 1)
+
+    # Canales con Boost de XP según INFO_SERVIDOR.md
+    msgs_boost_15 = round(total / (225 * 1.15))         # #recomendaciones-gaming (+15%)
+    msgs_boost_10 = round(total / (225 * 1.10))         # #la-shit-de-todos-los-dias (+10%)
+    hours_voice_boost = round(total / (1500 * 1.05), 1) # 🔊games🔊 (+5%)
+
     return (
         f"\n[CÁLCULO EXACTO DE XP]:\n"
         f"  * Subir de Nivel {start_lvl} a Nivel {target_lvl} requiere: **{total:,} XP**.\n"
-        f"  * Equivale a: ~{mins_txt} mensajes de texto activos o ~{hours_voice} horas de llamada en voz."
+        f"  * Tasa estándar (canales base):\n"
+        f"    - Texto (~225 XP/msg): ~{msgs_base} mensajes activos (1 msg/min cooldown).\n"
+        f"    - Voz (~1.500 XP/h): ~{hours_voice_base} horas en llamada.\n"
+        f"  * Con Boost de servidor (canales bonificados):\n"
+        f"    - En #recomendaciones-gaming (+15% XP): ~{msgs_boost_15} mensajes.\n"
+        f"    - En #la-shit-de-todos-los-dias (+10% XP): ~{msgs_boost_10} mensajes.\n"
+        f"    - En canal de voz 🔊games🔊 (+5% XP): ~{hours_voice_boost} horas."
     )
 
 def fetch_url_content(url: str) -> str:
