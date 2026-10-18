@@ -1,12 +1,13 @@
 """
 Módulo de Comandos Slash Nativos para el Bot 'Asistente' en Discord:
-Contiene los 22 comandos interactivos oficiales (@app_commands.command):
+Contiene los 26 comandos interactivos oficiales (@app_commands.command):
 - Multimedia y Arte: /dibuja, /musica
 - Gaming y Catálogo: /steam, /tribunal
 - Asistencia y Lore: /perfil, /pregunta, /voz, /recuerda, /xp
 - Voz Neuronal y Gemini Live: /habla, /geminilive, /cambiar_voz, /unete, /desconecta, /para_audio
 - Minijuegos del Servidor: /trivial, /ranking_trivial, /tres_en_raya, /conecta4, /ajedrez
 - Moderación y Reemplazo de Carl-bot: /autoroles, /sugerencia
+- Economía de Porros y Casino: /slots, /balance, /trabajar, /transferir
 """
 
 import os
@@ -16,6 +17,7 @@ import random
 import io
 import re
 import urllib.parse
+from typing import Optional
 import discord
 from discord import app_commands
 from discord.ext import voice_recv
@@ -1163,7 +1165,152 @@ async def cmd_sugerencia(interaction: discord.Interaction, idea: str):
     )
 
 
-# Lista de los 22 comandos registrados
+
+# ==========================================
+# 7. ECONOMÍA DE PORROS Y CASINO
+# ==========================================
+
+@app_commands.command(name="slots", description="Juega a la máquina tragaperras del servidor apostando Porros")
+@app_commands.describe(
+    apuesta="Cantidad de Porros a apostar (mínimo 50, por defecto 100)"
+)
+async def cmd_slots(interaction: discord.Interaction, apuesta: int = 100):
+    from modulos.economia import handle_slots_spin, SlotsLayoutView, PORRO_EMOJI
+
+    if apuesta < 50:
+        await interaction.response.send_message(
+            f"❌ La apuesta mínima en la tragaperras es de 50 Porros ({PORRO_EMOJI}).",
+            ephemeral=True,
+        )
+        return
+
+    ok, err_msg, res, bal = handle_slots_spin(interaction.user.id, apuesta)
+    if not ok:
+        await interaction.response.send_message(
+            f"❌ {err_msg}\n💡 Usa `/trabajar` para conseguir Porros si estás a cero.",
+            ephemeral=True,
+        )
+        return
+
+    view = SlotsLayoutView(res, str(interaction.user.id), apuesta)
+    await interaction.response.send_message(view=view)
+
+
+@app_commands.command(name="balance", description="Consulta tu saldo de Porros o el de otro miembro del servidor")
+@app_commands.describe(
+    usuario="Miembro cuyo saldo quieres consultar (opcional, por defecto tú)"
+)
+async def cmd_balance(interaction: discord.Interaction, usuario: Optional[discord.Member] = None):
+    from modulos.economia import get_balance, get_server_jackpot, PORRO_EMOJI
+
+    target = usuario or interaction.user
+    bal = get_balance(target.id)
+    jackpot = get_server_jackpot()
+
+    embed = discord.Embed(
+        title=f"💰 Saldo de {target.display_name}",
+        color=0xF1C40F,  # Dorado
+        timestamp=datetime.now(timezone.utc),
+    )
+    if hasattr(target, "display_avatar") and target.display_avatar:
+        embed.set_thumbnail(url=str(target.display_avatar.url))
+
+    embed.add_field(
+        name="💵 Efectivo (Cash)",
+        value=f"{PORRO_EMOJI} **{bal['cash']:,}** Porros",
+        inline=True,
+    )
+    embed.add_field(
+        name="🏦 Banco (Bank)",
+        value=f"{PORRO_EMOJI} **{bal['bank']:,}** Porros",
+        inline=True,
+    )
+    embed.add_field(
+        name="💎 Patrimonio Total",
+        value=f"{PORRO_EMOJI} **{bal['total']:,}** Porros",
+        inline=False,
+    )
+    embed.add_field(
+        name="🎰 Bote Acumulado del Servidor",
+        value=f"{PORRO_EMOJI} **{jackpot:,}** Porros *(¡Reclámalo con Ranked Pro en /slots!)*",
+        inline=False,
+    )
+    embed.set_footer(text="Economía Oficial de Porros • Asistente")
+
+    is_ephemeral = (usuario is None or target.id == interaction.user.id)
+    await interaction.response.send_message(embed=embed, ephemeral=is_ephemeral)
+
+
+@app_commands.command(name="trabajar", description="Trabaja en el servidor para conseguir Porros (cooldown de 2 horas)")
+async def cmd_trabajar(interaction: discord.Interaction):
+    from modulos.economia import execute_work, get_balance, PORRO_EMOJI
+
+    ok, job_story, reward = execute_work(interaction.user.id)
+    if not ok:
+        await interaction.response.send_message(job_story, ephemeral=True)
+        return
+
+    bal = get_balance(interaction.user.id)
+    embed = discord.Embed(
+        title="💼 Jornada Laboral Completada",
+        description=f"{job_story}\n\n**Salario recibido:** {PORRO_EMOJI} **+{reward:,}** Porros\n**Saldo actual en efectivo:** {PORRO_EMOJI} **{bal['cash']:,}** Porros",
+        color=0x2ECC71,  # Verde esmeralda
+        timestamp=datetime.now(timezone.utc),
+    )
+    embed.set_author(
+        name=f"{interaction.user.display_name} (@{interaction.user.name})",
+        icon_url=str(interaction.user.display_avatar.url) if hasattr(interaction.user, "display_avatar") else None,
+    )
+    embed.set_footer(text="Vuelve en 2 horas para volver a trabajar • /trabajar")
+    await interaction.response.send_message(embed=embed)
+
+
+@app_commands.command(name="transferir", description="Transfiere Porros de tu efectivo a otro miembro del servidor")
+@app_commands.describe(
+    usuario="Miembro al que deseas transferir los Porros",
+    cantidad="Cantidad exacta de Porros a transferir (número entero positivo)",
+)
+async def cmd_transferir(interaction: discord.Interaction, usuario: discord.Member, cantidad: int):
+    from modulos.economia import transfer_funds, PORRO_EMOJI
+
+    if usuario.id == interaction.user.id:
+        await interaction.response.send_message("❌ No puedes transferirte Porros a ti mismo.", ephemeral=True)
+        return
+
+    if getattr(usuario, "bot", False):
+        await interaction.response.send_message("❌ No puedes transferir Porros a un bot.", ephemeral=True)
+        return
+
+    if cantidad <= 0:
+        await interaction.response.send_message("❌ La cantidad a transferir debe ser mayor a 0 Porros.", ephemeral=True)
+        return
+
+    ok, msg, sender_bal, recipient_bal = transfer_funds(interaction.user.id, usuario.id, cantidad)
+    if not ok:
+        await interaction.response.send_message(f"❌ {msg}", ephemeral=True)
+        return
+
+    embed = discord.Embed(
+        title="💸 Transferencia Exitosa",
+        description=f"**{interaction.user.display_name}** le ha transferido {PORRO_EMOJI} **{cantidad:,}** Porros a **{usuario.display_name}**.",
+        color=0x3498DB,  # Azul
+        timestamp=datetime.now(timezone.utc),
+    )
+    embed.add_field(
+        name=f"Saldo de {interaction.user.display_name}",
+        value=f"{PORRO_EMOJI} **{sender_bal['cash']:,}** Porros",
+        inline=True,
+    )
+    embed.add_field(
+        name=f"Saldo de {usuario.display_name}",
+        value=f"{PORRO_EMOJI} **{recipient_bal['cash']:,}** Porros",
+        inline=True,
+    )
+    embed.set_footer(text="Transferencia instantánea sin comisiones • Economía de Porros")
+    await interaction.response.send_message(embed=embed)
+
+
+# Lista de los 26 comandos registrados
 ALL_SLASH_COMMANDS = [
     cmd_dibuja,
     cmd_musica,
@@ -1187,6 +1334,10 @@ ALL_SLASH_COMMANDS = [
     cmd_ajedrez,
     cmd_autoroles,
     cmd_sugerencia,
+    cmd_slots,
+    cmd_balance,
+    cmd_trabajar,
+    cmd_transferir,
 ]
 
 
@@ -1199,3 +1350,4 @@ def register_slash_commands(tree: app_commands.CommandTree):
             pass
         except Exception as e:
             _bot_log(f"Aviso registrando comando /{cmd.name}: {e}")
+

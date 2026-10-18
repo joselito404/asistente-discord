@@ -1,0 +1,18 @@
+{
+  "users": {
+    "test_user_1": {
+      "cash": 1400,
+      "bank": 0,
+      "last_work": null,
+      "inventory": [],
+      "portfolio": {}
+    }
+  },
+  "server_jackpot": 25003,
+  "meta": {
+    "currency_name": "Porro",
+    "currency_emoji": "<:Porro:1535685303317172305>",
+    "created_at": "2026-10-18T22:25:00Z",
+    "version": "1.0"
+  }
+}

@@ -13,6 +13,7 @@
 | `tribunal_data.json` | `modulos/juegos.py` | Catálogo de casos, argumentos de acusación/defensa y sentencias del minijuego `/tribunal`. |
 | `trivia_data.json` | `modulos/juegos.py` | Banco estructurado de preguntas, opciones y respuestas por categorías (Gaming, Lore, Manhwas, etc.) para `/trivial`. |
 | `user_memory.json` | `modulos/chat_ia.py` | Memoria a largo plazo por ID de usuario: obras favoritas, notas de contexto personal y puntos de trivial acumulados. |
+| `economia.json` | `modulos/economia.py` | Estado financiero persistente: cuentas de usuarios (cash, bank, last_work, inventory, portfolio), bote acumulado del servidor (jackpot) y metadatos de moneda (Porro). |
 
 ---
 

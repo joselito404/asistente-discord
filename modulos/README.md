@@ -38,8 +38,18 @@ Cualquier agente o desarrollador autorizado que trabaje en nuevas funcionalidade
    - Catálogo canónico de 124 emojis del servidor (`SERVER_EMOJIS_DATA`), auto-conversor pre-envío regex (`format_server_emojis`) y arquitectura resiliente ante expiración de Server Boost con fallbacks limpios (`DISABLED_EMOJI_FALLBACK`).
    - Búsqueda web contextual en vivo (`search_web_lite`), radar de voz, censos y enrutador principal de mensajes (`_handle_message_safe`).
 8. **`comandos.py`**: Registro unificado de Comandos Slash nativos:
-   - Declaración de los 22 comandos interactivos (`@app_commands.command`) con descripciones y choices.
+   - Declaración de los 26 comandos interactivos (`@app_commands.command`) con descripciones y choices.
    - Función `register_slash_commands(tree)` para registro limpio en el `CommandTree`.
+9. **`economia.py`**: Motor nativo de economía comunitaria y casino:
+   - Moneda oficial: Porros (`PORRO_EMOJI` `<:Porro:1535685303317172305>`).
+   - Persistencia segura y atómica en `datos/economia.json` con bloqueo `ECONOMY_LOCK` (`RLock`) y escritura temporal `safe_write_json`.
+   - Gestión de saldos: `get_balance`, `modify_balance`, `transfer_funds`.
+   - Jornada laboral (`/trabajar`): historias cómicas del lore del servidor (`WORK_MESSAGES`), retribución calibrada de 200 a 800 porros y cooldown estricto de 2 horas.
+   - Máquina tragaperras (`/slots`):
+     * Réplica matemática 1:1 de UnbelievaBoat calibrada mediante Monte Carlo (`SlotEngine`, RTP 94-96%, WinRate ~36.5%).
+     * 6 símbolos Brawl Stars Ranked con 5 líneas de pago evaluadas simultáneamente (`SLOT_SYMBOLS`, `SLOT_PAYLINES`).
+     * Bote Progresivo (`server_jackpot`): un 3% de las pérdidas en tiradas no ganadoras alimenta el jackpot acumulado, reclamable al alinear la línea de Ranked Pro.
+     * Interfaz nativa con **Discord Components V2** (`SlotsLayoutView`): contenedores tipo 17 con `accent_color`, separadores tipo 14, textos tipo 10 y botones `[Play Again]` y `[Payouts]` en fila de acciones tipo 1.
 
 ## Cómo se usa e integra con `bot_service.py`
 - `bot_service.py` actúa como punto de entrada único (`python bot_service.py`), registra `sys.modules.setdefault("bot_service", sys.modules[__name__])` y reexporta las funciones, clases y constantes de `modulos.*`.

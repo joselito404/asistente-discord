@@ -267,6 +267,35 @@ from modulos.chat_ia import (
     _handle_message_safe,
 )
 
+from modulos.economia import (
+    PORRO_EMOJI,
+    DEFAULT_JACKPOT,
+    DEFAULT_STARTING_CASH,
+    DEFAULT_STARTING_BANK,
+    SLOT_SYMBOLS,
+    SLOT_PAYLINES,
+    SlotEngine,
+    slot_engine,
+    SlotsLayoutView,
+    SlotsPlayAgainButton,
+    SlotsPayoutsButton,
+    get_balance,
+    modify_balance,
+    get_user_economy,
+    ensure_user,
+    get_server_jackpot,
+    modify_server_jackpot,
+    reset_server_jackpot,
+    transfer_funds,
+    can_work,
+    execute_work,
+    load_economy_data,
+    save_economy_data,
+    build_payouts_text,
+    handle_slots_spin,
+    handle_slots_interaction,
+)
+
 from modulos.comandos import (
     register_slash_commands,
     cmd_dibuja,
@@ -291,9 +320,13 @@ from modulos.comandos import (
     cmd_autoroles,
     cmd_sugerencia,
     cmd_ajedrez,
+    cmd_slots,
+    cmd_balance,
+    cmd_trabajar,
+    cmd_transferir,
 )
 
-# Registrar los 22 comandos slash en el CommandTree
+# Registrar los 26 comandos slash en el CommandTree
 register_slash_commands(tree)
 
 # ==========================================
@@ -305,7 +338,7 @@ async def on_ready():
     bot_log(f"Bot '{bot.user}' conectado y listo en Discord.")
     bot_log(f"Motores de IA con respaldo: {MODELS_PRIORITY}")
     bot_log(f"Ajedrez: python-chess {'OK' if chess else 'NO disponible'} | Stockfish {'OK' if os.path.exists(STOCKFISH_PATH) else 'NO encontrado'} ({STOCKFISH_PATH})")
-    bot_log("Capacidades activas: Gemini Live en Voz (/geminilive), Auto-Roles 24/7 (/autoroles), Sugerencias (/sugerencia), Memoria Persistente, Trivial, Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y 22 Slash Commands.")
+    bot_log("Capacidades activas: Gemini Live en Voz (/geminilive), Auto-Roles 24/7 (/autoroles), Sugerencias (/sugerencia), Economía de Porros y Slots (/slots), Memoria Persistente, Trivial, Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y 26 Slash Commands.")
 
     # Registrar vistas interactivas persistentes 24/7 (sobreviven a reinicios de Render sin expirar jamás)
     try:
@@ -468,6 +501,15 @@ async def on_message(message: discord.Message):
         await _handle_message_safe(message)
     except Exception as e:
         print(f"Error procesando mensaje: {e}")
+
+
+@bot.event
+async def on_interaction(interaction: discord.Interaction):
+    if interaction.type == discord.InteractionType.component and not interaction.response.is_done():
+        cid = interaction.data.get("custom_id", "")
+        if cid.startswith("slots:"):
+            await handle_slots_interaction(interaction)
+
 
 
 # ==========================================
