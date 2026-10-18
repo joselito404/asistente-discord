@@ -8,6 +8,7 @@ config_discord.json
 !tribunal_data.json
 !user_memory.json
 !trivia_data.json
+!economia.json
 /CHAT_RAW.md
 /HISTORIAL_CONVERSACION.md
 chat *.md
@@ -20,9 +21,13 @@ imagenes_contexto/
 build_*.js
 recordings/
 recordings_backup/
+emojis_backup/
+datos_locales/emojis_backup/
 *.wav
 historico_chat/
 herramientas/
+!herramientas/test_economy.py
+!herramientas/test_slots_engine.py
 documentos_pdf/
 *.zip
 *.txt

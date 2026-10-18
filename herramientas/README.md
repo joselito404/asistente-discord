@@ -14,6 +14,7 @@
 | `discord_client.py` | Importable o interactivo | Cliente HTTP REST ligero para consultar canales, leer censos, enviar mensajes o modificar tópicos sin iniciar el proceso local del bot. |
 | `sync_voice_recordings.py` | `python herramientas/sync_voice_recordings.py` | Descarga y sincroniza las grabaciones de voz temporales desde Render Cloud hacia `datos_locales/recordings_backup/`. |
 | `sync_info_servidor.py` | `python herramientas/sync_info_servidor.py` | Audita y sincroniza en segundos los canales, roles y censos reales de Discord contra `docs/INFO_SERVIDOR.md`. |
+| `audit_emojis_telemetry.py` | `python herramientas/audit_emojis_telemetry.py` | Descarga respaldo local de los 124 emojis en `datos_locales/emojis_backup/`, genera `manifest.json` y escanea mensajes y reacciones en los 33 canales de texto para telemetría real de uso. |
 
 ---
 
@@ -32,6 +33,8 @@ Ejecutar antes de cualquier commit o despliegue en Render Cloud:
 | `test_prompts_key_files.py` | `python herramientas/test_prompts_key_files.py` | Integridad sintáctica de prompts y dependencias de archivos. |
 | `test_audio_models.py` | `python herramientas/test_audio_models.py` | Compatibilidad de modelos de voz y Edge-TTS. |
 | `test_emoji_converter.py` | `python herramientas/test_emoji_converter.py` | Auto-conversor de emojis (:aura:, :Porro:, :gigachad:, Brawl Stars Ranked), insensibilidad a mayúsculas, protección de bloques de código y resiliencia ante pérdida de Server Boost (available=False fallback). |
+| `test_slots_engine.py` | `python herramientas/test_slots_engine.py` | Simulación Monte Carlo de 100k tiradas y calibración de RTP (94-96%) y win rate (36.5%) de la tragaperras. |
+| `test_economy.py` | `python herramientas/test_economy.py` | Suite integral de economía: persistencia atómica, saldos, jornada laboral (/trabajar), transferencias (/transferir), tragaperras (/slots) con Discord Components V2, bote progresivo y concurrencia multihilo. |
 
 ---
 

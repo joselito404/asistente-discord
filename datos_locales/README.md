@@ -12,4 +12,5 @@ Todo el contenido de esta carpeta está excluido de Git por `.gitignore`:
 - `*.exe` (instaladores locales como `Claude Setup.exe`).
 - `logs/` (volcados temporales de registros de consola).
 - `recordings_backup/` (copias de seguridad locales descargadas de Render).
+- `emojis_backup/` (copia de seguridad local de alta resolución de los 124 emojis del servidor con `manifest.json`).
 - `grabaciones/` (archivos WAV temporales).
