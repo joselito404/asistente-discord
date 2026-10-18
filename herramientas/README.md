@@ -13,6 +13,7 @@
 | `deploy_render.py` | `python herramientas/deploy_render.py` | Despliegue manual en Render Cloud llamando a la API de Render con la clave de `config/config_discord.json`. |
 | `discord_client.py` | Importable o interactivo | Cliente HTTP REST ligero para consultar canales, leer censos, enviar mensajes o modificar tópicos sin iniciar el proceso local del bot. |
 | `sync_voice_recordings.py` | `python herramientas/sync_voice_recordings.py` | Descarga y sincroniza las grabaciones de voz temporales desde Render Cloud hacia `datos_locales/recordings_backup/`. |
+| `sync_info_servidor.py` | `python herramientas/sync_info_servidor.py` | Audita y sincroniza en segundos los canales, roles y censos reales de Discord contra `docs/INFO_SERVIDOR.md`. |
 
 ---
 
