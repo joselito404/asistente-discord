@@ -11,7 +11,7 @@ Capacidades:
 - Ficha Técnica de Usuarios: Inspección en profundidad de fechas, roles y estado de miembros.
 - Calculadora de XP: Motor matemático cuadrático del sistema de niveles de Cakey Bot.
 - Guía de Comandos: Diccionario completo de economía (UnbelievaBoat) y niveles (Cakey Bot).
-- Seguridad: Cero permisos de roles; actúa como enciclopedia del servidor y colega.
+- Auto-Roles y Sugerencias 24/7: Reemplazo integral de Carl-bot con vistas persistentes y whitelist estricta de 36 autoroles.
 - Motor: Gemini Flash con lista de respaldo automático (100% Free Tier, coste 0€).
 """
 
@@ -3836,14 +3836,30 @@ async def _apply_role_changes_to_member(guild: discord.Guild, member: discord.Me
             await member.add_roles(*[o for _, o in add_objs], reason=reason)
             added_ok.extend([rid for rid, _ in add_objs])
         except Exception as e:
-            errors.append(f"Error añadiendo roles: {e}")
+            if len(add_objs) > 1:
+                for rid, r_obj in add_objs:
+                    try:
+                        await member.add_roles(r_obj, reason=reason)
+                        added_ok.append(rid)
+                    except Exception as e_single:
+                        errors.append(f"Error añadiendo <@&{rid}>: {e_single}")
+            else:
+                errors.append(f"Error añadiendo roles: {e}")
 
     if rem_objs:
         try:
             await member.remove_roles(*[o for _, o in rem_objs], reason=reason)
             removed_ok.extend([rid for rid, _ in rem_objs])
         except Exception as e:
-            errors.append(f"Error retirando roles: {e}")
+            if len(rem_objs) > 1:
+                for rid, r_obj in rem_objs:
+                    try:
+                        await member.remove_roles(r_obj, reason=reason)
+                        removed_ok.append(rid)
+                    except Exception as e_single:
+                        errors.append(f"Error retirando <@&{rid}>: {e_single}")
+            else:
+                errors.append(f"Error retirando roles: {e}")
 
     return added_ok, removed_ok, errors
 
@@ -3965,6 +3981,7 @@ class PersonalCategorySelect(discord.ui.Select):
             for emoji, rid, name, desc in cat["roles"]
         ]
         super().__init__(
+            custom_id=f"autoroles:personal:{cat_key}",
             placeholder=f"✏️ Editar {cat['title']} (marca/desmarca)",
             min_values=0,
             max_values=len(options),
@@ -3977,9 +3994,10 @@ class PersonalCategorySelect(discord.ui.Select):
             await interaction.response.send_message("❌ Este menú solo funciona en un servidor.", ephemeral=True)
             return
 
+        await interaction.response.defer()
         member = await _resolve_guild_member(interaction)
         if not member:
-            await interaction.response.send_message("❌ No se pudo encontrar tu perfil de miembro.", ephemeral=True)
+            await interaction.followup.send("❌ No se pudo encontrar tu perfil de miembro.", ephemeral=True)
             return
 
         current_ids = {r.id for r in getattr(member, "roles", [])}
@@ -4008,15 +4026,16 @@ class PersonalCategorySelect(discord.ui.Select):
         new_embed = build_personal_autoroles_embed(member.display_name, updated_ids, "\n".join(summary_lines))
         new_view = PersonalAutoRolesView(updated_ids)
         bot_log(f"🎭 [Auto-Roles Personal] {member.display_name} ({self.cat_key}): +{len(added_ok)} / -{len(removed_ok)}")
-        await interaction.response.edit_message(embed=new_embed, view=new_view)
+        await interaction.edit_original_response(embed=new_embed, view=new_view)
 
 
 class PersonalAutoRolesView(discord.ui.View):
-    """Vista efímera personalizada donde el usuario ve sus roles premarcados con ✅ y puede editarlos."""
-    def __init__(self, current_role_ids: set):
-        super().__init__(timeout=600)
+    """Vista efímera personalizada persistente donde el usuario ve sus roles premarcados con ✅ y puede editarlos."""
+    def __init__(self, current_role_ids: set = None):
+        super().__init__(timeout=None)
+        role_ids_set = set(current_role_ids) if current_role_ids else set()
         for idx, cat_key in enumerate(AUTOROLES_CATALOG.keys()):
-            self.add_item(PersonalCategorySelect(cat_key, current_role_ids, row=idx))
+            self.add_item(PersonalCategorySelect(cat_key, role_ids_set, row=idx))
 
 
 async def _handle_mis_roles_button(interaction: discord.Interaction):
@@ -4200,11 +4219,44 @@ def _extract_votes_from_embed(embed: discord.Embed) -> tuple:
     return 0, 0
 
 
-def _update_suggestion_embed_votes(embed: discord.Embed, up_count: int, down_count: int) -> discord.Embed:
-    """Actualiza el campo de votos en el embed de una sugerencia."""
+def _extract_vote_state_from_embed(embed: discord.Embed) -> dict:
+    """Reconstruye el estado completo de votantes (sets 'up' y 'down' + base_up/base_down) directamente
+    desde el embed de la sugerencia para que ni siquiera un reinicio o redespliegue de Render permita votos duplicados."""
+    b_up, b_down = _extract_votes_from_embed(embed)
+    up_ids = set()
+    down_ids = set()
+    if embed and getattr(embed, "fields", None):
+        for f in embed.fields:
+            if "Votos" in (f.name or ""):
+                for line in (f.value or "").splitlines()[1:]:
+                    line_s = line.strip()
+                    if line_s.startswith("👍:"):
+                        up_ids.update(int(x) for x in re.findall(r"<@!?(\d+)>", line_s))
+                    elif line_s.startswith("👎:"):
+                        down_ids.update(int(x) for x in re.findall(r"<@!?(\d+)>", line_s))
+
+    # Si no había línea explícita de votantes pero el footer tiene Autor ID y hay al menos 1 voto a favor, atribuir al autor
+    if not up_ids and not down_ids and b_up >= 1 and embed:
+        footer_txt = getattr(getattr(embed, "footer", None), "text", "") or ""
+        m_auth = re.search(r"Autor ID:\s*(\d+)", footer_txt)
+        if m_auth:
+            up_ids.add(int(m_auth.group(1)))
+
+    base_up = max(0, b_up - len(up_ids))
+    base_down = max(0, b_down - len(down_ids))
+    return {"up": up_ids, "down": down_ids, "base_up": base_up, "base_down": base_down}
+
+
+def _update_suggestion_embed_votes(embed: discord.Embed, up_count: int, down_count: int, up_ids: set = None, down_ids: set = None) -> discord.Embed:
+    """Actualiza el campo de votos y el registro de votantes en el embed de una sugerencia."""
     d = embed.to_dict()
     fields = d.get("fields", [])
-    vote_str = f"👍 **{up_count}** a favor · 👎 **{down_count}** en contra"
+    lines = [f"👍 **{up_count}** a favor · 👎 **{down_count}** en contra"]
+    if up_ids:
+        lines.append("👍: " + ", ".join(f"<@{uid}>" for uid in sorted(up_ids)[:25]))
+    if down_ids:
+        lines.append("👎: " + ", ".join(f"<@{uid}>" for uid in sorted(down_ids)[:25]))
+    vote_str = "\n".join(lines)
     updated = False
     for f in fields:
         if "Votos" in f.get("name", ""):
@@ -4234,11 +4286,13 @@ class SuggestionDecisionModal(discord.ui.Modal):
         self.add_item(self.reason_input)
 
     async def on_submit(self, interaction: discord.Interaction):
-        if not self.suggestion_message or not self.suggestion_message.embeds:
+        target_msg = getattr(interaction, "message", None) or self.suggestion_message
+        if not target_msg or not getattr(target_msg, "embeds", None):
             await interaction.response.send_message("❌ No se encontró el embed de la sugerencia.", ephemeral=True)
             return
 
-        old_embed = self.suggestion_message.embeds[0]
+        await interaction.response.defer(ephemeral=True)
+        old_embed = target_msg.embeds[0]
         d = old_embed.to_dict()
         num_match = re.search(r"#(\d+)", d.get("title", ""))
         sug_num = num_match.group(1) if num_match else "?"
@@ -4266,9 +4320,9 @@ class SuggestionDecisionModal(discord.ui.Modal):
 
         up_c, down_c = _extract_votes_from_embed(old_embed)
         closed_view = SuggestionPersistentView(up_count=up_c, down_count=down_c, disabled=True)
-        await self.suggestion_message.edit(embed=discord.Embed.from_dict(d), view=closed_view)
+        await target_msg.edit(embed=discord.Embed.from_dict(d), view=closed_view)
         bot_log(f"💡 [Sugerencia #{sug_num}] {'Aprobada' if self.action == 'approve' else 'Rechazada'} por {admin_name}: {reason_text}")
-        await interaction.response.send_message(
+        await interaction.followup.send(
             f"✅ Has marcado la **Sugerencia #{sug_num}** como **{'Aprobada' if self.action == 'approve' else 'Rechazada'}**.",
             ephemeral=True,
         )
@@ -4331,8 +4385,7 @@ class SuggestionPersistentView(discord.ui.View):
         emb = msg.embeds[0]
         state = SUGGESTION_VOTES_STATE.get(msg.id)
         if state is None:
-            b_up, b_down = _extract_votes_from_embed(emb)
-            state = {"up": set(), "down": set(), "base_up": b_up, "base_down": b_down}
+            state = _extract_vote_state_from_embed(emb)
             SUGGESTION_VOTES_STATE[msg.id] = state
 
         uid = interaction.user.id
@@ -4355,7 +4408,7 @@ class SuggestionPersistentView(discord.ui.View):
 
         up_total = state["base_up"] + len(state["up"])
         down_total = state["base_down"] + len(state["down"])
-        new_emb = _update_suggestion_embed_votes(emb, up_total, down_total)
+        new_emb = _update_suggestion_embed_votes(emb, up_total, down_total, state["up"], state["down"])
         new_view = SuggestionPersistentView(up_count=up_total, down_count=down_total, disabled=False)
         await interaction.response.edit_message(embed=new_emb, view=new_view)
         await interaction.followup.send(notice, ephemeral=True)
@@ -4427,7 +4480,11 @@ async def cmd_sugerencia(interaction: discord.Interaction, idea: str):
         icon_url=str(interaction.user.display_avatar.url),
     )
     embed.add_field(name="📊 Estado", value="⏳ En votación comunitaria", inline=True)
-    embed.add_field(name="🗳️ Votos", value="👍 **1** a favor · 👎 **0** en contra", inline=True)
+    embed.add_field(
+        name="🗳️ Votos",
+        value=f"👍 **1** a favor · 👎 **0** en contra\n👍: <@{interaction.user.id}>",
+        inline=True,
+    )
     embed.set_footer(text=f"Autor ID: {interaction.user.id} • Usa /sugerencia para proponer ideas")
 
     view = SuggestionPersistentView(up_count=1, down_count=0, disabled=False)
@@ -4455,8 +4512,9 @@ async def on_ready():
     # Registrar vistas interactivas persistentes 24/7 (sobreviven a reinicios de Render sin expirar jamás)
     try:
         bot.add_view(AutoRolesPersistentView())
+        bot.add_view(PersonalAutoRolesView())
         bot.add_view(SuggestionPersistentView())
-        bot_log("🎭 [Persistent Views] AutoRolesPersistentView y SuggestionPersistentView registradas 24/7.")
+        bot_log("🎭 [Persistent Views] AutoRolesPersistentView, PersonalAutoRolesView y SuggestionPersistentView registradas 24/7.")
     except Exception as e_view:
         bot_log(f"Aviso registrando vistas persistentes: {e_view}")
 
