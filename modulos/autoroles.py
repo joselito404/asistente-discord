@@ -138,28 +138,36 @@ def compute_autorole_category_sync(current_role_ids: set, selected_role_ids: lis
     return to_add, to_remove
 
 
-def build_autoroles_category_embed(cat_key: str, include_footer: bool = False) -> discord.Embed:
+def build_autoroles_category_embed(cat_key: str, guild: discord.Guild = None, include_footer: bool = False) -> discord.Embed:
+    """Construye el embed visual de una categoría de Auto-Roles con menciones nativas <@&ID> y contadores de miembros en tiempo real."""
     cat = AUTOROLES_CATALOG[cat_key]
-    lines = [
-        f"{emoji} <@&{rid}>" + (f" — *{desc}*" if desc else "")
-        for emoji, rid, _name, desc in cat["roles"]
-    ]
+    lines = []
+    for emoji, rid, _name, desc in cat["roles"]:
+        count_str = ""
+        if guild:
+            role = guild.get_role(rid)
+            count = len(role.members) if (role and hasattr(role, "members")) else 0
+            count_str = f" • 👥 **{count}**"
+        desc_str = f" — *{desc}*" if desc else ""
+        lines.append(f"{emoji} <@&{rid}>{count_str}{desc_str}")
+
     embed = discord.Embed(
         title=cat["title"],
         description=f"{cat['description']}\n\n" + "\n".join(lines),
         color=cat["color"],
     )
     if include_footer:
+        member_cnt = f" • 👥 {len(guild.members)} miembros en el servidor" if (guild and hasattr(guild, "members")) else ""
         embed.set_footer(
-            text="⚡ Auto-Roles 24/7 de Asistente • Elige roles en los menús para activarlos (✅) o quitarlos (❌) • Pulsa 'Mis Roles' para tu vista personal"
+            text=f"⚡ Auto-Roles 24/7 de Asistente{member_cnt} • Elige roles en los menús para activarlos (✅) o quitarlos (❌) • Pulsa 'Mis Roles' para tu vista personal"
         )
     return embed
 
 
-def build_autoroles_all_embeds() -> list:
-    """Construye los 3 embeds oficiales de Auto-Roles para el panel unificado."""
+def build_autoroles_all_embeds(guild: discord.Guild = None) -> list:
+    """Construye los 3 embeds oficiales de Auto-Roles para el panel unificado con contadores en tiempo real."""
     keys = list(AUTOROLES_CATALOG.keys())
-    return [build_autoroles_category_embed(k, include_footer=(i == len(keys) - 1)) for i, k in enumerate(keys)]
+    return [build_autoroles_category_embed(k, guild=guild, include_footer=(i == len(keys) - 1)) for i, k in enumerate(keys)]
 
 
 def build_personal_autoroles_embed(member_display_name: str, current_role_ids: set, changes_summary: str = "") -> discord.Embed:
@@ -261,18 +269,26 @@ async def _apply_role_changes_to_member(guild: discord.Guild, member: discord.Me
 class AutoRoleSelect(discord.ui.Select):
     """Menú desplegable público persistente para una categoría de Auto-Roles (Modo Interruptor / Toggle)."""
 
-    def __init__(self, cat_key: str, row: int = 0):
+    def __init__(self, cat_key: str, row: int = 0, guild: discord.Guild = None):
         self.cat_key = cat_key
+        self.guild = guild
         cat = AUTOROLES_CATALOG[cat_key]
-        options = [
-            discord.SelectOption(
-                label=name,
-                value=str(rid),
-                emoji=emoji,
-                description=desc[:100] if desc else None,
+        options = []
+        for emoji, rid, name, desc in cat["roles"]:
+            count_text = ""
+            if guild:
+                role = guild.get_role(rid)
+                count = len(role.members) if (role and hasattr(role, "members")) else 0
+                count_text = f"{count} {'miembro' if count == 1 else 'miembros'}"
+            full_desc = f"{count_text} • {desc}" if (count_text and desc) else (count_text or desc or None)
+            options.append(
+                discord.SelectOption(
+                    label=name,
+                    value=str(rid),
+                    emoji=emoji,
+                    description=full_desc[:100] if full_desc else None,
+                )
             )
-            for emoji, rid, name, desc in cat["roles"]
-        ]
         super().__init__(
             custom_id=f"autoroles:select:{cat_key}",
             placeholder=cat["placeholder"],
@@ -307,7 +323,7 @@ class AutoRoleSelect(discord.ui.Select):
         # Actualizar conjunto de roles tras la operación
         updated_ids = (current_ids | set(added_ok)) - set(removed_ok)
 
-        # Refrescar el View del mensaje público para limpiar la selección visual en el cliente de Discord
+        # Refrescar el View y los embeds del mensaje público para limpiar la selección visual en el cliente y actualizar contadores
         if interaction.message:
             try:
                 select_count = 0
@@ -320,10 +336,13 @@ class AutoRoleSelect(discord.ui.Select):
                         elif cid.startswith("autoroles:btn:"):
                             has_buttons = True
                 if select_count == 1:
-                    fresh_view = AutoRoleCategoryView(self.cat_key, include_buttons=has_buttons)
+                    fresh_embed = build_autoroles_category_embed(self.cat_key, guild=interaction.guild, include_footer=has_buttons)
+                    fresh_view = AutoRoleCategoryView(self.cat_key, include_buttons=has_buttons, guild=interaction.guild)
+                    await interaction.message.edit(embed=fresh_embed, view=fresh_view)
                 else:
-                    fresh_view = AutoRolesPersistentView()
-                await interaction.message.edit(view=fresh_view)
+                    fresh_embeds = build_autoroles_all_embeds(guild=interaction.guild)
+                    fresh_view = AutoRolesPersistentView(guild=interaction.guild)
+                    await interaction.message.edit(embeds=fresh_embeds, view=fresh_view)
             except Exception:
                 pass
 
@@ -363,19 +382,27 @@ class AutoRoleSelect(discord.ui.Select):
 class PersonalCategorySelect(discord.ui.Select):
     """Menú desplegable efímero personalizado con las opciones actuales del usuario premarcadas (default=True)."""
 
-    def __init__(self, cat_key: str, current_role_ids: set, row: int = 0):
+    def __init__(self, cat_key: str, current_role_ids: set, row: int = 0, guild: discord.Guild = None):
         self.cat_key = cat_key
+        self.guild = guild
         cat = AUTOROLES_CATALOG[cat_key]
-        options = [
-            discord.SelectOption(
-                label=name,
-                value=str(rid),
-                emoji=emoji,
-                description=desc[:100] if desc else None,
-                default=(rid in current_role_ids),
+        options = []
+        for emoji, rid, name, desc in cat["roles"]:
+            count_text = ""
+            if guild:
+                role = guild.get_role(rid)
+                count = len(role.members) if (role and hasattr(role, "members")) else 0
+                count_text = f"{count} {'miembro' if count == 1 else 'miembros'}"
+            full_desc = f"{count_text} • {desc}" if (count_text and desc) else (count_text or desc or None)
+            options.append(
+                discord.SelectOption(
+                    label=name,
+                    value=str(rid),
+                    emoji=emoji,
+                    description=full_desc[:100] if full_desc else None,
+                    default=(rid in current_role_ids),
+                )
             )
-            for emoji, rid, name, desc in cat["roles"]
-        ]
         super().__init__(
             custom_id=f"autoroles:personal:{cat_key}",
             placeholder=f"✏️ Editar {cat['title']} (marca/desmarca)",
@@ -420,7 +447,7 @@ class PersonalCategorySelect(discord.ui.Select):
             summary_lines.append("ℹ️ *Sin cambios en esta categoría.*")
 
         new_embed = build_personal_autoroles_embed(member.display_name, updated_ids, "\n".join(summary_lines))
-        new_view = PersonalAutoRolesView(updated_ids)
+        new_view = PersonalAutoRolesView(updated_ids, guild=interaction.guild)
         _bot_log(f"🎭 [Auto-Roles Personal] {member.display_name} ({self.cat_key}): +{len(added_ok)} / -{len(removed_ok)}")
         await interaction.edit_original_response(embed=new_embed, view=new_view)
 
@@ -428,11 +455,11 @@ class PersonalCategorySelect(discord.ui.Select):
 class PersonalAutoRolesView(discord.ui.View):
     """Vista efímera personalizada persistente donde el usuario ve sus roles premarcados con ✅ y puede editarlos."""
 
-    def __init__(self, current_role_ids: set = None):
+    def __init__(self, current_role_ids: set = None, guild: discord.Guild = None):
         super().__init__(timeout=None)
         role_ids_set = set(current_role_ids) if current_role_ids else set()
         for idx, cat_key in enumerate(AUTOROLES_CATALOG.keys()):
-            self.add_item(PersonalCategorySelect(cat_key, role_ids_set, row=idx))
+            self.add_item(PersonalCategorySelect(cat_key, role_ids_set, row=idx, guild=guild))
 
 
 async def _handle_mis_roles_button(interaction: discord.Interaction):
@@ -445,7 +472,7 @@ async def _handle_mis_roles_button(interaction: discord.Interaction):
         return
     current_ids = {r.id for r in getattr(member, "roles", [])}
     embed = build_personal_autoroles_embed(member.display_name, current_ids)
-    view = PersonalAutoRolesView(current_ids)
+    view = PersonalAutoRolesView(current_ids, guild=interaction.guild)
     await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
 
@@ -484,13 +511,50 @@ async def _handle_limpiar_autoroles_button(interaction: discord.Interaction):
     await interaction.followup.send(embed=embed, ephemeral=True)
 
 
+async def _handle_refrescar_autoroles_button(interaction: discord.Interaction):
+    """Refresca manualmente los contadores de miembros en los embeds públicos y select menus."""
+    if not interaction.guild:
+        await interaction.response.send_message("❌ Solo disponible en el servidor.", ephemeral=True)
+        return
+    await interaction.response.defer(ephemeral=True)
+    if interaction.message:
+        try:
+            select_count = 0
+            has_buttons = False
+            target_cat_key = None
+            for row_comp in getattr(interaction.message, "components", []):
+                for child in getattr(row_comp, "children", []):
+                    cid = getattr(child, "custom_id", "") or ""
+                    if cid.startswith("autoroles:select:"):
+                        select_count += 1
+                        target_cat_key = cid.split(":")[-1]
+                    elif cid.startswith("autoroles:btn:"):
+                        has_buttons = True
+
+            if select_count == 1 and target_cat_key in AUTOROLES_CATALOG:
+                fresh_embed = build_autoroles_category_embed(target_cat_key, guild=interaction.guild, include_footer=has_buttons)
+                fresh_view = AutoRoleCategoryView(target_cat_key, include_buttons=has_buttons, guild=interaction.guild)
+                await interaction.message.edit(embed=fresh_embed, view=fresh_view)
+            else:
+                fresh_embeds = build_autoroles_all_embeds(guild=interaction.guild)
+                fresh_view = AutoRolesPersistentView(guild=interaction.guild)
+                await interaction.message.edit(embeds=fresh_embeds, view=fresh_view)
+            _bot_log(f"🔄 [Auto-Roles] Contadores de roles actualizados por {interaction.user.display_name}.")
+            await interaction.followup.send("✅ **Contadores actualizados:** los números de miembros y menús reflejan el censo en tiempo real.", ephemeral=True)
+            return
+        except Exception as e:
+            await interaction.followup.send(f"⚠️ Error actualizando los contadores: {e}", ephemeral=True)
+            return
+    await interaction.followup.send("ℹ️ No se pudo detectar el mensaje a refrescar.", ephemeral=True)
+
+
 class AutoRolesPersistentView(discord.ui.View):
     """Panel maestro persistente 24/7 con los 3 menús desplegables de categorías y botones de gestión."""
 
-    def __init__(self):
+    def __init__(self, guild: discord.Guild = None):
         super().__init__(timeout=None)
         for idx, cat_key in enumerate(AUTOROLES_CATALOG.keys()):
-            self.add_item(AutoRoleSelect(cat_key, row=idx))
+            self.add_item(AutoRoleSelect(cat_key, row=idx, guild=guild))
 
         btn_mis_roles = discord.ui.Button(
             label="Mis Roles / Vista Personal (✅)",
@@ -512,13 +576,23 @@ class AutoRolesPersistentView(discord.ui.View):
         btn_limpiar.callback = _handle_limpiar_autoroles_button
         self.add_item(btn_limpiar)
 
+        btn_refrescar = discord.ui.Button(
+            label="Actualizar Contadores",
+            style=discord.ButtonStyle.secondary,
+            emoji="🔄",
+            custom_id="autoroles:btn:refrescar",
+            row=3,
+        )
+        btn_refrescar.callback = _handle_refrescar_autoroles_button
+        self.add_item(btn_refrescar)
+
 
 class AutoRoleCategoryView(discord.ui.View):
     """Vista persistente para un mensaje individual de una sola categoría (modo separado)."""
 
-    def __init__(self, cat_key: str, include_buttons: bool = False):
+    def __init__(self, cat_key: str, include_buttons: bool = False, guild: discord.Guild = None):
         super().__init__(timeout=None)
-        self.add_item(AutoRoleSelect(cat_key, row=0))
+        self.add_item(AutoRoleSelect(cat_key, row=0, guild=guild))
         if include_buttons:
             btn_mis_roles = discord.ui.Button(
                 label="Mis Roles / Vista Personal (✅)",
@@ -539,6 +613,16 @@ class AutoRoleCategoryView(discord.ui.View):
             )
             btn_limpiar.callback = _handle_limpiar_autoroles_button
             self.add_item(btn_limpiar)
+
+            btn_refrescar = discord.ui.Button(
+                label="Actualizar Contadores",
+                style=discord.ButtonStyle.secondary,
+                emoji="🔄",
+                custom_id="autoroles:btn:refrescar",
+                row=1,
+            )
+            btn_refrescar.callback = _handle_refrescar_autoroles_button
+            self.add_item(btn_refrescar)
 
 
 def is_admin_or_mod(member_or_user) -> bool:

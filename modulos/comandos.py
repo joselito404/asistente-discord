@@ -1093,12 +1093,12 @@ async def cmd_autoroles(interaction: discord.Interaction, canal: discord.TextCha
             keys = list(AUTOROLES_CATALOG.keys())
             for idx, k in enumerate(keys):
                 is_last = idx == len(keys) - 1
-                emb = build_autoroles_category_embed(k, include_footer=is_last)
-                vw = AutoRoleCategoryView(k, include_buttons=is_last)
+                emb = build_autoroles_category_embed(k, guild=interaction.guild, include_footer=is_last)
+                vw = AutoRoleCategoryView(k, include_buttons=is_last, guild=interaction.guild)
                 await target_channel.send(embed=emb, view=vw)
         else:
-            embeds = build_autoroles_all_embeds()
-            view = AutoRolesPersistentView()
+            embeds = build_autoroles_all_embeds(guild=interaction.guild)
+            view = AutoRolesPersistentView(guild=interaction.guild)
             await target_channel.send(embeds=embeds, view=view)
 
         _bot_log(f"🎭 [Auto-Roles] Panel ({fmt_val}) publicado en #{target_channel.name} por {interaction.user.display_name}.")

@@ -213,6 +213,7 @@ from modulos.autoroles import (
     PersonalAutoRolesView,
     _handle_mis_roles_button,
     _handle_limpiar_autoroles_button,
+    _handle_refrescar_autoroles_button,
     AutoRolesPersistentView,
     AutoRoleCategoryView,
     is_admin_or_mod,
