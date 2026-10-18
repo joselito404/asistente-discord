@@ -209,6 +209,8 @@ SYSTEM_PROMPT = r"""Eres 'Asistente', la IA oficial y colega del servidor de Dis
   * `/tribunal [accion] [juego]`: Catálogo de El Tribunal Gaming.
   * `/perfil [usuario]`: Ficha de miembros con roles y niveles.
   * `/pregunta [duda]`: Preguntas directas a la IA.
+  * `/autoroles [canal] [formato]`: Publica el panel interactivo 24/7 de Auto-Roles (menús desplegables y vista personal, reemplazando a Carl-bot).
+  * `/sugerencia [idea]`: Envía una sugerencia a `#💡sugerencias💡` con botones de votación en vivo y moderación para admins.
 
 👥 MIEMBROS CLAVE DEL SERVIDOR (Lore & Respeto):
 - Joselito (@joselito3499): Fundador, dueño y Administrador del servidor. Fanático de los manhwas (Olympus Scanlation, Asura Scans). En #cultura tiene anclado su top 69 manhwas.
@@ -229,8 +231,9 @@ SYSTEM_PROMPT = r"""Eres 'Asistente', la IA oficial y colega del servidor de Dis
 🌐 BÚSQUEDA WEB EN VIVO:
 - Cuando recibas el bloque [BÚSQUEDA WEB EN VIVO], utilízalo como verdad absoluta para responder con fechas reales, estrenos, secuelas y noticias de actualidad.
 
-🛡️ SEGURIDAD:
-- No tienes permisos de Discord para modificar roles ni expulsar a nadie. Si te lo piden en broma, responde con humor de colega.
+🛡️ SEGURIDAD Y AUTO-ROLES:
+- Por chat de texto nunca asignas roles de administración ni niveles ni expulsas a nadie (si te lo piden en broma, responde con humor de colega).
+- Para roles de juegos, plataformas, géneros y hobbies, gestionas el panel interactivo oficial de Auto-Roles en <#1537575617111920782> (`#🎭roles🎭` / comando `/autoroles`), reemplazando por completo al antiguo Carl-bot.
 
 REGLAS DE FORMATO:
 - Sé conciso, directo, estructurado y usa negritas.
@@ -3625,13 +3628,838 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
             except Exception:
                 pass
 
+# ==========================================
+# REEMPLAZO DE CARL-BOT: AUTO-ROLES 24/7 Y SUGERENCIAS
+# ==========================================
+AUTOROLES_CATALOG = {
+    "plataformas": {
+        "title": "🎮 PLATAFORMAS, IDIOMAS Y HOBBIES",
+        "placeholder": "🎮 Plataformas, Idiomas y Hobbies (elige uno o varios)",
+        "description": "Selecciona tus dispositivos, idiomas o aficiones en el menú desplegable para asignarte (✅) o quitarte (❌) los roles al instante:",
+        "color": 0x5865F2,
+        "roles": [
+            ("💻", 1537577523011911772, "PC", "Jugador de PC / Escritorio"),
+            ("🎮", 1537593228209950720, "Consola", "PlayStation, Xbox o Nintendo Switch"),
+            ("🍿", 1537592958747148368, "Cine", "Películas, series y debate cinéfilo"),
+            ("📖", 1537593474721906759, "lectura", "Libros, novelas ligeras y lectura"),
+            ("🤝", 1537577153862967366, "Co-op", "Juegos cooperativos (acceso a #juegos-cooperativos)"),
+            ("📚", 1537593587670327356, "manga", "Lectores de manga japonés"),
+            ("🐉", 1537593562772799498, "anime", "Temporadas de anime y películas"),
+            ("🇰🇷", 1537593440303325275, "Manhwa", "Manhwas, webtoons y cultura coreana"),
+            ("👥", 1537593280232165396, "Familia de Steam", "Miembros de la Familia de Steam (#familia-steam)"),
+            ("⚽", 1537594961837428776, "Deportes", "Fútbol, motor, deporte y eventos"),
+            ("🌙", 1537593627105038466, "nocturno", "Búhos nocturnos y charlas de madrugada"),
+            ("🇪🇸", 1537594201326489690, "Español", "Hablante de español"),
+            ("🇬🇧", 1537594249720242216, "ingles", "Hablante / lector en inglés"),
+            ("⚡", 1537593357713412146, "Tryhard", "Competitivo, ranked y sudar la camiseta"),
+            ("☕", 1537593381830529104, "Casual", "Jugar de chill y pasar el rato"),
+        ],
+    },
+    "generos": {
+        "title": "🎯 GÉNEROS DE JUEGOS Y ALERTAS",
+        "placeholder": "🎯 Géneros de Juegos y Alertas (elige uno o varios)",
+        "description": "Selecciona los géneros de videojuegos y avisos que te interesen:",
+        "color": 0x10B981,
+        "roles": [
+            ("🎯", 1537591932010766367, "Shooters", "FPS, tácticos y juegos de disparos"),
+            ("🌲", 1537592360291008612, "Survival", "Supervivencia, crafteo y mundo abierto"),
+            ("🎒", 1537592390142132396, "Extraction", "Extraction shooters y loot de alto riesgo"),
+            ("💀", 1537592856380706906, "Roguelike", "Roguelikes, roguelites y runs infinitas"),
+            ("🗡️", 1537595229627224124, "RPG", "Juegos de rol, historia y aventura"),
+            ("🤼", 1537594274093465683, "Peleas", "Fighting games y combates 1v1"),
+            ("🚨", 1537594120078368768, "Falta Uno", "Ping cuando falta hueco en el lobby"),
+            ("🃏", 1537595303346053221, "Cartas", "Deckbuilders, TCG y juegos de cartas"),
+            ("♟️", 1537595282190237706, "Estrategia", "RTS, 4X, táctica y ajedrez"),
+            ("⭐", 1537914650274963598, "recomendaciones de juegos", "Avisos de joyas y análisis en #recomendaciones-gaming"),
+            ("🔥", 1537595250695209000, "Soulslike", "FromSoftware, bosses duros y acción desafiante"),
+            ("🕹️", 1537592919815360632, "Indie", "Juegos independientes y propuestas originales"),
+            ("📈", 1537934178283290664, "incremental", "Idle, clickers y números que suben"),
+        ],
+    },
+    "juegos": {
+        "title": "🕹️ JUEGOS ESPECÍFICOS",
+        "placeholder": "🕹️ Juegos Específicos (elige uno o varios)",
+        "description": "Selecciona los juegos a los que juegas para enterarte cuando se arme partida:",
+        "color": 0xF59E0B,
+        "roles": [
+            ("📱", 1537591875656224820, "Brawl Stars", "Partidas, club y Matcherino de Brawl Stars"),
+            ("🤖", 1537914271483297812, "ARC Raiders", "Escuadrones en ARC Raiders"),
+            ("🪂", 1537914329167302718, "Fornite", "Battle Royale y modos de Fortnite"),
+            ("💥", 1537914381277462719, "The finals", "Torneos y destrucción en THE FINALS"),
+            ("📦", 1537914482724970576, "R.E.P.O", "Cooperativo y risas en R.E.P.O."),
+            ("🌻", 1537914562823594024, "PVZ GW2", "Plants vs. Zombies: Garden Warfare 2"),
+            ("⛰️", 1537914820223828038, "PEAK", "Escalada cooperativa en PEAK"),
+            ("🚶", 1548716906213543986, "Big Walk", "Aventuras cooperativas en Big Walk"),
+        ],
+    },
+}
+
+AUTOROLE_INFO_BY_ID = {}
+for _cat_key, _cat_data in AUTOROLES_CATALOG.items():
+    for _emoji, _rid, _name, _desc in _cat_data["roles"]:
+        AUTOROLE_INFO_BY_ID[_rid] = {
+            "category": _cat_key,
+            "emoji": _emoji,
+            "id": _rid,
+            "name": _name,
+            "description": _desc,
+        }
+
+ALL_AUTOROLE_IDS = frozenset(AUTOROLE_INFO_BY_ID.keys())
+
+
+def compute_autorole_toggle(current_role_ids: set, selected_role_ids: list, allowed_role_ids: set = ALL_AUTOROLE_IDS) -> tuple:
+    """Calcula qué autoroles añadir y cuáles retirar en modo interruptor (Toggle).
+    Ignora estrictamente cualquier ID que no pertenezca a allowed_role_ids."""
+    to_add = []
+    to_remove = []
+    seen = set()
+    for raw_id in selected_role_ids:
+        try:
+            rid = int(raw_id)
+        except (ValueError, TypeError):
+            continue
+        if rid not in allowed_role_ids or rid in seen:
+            continue
+        seen.add(rid)
+        if rid in current_role_ids:
+            to_remove.append(rid)
+        else:
+            to_add.append(rid)
+    return to_add, to_remove
+
+
+def compute_autorole_category_sync(current_role_ids: set, selected_role_ids: list, category_role_ids: list) -> tuple:
+    """Calcula la sincronización exacta de una categoría en la vista personal (con checks premarcados).
+    Añade los marcados que no tenía y retira los desmarcados de esa categoría."""
+    cat_set = set(category_role_ids) & ALL_AUTOROLE_IDS
+    selected_set = set()
+    for raw_id in selected_role_ids:
+        try:
+            rid = int(raw_id)
+            if rid in cat_set:
+                selected_set.add(rid)
+        except (ValueError, TypeError):
+            continue
+    to_add = [rid for rid in category_role_ids if rid in selected_set and rid not in current_role_ids]
+    to_remove = [rid for rid in category_role_ids if rid in cat_set and rid in current_role_ids and rid not in selected_set]
+    return to_add, to_remove
+
+
+def build_autoroles_category_embed(cat_key: str, include_footer: bool = False) -> discord.Embed:
+    """Construye el embed visual de una categoría de Auto-Roles con menciones nativas <@&ID>."""
+    cat = AUTOROLES_CATALOG[cat_key]
+    lines = [f"{emoji} <@&{rid}> — *{desc}*" for emoji, rid, _name, desc in cat["roles"]]
+    embed = discord.Embed(
+        title=cat["title"],
+        description=f"{cat['description']}\n\n" + "\n".join(lines),
+        color=cat["color"],
+    )
+    if include_footer:
+        embed.set_footer(
+            text="⚡ Auto-Roles 24/7 de Asistente • Elige roles en los menús para activarlos (✅) o quitarlos (❌) • Pulsa 'Mis Roles' para tu vista personal"
+        )
+    return embed
+
+
+def build_autoroles_all_embeds() -> list:
+    """Construye los 3 embeds oficiales de Auto-Roles para el panel unificado."""
+    keys = list(AUTOROLES_CATALOG.keys())
+    return [build_autoroles_category_embed(k, include_footer=(i == len(keys) - 1)) for i, k in enumerate(keys)]
+
+
+def build_personal_autoroles_embed(member_display_name: str, current_role_ids: set, changes_summary: str = "") -> discord.Embed:
+    """Construye el embed efímero con el resumen de autoroles activos del usuario."""
+    total_active = len(current_role_ids & ALL_AUTOROLE_IDS)
+    desc_parts = []
+    if changes_summary:
+        desc_parts.append(changes_summary)
+    desc_parts.append(
+        f"Aquí tienes tus autoroles equipados actualmente (**{total_active} / {len(ALL_AUTOROLE_IDS)}** activos).\n"
+        f"En los menús de abajo ya aparecen **marcados con ✅** los que tienes: marca o desmarca los que quieras para sincronizarlos al vuelo."
+    )
+    embed = discord.Embed(
+        title=f"🎭 Vista Personal de Auto-Roles — {member_display_name}",
+        description="\n\n".join(desc_parts),
+        color=0x8B5CF6,
+    )
+    for cat_key, cat_data in AUTOROLES_CATALOG.items():
+        active_mentions = [
+            f"{emoji} <@&{rid}>"
+            for emoji, rid, _name, _desc in cat_data["roles"]
+            if rid in current_role_ids
+        ]
+        val = " · ".join(active_mentions) if active_mentions else "*Ninguno seleccionado*"
+        embed.add_field(name=cat_data["title"], value=val, inline=False)
+    embed.set_footer(text="Vista personal efímera • Solo tú puedes ver y usar estos menús")
+    return embed
+
+
+async def _resolve_guild_member(interaction: discord.Interaction):
+    """Obtiene el objeto discord.Member actualizado del usuario que interactúa."""
+    if not interaction.guild:
+        return None
+    if isinstance(interaction.user, discord.Member):
+        return interaction.user
+    member = interaction.guild.get_member(interaction.user.id)
+    if not member:
+        try:
+            member = await interaction.guild.fetch_member(interaction.user.id)
+        except Exception:
+            member = None
+    return member
+
+
+async def _apply_role_changes_to_member(guild: discord.Guild, member: discord.Member, to_add_ids: list, to_remove_ids: list, reason: str) -> tuple:
+    """Aplica las altas y bajas de roles al miembro en Discord de forma segura.
+    Devuelve (added_ids_ok, removed_ids_ok, errors)."""
+    added_ok = []
+    removed_ok = []
+    errors = []
+
+    add_objs = []
+    for rid in to_add_ids:
+        if rid not in ALL_AUTOROLE_IDS:
+            continue
+        r_obj = guild.get_role(rid) or discord.Object(id=rid)
+        add_objs.append((rid, r_obj))
+
+    rem_objs = []
+    for rid in to_remove_ids:
+        if rid not in ALL_AUTOROLE_IDS:
+            continue
+        r_obj = guild.get_role(rid) or discord.Object(id=rid)
+        rem_objs.append((rid, r_obj))
+
+    if add_objs:
+        try:
+            await member.add_roles(*[o for _, o in add_objs], reason=reason)
+            added_ok.extend([rid for rid, _ in add_objs])
+        except Exception as e:
+            errors.append(f"Error añadiendo roles: {e}")
+
+    if rem_objs:
+        try:
+            await member.remove_roles(*[o for _, o in rem_objs], reason=reason)
+            removed_ok.extend([rid for rid, _ in rem_objs])
+        except Exception as e:
+            errors.append(f"Error retirando roles: {e}")
+
+    return added_ok, removed_ok, errors
+
+
+class AutoRoleSelect(discord.ui.Select):
+    """Menú desplegable público persistente para una categoría de Auto-Roles (Modo Interruptor / Toggle)."""
+    def __init__(self, cat_key: str, row: int = 0):
+        self.cat_key = cat_key
+        cat = AUTOROLES_CATALOG[cat_key]
+        options = [
+            discord.SelectOption(
+                label=name,
+                value=str(rid),
+                emoji=emoji,
+                description=desc[:100],
+            )
+            for emoji, rid, name, desc in cat["roles"]
+        ]
+        super().__init__(
+            custom_id=f"autoroles:select:{cat_key}",
+            placeholder=cat["placeholder"],
+            min_values=1,
+            max_values=len(options),
+            options=options,
+            row=row,
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        if not interaction.guild:
+            await interaction.response.send_message("❌ Este menú solo funciona dentro del servidor.", ephemeral=True)
+            return
+
+        await interaction.response.defer(ephemeral=True)
+        member = await _resolve_guild_member(interaction)
+        if not member:
+            await interaction.followup.send("❌ No se pudo encontrar tu perfil de miembro en el servidor.", ephemeral=True)
+            return
+
+        current_ids = {r.id for r in getattr(member, "roles", [])}
+        to_add_ids, to_remove_ids = compute_autorole_toggle(current_ids, list(self.values), ALL_AUTOROLE_IDS)
+
+        added_ok, removed_ok, errors = await _apply_role_changes_to_member(
+            interaction.guild,
+            member,
+            to_add_ids,
+            to_remove_ids,
+            reason=f"Auto-Roles Asistente ({self.cat_key})",
+        )
+
+        # Actualizar conjunto de roles tras la operación
+        updated_ids = (current_ids | set(added_ok)) - set(removed_ok)
+
+        # Refrescar el View del mensaje público para limpiar la selección visual en el cliente de Discord
+        if interaction.message:
+            try:
+                select_count = 0
+                has_buttons = False
+                for row_comp in getattr(interaction.message, "components", []):
+                    for child in getattr(row_comp, "children", []):
+                        cid = getattr(child, "custom_id", "") or ""
+                        if cid.startswith("autoroles:select:"):
+                            select_count += 1
+                        elif cid.startswith("autoroles:btn:"):
+                            has_buttons = True
+                if select_count == 1:
+                    fresh_view = AutoRoleCategoryView(self.cat_key, include_buttons=has_buttons)
+                else:
+                    fresh_view = AutoRolesPersistentView()
+                await interaction.message.edit(view=fresh_view)
+            except Exception:
+                pass
+
+        cat = AUTOROLES_CATALOG[self.cat_key]
+        lines = []
+        if added_ok:
+            mentions = ", ".join(f"{AUTOROLE_INFO_BY_ID[rid]['emoji']} <@&{rid}>" for rid in added_ok)
+            lines.append(f"✅ **Roles añadidos:** {mentions}")
+        if removed_ok:
+            mentions = ", ".join(f"{AUTOROLE_INFO_BY_ID[rid]['emoji']} <@&{rid}>" for rid in removed_ok)
+            lines.append(f"❌ **Roles retirados:** {mentions}")
+        if errors:
+            lines.append("⚠️ " + " | ".join(errors))
+        if not lines:
+            lines.append("ℹ️ No se realizaron cambios de roles.")
+
+        cat_active = [
+            f"{emoji} <@&{rid}>"
+            for emoji, rid, _name, _desc in cat["roles"]
+            if rid in updated_ids
+        ]
+        lines.append(
+            f"\n🎭 **Tus roles actuales en {cat['title']}:**\n"
+            + (" · ".join(cat_active) if cat_active else "*Ninguno activo en esta categoría*")
+        )
+
+        embed = discord.Embed(
+            title="⚡ Auto-Roles Actualizados",
+            description="\n".join(lines),
+            color=0x10B981 if added_ok and not removed_ok else (0xF59E0B if removed_ok else 0x3B82F6),
+        )
+        embed.set_footer(text="💡 Tip: Vuelve a elegir un rol si quieres quitártelo, o pulsa '📋 Mis Roles' para ver tu lista marcada.")
+        bot_log(f"🎭 [Auto-Roles] {member.display_name} ({self.cat_key}): +{len(added_ok)} / -{len(removed_ok)}")
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
+
+class PersonalCategorySelect(discord.ui.Select):
+    """Menú desplegable efímero personalizado con las opciones actuales del usuario premarcadas (default=True)."""
+    def __init__(self, cat_key: str, current_role_ids: set, row: int = 0):
+        self.cat_key = cat_key
+        cat = AUTOROLES_CATALOG[cat_key]
+        options = [
+            discord.SelectOption(
+                label=name,
+                value=str(rid),
+                emoji=emoji,
+                description=desc[:100],
+                default=(rid in current_role_ids),
+            )
+            for emoji, rid, name, desc in cat["roles"]
+        ]
+        super().__init__(
+            placeholder=f"✏️ Editar {cat['title']} (marca/desmarca)",
+            min_values=0,
+            max_values=len(options),
+            options=options,
+            row=row,
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        if not interaction.guild:
+            await interaction.response.send_message("❌ Este menú solo funciona en un servidor.", ephemeral=True)
+            return
+
+        member = await _resolve_guild_member(interaction)
+        if not member:
+            await interaction.response.send_message("❌ No se pudo encontrar tu perfil de miembro.", ephemeral=True)
+            return
+
+        current_ids = {r.id for r in getattr(member, "roles", [])}
+        cat_role_ids = [rid for _emoji, rid, _name, _desc in AUTOROLES_CATALOG[self.cat_key]["roles"]]
+        to_add_ids, to_remove_ids = compute_autorole_category_sync(current_ids, list(self.values), cat_role_ids)
+
+        added_ok, removed_ok, errors = await _apply_role_changes_to_member(
+            interaction.guild,
+            member,
+            to_add_ids,
+            to_remove_ids,
+            reason=f"Auto-Roles Vista Personal ({self.cat_key})",
+        )
+
+        updated_ids = (current_ids | set(added_ok)) - set(removed_ok)
+        summary_lines = []
+        if added_ok:
+            summary_lines.append("✅ **Añadidos:** " + ", ".join(f"<@&{rid}>" for rid in added_ok))
+        if removed_ok:
+            summary_lines.append("❌ **Retirados:** " + ", ".join(f"<@&{rid}>" for rid in removed_ok))
+        if errors:
+            summary_lines.append("⚠️ " + " | ".join(errors))
+        if not summary_lines:
+            summary_lines.append("ℹ️ *Sin cambios en esta categoría.*")
+
+        new_embed = build_personal_autoroles_embed(member.display_name, updated_ids, "\n".join(summary_lines))
+        new_view = PersonalAutoRolesView(updated_ids)
+        bot_log(f"🎭 [Auto-Roles Personal] {member.display_name} ({self.cat_key}): +{len(added_ok)} / -{len(removed_ok)}")
+        await interaction.response.edit_message(embed=new_embed, view=new_view)
+
+
+class PersonalAutoRolesView(discord.ui.View):
+    """Vista efímera personalizada donde el usuario ve sus roles premarcados con ✅ y puede editarlos."""
+    def __init__(self, current_role_ids: set):
+        super().__init__(timeout=600)
+        for idx, cat_key in enumerate(AUTOROLES_CATALOG.keys()):
+            self.add_item(PersonalCategorySelect(cat_key, current_role_ids, row=idx))
+
+
+async def _handle_mis_roles_button(interaction: discord.Interaction):
+    if not interaction.guild:
+        await interaction.response.send_message("❌ Solo disponible en el servidor.", ephemeral=True)
+        return
+    member = await _resolve_guild_member(interaction)
+    if not member:
+        await interaction.response.send_message("❌ No se pudo cargar tu perfil de miembro.", ephemeral=True)
+        return
+    current_ids = {r.id for r in getattr(member, "roles", [])}
+    embed = build_personal_autoroles_embed(member.display_name, current_ids)
+    view = PersonalAutoRolesView(current_ids)
+    await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+
+
+async def _handle_limpiar_autoroles_button(interaction: discord.Interaction):
+    if not interaction.guild:
+        await interaction.response.send_message("❌ Solo disponible en el servidor.", ephemeral=True)
+        return
+    member = await _resolve_guild_member(interaction)
+    if not member:
+        await interaction.response.send_message("❌ No se pudo cargar tu perfil de miembro.", ephemeral=True)
+        return
+
+    current_ids = {r.id for r in getattr(member, "roles", [])}
+    active_autoroles = [rid for rid in ALL_AUTOROLE_IDS if rid in current_ids]
+    if not active_autoroles:
+        await interaction.response.send_message(
+            "ℹ️ No tienes ningún autorol de juegos, géneros o hobbies equipado ahora mismo.",
+            ephemeral=True,
+        )
+        return
+
+    await interaction.response.defer(ephemeral=True)
+    _, removed_ok, errors = await _apply_role_changes_to_member(
+        interaction.guild,
+        member,
+        [],
+        active_autoroles,
+        reason="Auto-Roles: Limpieza total solicitada por el usuario",
+    )
+    mentions = ", ".join(f"<@&{rid}>" for rid in removed_ok)
+    desc = f"🗑️ Se han retirado **{len(removed_ok)}** autoroles de tu perfil:\n{mentions}\n\n*(Tus roles de nivel, economía y administración no se tocan nunca)*."
+    if errors:
+        desc += "\n⚠️ " + " | ".join(errors)
+    embed = discord.Embed(title="🧹 Auto-Roles Limpiados", description=desc, color=0xEF4444)
+    bot_log(f"🧹 [Auto-Roles] {member.display_name} limpió todos sus autoroles ({len(removed_ok)} retirados).")
+    await interaction.followup.send(embed=embed, ephemeral=True)
+
+
+class AutoRolesPersistentView(discord.ui.View):
+    """Panel maestro persistente 24/7 con los 3 menús desplegables de categorías y botones de gestión."""
+    def __init__(self):
+        super().__init__(timeout=None)
+        for idx, cat_key in enumerate(AUTOROLES_CATALOG.keys()):
+            self.add_item(AutoRoleSelect(cat_key, row=idx))
+
+        btn_mis_roles = discord.ui.Button(
+            label="Mis Roles / Vista Personal (✅)",
+            style=discord.ButtonStyle.primary,
+            emoji="📋",
+            custom_id="autoroles:btn:mis_roles",
+            row=3,
+        )
+        btn_mis_roles.callback = _handle_mis_roles_button
+        self.add_item(btn_mis_roles)
+
+        btn_limpiar = discord.ui.Button(
+            label="Quitar Todos Mis Autoroles",
+            style=discord.ButtonStyle.danger,
+            emoji="🗑️",
+            custom_id="autoroles:btn:limpiar",
+            row=3,
+        )
+        btn_limpiar.callback = _handle_limpiar_autoroles_button
+        self.add_item(btn_limpiar)
+
+
+class AutoRoleCategoryView(discord.ui.View):
+    """Vista persistente para un mensaje individual de una sola categoría (modo separado)."""
+    def __init__(self, cat_key: str, include_buttons: bool = False):
+        super().__init__(timeout=None)
+        self.add_item(AutoRoleSelect(cat_key, row=0))
+        if include_buttons:
+            btn_mis_roles = discord.ui.Button(
+                label="Mis Roles / Vista Personal (✅)",
+                style=discord.ButtonStyle.primary,
+                emoji="📋",
+                custom_id="autoroles:btn:mis_roles",
+                row=1,
+            )
+            btn_mis_roles.callback = _handle_mis_roles_button
+            self.add_item(btn_mis_roles)
+
+            btn_limpiar = discord.ui.Button(
+                label="Quitar Todos Mis Autoroles",
+                style=discord.ButtonStyle.danger,
+                emoji="🗑️",
+                custom_id="autoroles:btn:limpiar",
+                row=1,
+            )
+            btn_limpiar.callback = _handle_limpiar_autoroles_button
+            self.add_item(btn_limpiar)
+
+
+def is_admin_or_mod(member_or_user) -> bool:
+    """Verifica si el usuario es Administrador, Moderador con gestión de roles/servidor, Joselito o Iván."""
+    uid = getattr(member_or_user, "id", 0)
+    if uid in (857923274771136522, 1208551025578082367):
+        return True
+    perms = getattr(member_or_user, "guild_permissions", None)
+    if perms and (perms.administrator or perms.manage_roles or perms.manage_guild):
+        return True
+    roles = getattr(member_or_user, "roles", [])
+    return any(getattr(r, "id", 0) in (1446145987335950549, 1536783626199633940, 1446145803432235120) for r in roles)
+
+
+@tree.command(name="autoroles", description="Publica el panel interactivo 24/7 de Auto-Roles del servidor (Reemplazo de Carl-bot)")
+@app_commands.describe(
+    canal="Canal donde publicar el panel de Auto-Roles (por defecto el canal actual)",
+    formato="Diseño del panel: Unificado en 1 mensaje o Separado en 3 mensajes por categoría",
+)
+@app_commands.choices(
+    formato=[
+        app_commands.Choice(name="📦 Panel Único Compacto (3 categorías + 3 menús en 1 mensaje)", value="unificado"),
+        app_commands.Choice(name="📑 3 Mensajes Separados por Categoría (estilo Carl-bot)", value="separado"),
+    ]
+)
+async def cmd_autoroles(interaction: discord.Interaction, canal: discord.TextChannel = None, formato: app_commands.Choice[str] = None):
+    if not interaction.guild:
+        await interaction.response.send_message("❌ Este comando solo está disponible en el servidor.", ephemeral=True)
+        return
+
+    member = await _resolve_guild_member(interaction)
+    if not is_admin_or_mod(member or interaction.user):
+        await interaction.response.send_message("❌ Solo los administradores o moderadores pueden publicar el panel de Auto-Roles.", ephemeral=True)
+        return
+
+    target_channel = canal or interaction.channel
+    fmt_val = formato.value if formato else "unificado"
+    await interaction.response.defer(ephemeral=True)
+
+    try:
+        if fmt_val == "separado":
+            keys = list(AUTOROLES_CATALOG.keys())
+            for idx, k in enumerate(keys):
+                is_last = idx == len(keys) - 1
+                emb = build_autoroles_category_embed(k, include_footer=is_last)
+                vw = AutoRoleCategoryView(k, include_buttons=is_last)
+                await target_channel.send(embed=emb, view=vw)
+        else:
+            embeds = build_autoroles_all_embeds()
+            view = AutoRolesPersistentView()
+            await target_channel.send(embeds=embeds, view=view)
+
+        bot_log(f"🎭 [Auto-Roles] Panel ({fmt_val}) publicado en #{target_channel.name} por {interaction.user.display_name}.")
+        await interaction.followup.send(
+            f"✅ **Panel interactivo 24/7 de Auto-Roles** publicado correctamente en <#{target_channel.id}> (`{fmt_val}`).",
+            ephemeral=True,
+        )
+    except Exception as e:
+        await interaction.followup.send(f"❌ Error al publicar el panel de Auto-Roles: {e}", ephemeral=True)
+
+
+# --- SISTEMA DE SUGERENCIAS COMUNITARIAS 24/7 (REEMPLAZO DE CARL-BOT EN #💡sugerencias💡) ---
+SUGGESTIONS_CHANNEL_ID = 1537582722812481696
+# Estado de votos en memoria por message_id: {msg_id: {"up": set(user_ids), "down": set(user_ids), "base_up": int, "base_down": int}}
+SUGGESTION_VOTES_STATE = {}
+
+
+def _extract_votes_from_embed(embed: discord.Embed) -> tuple:
+    """Extrae los contadores (up, down) actuales desde el campo Votos del embed como respaldo tras reinicios."""
+    if not embed or not getattr(embed, "fields", None):
+        return 0, 0
+    for f in embed.fields:
+        if "Votos" in (f.name or ""):
+            m = re.search(r"👍\s*\*\*(\d+)\*\*.*?👎\s*\*\*(\d+)\*\*", f.value or "")
+            if m:
+                return int(m.group(1)), int(m.group(2))
+    return 0, 0
+
+
+def _update_suggestion_embed_votes(embed: discord.Embed, up_count: int, down_count: int) -> discord.Embed:
+    """Actualiza el campo de votos en el embed de una sugerencia."""
+    d = embed.to_dict()
+    fields = d.get("fields", [])
+    vote_str = f"👍 **{up_count}** a favor · 👎 **{down_count}** en contra"
+    updated = False
+    for f in fields:
+        if "Votos" in f.get("name", ""):
+            f["value"] = vote_str
+            updated = True
+            break
+    if not updated:
+        fields.append({"name": "🗳️ Votos", "value": vote_str, "inline": True})
+    d["fields"] = fields
+    return discord.Embed.from_dict(d)
+
+
+class SuggestionDecisionModal(discord.ui.Modal):
+    """Modal para que un administrador apruebe o rechace una sugerencia indicando el motivo."""
+    def __init__(self, action: str, suggestion_message: discord.Message):
+        title = "✅ Aprobar Sugerencia" if action == "approve" else "❌ Rechazar Sugerencia"
+        super().__init__(title=title)
+        self.action = action
+        self.suggestion_message = suggestion_message
+        self.reason_input = discord.ui.TextInput(
+            label="Motivo o comentario de la administración",
+            style=discord.TextStyle.paragraph,
+            placeholder="Ej: Todos los @🔮Pendejo Veterano🔮 votaron a favor / Inviable técnicamente...",
+            required=False,
+            max_length=500,
+        )
+        self.add_item(self.reason_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        if not self.suggestion_message or not self.suggestion_message.embeds:
+            await interaction.response.send_message("❌ No se encontró el embed de la sugerencia.", ephemeral=True)
+            return
+
+        old_embed = self.suggestion_message.embeds[0]
+        d = old_embed.to_dict()
+        num_match = re.search(r"#(\d+)", d.get("title", ""))
+        sug_num = num_match.group(1) if num_match else "?"
+        reason_text = (self.reason_input.value or "").strip() or "Sin motivo especificado"
+        admin_name = interaction.user.display_name
+
+        if self.action == "approve":
+            d["title"] = f"✅ Sugerencia #{sug_num} Aprobada"
+            d["color"] = 0x10B981
+            status_val = f"✅ Aprobada por **{admin_name}**"
+        else:
+            d["title"] = f"❌ Sugerencia #{sug_num} Rechazada"
+            d["color"] = 0xEF4444
+            status_val = f"❌ Rechazada por **{admin_name}**"
+
+        fields = d.get("fields", [])
+        new_fields = []
+        for f in fields:
+            if "Estado" in f.get("name", ""):
+                new_fields.append({"name": "📊 Estado", "value": status_val, "inline": True})
+            elif not f.get("name", "").startswith("⚖️ Motivo de"):
+                new_fields.append(f)
+        new_fields.append({"name": f"⚖️ Motivo de {admin_name}", "value": reason_text, "inline": False})
+        d["fields"] = new_fields
+
+        up_c, down_c = _extract_votes_from_embed(old_embed)
+        closed_view = SuggestionPersistentView(up_count=up_c, down_count=down_c, disabled=True)
+        await self.suggestion_message.edit(embed=discord.Embed.from_dict(d), view=closed_view)
+        bot_log(f"💡 [Sugerencia #{sug_num}] {'Aprobada' if self.action == 'approve' else 'Rechazada'} por {admin_name}: {reason_text}")
+        await interaction.response.send_message(
+            f"✅ Has marcado la **Sugerencia #{sug_num}** como **{'Aprobada' if self.action == 'approve' else 'Rechazada'}**.",
+            ephemeral=True,
+        )
+
+
+class SuggestionPersistentView(discord.ui.View):
+    """Vista interactiva persistente 24/7 para votar y moderar sugerencias de la comunidad."""
+    def __init__(self, up_count: int = 0, down_count: int = 0, disabled: bool = False):
+        super().__init__(timeout=None)
+        btn_up = discord.ui.Button(
+            label=f"A favor ({up_count})",
+            style=discord.ButtonStyle.success,
+            emoji="👍",
+            custom_id="sugerencia:vote:up",
+            disabled=disabled,
+            row=0,
+        )
+        btn_up.callback = self.on_vote_up
+        self.add_item(btn_up)
+
+        btn_down = discord.ui.Button(
+            label=f"En contra ({down_count})",
+            style=discord.ButtonStyle.secondary,
+            emoji="👎",
+            custom_id="sugerencia:vote:down",
+            disabled=disabled,
+            row=0,
+        )
+        btn_down.callback = self.on_vote_down
+        self.add_item(btn_down)
+
+        btn_approve = discord.ui.Button(
+            label="Aprobar",
+            style=discord.ButtonStyle.primary,
+            emoji="✅",
+            custom_id="sugerencia:mod:approve",
+            disabled=disabled,
+            row=0,
+        )
+        btn_approve.callback = self.on_approve
+        self.add_item(btn_approve)
+
+        btn_reject = discord.ui.Button(
+            label="Rechazar",
+            style=discord.ButtonStyle.danger,
+            emoji="❌",
+            custom_id="sugerencia:mod:reject",
+            disabled=disabled,
+            row=0,
+        )
+        btn_reject.callback = self.on_reject
+        self.add_item(btn_reject)
+
+    async def _handle_vote(self, interaction: discord.Interaction, direction: str):
+        msg = interaction.message
+        if not msg or not msg.embeds:
+            await interaction.response.send_message("❌ No se pudo leer la sugerencia.", ephemeral=True)
+            return
+
+        emb = msg.embeds[0]
+        state = SUGGESTION_VOTES_STATE.get(msg.id)
+        if state is None:
+            b_up, b_down = _extract_votes_from_embed(emb)
+            state = {"up": set(), "down": set(), "base_up": b_up, "base_down": b_down}
+            SUGGESTION_VOTES_STATE[msg.id] = state
+
+        uid = interaction.user.id
+        if direction == "up":
+            if uid in state["up"]:
+                state["up"].remove(uid)
+                notice = "ℹ️ Has retirado tu voto a favor."
+            else:
+                state["down"].discard(uid)
+                state["up"].add(uid)
+                notice = "👍 ¡Voto a favor registrado!"
+        else:
+            if uid in state["down"]:
+                state["down"].remove(uid)
+                notice = "ℹ️ Has retirado tu voto en contra."
+            else:
+                state["up"].discard(uid)
+                state["down"].add(uid)
+                notice = "👎 Voto en contra registrado."
+
+        up_total = state["base_up"] + len(state["up"])
+        down_total = state["base_down"] + len(state["down"])
+        new_emb = _update_suggestion_embed_votes(emb, up_total, down_total)
+        new_view = SuggestionPersistentView(up_count=up_total, down_count=down_total, disabled=False)
+        await interaction.response.edit_message(embed=new_emb, view=new_view)
+        await interaction.followup.send(notice, ephemeral=True)
+
+    async def on_vote_up(self, interaction: discord.Interaction):
+        await self._handle_vote(interaction, "up")
+
+    async def on_vote_down(self, interaction: discord.Interaction):
+        await self._handle_vote(interaction, "down")
+
+    async def on_approve(self, interaction: discord.Interaction):
+        member = await _resolve_guild_member(interaction)
+        if not is_admin_or_mod(member or interaction.user):
+            await interaction.response.send_message("❌ Solo los administradores pueden aprobar o rechazar sugerencias.", ephemeral=True)
+            return
+        await interaction.response.send_modal(SuggestionDecisionModal("approve", interaction.message))
+
+    async def on_reject(self, interaction: discord.Interaction):
+        member = await _resolve_guild_member(interaction)
+        if not is_admin_or_mod(member or interaction.user):
+            await interaction.response.send_message("❌ Solo los administradores pueden aprobar o rechazar sugerencias.", ephemeral=True)
+            return
+        await interaction.response.send_modal(SuggestionDecisionModal("reject", interaction.message))
+
+
+async def _get_next_suggestion_number(channel: discord.TextChannel) -> int:
+    """Obtiene el siguiente número correlativo de sugerencia leyendo el historial de #sugerencias."""
+    highest = 8  # Carl-bot llegó hasta Suggestion #8
+    try:
+        async for m in channel.history(limit=35):
+            for emb in getattr(m, "embeds", []):
+                t = getattr(emb, "title", "") or ""
+                match = re.search(r"(?:Suggestion|Sugerencia)\s*#(\d+)", t, re.IGNORECASE)
+                if match:
+                    num = int(match.group(1))
+                    if num > highest:
+                        highest = num
+    except Exception:
+        pass
+    return highest + 1
+
+
+@tree.command(name="sugerencia", description="Envía una propuesta a #💡sugerencias💡 para votación comunitaria (Reemplazo de Carl-bot)")
+@app_commands.describe(idea="Describe tu sugerencia o mejora para el servidor")
+async def cmd_sugerencia(interaction: discord.Interaction, idea: str):
+    if not interaction.guild:
+        await interaction.response.send_message("❌ Este comando solo funciona en el servidor.", ephemeral=True)
+        return
+
+    clean_idea = idea.strip()
+    if len(clean_idea) < 5:
+        await interaction.response.send_message("⚠️ Describe tu sugerencia con un poco más de detalle (mínimo 5 caracteres).", ephemeral=True)
+        return
+
+    await interaction.response.defer(ephemeral=True)
+    sug_channel = interaction.guild.get_channel(SUGGESTIONS_CHANNEL_ID)
+    if not sug_channel or not isinstance(sug_channel, discord.TextChannel):
+        sug_channel = discord.utils.find(lambda c: "sugerencia" in c.name.lower(), interaction.guild.text_channels) or interaction.channel
+
+    next_num = await _get_next_suggestion_number(sug_channel)
+    embed = discord.Embed(
+        title=f"💡 Sugerencia #{next_num}",
+        description=clean_idea,
+        color=0x3B82F6,
+        timestamp=datetime.now(timezone.utc),
+    )
+    embed.set_author(
+        name=f"{interaction.user.display_name} (@{interaction.user.name})",
+        icon_url=str(interaction.user.display_avatar.url),
+    )
+    embed.add_field(name="📊 Estado", value="⏳ En votación comunitaria", inline=True)
+    embed.add_field(name="🗳️ Votos", value="👍 **1** a favor · 👎 **0** en contra", inline=True)
+    embed.set_footer(text=f"Autor ID: {interaction.user.id} • Usa /sugerencia para proponer ideas")
+
+    view = SuggestionPersistentView(up_count=1, down_count=0, disabled=False)
+    sent_msg = await sug_channel.send(embed=embed, view=view)
+    SUGGESTION_VOTES_STATE[sent_msg.id] = {
+        "up": {interaction.user.id},
+        "down": set(),
+        "base_up": 0,
+        "base_down": 0,
+    }
+    bot_log(f"💡 [Sugerencia #{next_num}] Creada por {interaction.user.display_name} en #{sug_channel.name}.")
+    await interaction.followup.send(
+        f"✅ ¡Tu **Sugerencia #{next_num}** ha sido publicada en <#{sug_channel.id}> para votación comunitaria!",
+        ephemeral=True,
+    )
+
+
 @bot.event
 async def on_ready():
     bot_log(f"Bot '{bot.user}' conectado y listo en Discord.")
     bot_log(f"Motores de IA con respaldo: {MODELS_PRIORITY}")
     bot_log(f"Ajedrez: python-chess {'OK' if chess else 'NO disponible'} | Stockfish {'OK' if os.path.exists(STOCKFISH_PATH) else 'NO encontrado'} ({STOCKFISH_PATH})")
-    bot_log("Capacidades activas: Gemini Live en Voz (/geminilive), Memoria Persistente, Trivial, Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y Slash Commands.")
-    
+    bot_log("Capacidades activas: Gemini Live en Voz (/geminilive), Auto-Roles 24/7 (/autoroles), Sugerencias (/sugerencia), Memoria Persistente, Trivial, Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y Slash Commands.")
+
+    # Registrar vistas interactivas persistentes 24/7 (sobreviven a reinicios de Render sin expirar jamás)
+    try:
+        bot.add_view(AutoRolesPersistentView())
+        bot.add_view(SuggestionPersistentView())
+        bot_log("🎭 [Persistent Views] AutoRolesPersistentView y SuggestionPersistentView registradas 24/7.")
+    except Exception as e_view:
+        bot_log(f"Aviso registrando vistas persistentes: {e_view}")
+
     # Sincronización instantánea de Slash Commands en el servidor (sin duplicados globales)
     try:
         GUILD_ID = 1446143936891715616
