@@ -1,5 +1,9 @@
 # 📊 Auditoría Técnica y Análisis Integral del Bot 'Asistente' (/boost)
 
+> [!WARNING] **Documento Histórico (Snapshot Previo a la Modularización)**  
+> Este documento refleja el diagnóstico realizado el 17 de octubre de 2026, cuando `bot_service.py` operaba como un monolito de 3.879 líneas.  
+> **Estado Actual (18/10/2026)**: El bot ha sido completamente modularizado en el paquete `modulos/` (7 submódulos), reduciendo `bot_service.py` a 442 líneas como conector central limpio.
+
 > **Documento de Auditoría, Diagnóstico Técnico y Plan de Potenciación**  
 > **Fecha:** 17 de Octubre de 2026  
 > **Sistema:** Bot Asistente en Discord (`bot_service.py`)  
@@ -7,6 +11,7 @@
 > **Servidor Discord:** LOS MONGOLOS DEL SANVI Y SUS AMIGOS (ID `1446143936891715616`)
 
 ---
+
 
 ## 1. Resumen Ejecutivo y Situación Actual
 
