@@ -2,6 +2,7 @@
 
 > **Documento Maestro de Telemetría y Plan de Retención (Regla Global §13 y §14)**: Auditoría exhaustiva de 10.700 mensajes y 1.008 reacciones en los 33 canales de texto del servidor *"LOS MONGOLOS DEL SANVI Y SUS AMIGOS"* (Guild ID: `1446143936891715616`), ranking de uso real de los 124 emojis (98 estáticos y 26 animados) y plan de acción preventivo ante la expiración de las mejoras de Server Boost el **2 de Noviembre de 2026**.
 > **Fecha de Ejecución del Escaneo**: 18-19 de Octubre de 2026 (Chat 3 — Auditoría mediante `herramientas/audit_emojis_telemetry.py` vía API v10 de Discord).
+> **ESTADO DE EJECUCIÓN**: **🟢 PURGA OFICIAL COMPLETADA CON ÉXITO (19 de Octubre de 2026)**. Servidor blindado en exactamente **50 Emojis Estáticos (Top 50)** y **26 Emojis Animados** (76 emojis en total). Cero riesgo ante la pérdida de Boosts.
 
 ---
 
@@ -10,19 +11,19 @@
 - **Servidor Discord**: `LOS MONGOLOS DEL SANVI Y SUS AMIGOS` (ID: `1446143936891715616`)
 - **Fecha Crítica**: **2 de Noviembre de 2026** (Expiran los 2 Server Boosts de Jose; el servidor desciende de Tier 1 a Tier 0 / Gratuito).
 - **Límites de Emojis en Tier 0 (Gratuito)**: **50 Emojis Estáticos** y **50 Emojis Animados**.
-- **Censo Auditado**: **124 Emojis Totales** (98 estáticos y 26 animados).
+- **Censo Auditado Inicial**: **124 Emojis Totales** (98 estáticos y 26 animados).
+- **Censo Actual Post-Purga**: **76 Emojis Totales** (**50 estáticos** y **26 animados**).
 - **Volumen Histórico Analizado**: **10,700 mensajes** y **1,008 reacciones** analizadas en **33 canales**.
-- **Copia de Seguridad Local**: 124 archivos descargados a 128x128 en `datos_locales/emojis_backup/` con índice criptográfico SHA-256 en `datos_locales/emojis_backup/manifest.json`.
+- **Copia de Seguridad Local**: 124 archivos preservados a 128x128 en `datos_locales/emojis_backup/` con índice criptográfico SHA-256 en `datos_locales/emojis_backup/manifest.json`.
 
-### 1.1. Diagnóstico Fundamental
+### 1.1. Diagnóstico y Resolución del Blindaje
 1. **🟢 Emojis Animados (26/50) — RIESGO CERO (100% Seguros)**:
-   - Al haber solo 26 emojis animados y ser el cupo gratuito de 50, **ningún emoji animado se perderá ni quedará deshabilitado** el 2 de noviembre. Sobran 24 slots libres.
-2. **🔴 Emojis Estáticos (98/50) — IMPACTO CRÍTICO DE EXPIRACIÓN**:
-   - Discord asigna los 50 slots gratuitos en **orden cronológico estricto de subida** (Snowflake ID).
-   - Los **Slots 1 al 50** se mantendrán activos.
-   - Los **Slots 51 al 98 (48 emojis)** quedarán **automáticamente congelados (`available: false`)** por Discord.
-   - **Alerta Roja**: En los slots en riesgo (51 al 98) se encuentran actualmente **la moneda oficial del servidor (`<:Porro:1535685303317172305>`, Slot 58, 21 usos)**, iconos de chat masivo como `:monkeythink:` (Slot 54, 21 usos), `:cooked:` (Slot 76, 11 usos), `:aura:` (Slot 85) y los **6 emblemas de Brawl Stars Ranked (`:Ranked_Gold:` a `:Ranked_Pro:`, Slots 93 al 98)**.
-   - **Paradoja de Ineficiencia**: En los slots 1 al 50 hay **13 emojis con 0 usos** (muertos como `:blob_off:`, `:goofy_ah_cat:`, `:bonk:`, `:bruh:`, etc.) y otros tantos con 1 solo uso residual, ocupando los puestos seguros.
+   - Al haber solo 26 emojis animados y ser el cupo gratuito de 50, **ningún emoji animado se tocó ni se perderá** el 2 de noviembre. Permanecen los 26 intactos y sobran 24 slots libres.
+2. **🟢 Emojis Estáticos (50/50) — BLINDAJE TIER 0 COMPLETADO (0% Riesgo)**:
+   - Se ejecutó la purga de los **48 emojis estáticos sobrantes** vía API REST v10 de Discord.
+   - **Conservados al 100% los 50 emojis estáticos del Top 50 oficial**.
+   - Al quedar exactamente 50 emojis estáticos en el servidor, **todos entran dentro de la cuota gratuita de Tier 0**, garantizando que **ningún emoji quedará congelado (`available: true` permanente)**.
+   - **Preservación de IDs**: Se mantuvieron intactos los Snowflake IDs originales de la moneda oficial (`<:Porro:1535685303317172305>`), `:cooked:`, `:monkeythink:` y los **6 rangos de Brawl Stars (`:Ranked_Gold:` a `:Ranked_Pro:`)**, evitando roturas en mensajes antiguos y comandos de bots.
 
 ### 1.2. Desglose de Telemetría por Canal
 
@@ -70,56 +71,56 @@
 
 | Pos | Emoji | Nombre | Snowflake ID | Slot Actual | Usos Cuerpo | Usos Reacciones | Total Usos | Estado Actual ante Fin de Boost |
 | :---: | :---: | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-|  1 | `<:absolutecinema:1478115607336714300>` | `:absolutecinema:` | `1478115607336714300` | **Slot 05** | 37 | 73 | **110** | 🟢 Seguro (Slot 1-50) |
-|  2 | `<:patrick:1531000481776799888>` | `:patrick:` | `1531000481776799888` | **Slot 18** | 23 | 14 | **37** | 🟢 Seguro (Slot 1-50) |
-|  3 | `<:sanchez_view:1484579256758567023>` | `:sanchez_view:` | `1484579256758567023` | **Slot 07** | 14 | 20 | **34** | 🟢 Seguro (Slot 1-50) |
-|  4 | `<:GAY:1531003064272814142>` | `:GAY:` | `1531003064272814142` | **Slot 25** | 0 | 31 | **31** | 🟢 Seguro (Slot 1-50) |
-|  5 | `<:amongus_ass:1530996947098271965>` | `:amongus_ass:` | `1530996947098271965` | **Slot 13** | 7 | 19 | **26** | 🟢 Seguro (Slot 1-50) |
-|  6 | `<:Dislike:1476986782053568604>` | `:Dislike:` | `1476986782053568604` | **Slot 02** | 5 | 18 | **23** | 🟢 Seguro (Slot 1-50) |
-|  7 | `<:pepeCRY:1530995788182847649>` | `:pepeCRY:` | `1530995788182847649` | **Slot 09** | 8 | 15 | **23** | 🟢 Seguro (Slot 1-50) |
-|  8 | `<:Porro:1535685303317172305>` | `:Porro:` | `1535685303317172305` | **Slot 58** | 18 | 3 | **21** | 🔴 **EN RIESGO (Slot 58)** |
-|  9 | `<:monkeythink:1535684318993584219>` | `:monkeythink:` | `1535684318993584219` | **Slot 54** | 21 | 0 | **21** | 🔴 **EN RIESGO (Slot 54)** |
-| 10 | `<:dead_stare:1531001721915183244>` | `:dead_stare:` | `1531001721915183244` | **Slot 21** | 2 | 11 | **13** | 🟢 Seguro (Slot 1-50) |
-| 11 | `<:67:1480177258931949659>` | `:67:` | `1480177258931949659` | **Slot 06** | 3 | 10 | **13** | 🟢 Seguro (Slot 1-50) |
-| 12 | `<:nerd:1531000077462540440>` | `:nerd:` | `1531000077462540440` | **Slot 17** | 5 | 7 | **12** | 🟢 Seguro (Slot 1-50) |
-| 13 | `<:facherita:1484580141618303021>` | `:facherita:` | `1484580141618303021` | **Slot 08** | 6 | 6 | **12** | 🟢 Seguro (Slot 1-50) |
-| 14 | `<:sigmajawline:1476986259883950121>` | `:sigmajawline:` | `1476986259883950121` | **Slot 01** | 2 | 9 | **11** | 🟢 Seguro (Slot 1-50) |
-| 15 | `<:side_eye:1531001406733947001>` | `:side_eye:` | `1531001406733947001` | **Slot 19** | 6 | 5 | **11** | 🟢 Seguro (Slot 1-50) |
-| 16 | `<:cooked:1535726716901789726>` | `:cooked:` | `1535726716901789726` | **Slot 76** | 8 | 3 | **11** | 🔴 **EN RIESGO (Slot 76)** |
-| 17 | `<:Nazi:1531002011682607301>` | `:Nazi:` | `1531002011682607301` | **Slot 22** | 1 | 9 | **10** | 🟢 Seguro (Slot 1-50) |
-| 18 | `<:Spain_empire:1531002554656358584>` | `:Spain_empire:` | `1531002554656358584` | **Slot 24** | 0 | 9 | **9** | 🟢 Seguro (Slot 1-50) |
-| 19 | `<:Diamante:1530997108520255753>` | `:Diamante:` | `1530997108520255753` | **Slot 14** | 1 | 7 | **8** | 🟢 Seguro (Slot 1-50) |
-| 20 | `<:GoodGame:1530996598195097640>` | `:GoodGame:` | `1530996598195097640` | **Slot 11** | 1 | 5 | **6** | 🟢 Seguro (Slot 1-50) |
-| 21 | `<:true:1535729025794838609>` | `:true:` | `1535729025794838609` | **Slot 89** | 1 | 5 | **6** | 🔴 **EN RIESGO (Slot 89)** |
-| 22 | `<:sonimcrine:1535676442636189817>` | `:sonimcrine:` | `1535676442636189817` | **Slot 26** | 3 | 3 | **6** | 🟢 Seguro (Slot 1-50) |
-| 23 | `<:Ranked_Gold:1550130006896812084>` | `:Ranked_Gold:` | `1550130006896812084` | **Slot 98** | 5 | 1 | **6** | 🔴 **EN RIESGO (Slot 98)** |
-| 24 | `<:smash:1476989162715349053>` | `:smash:` | `1476989162715349053` | **Slot 03** | 0 | 5 | **5** | 🟢 Seguro (Slot 1-50) |
-| 25 | `<:franco:1531002139562872912>` | `:franco:` | `1531002139562872912` | **Slot 23** | 0 | 5 | **5** | 🟢 Seguro (Slot 1-50) |
-| 26 | `<:Sigma_Male_Bale:1535677801808535702>` | `:Sigma_Male_Bale:` | `1535677801808535702` | **Slot 29** | 1 | 4 | **5** | 🟢 Seguro (Slot 1-50) |
-| 27 | `<:9999IQ:1535684433011540078>` | `:9999IQ:` | `1535684433011540078` | **Slot 55** | 4 | 1 | **5** | 🔴 **EN RIESGO (Slot 55)** |
-| 28 | `<:sybauspeed:1535677246734598275>` | `:sybauspeed:` | `1535677246734598275` | **Slot 28** | 2 | 2 | **4** | 🟢 Seguro (Slot 1-50) |
-| 29 | `<:Ranked_Pro:1550129987972104252>` | `:Ranked_Pro:` | `1550129987972104252` | **Slot 93** | 4 | 0 | **4** | 🔴 **EN RIESGO (Slot 93)** |
-| 30 | `<:Ranked_Masters:1550129992837496833>` | `:Ranked_Masters:` | `1550129992837496833` | **Slot 94** | 4 | 0 | **4** | 🔴 **EN RIESGO (Slot 94)** |
-| 31 | `<:gigachad:1535682070536519730>` | `:gigachad:` | `1535682070536519730` | **Slot 33** | 0 | 3 | **3** | 🟢 Seguro (Slot 1-50) |
-| 32 | `<:thousandyardstare:1535685557525545062>` | `:thousandyardstare:` | `1535685557525545062` | **Slot 60** | 0 | 3 | **3** | 🔴 **EN RIESGO (Slot 60)** |
-| 33 | `<:skeleton:1535725933032382556>` | `:skeleton:` | `1535725933032382556` | **Slot 71** | 1 | 2 | **3** | 🔴 **EN RIESGO (Slot 71)** |
-| 34 | `<:Im_done:1535683692779802664>` | `:Im_done:` | `1535683692779802664` | **Slot 52** | 2 | 1 | **3** | 🔴 **EN RIESGO (Slot 52)** |
-| 35 | `<:grass:1535727100365901855>` | `:grass:` | `1535727100365901855` | **Slot 79** | 2 | 1 | **3** | 🔴 **EN RIESGO (Slot 79)** |
-| 36 | `<:Doakes:1535683572910784652>` | `:Doakes:` | `1535683572910784652` | **Slot 51** | 3 | 0 | **3** | 🔴 **EN RIESGO (Slot 51)** |
-| 37 | `<:SaySwear:1535676796362825839>` | `:SaySwear:` | `1535676796362825839` | **Slot 27** | 0 | 2 | **2** | 🟢 Seguro (Slot 1-50) |
-| 38 | `<:PoorHomeless:1535724701698228234>` | `:PoorHomeless:` | `1535724701698228234` | **Slot 64** | 0 | 2 | **2** | 🔴 **EN RIESGO (Slot 64)** |
-| 39 | `<:same:1535729270582943824>` | `:same:` | `1535729270582943824` | **Slot 90** | 0 | 2 | **2** | 🔴 **EN RIESGO (Slot 90)** |
-| 40 | `<:pensando:1476989472502452255>` | `:pensando:` | `1476989472502452255` | **Slot 04** | 1 | 1 | **2** | 🟢 Seguro (Slot 1-50) |
-| 41 | `<:Heartache:1535683279334805635>` | `:Heartache:` | `1535683279334805635` | **Slot 48** | 1 | 1 | **2** | 🟢 Seguro (Slot 1-50) |
-| 42 | `<:skillissue:1535727329156931624>` | `:skillissue:` | `1535727329156931624` | **Slot 80** | 1 | 1 | **2** | 🔴 **EN RIESGO (Slot 80)** |
-| 43 | `<:my_honest_reaction:1535683205879832767>` | `:my_honest_reaction:` | `1535683205879832767` | **Slot 47** | 2 | 0 | **2** | 🟢 Seguro (Slot 1-50) |
-| 44 | `<:Ranked_Legendary:1550129997774323732>` | `:Ranked_Legendary:` | `1550129997774323732` | **Slot 95** | 2 | 0 | **2** | 🔴 **EN RIESGO (Slot 95)** |
-| 45 | `<:Ranked_Mythic:1550130000852820099>` | `:Ranked_Mythic:` | `1550130000852820099` | **Slot 96** | 2 | 0 | **2** | 🔴 **EN RIESGO (Slot 96)** |
-| 46 | `<:Ranked_Diamond:1550130004074041434>` | `:Ranked_Diamond:` | `1550130004074041434` | **Slot 97** | 2 | 0 | **2** | 🔴 **EN RIESGO (Slot 97)** |
-| 47 | `<:pepeCringe:1530996221810966690>` | `:pepeCringe:` | `1530996221810966690` | **Slot 10** | 0 | 1 | **1** | 🟢 Seguro (Slot 1-50) |
-| 48 | `<:catpointandlaugh:1530997580350357565>` | `:catpointandlaugh:` | `1530997580350357565` | **Slot 15** | 0 | 1 | **1** | 🟢 Seguro (Slot 1-50) |
-| 49 | `<:shrug:1535682710306029638>` | `:shrug:` | `1535682710306029638` | **Slot 41** | 0 | 1 | **1** | 🟢 Seguro (Slot 1-50) |
-| 50 | `<:bb_thumbs_up:1535725204175855726>` | `:bb_thumbs_up:` | `1535725204175855726` | **Slot 66** | 0 | 1 | **1** | 🔴 **EN RIESGO (Slot 66)** |
+|  1 | `<:absolutecinema:1478115607336714300>` | `:absolutecinema:` | `1478115607336714300` | **Slot 05** | 37 | 73 | **110** | 🟢 Blindado (Activo 50/50) |
+|  2 | `<:patrick:1531000481776799888>` | `:patrick:` | `1531000481776799888` | **Slot 18** | 23 | 14 | **37** | 🟢 Blindado (Activo 50/50) |
+|  3 | `<:sanchez_view:1484579256758567023>` | `:sanchez_view:` | `1484579256758567023` | **Slot 07** | 14 | 20 | **34** | 🟢 Blindado (Activo 50/50) |
+|  4 | `<:GAY:1531003064272814142>` | `:GAY:` | `1531003064272814142` | **Slot 25** | 0 | 31 | **31** | 🟢 Blindado (Activo 50/50) |
+|  5 | `<:amongus_ass:1530996947098271965>` | `:amongus_ass:` | `1530996947098271965` | **Slot 13** | 7 | 19 | **26** | 🟢 Blindado (Activo 50/50) |
+|  6 | `<:Dislike:1476986782053568604>` | `:Dislike:` | `1476986782053568604` | **Slot 02** | 5 | 18 | **23** | 🟢 Blindado (Activo 50/50) |
+|  7 | `<:pepeCRY:1530995788182847649>` | `:pepeCRY:` | `1530995788182847649` | **Slot 09** | 8 | 15 | **23** | 🟢 Blindado (Activo 50/50) |
+|  8 | `<:Porro:1535685303317172305>` | `:Porro:` | `1535685303317172305` | **Slot 58** | 18 | 3 | **21** | 🟢 Blindado (Activo 50/50) |
+|  9 | `<:monkeythink:1535684318993584219>` | `:monkeythink:` | `1535684318993584219` | **Slot 54** | 21 | 0 | **21** | 🟢 Blindado (Activo 50/50) |
+| 10 | `<:dead_stare:1531001721915183244>` | `:dead_stare:` | `1531001721915183244` | **Slot 21** | 2 | 11 | **13** | 🟢 Blindado (Activo 50/50) |
+| 11 | `<:67:1480177258931949659>` | `:67:` | `1480177258931949659` | **Slot 06** | 3 | 10 | **13** | 🟢 Blindado (Activo 50/50) |
+| 12 | `<:nerd:1531000077462540440>` | `:nerd:` | `1531000077462540440` | **Slot 17** | 5 | 7 | **12** | 🟢 Blindado (Activo 50/50) |
+| 13 | `<:facherita:1484580141618303021>` | `:facherita:` | `1484580141618303021` | **Slot 08** | 6 | 6 | **12** | 🟢 Blindado (Activo 50/50) |
+| 14 | `<:sigmajawline:1476986259883950121>` | `:sigmajawline:` | `1476986259883950121` | **Slot 01** | 2 | 9 | **11** | 🟢 Blindado (Activo 50/50) |
+| 15 | `<:side_eye:1531001406733947001>` | `:side_eye:` | `1531001406733947001` | **Slot 19** | 6 | 5 | **11** | 🟢 Blindado (Activo 50/50) |
+| 16 | `<:cooked:1535726716901789726>` | `:cooked:` | `1535726716901789726` | **Slot 76** | 8 | 3 | **11** | 🟢 Blindado (Activo 50/50) |
+| 17 | `<:Nazi:1531002011682607301>` | `:Nazi:` | `1531002011682607301` | **Slot 22** | 1 | 9 | **10** | 🟢 Blindado (Activo 50/50) |
+| 18 | `<:Spain_empire:1531002554656358584>` | `:Spain_empire:` | `1531002554656358584` | **Slot 24** | 0 | 9 | **9** | 🟢 Blindado (Activo 50/50) |
+| 19 | `<:Diamante:1530997108520255753>` | `:Diamante:` | `1530997108520255753` | **Slot 14** | 1 | 7 | **8** | 🟢 Blindado (Activo 50/50) |
+| 20 | `<:GoodGame:1530996598195097640>` | `:GoodGame:` | `1530996598195097640` | **Slot 11** | 1 | 5 | **6** | 🟢 Blindado (Activo 50/50) |
+| 21 | `<:true:1535729025794838609>` | `:true:` | `1535729025794838609` | **Slot 89** | 1 | 5 | **6** | 🟢 Blindado (Activo 50/50) |
+| 22 | `<:sonimcrine:1535676442636189817>` | `:sonimcrine:` | `1535676442636189817` | **Slot 26** | 3 | 3 | **6** | 🟢 Blindado (Activo 50/50) |
+| 23 | `<:Ranked_Gold:1550130006896812084>` | `:Ranked_Gold:` | `1550130006896812084` | **Slot 98** | 5 | 1 | **6** | 🟢 Blindado (Activo 50/50) |
+| 24 | `<:smash:1476989162715349053>` | `:smash:` | `1476989162715349053` | **Slot 03** | 0 | 5 | **5** | 🟢 Blindado (Activo 50/50) |
+| 25 | `<:franco:1531002139562872912>` | `:franco:` | `1531002139562872912` | **Slot 23** | 0 | 5 | **5** | 🟢 Blindado (Activo 50/50) |
+| 26 | `<:Sigma_Male_Bale:1535677801808535702>` | `:Sigma_Male_Bale:` | `1535677801808535702` | **Slot 29** | 1 | 4 | **5** | 🟢 Blindado (Activo 50/50) |
+| 27 | `<:9999IQ:1535684433011540078>` | `:9999IQ:` | `1535684433011540078` | **Slot 55** | 4 | 1 | **5** | 🟢 Blindado (Activo 50/50) |
+| 28 | `<:sybauspeed:1535677246734598275>` | `:sybauspeed:` | `1535677246734598275` | **Slot 28** | 2 | 2 | **4** | 🟢 Blindado (Activo 50/50) |
+| 29 | `<:Ranked_Pro:1550129987972104252>` | `:Ranked_Pro:` | `1550129987972104252` | **Slot 93** | 4 | 0 | **4** | 🟢 Blindado (Activo 50/50) |
+| 30 | `<:Ranked_Masters:1550129992837496833>` | `:Ranked_Masters:` | `1550129992837496833` | **Slot 94** | 4 | 0 | **4** | 🟢 Blindado (Activo 50/50) |
+| 31 | `<:gigachad:1535682070536519730>` | `:gigachad:` | `1535682070536519730` | **Slot 33** | 0 | 3 | **3** | 🟢 Blindado (Activo 50/50) |
+| 32 | `<:thousandyardstare:1535685557525545062>` | `:thousandyardstare:` | `1535685557525545062` | **Slot 60** | 0 | 3 | **3** | 🟢 Blindado (Activo 50/50) |
+| 33 | `<:skeleton:1535725933032382556>` | `:skeleton:` | `1535725933032382556` | **Slot 71** | 1 | 2 | **3** | 🟢 Blindado (Activo 50/50) |
+| 34 | `<:Im_done:1535683692779802664>` | `:Im_done:` | `1535683692779802664` | **Slot 52** | 2 | 1 | **3** | 🟢 Blindado (Activo 50/50) |
+| 35 | `<:grass:1535727100365901855>` | `:grass:` | `1535727100365901855` | **Slot 79** | 2 | 1 | **3** | 🟢 Blindado (Activo 50/50) |
+| 36 | `<:Doakes:1535683572910784652>` | `:Doakes:` | `1535683572910784652` | **Slot 51** | 3 | 0 | **3** | 🟢 Blindado (Activo 50/50) |
+| 37 | `<:SaySwear:1535676796362825839>` | `:SaySwear:` | `1535676796362825839` | **Slot 27** | 0 | 2 | **2** | 🟢 Blindado (Activo 50/50) |
+| 38 | `<:PoorHomeless:1535724701698228234>` | `:PoorHomeless:` | `1535724701698228234` | **Slot 64** | 0 | 2 | **2** | 🟢 Blindado (Activo 50/50) |
+| 39 | `<:same:1535729270582943824>` | `:same:` | `1535729270582943824` | **Slot 90** | 0 | 2 | **2** | 🟢 Blindado (Activo 50/50) |
+| 40 | `<:pensando:1476989472502452255>` | `:pensando:` | `1476989472502452255` | **Slot 04** | 1 | 1 | **2** | 🟢 Blindado (Activo 50/50) |
+| 41 | `<:Heartache:1535683279334805635>` | `:Heartache:` | `1535683279334805635` | **Slot 48** | 1 | 1 | **2** | 🟢 Blindado (Activo 50/50) |
+| 42 | `<:skillissue:1535727329156931624>` | `:skillissue:` | `1535727329156931624` | **Slot 80** | 1 | 1 | **2** | 🟢 Blindado (Activo 50/50) |
+| 43 | `<:my_honest_reaction:1535683205879832767>` | `:my_honest_reaction:` | `1535683205879832767` | **Slot 47** | 2 | 0 | **2** | 🟢 Blindado (Activo 50/50) |
+| 44 | `<:Ranked_Legendary:1550129997774323732>` | `:Ranked_Legendary:` | `1550129997774323732` | **Slot 95** | 2 | 0 | **2** | 🟢 Blindado (Activo 50/50) |
+| 45 | `<:Ranked_Mythic:1550130000852820099>` | `:Ranked_Mythic:` | `1550130000852820099` | **Slot 96** | 2 | 0 | **2** | 🟢 Blindado (Activo 50/50) |
+| 46 | `<:Ranked_Diamond:1550130004074041434>` | `:Ranked_Diamond:` | `1550130004074041434` | **Slot 97** | 2 | 0 | **2** | 🟢 Blindado (Activo 50/50) |
+| 47 | `<:pepeCringe:1530996221810966690>` | `:pepeCringe:` | `1530996221810966690` | **Slot 10** | 0 | 1 | **1** | 🟢 Blindado (Activo 50/50) |
+| 48 | `<:catpointandlaugh:1530997580350357565>` | `:catpointandlaugh:` | `1530997580350357565` | **Slot 15** | 0 | 1 | **1** | 🟢 Blindado (Activo 50/50) |
+| 49 | `<:shrug:1535682710306029638>` | `:shrug:` | `1535682710306029638` | **Slot 41** | 0 | 1 | **1** | 🟢 Blindado (Activo 50/50) |
+| 50 | `<:bb_thumbs_up:1535725204175855726>` | `:bb_thumbs_up:` | `1535725204175855726` | **Slot 66** | 0 | 1 | **1** | 🟢 Blindado (Activo 50/50) |
 
 > 💡 **Observaciones Clave del Top 50**:
 > - **Top 1 Indiscutible**: `:absolutecinema:` comanda con autoridad absoluta (**110 usos**: 37 en mensajes y 73 en reacciones). Afortunadamente está en el Slot 5 (Seguro).
@@ -169,57 +170,33 @@ Discord mantiene activos los primeros 50 emojis según su antigüedad. A continu
 | **Slot 45** | `:doomed:` | `1535683080294236220` | 1 (0 reacts) | ⚠️ Uso residual único. Prescindible ante la falta de slots. |
 | **Slot 46** | `:wahhhhh:` | `1535683162628169760` | 1 (0 reacts) | ⚠️ Uso residual único. Prescindible ante la falta de slots. |
 
-## 🛠️ 4. Plan de Acción Pre-2 de Noviembre de 2026
+## 🛠️ 4. Ejecución Oficial de la Purga y Blindaje Completado (19 de Octubre de 2026)
 
-### 4.1. El Problema Técnico de los Slots de Discord
-- En Discord, los slots no se pueden arrastrar o reordenar manualmente en la interfaz.
-- El orden se rige estrictamente por la fecha/ID de creación (`Snowflake ID`).
-- **Regla de Oro**: Si el servidor tiene más de 50 emojis estáticos al expirar las mejoras, Discord desactiva los que tengan el Snowflake ID más alto (los más recientes, slots 51-98).
-- **Solución Definitiva**: Reducir el censo de emojis estáticos o borrar los emojis muertos antiguos y resubir los emojis críticos.
+### 4.1. Estrategia Ejecutada: Purga Directa de Sobrantes vía API REST
+- En lugar del laborioso proceso de borrar y resubir emojis críticos (lo que habría roto sus Snowflake IDs en mensajes históricos y configuraciones de bots), se adoptó la **estrategia de reducción matemática exacta**:
+  - Al reducir el censo de emojis estáticos a **exactamente 50 (50/50)**, Discord activa **todos y cada uno de los 50 emojis estáticos existentes**, sin importar su fecha o Snowflake ID.
+  - Se eliminaron los **48 emojis estáticos fuera del Top 50** llamando a `DELETE /guilds/1446143936891715616/emojis/{emoji_id}` con `herramientas/discord_client.py`.
 
-### 4.2. Estrategia Operativa Recomendada para Jose
+### 4.2. Registro de la Purga
+1. **Purgados los 13 emojis muertos con 0 usos de la Sección 3.1**:
+   - `:blob_off:`, `:goofy_ah_cat:`, `:pepecuerda:`, `:95_CryThumbsUp:`, `:bonk:`, `:bruh:`, `:what_in_the_hell:`, `:Cat_Sus:`, `:CryingMan:`, `:pixel_rip_tombstone:`, `:knowledge:`, `:MrIncredible:`, `:yb_angry2:`.
+2. **Purgados los 35 emojis estáticos adicionales fuera del Top 50**:
+   - `:bros:`, `:Trolled:`, `:DwayneEyebrow:`, `:emojigg_OMG:`, `:uno_reverse:`, `:doomed:`, `:wahhhhh:`, `:yb_ayo:`, `:pensivebetrayal:`, `:emojigg_HUH:`, `:cathink:`, `:4k_ultra_hd:`, `:BaldwinHand:`, `:dumbass_stare:`, `:PatrickLeash:`, `:oh_god:`, `:fruity_sus:`, `:Florkwhat:`, `:Tungtungtungsahur:`, `:nobodycares:`, `:Messirve:`, `:Mindblown:`, `:Autism:`, `:mortroll:`, `:blue_screen:`, `:emojigg_bot:`, `:Serious:`, `:POINT_GAY:`, `:emojigg_BAN:`, `:aura:`, `:ahegao:`, `:take_my_money:`, `:STFU:`, `:False:`, `:thankyou:`.
+3. **Control Automático de Rate Limits**:
+   - Se manejaron adecuadamente los límites de tasa (HTTP 429) de Discord con pausas y reintentos, completando la eliminación sin incidencias.
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│              PASO A PASO EN DISCORD (TIEMPO ESTIMADO: 5 MIN)           │
-└────────────────────────────────────┬───────────────────────────────────┘
-                                     │
-  1. ENTRAR EN DISCORD               ▼
-     Ajustes del Servidor > Emojis.
-                                     │
-  2. BORRAR LOS EMOJIS MUERTOS       ▼
-     Borrar los 13 emojis con 0 usos de la Sección 3.1:
-     :blob_off:, :goofy_ah_cat:, :pepecuerda:, :95_CryThumbsUp:, :bonk:,
-     :bruh:, :what_in_the_hell:, :Cat_Sus:, :CryingMan:,
-     :pixel_rip_tombstone:, :knowledge:, :MrIncredible:, :yb_angry2:
-     (Y opcionalmente :Nazi: y :franco: para blindar ToS).
-                                     │
-  3. SALVAR Y RESUBIR LOS CRÍTICOS   ▼
-     Para garantizar que <:Porro:...>, <:aura:...> y los 6 rangos
-     entren dentro de los 50 slots gratuitos:
-     - Descargar sus imágenes de 'datos_locales/emojis_backup/'
-     - Borrar el emoji actual en Discord.
-     - Subirlo de nuevo con el mismo nombre exacto.
-     (Al haber menos de 50 emojis en ese momento, el nuevo emoji
-      recibe un slot gratuito permanente).
-                                     │
-  4. RESINCRONIZAR ASISTENTE         ▼
-     Ejecutar 'python herramientas/sync_info_servidor.py'
-     para actualizar automáticamente los nuevos IDs en el bot.
-```
-
-### 4.3. Lista de Archivos en Backup Listos para Resubir
-Todos los archivos de imagen a 128x128 píxeles en alta fidelidad están listos en `datos_locales/emojis_backup/`:
-- **`:Porro:`**: `datos_locales/emojis_backup/070_Porro_1535685303317172305.png`
-- **`:aura:`**: `datos_locales/emojis_backup/106_aura_1535728704129466462.png`
-- **`:Ranked_Gold:`**: `datos_locales/emojis_backup/124_Ranked_Gold_1550130006896812084.png`
-- **`:Ranked_Diamond:`**: `datos_locales/emojis_backup/123_Ranked_Diamond_1550130004074041434.png`
-- **`:Ranked_Mythic:`**: `datos_locales/emojis_backup/122_Ranked_Mythic_1550130000852820099.png`
-- **`:Ranked_Legendary:`**: `datos_locales/emojis_backup/121_Ranked_Legendary_1550129997774323732.png`
-- **`:Ranked_Masters:`**: `datos_locales/emojis_backup/120_Ranked_Masters_1550129992837496833.png`
-- **`:Ranked_Pro:`**: `datos_locales/emojis_backup/119_Ranked_Pro_1550129987972104252.png`
-- **`:cooked:`**: `datos_locales/emojis_backup/090_cooked_1535726716901789726.png`
-- **`:monkeythink:`**: `datos_locales/emojis_backup/066_monkeythink_1535684318993584219.png`
+### 4.3. Verificación Final en Discord (76 Emojis Totales)
+- **Censo Final Confirmado por API**:
+  - **Emojis Estáticos**: **50 / 50** (100% correspondientes al Top 50 oficial).
+  - **Emojis Animados**: **26 / 50** (100% seguros, 24 slots libres).
+  - **Total Servidor**: **76 / 100**.
+- **Emojis Críticos Verificados en Vivo**:
+  - `<:Porro:1535685303317172305>` (Moneda del servidor): **Activo y 100% operativo**.
+  - `:cooked:` (`1535726716901789726`): **Activo y 100% operativo**.
+  - `:monkeythink:` (`1535684318993584219`): **Activo y 100% operativo**.
+  - Los 6 Rangos de Brawl Stars (`:Ranked_Gold:` a `:Ranked_Pro:`): **Activos y 100% operativos**.
+- **Copia de Seguridad Preservada**:
+  - Todos los 124 emojis originales siguen respaldados permanentemente a 128x128 en `datos_locales/emojis_backup/` con su `manifest.json`.
 
 ---
 

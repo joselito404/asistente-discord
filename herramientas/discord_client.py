@@ -23,18 +23,20 @@ def load_config():
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
         return json.load(f)
 
-def get_headers():
+def get_headers(has_body=False):
     cfg = load_config()
-    return {
+    headers = {
         "Authorization": f"Bot {cfg['token']}",
-        "Content-Type": "application/json",
         "User-Agent": "AntigravityDiscordClient/1.0"
     }
+    if has_body:
+        headers["Content-Type"] = "application/json"
+    return headers
 
 def request(endpoint, method="GET", data=None):
     url = f"https://discord.com/api/v10{endpoint}"
-    headers = get_headers()
-    body = json.dumps(data).encode("utf-8") if data else None
+    headers = get_headers(has_body=(data is not None))
+    body = json.dumps(data).encode("utf-8") if data is not None else None
     req = urllib.request.Request(url, data=body, headers=headers, method=method)
     try:
         with urllib.request.urlopen(req) as resp:
