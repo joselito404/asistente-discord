@@ -38,7 +38,8 @@ def request(endpoint, method="GET", data=None):
     req = urllib.request.Request(url, data=body, headers=headers, method=method)
     try:
         with urllib.request.urlopen(req) as resp:
-            return json.loads(resp.read().decode("utf-8"))
+            content = resp.read().decode("utf-8")
+            return json.loads(content) if content.strip() else {}
     except urllib.error.HTTPError as e:
         error_msg = e.read().decode("utf-8")
         raise RuntimeError(f"HTTP {e.code}: {error_msg}")
