@@ -30,21 +30,21 @@ AUTOROLES_CATALOG = {
         "description": "Selecciona tus dispositivos, idiomas o aficiones en el menú desplegable para asignarte (✅) o quitarte (❌) los roles al instante:",
         "color": 0x5865F2,
         "roles": [
-            ("💻", 1537577523011911772, "PC", "Jugador de PC / Escritorio"),
-            ("🎮", 1537593228209950720, "Consola", "PlayStation, Xbox o Nintendo Switch"),
-            ("🍿", 1537592958747148368, "Cine", "Películas, series y debate cinéfilo"),
-            ("📖", 1537593474721906759, "lectura", "Libros, novelas ligeras y lectura"),
-            ("🤝", 1537577153862967366, "Co-op", "Juegos cooperativos (acceso a #juegos-cooperativos)"),
-            ("📚", 1537593587670327356, "manga", "Lectores de manga japonés"),
-            ("🐉", 1537593562772799498, "anime", "Temporadas de anime y películas"),
-            ("🇰🇷", 1537593440303325275, "Manhwa", "Manhwas, webtoons y cultura coreana"),
-            ("👥", 1537593280232165396, "Familia de Steam", "Miembros de la Familia de Steam (#familia-steam)"),
-            ("⚽", 1537594961837428776, "Deportes", "Fútbol, motor, deporte y eventos"),
-            ("🌙", 1537593627105038466, "nocturno", "Búhos nocturnos y charlas de madrugada"),
-            ("🇪🇸", 1537594201326489690, "Español", "Hablante de español"),
-            ("🇬🇧", 1537594249720242216, "ingles", "Hablante / lector en inglés"),
-            ("⚡", 1537593357713412146, "Tryhard", "Competitivo, ranked y sudar la camiseta"),
-            ("☕", 1537593381830529104, "Casual", "Jugar de chill y pasar el rato"),
+            ("💻", 1537577523011911772, "PC", None),
+            ("🎮", 1537593228209950720, "Consola", None),
+            ("🍿", 1537592958747148368, "Cine", "Películas y series"),
+            ("📖", 1537593474721906759, "lectura", "Libros y novelas"),
+            ("🤝", 1537577153862967366, "Co-op", "Juegos cooperativos"),
+            ("📚", 1537593587670327356, "manga", None),
+            ("🐉", 1537593562772799498, "anime", None),
+            ("🇰🇷", 1537593440303325275, "Manhwa", None),
+            ("👥", 1537593280232165396, "Familia de Steam", None),
+            ("⚽", 1537594961837428776, "Deportes", None),
+            ("🌙", 1537593627105038466, "nocturno", "Charlas de noche"),
+            ("🇪🇸", 1537594201326489690, "Español", None),
+            ("🇬🇧", 1537594249720242216, "ingles", None),
+            ("⚡", 1537593357713412146, "Tryhard", "Juego competitivo"),
+            ("☕", 1537593381830529104, "Casual", "Jugar de chill"),
         ],
     },
     "generos": {
@@ -53,19 +53,19 @@ AUTOROLES_CATALOG = {
         "description": "Selecciona los géneros de videojuegos y avisos que te interesen:",
         "color": 0x10B981,
         "roles": [
-            ("🎯", 1537591932010766367, "Shooters", "FPS, tácticos y juegos de disparos"),
-            ("🌲", 1537592360291008612, "Survival", "Supervivencia, crafteo y mundo abierto"),
-            ("🎒", 1537592390142132396, "Extraction", "Extraction shooters y loot de alto riesgo"),
-            ("💀", 1537592856380706906, "Roguelike", "Roguelikes, roguelites y runs infinitas"),
-            ("🗡️", 1537595229627224124, "RPG", "Juegos de rol, historia y aventura"),
-            ("🤼", 1537594274093465683, "Peleas", "Fighting games y combates 1v1"),
-            ("🚨", 1537594120078368768, "Falta Uno", "Ping cuando falta hueco en el lobby"),
-            ("🃏", 1537595303346053221, "Cartas", "Deckbuilders, TCG y juegos de cartas"),
-            ("♟️", 1537595282190237706, "Estrategia", "RTS, 4X, táctica y ajedrez"),
-            ("⭐", 1537914650274963598, "recomendaciones de juegos", "Avisos de joyas y análisis en #recomendaciones-gaming"),
-            ("🔥", 1537595250695209000, "Soulslike", "FromSoftware, bosses duros y acción desafiante"),
-            ("🕹️", 1537592919815360632, "Indie", "Juegos independientes y propuestas originales"),
-            ("📈", 1537934178283290664, "incremental", "Idle, clickers y números que suben"),
+            ("🎯", 1537591932010766367, "Shooters", None),
+            ("🌲", 1537592360291008612, "Survival", None),
+            ("🎒", 1537592390142132396, "Extraction", None),
+            ("💀", 1537592856380706906, "Roguelike", None),
+            ("🗡️", 1537595229627224124, "RPG", None),
+            ("🤼", 1537594274093465683, "Peleas", None),
+            ("🚨", 1537594120078368768, "Falta Uno", "Avisos para completar partida"),
+            ("🃏", 1537595303346053221, "Cartas", None),
+            ("♟️", 1537595282190237706, "Estrategia", None),
+            ("⭐", 1537914650274963598, "recomendaciones de juegos", None),
+            ("🔥", 1537595250695209000, "Soulslike", None),
+            ("🕹️", 1537592919815360632, "Indie", None),
+            ("📈", 1537934178283290664, "incremental", None),
         ],
     },
     "juegos": {
@@ -74,14 +74,14 @@ AUTOROLES_CATALOG = {
         "description": "Selecciona los juegos a los que juegas para enterarte cuando se arme partida:",
         "color": 0xF59E0B,
         "roles": [
-            ("📱", 1537591875656224820, "Brawl Stars", "Partidas, club y Matcherino de Brawl Stars"),
-            ("🤖", 1537914271483297812, "ARC Raiders", "Escuadrones en ARC Raiders"),
-            ("🪂", 1537914329167302718, "Fornite", "Battle Royale y modos de Fortnite"),
-            ("💥", 1537914381277462719, "The finals", "Torneos y destrucción en THE FINALS"),
-            ("📦", 1537914482724970576, "R.E.P.O", "Cooperativo y risas en R.E.P.O."),
-            ("🌻", 1537914562823594024, "PVZ GW2", "Plants vs. Zombies: Garden Warfare 2"),
-            ("⛰️", 1537914820223828038, "PEAK", "Escalada cooperativa en PEAK"),
-            ("🚶", 1548716906213543986, "Big Walk", "Aventuras cooperativas en Big Walk"),
+            ("📱", 1537591875656224820, "Brawl Stars", None),
+            ("🤖", 1537914271483297812, "ARC Raiders", None),
+            ("🪂", 1537914329167302718, "Fornite", None),
+            ("💥", 1537914381277462719, "The finals", None),
+            ("📦", 1537914482724970576, "R.E.P.O", None),
+            ("🌻", 1537914562823594024, "PVZ GW2", "Plants vs. Zombies GW2"),
+            ("⛰️", 1537914820223828038, "PEAK", None),
+            ("🚶", 1548716906213543986, "Big Walk", None),
         ],
     },
 }
@@ -139,9 +139,11 @@ def compute_autorole_category_sync(current_role_ids: set, selected_role_ids: lis
 
 
 def build_autoroles_category_embed(cat_key: str, include_footer: bool = False) -> discord.Embed:
-    """Construye el embed visual de una categoría de Auto-Roles con menciones nativas <@&ID>."""
     cat = AUTOROLES_CATALOG[cat_key]
-    lines = [f"{emoji} <@&{rid}> — *{desc}*" for emoji, rid, _name, desc in cat["roles"]]
+    lines = [
+        f"{emoji} <@&{rid}>" + (f" — *{desc}*" if desc else "")
+        for emoji, rid, _name, desc in cat["roles"]
+    ]
     embed = discord.Embed(
         title=cat["title"],
         description=f"{cat['description']}\n\n" + "\n".join(lines),
@@ -267,7 +269,7 @@ class AutoRoleSelect(discord.ui.Select):
                 label=name,
                 value=str(rid),
                 emoji=emoji,
-                description=desc[:100],
+                description=desc[:100] if desc else None,
             )
             for emoji, rid, name, desc in cat["roles"]
         ]
@@ -369,7 +371,7 @@ class PersonalCategorySelect(discord.ui.Select):
                 label=name,
                 value=str(rid),
                 emoji=emoji,
-                description=desc[:100],
+                description=desc[:100] if desc else None,
                 default=(rid in current_role_ids),
             )
             for emoji, rid, name, desc in cat["roles"]
