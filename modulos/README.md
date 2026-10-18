@@ -32,6 +32,13 @@ Cualquier agente o desarrollador autorizado que trabaje en nuevas funcionalidade
    - Receptor de audio bidireccional en vivo con **Gemini Live 2.5 Native Audio** (`GeminiLiveVoiceSink`, `ensure_voice_connection`, `play_audio_in_voice`) y retención de grabaciones 24h (`RECORDINGS_DIR`, `load_recordings_metadata`).
 6. **`web_server.py`**: Servidor HTTP de diagnóstico y portal de grabaciones (puerto 10000 en Render):
    - Health-check `HTTP 200 OK` (`/`), estado JSON (`/status`), visor de logs en vivo (`/logs`) y portal/API de grabaciones de voz de las últimas 24h (`/audios`, `/audios/zip`, `/api/audios`).
+7. **`chat_ia.py`**: Motor conversacional y orquestador LLM de Gemini:
+   - System Prompt con lore del servidor, Circuit Breaker inteligente de modelos (`MODELS_PRIORITY`, `mark_model_cooldown`), cliente multi-turno (`call_gemini_multiturn`).
+   - Monitor de niveles reales de Cakey Bot (`get_live_levels_dict`), cálculo cuadrático de XP (`calculate_xp_gap`), memoria de usuarios (`user_memory`).
+   - Búsqueda web contextual en vivo (`search_web_lite`), radar de voz, censos y enrutador principal de mensajes (`_handle_message_safe`).
+8. **`comandos.py`**: Registro unificado de Comandos Slash nativos:
+   - Declaración de los 22 comandos interactivos (`@app_commands.command`) con descripciones y choices.
+   - Función `register_slash_commands(tree)` para registro limpio en el `CommandTree`.
 
 ## Cómo se usa e integra con `bot_service.py`
 - `bot_service.py` actúa como punto de entrada único (`python bot_service.py`), registra `sys.modules.setdefault("bot_service", sys.modules[__name__])` y reexporta las funciones, clases y constantes de `modulos.*`.
