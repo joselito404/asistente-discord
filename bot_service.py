@@ -231,6 +231,9 @@ from modulos.autoroles import (
 )
 
 from modulos.chat_ia import (
+    SERVER_EMOJIS_DATA,
+    DISABLED_EMOJI_FALLBACK,
+    format_server_emojis,
     MODELS_PRIORITY,
     model_cooldowns,
     get_available_models,

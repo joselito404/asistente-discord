@@ -35,6 +35,7 @@ Cualquier agente o desarrollador autorizado que trabaje en nuevas funcionalidade
 7. **`chat_ia.py`**: Motor conversacional y orquestador LLM de Gemini:
    - System Prompt con lore del servidor, Circuit Breaker inteligente de modelos (`MODELS_PRIORITY`, `mark_model_cooldown`), cliente multi-turno (`call_gemini_multiturn`).
    - Monitor de niveles reales de Cakey Bot (`get_live_levels_dict`), cálculo cuadrático de XP (`calculate_xp_gap`), memoria de usuarios (`user_memory`).
+   - Catálogo canónico de 124 emojis del servidor (`SERVER_EMOJIS_DATA`), auto-conversor pre-envío regex (`format_server_emojis`) y arquitectura resiliente ante expiración de Server Boost con fallbacks limpios (`DISABLED_EMOJI_FALLBACK`).
    - Búsqueda web contextual en vivo (`search_web_lite`), radar de voz, censos y enrutador principal de mensajes (`_handle_message_safe`).
 8. **`comandos.py`**: Registro unificado de Comandos Slash nativos:
    - Declaración de los 22 comandos interactivos (`@app_commands.command`) con descripciones y choices.

@@ -352,7 +352,7 @@ async def cmd_perfil(interaction: discord.Interaction, usuario: discord.Member =
 @app_commands.command(name="pregunta", description="Haz una pregunta o debate con el Asistente sin necesidad de mencionarlo")
 @app_commands.describe(duda="Tu pregunta sobre juegos, anime, hardware, salseo o cualquier tema")
 async def cmd_pregunta(interaction: discord.Interaction, duda: str):
-    from modulos.chat_ia import call_gemini_multiturn, get_spain_now_str
+    from modulos.chat_ia import call_gemini_multiturn, get_spain_now_str, format_server_emojis
     from modulos.graficos import generate_image_flux, ImageActionView
 
     await interaction.response.defer(thinking=True)
@@ -365,6 +365,7 @@ async def cmd_pregunta(interaction: discord.Interaction, duda: str):
     if draw_match:
         prompt_flux = draw_match.group(1).strip()
         clean_response = re.sub(r"\[ACTION_DRAW:\s*.*?\]", "", response, flags=re.DOTALL | re.IGNORECASE).strip()
+        clean_response = format_server_emojis(clean_response, guild=interaction.guild)
         try:
             img_bytes = await asyncio.to_thread(generate_image_flux, prompt_flux)
             file = discord.File(io.BytesIO(img_bytes), filename="creacion_flux.png")
@@ -374,6 +375,7 @@ async def cmd_pregunta(interaction: discord.Interaction, duda: str):
         except Exception:
             pass
 
+    response = format_server_emojis(response, guild=interaction.guild)
     if len(response) <= 1900:
         await interaction.followup.send(response)
     else:

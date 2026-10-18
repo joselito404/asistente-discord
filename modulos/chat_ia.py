@@ -99,6 +99,256 @@ def mark_model_cooldown(model_name: str, duration_sec: int = 60):
     _bot_log(f"⚡ [Circuit Breaker] Modelo '{model_name}' en cooldown por {duration_sec}s.")
 
 
+# ==========================================
+# CATÁLOGO DE EMOJIS DEL SERVIDOR Y CONVERSOR
+# ==========================================
+
+# Diccionario canónico de los 124 emojis del servidor (98 estáticos, 26 animados)
+SERVER_EMOJIS_DATA = {
+    "sigmajawline": {"name": "sigmajawline", "id": 1476986259883950121, "animated": False, "is_safe": True, "rank": 1},
+    "dislike": {"name": "Dislike", "id": 1476986782053568604, "animated": False, "is_safe": True, "rank": 2},
+    "smash": {"name": "smash", "id": 1476989162715349053, "animated": False, "is_safe": True, "rank": 3},
+    "pensando": {"name": "pensando", "id": 1476989472502452255, "animated": False, "is_safe": True, "rank": 4},
+    "absolutecinema": {"name": "absolutecinema", "id": 1478115607336714300, "animated": False, "is_safe": True, "rank": 5},
+    "67": {"name": "67", "id": 1480177258931949659, "animated": False, "is_safe": True, "rank": 6},
+    "sanchez_view": {"name": "sanchez_view", "id": 1484579256758567023, "animated": False, "is_safe": True, "rank": 7},
+    "facherita": {"name": "facherita", "id": 1484580141618303021, "animated": False, "is_safe": True, "rank": 8},
+    "pepecry": {"name": "pepeCRY", "id": 1530995788182847649, "animated": False, "is_safe": True, "rank": 9},
+    "pepecringe": {"name": "pepeCringe", "id": 1530996221810966690, "animated": False, "is_safe": True, "rank": 10},
+    "goodgame": {"name": "GoodGame", "id": 1530996598195097640, "animated": False, "is_safe": True, "rank": 11},
+    "blob_off": {"name": "blob_off", "id": 1530996740298375410, "animated": False, "is_safe": True, "rank": 12},
+    "amongus_ass": {"name": "amongus_ass", "id": 1530996947098271965, "animated": False, "is_safe": True, "rank": 13},
+    "diamante": {"name": "Diamante", "id": 1530997108520255753, "animated": False, "is_safe": True, "rank": 14},
+    "catpointandlaugh": {"name": "catpointandlaugh", "id": 1530997580350357565, "animated": False, "is_safe": True, "rank": 15},
+    "goofy_ah_cat": {"name": "goofy_ah_cat", "id": 1530997748340363399, "animated": False, "is_safe": True, "rank": 16},
+    "nerd": {"name": "nerd", "id": 1531000077462540440, "animated": False, "is_safe": True, "rank": 17},
+    "patrick": {"name": "patrick", "id": 1531000481776799888, "animated": False, "is_safe": True, "rank": 18},
+    "side_eye": {"name": "side_eye", "id": 1531001406733947001, "animated": False, "is_safe": True, "rank": 19},
+    "bros": {"name": "bros", "id": 1531001502066413678, "animated": False, "is_safe": True, "rank": 20},
+    "dead_stare": {"name": "dead_stare", "id": 1531001721915183244, "animated": False, "is_safe": True, "rank": 21},
+    "nazi": {"name": "Nazi", "id": 1531002011682607301, "animated": False, "is_safe": True, "rank": 22},
+    "franco": {"name": "franco", "id": 1531002139562872912, "animated": False, "is_safe": True, "rank": 23},
+    "spain_empire": {"name": "Spain_empire", "id": 1531002554656358584, "animated": False, "is_safe": True, "rank": 24},
+    "gay": {"name": "GAY", "id": 1531003064272814142, "animated": False, "is_safe": True, "rank": 25},
+    "sonimcrine": {"name": "sonimcrine", "id": 1535676442636189817, "animated": False, "is_safe": True, "rank": 26},
+    "sayswear": {"name": "SaySwear", "id": 1535676796362825839, "animated": False, "is_safe": True, "rank": 27},
+    "sybauspeed": {"name": "sybauspeed", "id": 1535677246734598275, "animated": False, "is_safe": True, "rank": 28},
+    "sigma_male_bale": {"name": "Sigma_Male_Bale", "id": 1535677801808535702, "animated": False, "is_safe": True, "rank": 29},
+    "pepecuerda": {"name": "pepecuerda", "id": 1535680479330701433, "animated": False, "is_safe": True, "rank": 30},
+    "95_crythumbsup": {"name": "95_CryThumbsUp", "id": 1535681917473656882, "animated": False, "is_safe": True, "rank": 31},
+    "bonk": {"name": "bonk", "id": 1535681979843092620, "animated": False, "is_safe": True, "rank": 32},
+    "gigachad": {"name": "gigachad", "id": 1535682070536519730, "animated": False, "is_safe": True, "rank": 33},
+    "trolled": {"name": "Trolled", "id": 1535682153818357802, "animated": False, "is_safe": True, "rank": 34},
+    "dwayneeyebrow": {"name": "DwayneEyebrow", "id": 1535682237817823362, "animated": False, "is_safe": True, "rank": 35},
+    "bruh": {"name": "bruh", "id": 1535682294139060235, "animated": False, "is_safe": True, "rank": 36},
+    "emojigg_omg": {"name": "emojigg_OMG", "id": 1535682384450691153, "animated": False, "is_safe": True, "rank": 37},
+    "what_in_the_hell": {"name": "what_in_the_hell", "id": 1535682520698585180, "animated": False, "is_safe": True, "rank": 38},
+    "uno_reverse": {"name": "uno_reverse", "id": 1535682567968129095, "animated": False, "is_safe": True, "rank": 39},
+    "cat_sus": {"name": "Cat_Sus", "id": 1535682639544197212, "animated": False, "is_safe": True, "rank": 40},
+    "shrug": {"name": "shrug", "id": 1535682710306029638, "animated": False, "is_safe": True, "rank": 41},
+    "cryingman": {"name": "CryingMan", "id": 1535682791755481141, "animated": False, "is_safe": True, "rank": 42},
+    "pixel_rip_tombstone": {"name": "pixel_rip_tombstone", "id": 1535682950056906752, "animated": False, "is_safe": True, "rank": 43},
+    "knowledge": {"name": "knowledge", "id": 1535683001533337640, "animated": False, "is_safe": True, "rank": 44},
+    "doomed": {"name": "doomed", "id": 1535683080294236220, "animated": False, "is_safe": True, "rank": 45},
+    "wahhhhh": {"name": "wahhhhh", "id": 1535683162628169760, "animated": False, "is_safe": True, "rank": 46},
+    "my_honest_reaction": {"name": "my_honest_reaction", "id": 1535683205879832767, "animated": False, "is_safe": True, "rank": 47},
+    "heartache": {"name": "Heartache", "id": 1535683279334805635, "animated": False, "is_safe": True, "rank": 48},
+    "mrincredible": {"name": "MrIncredible", "id": 1535683403158921338, "animated": False, "is_safe": True, "rank": 49},
+    "yb_angry2": {"name": "yb_angry2", "id": 1535683502937350145, "animated": False, "is_safe": True, "rank": 50},
+    "doakes": {"name": "Doakes", "id": 1535683572910784652, "animated": False, "is_safe": False, "rank": 51},
+    "im_done": {"name": "Im_done", "id": 1535683692779802664, "animated": False, "is_safe": False, "rank": 52},
+    "yb_ayo": {"name": "yb_ayo", "id": 1535683762182955051, "animated": False, "is_safe": False, "rank": 53},
+    "monkeythink": {"name": "monkeythink", "id": 1535684318993584219, "animated": False, "is_safe": False, "rank": 54},
+    "9999iq": {"name": "9999IQ", "id": 1535684433011540078, "animated": False, "is_safe": False, "rank": 55},
+    "pensivebetrayal": {"name": "pensivebetrayal", "id": 1535684508542832690, "animated": False, "is_safe": False, "rank": 56},
+    "emojigg_huh": {"name": "emojigg_HUH", "id": 1535684921795026984, "animated": False, "is_safe": False, "rank": 57},
+    "porro": {"name": "Porro", "id": 1535685303317172305, "animated": False, "is_safe": False, "rank": 58},
+    "cathink": {"name": "cathink", "id": 1535685385424867400, "animated": False, "is_safe": False, "rank": 59},
+    "thousandyardstare": {"name": "thousandyardstare", "id": 1535685557525545062, "animated": False, "is_safe": False, "rank": 60},
+    "4k_ultra_hd": {"name": "4k_ultra_hd", "id": 1535685617026080911, "animated": False, "is_safe": False, "rank": 61},
+    "baldwinhand": {"name": "BaldwinHand", "id": 1535724200013201408, "animated": False, "is_safe": False, "rank": 62},
+    "dumbass_stare": {"name": "dumbass_stare", "id": 1535724333756977253, "animated": False, "is_safe": False, "rank": 63},
+    "poorhomeless": {"name": "PoorHomeless", "id": 1535724701698228234, "animated": False, "is_safe": False, "rank": 64},
+    "patrickleash": {"name": "PatrickLeash", "id": 1535724791644954691, "animated": False, "is_safe": False, "rank": 65},
+    "bb_thumbs_up": {"name": "bb_thumbs_up", "id": 1535725204175855726, "animated": False, "is_safe": False, "rank": 66},
+    "oh_god": {"name": "oh_god", "id": 1535725370723147939, "animated": False, "is_safe": False, "rank": 67},
+    "fruity_sus": {"name": "fruity_sus", "id": 1535725573190455308, "animated": False, "is_safe": False, "rank": 68},
+    "florkwhat": {"name": "Florkwhat", "id": 1535725634779619472, "animated": False, "is_safe": False, "rank": 69},
+    "tungtungtungsahur": {"name": "Tungtungtungsahur", "id": 1535725729503772813, "animated": False, "is_safe": False, "rank": 70},
+    "skeleton": {"name": "skeleton", "id": 1535725933032382556, "animated": False, "is_safe": False, "rank": 71},
+    "nobodycares": {"name": "nobodycares", "id": 1535726064293257298, "animated": False, "is_safe": False, "rank": 72},
+    "messirve": {"name": "Messirve", "id": 1535726367847743528, "animated": False, "is_safe": False, "rank": 73},
+    "mindblown": {"name": "Mindblown", "id": 1535726556318793798, "animated": False, "is_safe": False, "rank": 74},
+    "autism": {"name": "Autism", "id": 1535726626049101926, "animated": False, "is_safe": False, "rank": 75},
+    "cooked": {"name": "cooked", "id": 1535726716901789726, "animated": False, "is_safe": False, "rank": 76},
+    "mortroll": {"name": "mortroll", "id": 1535726810086641795, "animated": False, "is_safe": False, "rank": 77},
+    "blue_screen": {"name": "blue_screen", "id": 1535726947831914576, "animated": False, "is_safe": False, "rank": 78},
+    "grass": {"name": "grass", "id": 1535727100365901855, "animated": False, "is_safe": False, "rank": 79},
+    "skillissue": {"name": "skillissue", "id": 1535727329156931624, "animated": False, "is_safe": False, "rank": 80},
+    "emojigg_bot": {"name": "emojigg_bot", "id": 1535727917441744937, "animated": False, "is_safe": False, "rank": 81},
+    "serious": {"name": "Serious", "id": 1535728149038366851, "animated": False, "is_safe": False, "rank": 82},
+    "point_gay": {"name": "POINT_GAY", "id": 1535728247696789564, "animated": False, "is_safe": False, "rank": 83},
+    "emojigg_ban": {"name": "emojigg_BAN", "id": 1535728476181495870, "animated": False, "is_safe": False, "rank": 84},
+    "aura": {"name": "aura", "id": 1535728704129466462, "animated": False, "is_safe": False, "rank": 85},
+    "ahegao": {"name": "ahegao", "id": 1535728782630191174, "animated": False, "is_safe": False, "rank": 86},
+    "take_my_money": {"name": "take_my_money", "id": 1535728830097133751, "animated": False, "is_safe": False, "rank": 87},
+    "stfu": {"name": "STFU", "id": 1535728963371147296, "animated": False, "is_safe": False, "rank": 88},
+    "true": {"name": "true", "id": 1535729025794838609, "animated": False, "is_safe": False, "rank": 89},
+    "same": {"name": "same", "id": 1535729270582943824, "animated": False, "is_safe": False, "rank": 90},
+    "false": {"name": "False", "id": 1535729373947109487, "animated": False, "is_safe": False, "rank": 91},
+    "thankyou": {"name": "thankyou", "id": 1535730204977406062, "animated": False, "is_safe": False, "rank": 92},
+    "ranked_pro": {"name": "Ranked_Pro", "id": 1550129987972104252, "animated": False, "is_safe": False, "rank": 93},
+    "ranked_masters": {"name": "Ranked_Masters", "id": 1550129992837496833, "animated": False, "is_safe": False, "rank": 94},
+    "ranked_legendary": {"name": "Ranked_Legendary", "id": 1550129997774323732, "animated": False, "is_safe": False, "rank": 95},
+    "ranked_mythic": {"name": "Ranked_Mythic", "id": 1550130000852820099, "animated": False, "is_safe": False, "rank": 96},
+    "ranked_diamond": {"name": "Ranked_Diamond", "id": 1550130004074041434, "animated": False, "is_safe": False, "rank": 97},
+    "ranked_gold": {"name": "Ranked_Gold", "id": 1550130006896812084, "animated": False, "is_safe": False, "rank": 98},
+    "hello_wave": {"name": "hello_wave", "id": 1535678953870725121, "animated": True, "is_safe": True, "rank": 1},
+    "thisisfine": {"name": "Thisisfine", "id": 1535679070312857672, "animated": True, "is_safe": True, "rank": 2},
+    "hulk_gif": {"name": "hulk_gif", "id": 1535679185803018361, "animated": True, "is_safe": True, "rank": 3},
+    "pain": {"name": "pain", "id": 1535679465383002192, "animated": True, "is_safe": True, "rank": 4},
+    "pepe_simp": {"name": "pepe_simp", "id": 1535679584819875950, "animated": True, "is_safe": True, "rank": 5},
+    "donowall": {"name": "Donowall", "id": 1535679683918831676, "animated": True, "is_safe": True, "rank": 6},
+    "kekwlaugh": {"name": "KEKWLaugh", "id": 1535679941059018903, "animated": True, "is_safe": True, "rank": 7},
+    "galaxybrainmeme": {"name": "GalaxyBrainMeme", "id": 1535680100060766311, "animated": True, "is_safe": True, "rank": 8},
+    "cat_bitting": {"name": "cat_bitting", "id": 1535680234207191100, "animated": True, "is_safe": True, "rank": 9},
+    "chadgif": {"name": "chadgif", "id": 1535680346199162982, "animated": True, "is_safe": True, "rank": 10},
+    "flashbang": {"name": "flashbang", "id": 1535680549660655616, "animated": True, "is_safe": True, "rank": 11},
+    "actually_im": {"name": "ACTUALLY_IM", "id": 1535680603179974678, "animated": True, "is_safe": True, "rank": 12},
+    "cat_boom": {"name": "cat_boom", "id": 1535725821652770836, "animated": True, "is_safe": True, "rank": 13},
+    "dead_spin": {"name": "dead_spin", "id": 1535726486168932353, "animated": True, "is_safe": True, "rank": 14},
+    "yummy": {"name": "yummy", "id": 1535726899018338346, "animated": True, "is_safe": True, "rank": 15},
+    "scubbacat": {"name": "Scubbacat", "id": 1535727498602618890, "animated": True, "is_safe": True, "rank": 16},
+    "ai_baby": {"name": "ai_baby", "id": 1535727719948623872, "animated": True, "is_safe": True, "rank": 17},
+    "freaky_lick": {"name": "freaky_lick", "id": 1535727845014241320, "animated": True, "is_safe": True, "rank": 18},
+    "reze": {"name": "Reze", "id": 1535727967232069642, "animated": True, "is_safe": True, "rank": 19},
+    "panickedno": {"name": "PanickedNo", "id": 1535728525431013437, "animated": True, "is_safe": True, "rank": 20},
+    "cornershaking": {"name": "cornershaking", "id": 1535728585665548298, "animated": True, "is_safe": True, "rank": 21},
+    "emojigg_67": {"name": "emojigg_67", "id": 1535729079657963661, "animated": True, "is_safe": True, "rank": 22},
+    "spinningfish": {"name": "SpinningFish", "id": 1535729132208656395, "animated": True, "is_safe": True, "rank": 23},
+    "ononono": {"name": "ononono", "id": 1535729205982269570, "animated": True, "is_safe": True, "rank": 24},
+    "think": {"name": "Think", "id": 1535729557469011968, "animated": True, "is_safe": True, "rank": 25},
+    "zooom": {"name": "ZOOOM", "id": 1535729987116736554, "animated": True, "is_safe": True, "rank": 26},
+}
+
+# Fallbacks limpios cuando un emoji queda deshabilitado en Discord por expiración del Server Boost (slots 51-98)
+DISABLED_EMOJI_FALLBACK = {
+    "doakes": "🤨",
+    "im_done": "🤦‍♂️",
+    "yb_ayo": "😳",
+    "monkeythink": "🐵🤔",
+    "9999iq": "<:gigachad:1535682070536519730>",
+    "pensivebetrayal": "😔🗡️",
+    "emojigg_huh": "🤨",
+    "porro": "🚬",
+    "cathink": "🐱🤔",
+    "thousandyardstare": "😳",
+    "4k_ultra_hd": "📸",
+    "baldwinhand": "✋",
+    "dumbass_stare": "😐",
+    "poorhomeless": "🏚️",
+    "patrickleash": "🪢",
+    "bb_thumbs_up": "👍",
+    "oh_god": "😱",
+    "fruity_sus": "🤨",
+    "florkwhat": "🥢",
+    "tungtungtungsahur": "🥁",
+    "skeleton": "💀",
+    "nobodycares": "🤷‍♂️",
+    "messirve": "<:facherita:1484580141618303021>",
+    "mindblown": "🤯",
+    "autism": "🎉",
+    "cooked": "💀",
+    "mortroll": "🃏",
+    "blue_screen": "💻💥",
+    "grass": "🌱",
+    "skillissue": "<:pepeCringe:1530996221810966690>",
+    "emojigg_bot": "🤖",
+    "serious": "😐",
+    "point_gay": "👉",
+    "emojigg_ban": "🔨",
+    "aura": "<:gigachad:1535682070536519730>",
+    "ahegao": "😵",
+    "take_my_money": "💸",
+    "stfu": "🤫",
+    "true": "✅",
+    "same": "🤝",
+    "false": "❌",
+    "thankyou": "🙏",
+    "ranked_pro": "🏆",
+    "ranked_masters": "👑",
+    "ranked_legendary": "🌟",
+    "ranked_mythic": "🟣",
+    "ranked_diamond": "💎",
+    "ranked_gold": "🥇",
+}
+
+EMOJI_PATTERN = re.compile(r"(?<!<)(?<!<a):([a-zA-Z0-9_]+):(?!\d+>)")
+
+
+def format_server_emojis(text: str, guild: discord.Guild = None) -> str:
+    """
+    Convierte automáticamente patrones ':nombre_emoji:' en menciones nativas de Discord:
+      <:nombre_emoji:ID> (estáticos) o <a:nombre_emoji:ID> (animados).
+
+    Resiliencia de Server Boosts y compatibilidad:
+    - Si se pasa 'guild' (discord.py activo), consulta 'guild.emojis' en tiempo real.
+      Inspecciona 'e.available': si Discord deshabilitó el emoji tras expirar las mejoras
+      del servidor, aplica automáticamente el fallback seguro (DISABLED_EMOJI_FALLBACK)
+      para que el mensaje nunca muestre texto crudo ni falle.
+    - Si 'guild' es None o el bot se ejecuta en modo headless/tests, utiliza el catálogo
+      canónico base (SERVER_EMOJIS_DATA).
+    - Protege bloques de código (```...```) y código inline (`...`) para no alterar fragmentos técnicos.
+    - Ignora menciones de emojis ya formateadas previamente (<:name:id> o <a:name:id>).
+    """
+    if not text or not isinstance(text, str):
+        return text
+
+    code_blocks = []
+
+    def _save_code(m):
+        code_blocks.append(m.group(0))
+        return f"___CODE_BLOCK_{len(code_blocks)-1}___"
+
+    text_protected = re.sub(r"(```[\s\S]*?```|`[^`\n]+`)", _save_code, text)
+
+    live_map = {}
+    if guild and hasattr(guild, "emojis") and guild.emojis:
+        for e in guild.emojis:
+            live_map[e.name.lower()] = e
+
+    def _replace(match):
+        raw_name = match.group(1)
+        lower_name = raw_name.lower()
+
+        # 1. Consulta en tiempo real en discord.py si guild está disponible
+        if live_map and lower_name in live_map:
+            e = live_map[lower_name]
+            is_available = getattr(e, "available", True)
+            if is_available:
+                prefix = "a" if e.animated else ""
+                return f"<{prefix}:{e.name}:{e.id}>"
+            else:
+                if lower_name in DISABLED_EMOJI_FALLBACK:
+                    return DISABLED_EMOJI_FALLBACK[lower_name]
+                return match.group(0)
+
+        # 2. Fallback de catálogo canónico base (para tests, DMs o bot headless)
+        if lower_name in SERVER_EMOJIS_DATA:
+            info = SERVER_EMOJIS_DATA[lower_name]
+            prefix = "a" if info["animated"] else ""
+            return f"<{prefix}:{info['name']}:{info['id']}>"
+
+        return match.group(0)
+
+    converted = EMOJI_PATTERN.sub(_replace, text_protected)
+
+    for idx, block in enumerate(code_blocks):
+        converted = converted.replace(f"___CODE_BLOCK_{idx}___", block)
+
+    return converted
+
+
 SYSTEM_PROMPT = r"""Eres 'Asistente', la IA oficial y colega del servidor de Discord 'LOS MONGOLOS DEL SANVI Y SUS AMIGOS'.
 
 🎯 PERSONALIDAD Y TONO DE COLEGA:
@@ -200,6 +450,23 @@ SYSTEM_PROMPT = r"""Eres 'Asistente', la IA oficial y colega del servidor de Dis
 🛡️ SEGURIDAD Y AUTO-ROLES:
 - Por chat de texto nunca asignas roles de administración ni niveles ni expulsas a nadie (si te lo piden en broma, responde con humor de colega).
 - Para roles de juegos, plataformas, géneros y hobbies, gestionas el panel interactivo oficial de Auto-Roles en <#1537575617111920782> (`#🎭roles🎭` / comando `/autoroles`), reemplazando por completo al antiguo Carl-bot.
+
+🎭 USO DE EMOJIS DEL SERVIDOR Y LORE HUMORÍSTICO:
+- Tienes a tu disposición los 124 emojis del servidor. Úsalos con soltura, gracia y naturalidad en tus respuestas como un colega más escribiendo `:nombre_emoji:` (el sistema los convierte automáticamente a formato de Discord):
+  * `:aura:` / `:gigachad:` / `:chadgif:` / `:sigmajawline:` / `:Sigma_Male_Bale:`: Para momentos de máximo respeto, jugadas maestras (+1.000 aura), respuestas legendarias o actitud sigma imperturbable.
+  * `:Porro:`: Para situaciones surrealistas, momentos de "qué me estás contando", teorías imposibles, relajación o fumadas sanas.
+  * `:absolutecinema:`: Imprescindible para elogiar manhwas sublimes (como los del Top 69 de Joselito en #cultura), animes top o momentos de cine puro.
+  * `:Messirve:`: Para dar el visto bueno, aceptar un trato con agrado o confirmar que algo es útil ("me sirve").
+  * `:cooked:`: Cuando alguien la ha liado a lo grande, está suspendido, no tiene escapatoria o está en la ruina ("estás cocinado").
+  * `:skillissue:`: Para vacilar amistosamente cuando alguien pierde en un juego, falla tiradas o pone excusas ("skill issue colega").
+  * `:KEKWLaugh:` / `:ononono:` / `:catpointandlaugh:`: Para reírte a carcajadas de anécdotas o situaciones cómicas del grupo.
+  * `:Thisisfine:`: Cuando todo se va a la mierda pero fingimos que el caos está controlado ("todo bajo control").
+  * `:bruh:` / `:dead_stare:` / `:DwayneEyebrow:` / `:side_eye:`: Para miradas de sospecha, incredulidad o momentos "no me lo creo".
+  * `:pepeCRY:` / `:pepeCringe:` / `:pepecuerda:` / `:pain:`: Para tristeza dramática, vergüenza ajena o desesperación cómica.
+  * `:Ranked_Pro:` / `:Ranked_Masters:` / `:Ranked_Legendary:` / `:Ranked_Mythic:` / `:Ranked_Diamond:` / `:Ranked_Gold:`: Para hablar del competitivo de Brawl Stars (juego estrella de Iván y Joselito) o catalogar el nivel de alguien.
+  * `:grass:`: Para mandar a alguien a tocar césped tras viciar 10 horas seguidas.
+  * `:take_my_money:`: Para el hype ante compras de Steam, ofertas o apuestas del casino.
+- Directriz: No satures con ristras excesivas de emojis. Pon 1 o 2 en el remate de tu mensaje donde den fuerza, humor o complicidad real de colega.
 
 REGLAS DE FORMATO:
 - Sé conciso, directo, estructurado y usa negritas.
@@ -1070,6 +1337,7 @@ async def _handle_message_safe(message: discord.Message):
                 file = discord.File(io.BytesIO(img_bytes), filename="creacion_asistente.png")
                 view = ImageActionView(prompt_flux, message.author.id)
                 if clean_response:
+                    clean_response = format_server_emojis(clean_response, guild=message.guild)
                     await message.reply(content=clean_response, file=file, view=view)
                 else:
                     await message.reply(file=file, view=view)
@@ -1077,6 +1345,7 @@ async def _handle_message_safe(message: discord.Message):
             except Exception as img_err:
                 print(f"Error generando imagen FLUX: {img_err}")
                 err_msg = (clean_response + "\n\n⚠️ *(Hubo un problema temporal con el motor de dibujo FLUX.1. Prueba a pedírmelo de nuevo en unos momentos)*") if clean_response else "⚠️ Ha ocurrido un problema con el motor de dibujo FLUX.1. Prueba a pedírmelo de nuevo en unos momentos."
+                err_msg = format_server_emojis(err_msg, guild=message.guild)
                 await message.reply(err_msg.strip())
                 return
 
@@ -1168,6 +1437,7 @@ async def _handle_message_safe(message: discord.Message):
                 file = discord.File(io.BytesIO(img_bytes), filename="creacion_asistente.png")
                 view = ImageActionView(enhanced, message.author.id)
                 reply_txt = response_text if response_text and not any(bad in response_text.lower() for bad in ["aquí tienes", "aqui tienes", "he creado", "la imagen"]) else f"🎨 **Aquí tienes tu creación, {message.author.display_name}:**"
+                reply_txt = format_server_emojis(reply_txt, guild=message.guild)
                 await message.reply(content=reply_txt, file=file, view=view)
                 return
             except Exception as e:
@@ -1175,6 +1445,8 @@ async def _handle_message_safe(message: discord.Message):
 
         # Sanitizar cualquier resto de código LaTeX
         response_text = sanitize_discord_math_text(response_text)
+        # Formatear y convertir emojis del servidor (:nombre_emoji: -> <:nombre:ID> o fallback seguro)
+        response_text = format_server_emojis(response_text, guild=message.guild)
         if not response_text and files_to_send:
             response_text = "Aquí tienes la representación visual:"
 

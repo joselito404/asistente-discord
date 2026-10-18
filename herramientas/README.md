@@ -31,6 +31,7 @@ Ejecutar antes de cualquier commit o despliegue en Render Cloud:
 | `test_voice_reconnection.py` | `python herramientas/test_voice_reconnection.py` | Reconexión del bot ante expulsiones o caídas de WebSocket. |
 | `test_prompts_key_files.py` | `python herramientas/test_prompts_key_files.py` | Integridad sintáctica de prompts y dependencias de archivos. |
 | `test_audio_models.py` | `python herramientas/test_audio_models.py` | Compatibilidad de modelos de voz y Edge-TTS. |
+| `test_emoji_converter.py` | `python herramientas/test_emoji_converter.py` | Auto-conversor de emojis (:aura:, :Porro:, :gigachad:, Brawl Stars Ranked), insensibilidad a mayúsculas, protección de bloques de código y resiliencia ante pérdida de Server Boost (available=False fallback). |
 
 ---
 
