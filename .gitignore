@@ -8,11 +8,11 @@ config_discord.json
 !tribunal_data.json
 !user_memory.json
 !trivia_data.json
-CHAT_RAW.md
-HISTORIAL_CONVERSACION.md
+/CHAT_RAW.md
+/HISTORIAL_CONVERSACION.md
 chat *.md
-INFO_SERVIDOR.md
-AGENTS.md
+/INFO_SERVIDOR.md
+/AGENTS.md
 node_modules/
 __pycache__/
 *.pyc
