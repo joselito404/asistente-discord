@@ -94,12 +94,12 @@ El sistema de economía gestiona un bote progresivo acumulativo en `datos/econom
 
 ---
 
-## 6. Calibración Matemática Monte Carlo
+## 6. Calibración Matemática Monte Carlo (Modo High Payouts)
 
-- **RTP Objetivo**: $94.5\% - 95.5\%$
-- **Hit Rate (Frecuencia de Acierto)**: $42.0\% - 44.5\%$ (frente al 36.5% plano de UnbelievaBoat).
-- **Frecuencia de Free Spins**: 1 de cada ~85 - 100 tiradas (evento especial emocionante pero controlado).
-- **Frecuencia de Grand Jackpot**: 1 de cada ~12.000 tiradas.
+- **RTP Objetivo (Return to Player)**: **$105.0\%$** (margen $104.5\% - 106.0\%$, modo con valor esperado positivo EV+ para los jugadores, superando el 103% de UnbelievaBoat).
+- **Hit Rate (Frecuencia de Acierto)**: $44.0\% - 47.0\%$ (alta frecuencia de premios gracias a las 9 líneas y sustitución de Wilds).
+- **Frecuencia de Free Spins**: 1 de cada ~75 - 90 tiradas (frecuencia óptima para disparar rondas de bonus sin romper la economía).
+- **Frecuencia de Grand Jackpot**: 1 de cada ~10.000 tiradas.
 
 ---
 
