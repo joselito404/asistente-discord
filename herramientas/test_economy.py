@@ -41,6 +41,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
+import discord
 import modulos.economia as eco
 from modulos.comandos import (
     ALL_SLASH_COMMANDS,
@@ -242,7 +243,30 @@ def run_tests():
         ok_expensive, msg_exp, _, _ = eco.buy_shop_item(uid_buyer, "aura_xp")  # Cuesta 1.000.000
         assert ok_expensive is False
         assert "No tienes suficientes Porros" in msg_exp
-        print("  ✅ TEST 7 PASADO: Tienda V2 con los 9 artículos e inventario validada.")
+
+        # Verificación del embed interactivo oficial
+        shop_embed = eco.build_shop_embed(uid_buyer)
+        assert "Tienda Oficial de Porros" in shop_embed.title
+        assert len(shop_embed.fields) == 3
+        assert "50,000" in shop_embed.footer.text
+
+        # Verificación de la vista interactiva (desplegable + botón verde de compra explícita)
+        shop_view = eco.ShopInteractiveView(author_id=uid_buyer)
+        assert shop_view.author_id == int(uid_buyer)
+        assert len(shop_view.children) == 2
+        select_comp = shop_view.children[0]
+        buy_btn_comp = shop_view.children[1]
+        assert isinstance(select_comp, discord.ui.Select)
+        assert len(select_comp.options) == 9
+        assert isinstance(buy_btn_comp, discord.ui.Button)
+        assert "Comprar" in buy_btn_comp.label
+        assert buy_btn_comp.style == discord.ButtonStyle.success
+
+        # Comprobar que cmd_tienda no recibe parámetros para prevenir compras accidentales
+        cmd_tienda_obj = [c for c in ALL_SLASH_COMMANDS if c.name == "tienda"][0]
+        assert len(cmd_tienda_obj.parameters) == 0, f"/tienda no debe recibir parámetros, tiene {len(cmd_tienda_obj.parameters)}"
+
+        print("  ✅ TEST 7 PASADO: Tienda V2 interactiva (embed categorizado, View con Select + Botón verde y 0 parámetros en /tienda) validada.")
 
         # TEST 8: Salario Acumulativo con Decaimiento del 5%
         print("\n[TEST 8] Salario Acumulativo con decaimiento del 5%...")
@@ -477,7 +501,8 @@ def run_tests():
         for expected_attr in [
             "cmd_slots", "cmd_balance", "cmd_trabajar", "cmd_transferir",
             "cmd_depositar", "cmd_retirar", "cmd_robar", "cmd_tienda", "cmd_salario",
-            "deposit_cash", "withdraw_cash", "execute_rob", "buy_shop_item", "claim_salary", "SlotEngine"
+            "deposit_cash", "withdraw_cash", "execute_rob", "buy_shop_item", "claim_salary", "SlotEngine",
+            "ShopInteractiveView", "build_shop_embed"
         ]:
             assert hasattr(bot_service, expected_attr), f"bot_service no tiene {expected_attr}"
         print("  ✅ TEST 17 PASADO: Los 31 comandos slash y funciones reexportados en bot_service.")

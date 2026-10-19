@@ -1379,78 +1379,17 @@ async def cmd_robar(interaction: discord.Interaction, usuario: discord.Member):
     await interaction.response.send_message(embed=embed)
 
 
-@app_commands.command(name="tienda", description="Consulta el catálogo de 9 artículos oficiales de la tienda o compra un ítem")
-@app_commands.describe(
-    articulo="Artículo que deseas comprar (opcional, deja vacío para ver el catálogo)",
-)
-@app_commands.choices(articulo=[
-    app_commands.Choice(name="🛡️ Cartera Blindada (50.000 Porros) - Inmunidad a robos", value="cartera_blindada"),
-    app_commands.Choice(name="🚬 Porro de Oro (75.000 Porros) - Flexeo", value="porro_oro"),
-    app_commands.Choice(name="🚬 Camello del Barrio (85.000 Porros) - Rol Verde", value="camello_barrio"),
-    app_commands.Choice(name="🎰 Ludópata Rehabilitado (40.000 Porros) - Rol Rojo", value="ludopata_rehabilitado"),
-    app_commands.Choice(name="🍗 Pollo de Pelea Dopado (25.000 Porros) - Cockfight", value="pollo_pelea"),
-    app_commands.Choice(name="⚡ Chute de XP 24h (15.000 Porros) - +5% XP", value="chute_xp"),
-    app_commands.Choice(name="🔥 Pase Semanal de XP (75.000 Porros) - +10% XP", value="pase_semanal_xp"),
-    app_commands.Choice(name="💠 Pase Mensual de XP (250.000 Porros) - +15% XP", value="pase_mensual_xp"),
-    app_commands.Choice(name="👑 Aura de XP Permanente (1.000.000 Porros) - +10% XP", value="aura_xp"),
-])
-async def cmd_tienda(interaction: discord.Interaction, articulo: Optional[app_commands.Choice[str]] = None):
-    from modulos.economia import get_shop_catalog, buy_shop_item, get_balance, PORRO_EMOJI
+@app_commands.command(name="tienda", description="Consulta el catálogo interactivo de la tienda oficial y adquiere artículos con confirmación")
+async def cmd_tienda(interaction: discord.Interaction):
+    from modulos.economia import build_shop_embed, ShopInteractiveView
 
-    if not articulo:
-        catalog = get_shop_catalog()
-        embed = discord.Embed(
-            title="🏪 Tienda Oficial de Porros — 'Asistente'",
-            description=(
-                f"Bienvenido al mercado oficial del servidor. Adquiere roles de estatus, ventajas e ítems de inventario.\n"
-                f"Usa `/tienda articulo: [nombre]` para comprar cualquier artículo.\n\n"
-                f"---"
-            ),
-            color=0xF39C12,
-            timestamp=datetime.now(timezone.utc),
-        )
-        for key, it in catalog.items():
-            type_badge = "🎭 Rol" if it["type"] == "role" else "🎒 Ítem"
-            embed.add_field(
-                name=f"{it['name']} — {PORRO_EMOJI} {it['price']:,} Porros ({type_badge})",
-                value=f"{it['description']}\n`ID: {it['id']}`",
-                inline=False,
-            )
-
-        bal = get_balance(interaction.user.id)
-        embed.set_footer(text=f"Tu saldo en efectivo: {bal['cash']:,} Porros • Usa /depositar o /retirar")
-        await interaction.response.send_message(embed=embed)
-        return
-
-    item_key = articulo.value
-    ok, msg, item_data, new_bal = buy_shop_item(interaction.user.id, item_key, member=interaction.user)
-
-    if not ok:
-        await interaction.response.send_message(msg, ephemeral=True)
-        return
-
-    role_added = False
-    if item_data and item_data.get("type") == "role" and hasattr(interaction.user, "add_roles"):
-        role_id_str = item_data.get("role_id")
-        if role_id_str and interaction.guild:
-            role = interaction.guild.get_role(int(role_id_str))
-            if role:
-                try:
-                    await interaction.user.add_roles(role, reason="Compra en /tienda")
-                    role_added = True
-                except Exception as e:
-                    _bot_log(f"Aviso auto-asignando rol {role.name}: {e}")
-
-    embed = discord.Embed(
-        title="🛒 Compra Exitosa en la Tienda",
-        description=f"{msg}\n\n**Saldo restante en efectivo:** {PORRO_EMOJI} **{new_bal['cash']:,}** Porros",
-        color=0x2ECC71,
-        timestamp=datetime.now(timezone.utc),
-    )
-    if role_added:
-        embed.add_field(name="🎭 Rol Asignado", value=f"¡El rol `{item_data['name']}` ha sido añadido a tu perfil de Discord!", inline=False)
-    embed.set_footer(text="Gracias por tu compra • Consulta tus ítems en /balance")
-    await interaction.response.send_message(embed=embed)
+    embed = build_shop_embed(interaction.user.id)
+    view = ShopInteractiveView(author_id=interaction.user.id)
+    await interaction.response.send_message(embed=embed, view=view)
+    try:
+        view.message = await interaction.original_response()
+    except Exception:
+        pass
 
 
 @app_commands.command(name="salario", description="Cobra tu salario diario acumulado según tus roles de nivel y podio (con decaimiento del 5%)")

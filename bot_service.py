@@ -301,6 +301,8 @@ from modulos.economia import (
     user_has_shield,
     buy_shop_item,
     get_shop_catalog,
+    build_shop_embed,
+    ShopInteractiveView,
     SHOP_ITEMS,
     calculate_daily_salary,
     calculate_accumulated_salary,

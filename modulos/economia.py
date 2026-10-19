@@ -813,6 +813,263 @@ def buy_shop_item(
         return True, f"✅ ¡Has adquirido **{item_name}** por {PORRO_EMOJI} **{price:,}** Porros!", matched_item, new_bal
 
 
+def build_shop_embed(user_id: Any) -> discord.Embed:
+    """Construye el embed oficial del catálogo de la tienda categorizado con el saldo del usuario."""
+    bal = get_balance(user_id)
+    cash_str = f"{bal['cash']:,}"
+
+    embed = discord.Embed(
+        title="🏪 Tienda Oficial de Porros — 'Asistente'",
+        description=(
+            "Bienvenido al mercado oficial del servidor. Adquiere roles de estatus, ventajas e ítems de inventario.\n\n"
+            "📌 **Cómo comprar de forma segura:**\n"
+            "1. Elige un artículo en el **menú desplegable** de abajo.\n"
+            "2. Presiona el botón verde **`[ 🛒 Comprar Artículo ]`** para confirmar tu compra."
+        ),
+        color=0xF39C12,
+        timestamp=datetime.now(timezone.utc),
+    )
+
+    # 1. Roles de Estatus y Protección
+    embed.add_field(
+        name="🎭 Roles de Estatus y Protección",
+        value=(
+            f"• **🛡️ Cartera Blindada** — {PORRO_EMOJI} **50,000** Porros\n"
+            f"  *Inmunidad total contra /robar (falla 100% y multa 15%).*\n"
+            f"• **🚬 Camello del Barrio** — {PORRO_EMOJI} **85,000** Porros\n"
+            f"  *Rol cosmético exclusivo en verde porro (#2ECC71).*\n"
+            f"• **🎰 Ludópata Rehabilitado** — {PORRO_EMOJI} **40,000** Porros\n"
+            f"  *Rol cosmético exclusivo en rojo casino (#E74C3C).*"
+        ),
+        inline=False,
+    )
+
+    # 2. Ítems de Inventario
+    embed.add_field(
+        name="🎒 Ítems de Inventario",
+        value=(
+            f"• **🚬 Porro de Oro** — {PORRO_EMOJI} **75,000** Porros\n"
+            f"  *Coleccionable de inventario de máximo prestigio y flexeo.*\n"
+            f"• **🍗 Pollo de Pelea Dopado** — {PORRO_EMOJI} **25,000** Porros\n"
+            f"  *Ítem de combate para duelos de cockfight y apuestas.*"
+        ),
+        inline=False,
+    )
+
+    # 3. Pases de Experiencia (XP)
+    embed.add_field(
+        name="⚡ Pases y Bonos de Experiencia (XP)",
+        value=(
+            f"• **⚡ Chute de XP (24h)** — {PORRO_EMOJI} **15,000** Porros\n"
+            f"  *Boost temporal de +5% de XP en Cakey Bot durante 24 horas.*\n"
+            f"• **🔥 Pase Semanal de XP** — {PORRO_EMOJI} **75,000** Porros\n"
+            f"  *Boost temporal de +10% de XP en Cakey Bot durante 7 días.*\n"
+            f"• **💠 Pase Mensual de XP** — {PORRO_EMOJI} **250,000** Porros\n"
+            f"  *Boost temporal de +15% de XP en Cakey Bot durante 30 días.*\n"
+            f"• **👑 Aura de XP Permanente** — {PORRO_EMOJI} **1,000,000** Porros\n"
+            f"  *Pase perpetuo élite con boost de +10% de XP permanente.*"
+        ),
+        inline=False,
+    )
+
+    embed.set_footer(
+        text=f"Tu saldo en efectivo: {cash_str} Porros • Si tienes saldo en el banco usa /retirar"
+    )
+    return embed
+
+
+class ShopItemSelect(discord.ui.Select):
+    """Menú desplegable con los 9 artículos oficiales de la tienda."""
+
+    def __init__(self):
+        options = [
+            discord.SelectOption(
+                label="🛡️ Cartera Blindada (50k)",
+                value="cartera_blindada",
+                description="50.000 Porros • Inmunidad a robos",
+                emoji="🛡️",
+            ),
+            discord.SelectOption(
+                label="🚬 Porro de Oro (75k)",
+                value="porro_oro",
+                description="75.000 Porros • Flexeo de inventario",
+                emoji="🚬",
+            ),
+            discord.SelectOption(
+                label="🚬 Camello del Barrio (85k)",
+                value="camello_barrio",
+                description="85.000 Porros • Rol Verde (#2ECC71)",
+                emoji="🚬",
+            ),
+            discord.SelectOption(
+                label="🎰 Ludópata Rehabilitado (40k)",
+                value="ludopata_rehabilitado",
+                description="40.000 Porros • Rol Rojo (#E74C3C)",
+                emoji="🎰",
+            ),
+            discord.SelectOption(
+                label="🍗 Pollo de Pelea Dopado (25k)",
+                value="pollo_pelea",
+                description="25.000 Porros • Duelos de combate",
+                emoji="🍗",
+            ),
+            discord.SelectOption(
+                label="⚡ Chute de XP 24h (15k)",
+                value="chute_xp",
+                description="15.000 Porros • Boost +5% XP por 24h",
+                emoji="⚡",
+            ),
+            discord.SelectOption(
+                label="🔥 Pase Semanal de XP (75k)",
+                value="pase_semanal_xp",
+                description="75.000 Porros • Boost +10% XP por 7d",
+                emoji="🔥",
+            ),
+            discord.SelectOption(
+                label="💠 Pase Mensual de XP (250k)",
+                value="pase_mensual_xp",
+                description="250.000 Porros • Boost +15% XP por 30d",
+                emoji="💠",
+            ),
+            discord.SelectOption(
+                label="👑 Aura de XP Permanente (1M)",
+                value="aura_xp",
+                description="1.000.000 Porros • Boost +10% XP permanente",
+                emoji="👑",
+            ),
+        ]
+        super().__init__(
+            placeholder="🛒 Selecciona un artículo de la tienda...",
+            min_values=1,
+            max_values=1,
+            options=options,
+            row=0,
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        view: "ShopInteractiveView" = self.view
+        if interaction.user.id != view.author_id:
+            await interaction.response.send_message(
+                "❌ Esta tienda pertenece a otro usuario. Usa `/tienda` para abrir la tuya.",
+                ephemeral=True,
+            )
+            return
+
+        selected_key = self.values[0]
+        view.selected_item = selected_key
+        item_info = SHOP_ITEMS.get(selected_key)
+        item_name = item_info["name"] if item_info else selected_key
+        price = item_info["price"] if item_info else 0
+
+        # Actualizar el botón de compra con el nombre y precio del artículo seleccionado
+        view.buy_btn.label = f"🛒 Comprar {item_name} ({price:,} Porros)"
+        view.buy_btn.disabled = False
+
+        await interaction.response.edit_message(view=view)
+
+
+class ShopInteractiveView(discord.ui.View):
+    """
+    Vista interactiva para /tienda con menú desplegable y botón explícito de confirmación de compra.
+    Evita compras accidentales asegurando que la transacción solo se ejecute al pulsar el botón.
+    """
+
+    def __init__(self, author_id: Any, timeout: float = 180.0):
+        super().__init__(timeout=timeout)
+        self.author_id = int(author_id)
+        self.selected_item: Optional[str] = None
+        self.message: Optional[discord.Message] = None
+
+        # Desplegable de artículos (Fila 0)
+        self.select_menu = ShopItemSelect()
+        self.add_item(self.select_menu)
+
+        # Botón verde de compra explícita (Fila 1)
+        self.buy_btn = discord.ui.Button(
+            label="🛒 Comprar Artículo",
+            style=discord.ButtonStyle.success,
+            row=1,
+            disabled=False,
+        )
+        self.buy_btn.callback = self._on_buy_clicked
+        self.add_item(self.buy_btn)
+
+    async def _on_buy_clicked(self, interaction: discord.Interaction):
+        if interaction.user.id != self.author_id:
+            await interaction.response.send_message(
+                "❌ Esta tienda pertenece a otro usuario. Usa `/tienda` para abrir la tuya.",
+                ephemeral=True,
+            )
+            return
+
+        if not self.selected_item:
+            await interaction.response.send_message(
+                "⚠️ Selecciona primero un artículo del menú desplegable antes de presionar el botón de compra.",
+                ephemeral=True,
+            )
+            return
+
+        item_key = self.selected_item
+        ok, msg, item_data, new_bal = buy_shop_item(
+            interaction.user.id,
+            item_key,
+            member=interaction.user,
+        )
+
+        if not ok:
+            await interaction.response.send_message(msg, ephemeral=True)
+            return
+
+        # Auto-asignación de rol si es de tipo 'role'
+        role_added = False
+        if item_data and item_data.get("type") == "role" and hasattr(interaction.user, "add_roles"):
+            role_id_str = item_data.get("role_id")
+            if role_id_str and interaction.guild:
+                role = interaction.guild.get_role(int(role_id_str))
+                if role:
+                    try:
+                        await interaction.user.add_roles(role, reason="Compra interactiva en /tienda")
+                        role_added = True
+                    except Exception as e:
+                        _bot_log(f"Aviso auto-asignando rol {role.name}: {e}")
+
+        confirm_embed = discord.Embed(
+            title="🛒 ¡Compra Realizada con Éxito!",
+            description=(
+                f"{msg}\n\n"
+                f"**Saldo restante en efectivo:** {PORRO_EMOJI} **{new_bal['cash']:,}** Porros"
+            ),
+            color=0x2ECC71,
+            timestamp=datetime.now(timezone.utc),
+        )
+        if role_added:
+            confirm_embed.add_field(
+                name="🎭 Rol Asignado",
+                value=f"¡El rol `{item_data['name']}` ha sido añadido a tu perfil de Discord!",
+                inline=False,
+            )
+        confirm_embed.set_footer(text="Gracias por tu compra • Consulta tu inventario con /balance")
+
+        await interaction.response.send_message(embed=confirm_embed, ephemeral=True)
+
+        # Actualizar el embed principal de la tienda con el nuevo saldo
+        try:
+            updated_embed = build_shop_embed(self.author_id)
+            if interaction.message:
+                await interaction.message.edit(embed=updated_embed, view=self)
+        except Exception as e:
+            _bot_log(f"Aviso actualizando embed de tienda tras compra: {e}")
+
+    async def on_timeout(self):
+        for item in self.children:
+            item.disabled = True
+        if self.message:
+            try:
+                await self.message.edit(view=self)
+            except Exception:
+                pass
+
+
 # ==========================================
 # SALARIO ACUMULATIVO CON DECAIMIENTO DEL 5%
 # ==========================================

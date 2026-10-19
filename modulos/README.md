@@ -46,7 +46,7 @@ Cualquier agente o desarrollador autorizado que trabaje en nuevas funcionalidade
    - Gestión de saldos: `get_balance`, `modify_balance`, `transfer_funds`.
    - Módulo de Banca (`/depositar`, `/retirar`): gestión segura de efectivo y banco con soporte de montos numéricos y opción `'all'`/`'todo'`.
    - Sistema de Robo (`/robar`): probabilidad de éxito 50%, hurto de 20-50% de efectivo, chequeo estricto de inmunidad contra `🛡️ Cartera Blindada` (falla 100% y multa 15%) y cooldown anti-spam.
-   - Catálogo Oficial de Tienda V2 (`/tienda`): 9 artículos entre roles de estatus (`🛡️ Cartera Blindada`, `🚬 Camello del Barrio`, etc.), pases de XP temporales y permanentes, e ítems de inventario con auto-asignación vía Discord API.
+   - Catálogo Oficial de Tienda V2 (`/tienda`): vista interactiva sin parámetros con embed categorizado (Roles, Ítems, XP), menú desplegable de 9 artículos y botón explícito de confirmación de compra (`ShopInteractiveView`) para evitar compras accidentales, con auto-asignación de roles vía Discord API.
    - Salario Acumulativo (`/salario` / `/cobrar`): cálculo continuo por roles de nivel (Nivel 10 a 100) y podio (Top 1, 2, 3) con fórmula de decaimiento del 5% diario ($P = S \times \frac{1 - (1 - d)^n}{d}$, tope asintótico $20 \times S$).
    - Jornada laboral (`/trabajar`): historias cómicas del lore del servidor (`WORK_MESSAGES`), retribución de 200 a 800 porros y cooldown estricto de 2 horas.
    - Máquina tragaperras 5x3 de Alta Tensión (`/slots`):
