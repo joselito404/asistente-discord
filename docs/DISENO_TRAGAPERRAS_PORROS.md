@@ -47,28 +47,17 @@ Rodillo 1    Rodillo 2    Rodillo 3    Rodillo 4    Rodillo 5
 [ (2,0) ]    [ (2,1) ]    [ (2,2) ]    [ (2,3) ]    [ (2,4) ]   -> Fila Inferior (Bottom)
 ```
 
-### Las 10 Líneas de Pago Limpias:
-1. **Línea 1 (Centro)**: `[(1,0), (1,1), (1,2), (1,3), (1,4)]`
-2. **Línea 2 (Arriba)**: `[(0,0), (0,1), (0,2), (0,3), (0,4)]`
-3. **Línea 3 (Abajo)**: `[(2,0), (2,1), (2,2), (2,3), (2,4)]`
+### Las 7 Líneas de Pago Limpias:
+1. **Línea 1 (Centro)**: `[(1,0), (1,1), (1,2), (1,3), (1,4)]` (Horizontal central)
+2. **Línea 2 (Arriba)**: `[(0,0), (0,1), (0,2), (0,3), (0,4)]` (Horizontal superior)
+3. **Línea 3 (Abajo)**: `[(2,0), (2,1), (2,2), (2,3), (2,4)]` (Horizontal inferior)
 4. **Línea 4 ("V" Suave)**: `[(0,0), (1,1), (2,2), (1,3), (0,4)]` (Arriba $\to$ Abajo $\to$ Arriba)
 5. **Línea 5 ("V Invertida")**: `[(2,0), (1,1), (0,2), (1,3), (2,4)]` (Abajo $\to$ Arriba $\to$ Abajo)
-6. **Línea 6 (Diagonal Descendente)**: `[(0,0), (0,1), (1,2), (2,3), (2,4)]`
-7. **Línea 7 (Diagonal Ascendente)**: `[(2,0), (2,1), (1,2), (0,3), (0,4)]`
-8. **Línea 8 (Corona Superior)**: `[(1,0), (0,1), (0,2), (0,3), (1,4)]`
-9. **Línea 9 (Corona Inferior)**: `[(1,0), (2,1), (2,2), (2,3), (1,4)]`
-10. **Línea 10 (Onda Central)**: `[(1,0), (0,1), (1,2), (2,3), (1,4)]`
+6. **Línea 6 (Diagonal Descendente)**: `[(0,0), (0,1), (1,2), (2,3), (2,4)]` (Rampa descendente de esquina a esquina)
+7. **Línea 7 (Diagonal Ascendente)**: `[(2,0), (2,1), (1,2), (0,3), (0,4)]` (Rampa ascendente de esquina a esquina)
 
-### Patrones Especiales de Pantalla:
-- **"El Ojo" (Marco Exterior - 12 Casilleros)**:
-  Los 12 casilleros del contorno exterior son el mismo símbolo o Wilds, dejando libres los 3 del centro `[(1,1), (1,2), (1,3)]`:
-  ```text
-  [ ⭐ ] [ ⭐ ] [ ⭐ ] [ ⭐ ] [ ⭐ ]
-  [ ⭐ ] [ 👁️ ] [ 👁️ ] [ 👁️ ] [ ⭐ ]
-  [ ⭐ ] [ ⭐ ] [ ⭐ ] [ ⭐ ] [ ⭐ ]
-  ```
-  *Premio Especial*: Otorga un multiplicador masivo de **$\times 50.0$** directo.
-- **Pantalla Completa (15 de 15)**: Todos los 15 casilleros llenos del mismo símbolo $\to$ **$\times 500.0$**.
+### Patrón Especial de Pantalla:
+- **Pantalla Completa (15 de 15)**: Todos los 15 casilleros llenos del mismo símbolo o Wilds $\to$ **$\times 500.0$** directo.
 
 ---
 
