@@ -38,19 +38,24 @@ Cualquier agente o desarrollador autorizado que trabaje en nuevas funcionalidade
    - Catálogo canónico de 124 emojis del servidor (`SERVER_EMOJIS_DATA`), auto-conversor pre-envío regex (`format_server_emojis`) y arquitectura resiliente ante expiración de Server Boost con fallbacks limpios (`DISABLED_EMOJI_FALLBACK`).
    - Búsqueda web contextual en vivo (`search_web_lite`), radar de voz, censos y enrutador principal de mensajes (`_handle_message_safe`).
 8. **`comandos.py`**: Registro unificado de Comandos Slash nativos:
-   - Declaración de los 26 comandos interactivos (`@app_commands.command`) con descripciones y choices.
+   - Declaración de los 31 comandos interactivos (`@app_commands.command`) con descripciones y choices.
    - Función `register_slash_commands(tree)` para registro limpio en el `CommandTree`.
-9. **`economia.py`**: Motor nativo de economía comunitaria y casino:
+9. **`economia.py`**: Motor nativo de economía comunitaria, banca, robos, tienda, salarios y casino:
    - Moneda oficial: Porros (`PORRO_EMOJI` `<:Porro:1535685303317172305>`).
    - Persistencia segura y atómica en `datos/economia.json` con bloqueo `ECONOMY_LOCK` (`RLock`) y escritura temporal `safe_write_json`.
    - Gestión de saldos: `get_balance`, `modify_balance`, `transfer_funds`.
-   - Jornada laboral (`/trabajar`): historias cómicas del lore del servidor (`WORK_MESSAGES`), retribución calibrada de 200 a 800 porros y cooldown estricto de 2 horas.
-   - Máquina tragaperras V2 de Alta Tensión (`/slots`):
-     * Matriz 3x3 y 8 símbolos: 6 Brawl Stars Ranked, Comodín WILD (`<:absolutecinema:...>`) y Dispersor SCATTER (`<:Porro:...>`).
-     * 9 Líneas de Pago Reales evaluadas de izquierda a derecha (`SLOT_PAYLINES`).
-     * Ronda de Bonus de 5 Tiradas Gratis (Free Spins) con multiplicador doble $\times 2$ al obtener 3+ Scatters en cualquier posición (re-trigger con +3 tiradas).
-     * Bote Progresivo Escalonado: Grand Jackpot (100% del bote con 3 Pro o 3 Wild en L1 central) y Mini Jackpot (25% del bote con 3 Masters en L1).
-     * Calibración Monte Carlo a RTP 110.0% (Hit Rate ~46.2%, modo High Payouts EV+ ordenado por Jose).
+   - Módulo de Banca (`/depositar`, `/retirar`): gestión segura de efectivo y banco con soporte de montos numéricos y opción `'all'`/`'todo'`.
+   - Sistema de Robo (`/robar`): probabilidad de éxito 50%, hurto de 20-50% de efectivo, chequeo estricto de inmunidad contra `🛡️ Cartera Blindada` (falla 100% y multa 15%) y cooldown anti-spam.
+   - Catálogo Oficial de Tienda V2 (`/tienda`): 9 artículos entre roles de estatus (`🛡️ Cartera Blindada`, `🚬 Camello del Barrio`, etc.), pases de XP temporales y permanentes, e ítems de inventario con auto-asignación vía Discord API.
+   - Salario Acumulativo (`/salario` / `/cobrar`): cálculo continuo por roles de nivel (Nivel 10 a 100) y podio (Top 1, 2, 3) con fórmula de decaimiento del 5% diario ($P = S \times \frac{1 - (1 - d)^n}{d}$, tope asintótico $20 \times S$).
+   - Jornada laboral (`/trabajar`): historias cómicas del lore del servidor (`WORK_MESSAGES`), retribución de 200 a 800 porros y cooldown estricto de 2 horas.
+   - Máquina tragaperras 5x3 de Alta Tensión (`/slots`):
+     * Matriz 5 rodillos $\times$ 3 filas (15 casilleros) y 8 símbolos: 6 Brawl Stars Ranked, Comodín WILD (`<:absolutecinema:...>`) y Dispersor SCATTER (`<:Porro:...>`).
+     * 10 Líneas de Pago Reales evaluadas de izquierda a derecha para 3, 4 y 5 aciertos (`SLOT_PAYLINES`).
+     * Patrón Especial "El Ojo" (marco exterior de 12 casillas a $\times 50.0$) y "Pantalla Completa" (15 casillas a $\times 500.0$).
+     * Ronda de Free Spins escalonada (3/4/5 Scatters $\to$ 5/8/12 giros a $\times 2$ con re-triggers $+3$).
+     * Bote Progresivo Escalonado: Grand Jackpot (100% bote con 5 Pro o 5 Wild en L1 central) y Mini Jackpot (25% bote con 5 Masters en L1).
+     * Calibración Monte Carlo a RTP 110.0% ($\pm 0.5\%$, Hit Rate ~51.8%, modo High Payouts EV+ ordenado por Jose).
      * Interfaz nativa con **Discord Components V2** (`SlotsLayoutView`): contenedores tipo 17 con `accent_color`, separadores tipo 14, textos tipo 10 y botones `[Play Again]`, `[🌀 Jugar Tiradas Gratis]` y `[Payouts]` en fila de acciones tipo 1.
 
 ## Cómo se usa e integra con `bot_service.py`

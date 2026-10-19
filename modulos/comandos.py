@@ -1,13 +1,13 @@
 """
 Módulo de Comandos Slash Nativos para el Bot 'Asistente' en Discord:
-Contiene los 26 comandos interactivos oficiales (@app_commands.command):
+Contiene los 31 comandos interactivos oficiales (@app_commands.command):
 - Multimedia y Arte: /dibuja, /musica
 - Gaming y Catálogo: /steam, /tribunal
 - Asistencia y Lore: /perfil, /pregunta, /voz, /recuerda, /xp
 - Voz Neuronal y Gemini Live: /habla, /geminilive, /cambiar_voz, /unete, /desconecta, /para_audio
 - Minijuegos del Servidor: /trivial, /ranking_trivial, /tres_en_raya, /conecta4, /ajedrez
 - Moderación y Reemplazo de Carl-bot: /autoroles, /sugerencia
-- Economía de Porros y Casino: /slots, /balance, /trabajar, /transferir
+- Economía de Porros y Casino: /slots, /balance, /trabajar, /transferir, /depositar, /retirar, /robar, /tienda, /salario
 """
 
 import os
@@ -1310,7 +1310,182 @@ async def cmd_transferir(interaction: discord.Interaction, usuario: discord.Memb
     await interaction.response.send_message(embed=embed)
 
 
-# Lista de los 26 comandos registrados
+@app_commands.command(name="depositar", description="Deposita Porros de tu efectivo en tu cuenta bancaria protegida")
+@app_commands.describe(cantidad="Cantidad de Porros a ingresar en el banco o 'all'/'todo'")
+async def cmd_depositar(interaction: discord.Interaction, cantidad: str):
+    from modulos.economia import deposit_cash, PORRO_EMOJI
+
+    ok, msg, bal = deposit_cash(interaction.user.id, cantidad)
+    if not ok:
+        await interaction.response.send_message(f"❌ {msg}", ephemeral=True)
+        return
+
+    embed = discord.Embed(
+        title="🏦 Depósito Bancario Completado",
+        description=f"{msg}\n\n**Efectivo disponible:** {PORRO_EMOJI} **{bal['cash']:,}** Porros\n**Saldo en banco:** {PORRO_EMOJI} **{bal['bank']:,}** Porros",
+        color=0x2ECC71,
+        timestamp=datetime.now(timezone.utc),
+    )
+    embed.set_author(name=interaction.user.display_name, icon_url=str(interaction.user.display_avatar.url) if hasattr(interaction.user, "display_avatar") else None)
+    embed.set_footer(text="El banco protege tus Porros al 100% frente a robos • /retirar")
+    await interaction.response.send_message(embed=embed)
+
+
+@app_commands.command(name="retirar", description="Retira Porros de tu cuenta bancaria a tu efectivo")
+@app_commands.describe(cantidad="Cantidad de Porros a retirar del banco o 'all'/'todo'")
+async def cmd_retirar(interaction: discord.Interaction, cantidad: str):
+    from modulos.economia import withdraw_cash, PORRO_EMOJI
+
+    ok, msg, bal = withdraw_cash(interaction.user.id, cantidad)
+    if not ok:
+        await interaction.response.send_message(f"❌ {msg}", ephemeral=True)
+        return
+
+    embed = discord.Embed(
+        title="🏧 Retirada Bancaria Completada",
+        description=f"{msg}\n\n**Efectivo disponible:** {PORRO_EMOJI} **{bal['cash']:,}** Porros\n**Saldo restante en banco:** {PORRO_EMOJI} **{bal['bank']:,}** Porros",
+        color=0x3498DB,
+        timestamp=datetime.now(timezone.utc),
+    )
+    embed.set_author(name=interaction.user.display_name, icon_url=str(interaction.user.display_avatar.url) if hasattr(interaction.user, "display_avatar") else None)
+    embed.set_footer(text="Recuerda que los Porros en efectivo pueden ser atracados con /robar")
+    await interaction.response.send_message(embed=embed)
+
+
+@app_commands.command(name="robar", description="Intenta robar Porros en efectivo a otro miembro del servidor (50% éxito)")
+@app_commands.describe(usuario="Miembro al que intentas atracar")
+async def cmd_robar(interaction: discord.Interaction, usuario: discord.Member):
+    from modulos.economia import execute_rob, PORRO_EMOJI
+
+    if usuario.id == interaction.user.id:
+        await interaction.response.send_message("❌ No puedes robarte a ti mismo. Ve al casino si quieres perder dinero.", ephemeral=True)
+        return
+
+    if getattr(usuario, "bot", False):
+        await interaction.response.send_message("❌ No puedes robar a un bot. Los bots no llevan Porros encima.", ephemeral=True)
+        return
+
+    ok, msg, delta = execute_rob(interaction.user.id, usuario.id, victim_member=usuario)
+
+    color = 0x2ECC71 if ok else 0xE74C3C
+    embed = discord.Embed(
+        title="🥷 Intento de Atraco",
+        description=msg,
+        color=color,
+        timestamp=datetime.now(timezone.utc),
+    )
+    embed.set_author(name=f"{interaction.user.display_name} vs {usuario.display_name}")
+    embed.set_footer(text="Protege tu efectivo en el banco con /depositar o compra la 🛡️ Cartera Blindada")
+    await interaction.response.send_message(embed=embed)
+
+
+@app_commands.command(name="tienda", description="Consulta el catálogo de 9 artículos oficiales de la tienda o compra un ítem")
+@app_commands.describe(
+    articulo="Artículo que deseas comprar (opcional, deja vacío para ver el catálogo)",
+)
+@app_commands.choices(articulo=[
+    app_commands.Choice(name="🛡️ Cartera Blindada (50.000 Porros) - Inmunidad a robos", value="cartera_blindada"),
+    app_commands.Choice(name="🚬 Porro de Oro (75.000 Porros) - Flexeo", value="porro_oro"),
+    app_commands.Choice(name="🚬 Camello del Barrio (85.000 Porros) - Rol Verde", value="camello_barrio"),
+    app_commands.Choice(name="🎰 Ludópata Rehabilitado (40.000 Porros) - Rol Rojo", value="ludopata_rehabilitado"),
+    app_commands.Choice(name="🍗 Pollo de Pelea Dopado (25.000 Porros) - Cockfight", value="pollo_pelea"),
+    app_commands.Choice(name="⚡ Chute de XP 24h (15.000 Porros) - +5% XP", value="chute_xp"),
+    app_commands.Choice(name="🔥 Pase Semanal de XP (75.000 Porros) - +10% XP", value="pase_semanal_xp"),
+    app_commands.Choice(name="💠 Pase Mensual de XP (250.000 Porros) - +15% XP", value="pase_mensual_xp"),
+    app_commands.Choice(name="👑 Aura de XP Permanente (1.000.000 Porros) - +10% XP", value="aura_xp"),
+])
+async def cmd_tienda(interaction: discord.Interaction, articulo: Optional[app_commands.Choice[str]] = None):
+    from modulos.economia import get_shop_catalog, buy_shop_item, get_balance, PORRO_EMOJI
+
+    if not articulo:
+        catalog = get_shop_catalog()
+        embed = discord.Embed(
+            title="🏪 Tienda Oficial de Porros — 'Asistente'",
+            description=(
+                f"Bienvenido al mercado oficial del servidor. Adquiere roles de estatus, ventajas e ítems de inventario.\n"
+                f"Usa `/tienda articulo: [nombre]` para comprar cualquier artículo.\n\n"
+                f"---"
+            ),
+            color=0xF39C12,
+            timestamp=datetime.now(timezone.utc),
+        )
+        for key, it in catalog.items():
+            type_badge = "🎭 Rol" if it["type"] == "role" else "🎒 Ítem"
+            embed.add_field(
+                name=f"{it['name']} — {PORRO_EMOJI} {it['price']:,} Porros ({type_badge})",
+                value=f"{it['description']}\n`ID: {it['id']}`",
+                inline=False,
+            )
+
+        bal = get_balance(interaction.user.id)
+        embed.set_footer(text=f"Tu saldo en efectivo: {bal['cash']:,} Porros • Usa /depositar o /retirar")
+        await interaction.response.send_message(embed=embed)
+        return
+
+    item_key = articulo.value
+    ok, msg, item_data, new_bal = buy_shop_item(interaction.user.id, item_key, member=interaction.user)
+
+    if not ok:
+        await interaction.response.send_message(msg, ephemeral=True)
+        return
+
+    role_added = False
+    if item_data and item_data.get("type") == "role" and hasattr(interaction.user, "add_roles"):
+        role_id_str = item_data.get("role_id")
+        if role_id_str and interaction.guild:
+            role = interaction.guild.get_role(int(role_id_str))
+            if role:
+                try:
+                    await interaction.user.add_roles(role, reason="Compra en /tienda")
+                    role_added = True
+                except Exception as e:
+                    _bot_log(f"Aviso auto-asignando rol {role.name}: {e}")
+
+    embed = discord.Embed(
+        title="🛒 Compra Exitosa en la Tienda",
+        description=f"{msg}\n\n**Saldo restante en efectivo:** {PORRO_EMOJI} **{new_bal['cash']:,}** Porros",
+        color=0x2ECC71,
+        timestamp=datetime.now(timezone.utc),
+    )
+    if role_added:
+        embed.add_field(name="🎭 Rol Asignado", value=f"¡El rol `{item_data['name']}` ha sido añadido a tu perfil de Discord!", inline=False)
+    embed.set_footer(text="Gracias por tu compra • Consulta tus ítems en /balance")
+    await interaction.response.send_message(embed=embed)
+
+
+@app_commands.command(name="salario", description="Cobra tu salario diario acumulado según tus roles de nivel y podio (con decaimiento del 5%)")
+async def cmd_salario(interaction: discord.Interaction):
+    from modulos.economia import claim_salary, get_balance, PORRO_EMOJI
+
+    member = interaction.user if isinstance(interaction.user, discord.Member) else None
+    ok, msg, payout, daily_salary = claim_salary(interaction.user.id, member=member)
+
+    if not ok:
+        await interaction.response.send_message(msg, ephemeral=True)
+        return
+
+    bal = get_balance(interaction.user.id)
+    embed = discord.Embed(
+        title="💵 Cobro de Salario Acumulativo",
+        description=msg,
+        color=0x2ECC71,
+        timestamp=datetime.now(timezone.utc),
+    )
+    embed.add_field(
+        name="💰 Saldo Actual en Efectivo",
+        value=f"{PORRO_EMOJI} **{bal['cash']:,}** Porros",
+        inline=True,
+    )
+    embed.add_field(
+        name="📈 Salario Diario Base",
+        value=f"{PORRO_EMOJI} **{daily_salary:,}** Porros/día",
+        inline=True,
+    )
+    embed.set_footer(text="Fórmula de decaimiento del 5% diario • Sube de nivel en el servidor para ganar más")
+    await interaction.response.send_message(embed=embed)
+
+
+# Lista de los 31 comandos registrados
 ALL_SLASH_COMMANDS = [
     cmd_dibuja,
     cmd_musica,
@@ -1338,6 +1513,11 @@ ALL_SLASH_COMMANDS = [
     cmd_balance,
     cmd_trabajar,
     cmd_transferir,
+    cmd_depositar,
+    cmd_retirar,
+    cmd_robar,
+    cmd_tienda,
+    cmd_salario,
 ]
 
 

@@ -1,18 +1,105 @@
 {
   "users": {
-    "test_user_1": {
-      "cash": 1400,
+    "857923274771136522": {
+      "username": "joselito3499",
+      "cash": 433802,
       "bank": 0,
       "last_work": null,
+      "last_rob": null,
+      "last_salary": null,
+      "inventory": [
+        "🛡️ Cartera Blindada"
+      ],
+      "portfolio": {}
+    },
+    "1170704124631846993": {
+      "username": "omen2042_38051",
+      "cash": 78144,
+      "bank": 0,
+      "last_work": null,
+      "last_rob": null,
+      "last_salary": null,
+      "inventory": [],
+      "portfolio": {}
+    },
+    "1311775415957848078": {
+      "username": "alexpro0812",
+      "cash": 3376,
+      "bank": 0,
+      "last_work": null,
+      "last_rob": null,
+      "last_salary": null,
+      "inventory": [],
+      "portfolio": {}
+    },
+    "1445111218951028748": {
+      "username": "motor123ewfvioq3590tj_68922",
+      "cash": 1000,
+      "bank": 0,
+      "last_work": null,
+      "last_rob": null,
+      "last_salary": null,
+      "inventory": [],
+      "portfolio": {}
+    },
+    "765533529589153812": {
+      "username": "miiguell_munozz",
+      "cash": 1000,
+      "bank": 0,
+      "last_work": null,
+      "last_rob": null,
+      "last_salary": null,
+      "inventory": [],
+      "portfolio": {}
+    },
+    "1208551025578082367": {
+      "username": "racerwasp",
+      "cash": 0,
+      "bank": 0,
+      "last_work": null,
+      "last_rob": null,
+      "last_salary": null,
+      "inventory": [],
+      "portfolio": {}
+    },
+    "1305627063147036683": {
+      "username": "carlitosmf__",
+      "cash": 0,
+      "bank": 0,
+      "last_work": null,
+      "last_rob": null,
+      "last_salary": null,
+      "inventory": [],
+      "portfolio": {}
+    },
+    "780104271768977418": {
+      "username": "slowis54",
+      "cash": 0,
+      "bank": 0,
+      "last_work": null,
+      "last_rob": null,
+      "last_salary": null,
+      "inventory": [],
+      "portfolio": {}
+    },
+    "794223776215990332": {
+      "username": "terreneiror",
+      "cash": 0,
+      "bank": 0,
+      "last_work": null,
+      "last_rob": null,
+      "last_salary": null,
       "inventory": [],
       "portfolio": {}
     }
   },
-  "server_jackpot": 25003,
+  "server_jackpot": 25000,
   "meta": {
     "currency_name": "Porro",
     "currency_emoji": "<:Porro:1535685303317172305>",
     "created_at": "2026-10-18T22:25:00Z",
-    "version": "1.0"
+    "updated_at": "2026-10-19T14:45:00Z",
+    "version": "2.0",
+    "migrated_from": "UnbelievaBoat"
   }
 }

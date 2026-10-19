@@ -294,6 +294,18 @@ from modulos.economia import (
     build_payouts_text,
     handle_slots_spin,
     handle_slots_interaction,
+    deposit_cash,
+    withdraw_cash,
+    execute_rob,
+    can_rob,
+    user_has_shield,
+    buy_shop_item,
+    get_shop_catalog,
+    SHOP_ITEMS,
+    calculate_daily_salary,
+    calculate_accumulated_salary,
+    can_claim_salary,
+    claim_salary,
 )
 
 from modulos.comandos import (
@@ -324,9 +336,14 @@ from modulos.comandos import (
     cmd_balance,
     cmd_trabajar,
     cmd_transferir,
+    cmd_depositar,
+    cmd_retirar,
+    cmd_robar,
+    cmd_tienda,
+    cmd_salario,
 )
 
-# Registrar los 26 comandos slash en el CommandTree
+# Registrar los 31 comandos slash en el CommandTree
 register_slash_commands(tree)
 
 # ==========================================
@@ -338,7 +355,7 @@ async def on_ready():
     bot_log(f"Bot '{bot.user}' conectado y listo en Discord.")
     bot_log(f"Motores de IA con respaldo: {MODELS_PRIORITY}")
     bot_log(f"Ajedrez: python-chess {'OK' if chess else 'NO disponible'} | Stockfish {'OK' if os.path.exists(STOCKFISH_PATH) else 'NO encontrado'} ({STOCKFISH_PATH})")
-    bot_log("Capacidades activas: Gemini Live en Voz (/geminilive), Auto-Roles 24/7 (/autoroles), Sugerencias (/sugerencia), Economía de Porros y Slots (/slots), Memoria Persistente, Trivial, Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y 26 Slash Commands.")
+    bot_log("Capacidades activas: Gemini Live en Voz (/geminilive), Auto-Roles 24/7 (/autoroles), Sugerencias (/sugerencia), Economía de Porros y Slots (/slots), Memoria Persistente, Trivial, Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y 31 Slash Commands.")
 
     # Registrar vistas interactivas persistentes 24/7 (sobreviven a reinicios de Render sin expirar jamás)
     try:
