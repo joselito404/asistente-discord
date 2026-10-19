@@ -22,14 +22,14 @@ La tragaperras opera con 8 símbolos: 6 regulares (Brawl Stars Ranked), 1 Comod�
 
 | Símbolo | Tipo | Emoji en Servidor | Multiplicador Base (3 en Línea) | Función / Efecto Especial | Peso en Rodillo |
 | :--- | :---: | :--- | :---: | :--- | :---: |
-| **WILD** | Especial | `<:absolutecinema:1478115607336714300>` | **$\times 100.0$** | **Comodín Universal**: Sustituye a cualquier símbolo regular (Gold a Pro). 3 Wilds pagan el mayor multiplicador fijo. | 2 |
-| **SCATTER** | Especial | `<:Porro:1535685303317172305>` | **Bote / Activador** | **Ronda de Bonus**: Paga en **cualquier posición** (no exige línea). Si caen **3 Scatters** en pantalla, activa **5 Tiradas Gratis (Free Spins)** con multiplicador doble $\times 2$. | 4 |
-| **Ranked_Pro** | Regular | `<:Ranked_Pro:1550129987972104252>` | **$\times 50.0$** | Premio Supremo Regular. Si coincide con 3 en línea central, otorga el **Grand Jackpot** del servidor. | 3 |
-| **Ranked_Masters** | Regular | `<:Ranked_Masters:1550129992837496833>` | **$\times 25.0$** | Premio Mítico. Si coincide en línea central, otorga el **Mini Jackpot** (25% del bote). | 5 |
-| **Ranked_Legendary** | Regular | `<:Ranked_Legendary:1550129997774323732>` | **$\times 10.0$** | Premio Épico. | 9 |
-| **Ranked_Mythic** | Regular | `<:Ranked_Mythic:1550130000852820099>` | **$\times 5.0$** | Premio Raro. | 15 |
-| **Ranked_Diamond** | Regular | `<:Ranked_Diamond:1550130004074041434>` | **$\times 3.0$** | Premio Poco Común. | 24 |
-| **Ranked_Gold** | Regular | `<:Ranked_Gold:1550130006896812084>` | **$\times 1.5$** | Premio Base Común. | 38 |
+| **WILD** | Especial | `<:absolutecinema:1478115607336714300>` | **$\times 65.0$** | **Comodín Universal**: Sustituye a cualquier símbolo regular (Gold a Pro). 3 Wilds pagan el mayor multiplicador fijo y en L1 otorgan Grand Jackpot. | 2 |
+| **SCATTER** | Especial | `<:Porro:1535685303317172305>` | **$\times 5.0$** | **Ronda de Bonus**: Paga en **cualquier posición** (no exige línea). Si caen **3 Scatters** en pantalla, otorga $\times 5$ de consolación y activa **5 Tiradas Gratis (Free Spins)** con multiplicador doble $\times 2$. | 4 |
+| **Ranked_Pro** | Regular | `<:Ranked_Pro:1550129987972104252>` | **$\times 32.0$** | Premio Supremo Regular. Si coincide con 3 en línea central (L1), otorga el **Grand Jackpot** (100% del bote). | 3 |
+| **Ranked_Masters** | Regular | `<:Ranked_Masters:1550129992837496833>` | **$\times 15.0$** | Premio Mítico. Si coincide en línea central (L1), otorga el **Mini Jackpot** (25% del bote). | 5 |
+| **Ranked_Legendary** | Regular | `<:Ranked_Legendary:1550129997774323732>` | **$\times 5.8$** | Premio Épico. | 9 |
+| **Ranked_Mythic** | Regular | `<:Ranked_Mythic:1550130000852820099>` | **$\times 3.0$** | Premio Raro. | 15 |
+| **Ranked_Diamond** | Regular | `<:Ranked_Diamond:1550130004074041434>` | **$\times 1.68$** | Premio Poco Común. | 24 |
+| **Ranked_Gold** | Regular | `<:Ranked_Gold:1550130006896812084>` | **$\times 0.86$** | Premio Base Común. | 38 |
 
 - **Moneda de Apuesta**: `<:Porro:1535685303317172305>` (`PORRO_EMOJI`).
 

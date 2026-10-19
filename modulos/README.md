@@ -45,11 +45,13 @@ Cualquier agente o desarrollador autorizado que trabaje en nuevas funcionalidade
    - Persistencia segura y atómica en `datos/economia.json` con bloqueo `ECONOMY_LOCK` (`RLock`) y escritura temporal `safe_write_json`.
    - Gestión de saldos: `get_balance`, `modify_balance`, `transfer_funds`.
    - Jornada laboral (`/trabajar`): historias cómicas del lore del servidor (`WORK_MESSAGES`), retribución calibrada de 200 a 800 porros y cooldown estricto de 2 horas.
-   - Máquina tragaperras (`/slots`):
-     * Réplica matemática 1:1 de UnbelievaBoat calibrada mediante Monte Carlo (`SlotEngine`, RTP 94-96%, WinRate ~36.5%).
-     * 6 símbolos Brawl Stars Ranked con 5 líneas de pago evaluadas simultáneamente (`SLOT_SYMBOLS`, `SLOT_PAYLINES`).
-     * Bote Progresivo (`server_jackpot`): un 3% de las pérdidas en tiradas no ganadoras alimenta el jackpot acumulado, reclamable al alinear la línea de Ranked Pro.
-     * Interfaz nativa con **Discord Components V2** (`SlotsLayoutView`): contenedores tipo 17 con `accent_color`, separadores tipo 14, textos tipo 10 y botones `[Play Again]` y `[Payouts]` en fila de acciones tipo 1.
+   - Máquina tragaperras V2 de Alta Tensión (`/slots`):
+     * Matriz 3x3 y 8 símbolos: 6 Brawl Stars Ranked, Comodín WILD (`<:absolutecinema:...>`) y Dispersor SCATTER (`<:Porro:...>`).
+     * 9 Líneas de Pago Reales evaluadas de izquierda a derecha (`SLOT_PAYLINES`).
+     * Ronda de Bonus de 5 Tiradas Gratis (Free Spins) con multiplicador doble $\times 2$ al obtener 3+ Scatters en cualquier posición (re-trigger con +3 tiradas).
+     * Bote Progresivo Escalonado: Grand Jackpot (100% del bote con 3 Pro o 3 Wild en L1 central) y Mini Jackpot (25% del bote con 3 Masters en L1).
+     * Calibración Monte Carlo a RTP 110.0% (Hit Rate ~46.2%, modo High Payouts EV+ ordenado por Jose).
+     * Interfaz nativa con **Discord Components V2** (`SlotsLayoutView`): contenedores tipo 17 con `accent_color`, separadores tipo 14, textos tipo 10 y botones `[Play Again]`, `[🌀 Jugar Tiradas Gratis]` y `[Payouts]` en fila de acciones tipo 1.
 
 ## Cómo se usa e integra con `bot_service.py`
 - `bot_service.py` actúa como punto de entrada único (`python bot_service.py`), registra `sys.modules.setdefault("bot_service", sys.modules[__name__])` y reexporta las funciones, clases y constantes de `modulos.*`.

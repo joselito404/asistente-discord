@@ -34,7 +34,7 @@ Ejecutar antes de cualquier commit o despliegue en Render Cloud:
 | `test_audio_models.py` | `python herramientas/test_audio_models.py` | Compatibilidad de modelos de voz y Edge-TTS. |
 | `test_emoji_converter.py` | `python herramientas/test_emoji_converter.py` | Auto-conversor de emojis (:aura:, :Porro:, :gigachad:, Brawl Stars Ranked), insensibilidad a mayúsculas, protección de bloques de código y resiliencia ante pérdida de Server Boost (available=False fallback). |
 | `test_slots_engine.py` | `python herramientas/test_slots_engine.py` | Simulación Monte Carlo de 100k tiradas y calibración de RTP (94-96%) y win rate (36.5%) de la tragaperras. |
-| `test_economy.py` | `python herramientas/test_economy.py` | Suite integral de economía: persistencia atómica, saldos, jornada laboral (/trabajar), transferencias (/transferir), tragaperras (/slots) con Discord Components V2, bote progresivo y concurrencia multihilo. |
+| `test_economy.py` | `python herramientas/test_economy.py` | Suite integral de economía y tragaperras V2: persistencia atómica, saldos, jornada laboral (/trabajar), transferencias (/transferir), 9 líneas de pago reales, comodín WILD, dispersor SCATTER, ronda de Free Spins x2, botes progresivos (Grand y Mini), Discord Components V2, concurrencia multihilo y simulación Monte Carlo a RTP 110%. |
 | `test_refined_transcription.py` | `python herramientas/test_refined_transcription.py` | Pruebas de transcripción refinada de audio y mitigación de alucinaciones en llamadas. |
 | `test_transcribe_all.py` | `python herramientas/test_transcribe_all.py` | Validación en lote de transcripción de audios de prueba de voz. |
 
