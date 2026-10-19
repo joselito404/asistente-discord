@@ -1,13 +1,15 @@
 """
-Módulo de Comandos Slash Nativos para el Bot 'Asistente' en Discord:
-Contiene los 31 comandos interactivos oficiales (@app_commands.command):
-- Multimedia y Arte: /dibuja, /musica
-- Gaming y Catálogo: /steam, /tribunal
-- Asistencia y Lore: /perfil, /pregunta, /voz, /recuerda, /xp
-- Voz Neuronal y Gemini Live: /habla, /geminilive, /cambiar_voz, /unete, /desconecta, /para_audio
-- Minijuegos del Servidor: /trivial, /ranking_trivial, /tres_en_raya, /conecta4, /ajedrez
-- Moderación y Reemplazo de Carl-bot: /autoroles, /sugerencia
-- Economía de Porros y Casino: /slots, /balance, /trabajar, /transferir, /depositar, /retirar, /robar, /tienda, /salario
+Módulo de Comandos Slash Nativos para los bots 'Asistente' y 'Economia Asistente' en Discord:
+Contiene los 31 comandos interactivos oficiales (@app_commands.command) divididos en Runner Dual:
+- Comandos Generales del Asistente (22):
+  * Multimedia y Arte: /dibuja, /musica
+  * Gaming y Catálogo: /steam, /tribunal
+  * Asistencia y Lore: /perfil, /pregunta, /voz, /recuerda, /xp
+  * Voz Neuronal y Gemini Live: /habla, /geminilive, /cambiar_voz, /unete, /desconecta, /para_audio
+  * Minijuegos del Servidor: /trivial, /ranking_trivial, /tres_en_raya, /conecta4, /ajedrez
+  * Moderación y Reemplazo de Carl-bot: /autoroles, /sugerencia
+- Comandos de Economía y Casino de Economia Asistente (9):
+  * Economía de Porros y Casino: /slots, /balance, /trabajar, /transferir, /depositar, /retirar, /robar, /tienda, /salario
 """
 
 import os
@@ -1424,8 +1426,12 @@ async def cmd_salario(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed)
 
 
-# Lista de los 31 comandos registrados
-ALL_SLASH_COMMANDS = [
+# ==========================================
+# LISTAS DE COMANDOS SLASH (RUNNER DUAL)
+# ==========================================
+
+# 22 Comandos Generales para el Bot 'Asistente'
+GENERAL_SLASH_COMMANDS = [
     cmd_dibuja,
     cmd_musica,
     cmd_steam,
@@ -1448,6 +1454,10 @@ ALL_SLASH_COMMANDS = [
     cmd_ajedrez,
     cmd_autoroles,
     cmd_sugerencia,
+]
+
+# 9 Comandos de Economía y Casino para el Bot 'Economia Asistente'
+ECONOMY_SLASH_COMMANDS = [
     cmd_slots,
     cmd_balance,
     cmd_trabajar,
@@ -1459,14 +1469,34 @@ ALL_SLASH_COMMANDS = [
     cmd_salario,
 ]
 
+# Total de 31 comandos para retrocompatibilidad total
+ALL_SLASH_COMMANDS = GENERAL_SLASH_COMMANDS + ECONOMY_SLASH_COMMANDS
 
-def register_slash_commands(tree: app_commands.CommandTree):
-    """Registra de forma segura todos los comandos slash en el árbol de comandos."""
-    for cmd in ALL_SLASH_COMMANDS:
+
+def register_general_commands(tree: app_commands.CommandTree):
+    """Registra los 22 comandos slash generales en el árbol del bot Asistente."""
+    for cmd in GENERAL_SLASH_COMMANDS:
         try:
             tree.add_command(cmd)
         except app_commands.CommandAlreadyRegistered:
             pass
         except Exception as e:
-            _bot_log(f"Aviso registrando comando /{cmd.name}: {e}")
+            _bot_log(f"Aviso registrando comando general /{cmd.name}: {e}")
+
+
+def register_economy_commands(tree: app_commands.CommandTree):
+    """Registra los 9 comandos slash de economía en el árbol del bot Economia Asistente."""
+    for cmd in ECONOMY_SLASH_COMMANDS:
+        try:
+            tree.add_command(cmd)
+        except app_commands.CommandAlreadyRegistered:
+            pass
+        except Exception as e:
+            _bot_log(f"Aviso registrando comando de economía /{cmd.name}: {e}")
+
+
+def register_slash_commands(tree: app_commands.CommandTree):
+    """Registra de forma segura todos los comandos slash (generales y economía) en el árbol de comandos."""
+    register_general_commands(tree)
+    register_economy_commands(tree)
 

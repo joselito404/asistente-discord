@@ -8,9 +8,9 @@
 ## 🏛️ Datos Generales del Servidor
 - **Nombre**: LOS MONGOLOS DEL SANVI Y SUS AMIGOS
 - **Server ID**: `1446143936891715616`
-- **Total Miembros**: **23 miembros** (17 usuarios humanos + 6 bots integrados)
+- **Total Miembros**: **24 miembros** (17 usuarios humanos + 7 bots integrados)
 - **Total Canales**: **49 canales** (9 categorías, 31 canales de texto/anuncios, 9 canales de voz)
-- **Total Roles**: **73 roles configurados**
+- **Total Roles**: **74 roles configurados**
 - **Administración Principal**:
   - Joselito (`joselito3499` / `Joselito 🪦 RIP` — ID: `857923274771136522`) — Creador, Administrador Principal y Top 1.
   - Iván (`racerwasp` — ID: `1208551025578082367`) — Administrador y Co-gestor (`EL AUTISTA NUMERO 1`).
@@ -75,9 +75,10 @@
 
 1. **Pos 72**: `EL AUTISTA NUMERO 1` (`1446145987335950549` | Color: `#1f8b4c` | 1 miembro: racerwasp) — Rol supremo de co-administración.
 2. **Pos 71**: `Admin` (`1536783626199633940` | Color: `#0015b6` | 2 miembros: Joselito, racerwasp) `[HOIST]` — Administración oficial.
-3. **Pos 70**: `Asistente` (`1549789822191935561` | Bot Gestionado | 1 miembro: Asistente) — Bot oficial de IA y utilidades Antigravity.
-4. **Pos 69**: `Cakey Bot` (`1543253460164812853` | Bot Gestionado | 1 miembro: Cakey Bot) — Niveles y cumpleaños.
-5. **Pos 68**: `UnbelievaBoat` (`1549498527191666770` | Bot Gestionado | 1 miembro: UnbelievaBoat) — Economía, casino y tienda.
+3. **Pos 71**: `Asistente` (`1549789822191935561` | Bot Gestionado | 1 miembro: Asistente) — Bot oficial de IA y utilidades Antigravity.
+4. **Pos 70**: `Economia Asistente` (`1561760781077446820` | Bot Gestionado | 1 miembro: Economia Asistente) — Bot nativo dedicado de economía y casino.
+5. **Pos 69**: `Cakey Bot` (`1543253460164812853` | Bot Gestionado | 1 miembro: Cakey Bot) — Niveles y cumpleaños.
+6. **Pos 68**: `UnbelievaBoat` (`1549498527191666770` | Bot Gestionado | 1 miembro: UnbelievaBoat) — Economía, casino y tienda.
 6. **Pos 67**: `Pendejo con poderes` (`1446145803432235120` | Color: `#2ecc71` | 2 miembros: Joselito, Omen2042) — Moderación activa.
 7. **Pos 66**: `carl-bot` (`1537575009453609032` | Bot Gestionado | 1 miembro: Carl-bot) — Sugerencias comunitarias (provisional).
 8. **Pos 65**: `💠Pendejo Supremo💠` (`1543021165491257344` | Color: `#75033e` | 0 miembros) `[HOIST]` — Nivel 100.

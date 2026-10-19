@@ -1,15 +1,16 @@
 """
-Servicio 24/7 de IA Multimodal para el Bot 'Asistente' en Discord.
+Servicio 24/7 de IA Multimodal y Runner Dual para los Bots 'Asistente' y 'Economia Asistente' en Discord.
 Arquitectura Modular (Paquete 'modulos/'):
 - modulos.graficos: Motor visual (FLUX.1, LaTeX PNG, gráficos QuickChart, Mermaid, terminal Pillow).
 - modulos.juegos: Steam Store, El Tribunal Gaming, Trivial con IA, Tres en Raya, Conecta 4 y Ajedrez.
 - modulos.voz: Parche DAVE E2EE, TTS neuronal Edge/Gemini, Gemini Live bidireccional y retención 24h.
 - modulos.autoroles: Reemplazo integral 24/7 de Carl-bot (Auto-roles con toggle/personal y sugerencias).
 - modulos.chat_ia: Modelos Gemini, System Prompt, búsqueda web, niveles Cakey Bot, XP, memoria y router.
-- modulos.comandos: Registro oficial de los 22 Comandos Slash (@app_commands.command).
+- modulos.comandos: Registro oficial de Comandos Slash (22 Generales + 9 Economía).
+- modulos.economia: Motor nativo de economía comunitaria, banca, robos, tienda, salarios y tragaperras 5x3.
 - modulos.web_server: Servidor HTTP multihilo en puerto 10000 para health-check de Render y audios.
 
-bot_service.py actúa como el conector y orquestador central ligero (~180 líneas).
+bot_service.py actúa como el conector y orquestador central con Arquitectura de Runner Dual.
 """
 
 import os
@@ -65,6 +66,7 @@ def load_config():
 
 cfg = load_config()
 TOKEN = os.getenv("DISCORD_TOKEN") or cfg.get("token")
+ECONOMY_TOKEN = os.getenv("ECONOMY_DISCORD_TOKEN") or cfg.get("economy_bot_token")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY") or cfg.get("gemini_api_key")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL") or cfg.get("gemini_model", "gemini-3.6-flash")
 
@@ -95,7 +97,7 @@ def load_trivia_data() -> list:
 
 tribunal_data = load_tribunal_data()
 
-# Cliente Discord y CommandTree
+# Clientes Discord y CommandTrees (Arquitectura Dual Runner)
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
@@ -103,6 +105,9 @@ intents.voice_states = True
 
 bot = discord.Client(intents=intents)
 tree = app_commands.CommandTree(bot)
+
+economy_bot = discord.Client(intents=intents)
+economy_tree = app_commands.CommandTree(economy_bot)
 
 # ==========================================
 # REEXPORTACIÓN DE MÓDULOS (COMPATIBILIDAD 100%)
@@ -311,6 +316,11 @@ from modulos.economia import (
 )
 
 from modulos.comandos import (
+    GENERAL_SLASH_COMMANDS,
+    ECONOMY_SLASH_COMMANDS,
+    ALL_SLASH_COMMANDS,
+    register_general_commands,
+    register_economy_commands,
     register_slash_commands,
     cmd_dibuja,
     cmd_steam,
@@ -345,8 +355,9 @@ from modulos.comandos import (
     cmd_salario,
 )
 
-# Registrar los 31 comandos slash en el CommandTree
-register_slash_commands(tree)
+# Registrar comandos en sus árboles correspondientes (Dual Runner)
+register_general_commands(tree)
+register_economy_commands(economy_tree)
 
 # ==========================================
 # EVENTOS DEL CICLO DE VIDA DE DISCORD
@@ -357,7 +368,7 @@ async def on_ready():
     bot_log(f"Bot '{bot.user}' conectado y listo en Discord.")
     bot_log(f"Motores de IA con respaldo: {MODELS_PRIORITY}")
     bot_log(f"Ajedrez: python-chess {'OK' if chess else 'NO disponible'} | Stockfish {'OK' if os.path.exists(STOCKFISH_PATH) else 'NO encontrado'} ({STOCKFISH_PATH})")
-    bot_log("Capacidades activas: Gemini Live en Voz (/geminilive), Auto-Roles 24/7 (/autoroles), Sugerencias (/sugerencia), Economía de Porros y Slots (/slots), Memoria Persistente, Trivial, Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y 31 Slash Commands.")
+    bot_log("Capacidades activas: Gemini Live en Voz (/geminilive), Auto-Roles 24/7 (/autoroles), Sugerencias (/sugerencia), Memoria Persistente, Trivial, Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y 22 Slash Commands Generales.")
 
     # Registrar vistas interactivas persistentes 24/7 (sobreviven a reinicios de Render sin expirar jamás)
     try:
@@ -368,15 +379,15 @@ async def on_ready():
     except Exception as e_view:
         bot_log(f"Aviso registrando vistas persistentes: {e_view}")
 
-    # Sincronización instantánea de Slash Commands en el servidor
+    # Sincronización instantánea de Slash Commands Generales en el servidor
     try:
         GUILD_ID = 1446143936891715616
         guild_obj = discord.Object(id=GUILD_ID)
         tree.copy_global_to(guild=guild_obj)
         await tree.sync(guild=guild_obj)
-        bot_log(f"Comandos Slash sincronizados limpiamente en el servidor ID {GUILD_ID} (sin duplicados).")
+        bot_log(f"Comandos Slash Generales (22) sincronizados limpiamente en el servidor ID {GUILD_ID} (sin duplicados).")
     except Exception as e:
-        bot_log(f"Aviso sincronización comandos slash: {e}")
+        bot_log(f"Aviso sincronización comandos slash generales: {e}")
 
     activity = discord.Activity(type=discord.ActivityType.listening, name="Gemini Live en voz (/unete)")
     await bot.change_presence(activity=activity)
@@ -530,9 +541,37 @@ async def on_interaction(interaction: discord.Interaction):
             await handle_slots_interaction(interaction)
 
 
+# ==========================================
+# EVENTOS DEL BOT DE ECONOMÍA (ECONOMIA ASISTENTE)
+# ==========================================
+
+@economy_bot.event
+async def on_ready():
+    GUILD_ID = 1446143936891715616
+    guild_obj = discord.Object(id=GUILD_ID)
+    try:
+        economy_tree.copy_global_to(guild=guild_obj)
+        await economy_tree.sync(guild=guild_obj)
+        bot_log(f"Bot de Economía '{economy_bot.user}' conectado y listo en Discord.")
+        bot_log(f"Comandos de Economía (9) sincronizados limpiamente en el servidor ID {GUILD_ID}.")
+    except Exception as e:
+        bot_log(f"Aviso sincronización comandos de economía: {e}")
+
+    activity = discord.Activity(type=discord.ActivityType.watching, name="Casino y Porros (/slots)")
+    await economy_bot.change_presence(activity=activity)
+
+
+@economy_bot.event
+async def on_interaction(interaction: discord.Interaction):
+    if interaction.type == discord.InteractionType.component and not interaction.response.is_done():
+        cid = interaction.data.get("custom_id", "")
+        if cid.startswith("slots:"):
+            await handle_slots_interaction(interaction)
+
+
 
 # ==========================================
-# SUPERVISOR PERSISTENTE Y ARRANQUE
+# SUPERVISOR PERSISTENTE Y ARRANQUE DUAL
 # ==========================================
 
 from modulos.web_server import (
@@ -541,19 +580,40 @@ from modulos.web_server import (
 )
 
 
+def _reset_client(client: discord.Client):
+    """Reinicia limpiamente el estado interno del cliente para permitir re-conexión sin colisión de sesión aiohttp."""
+    if client:
+        client._closed = False
+        client._closing_task = None
+        client.loop = discord.utils.MISSING
+        if hasattr(client, "http"):
+            client.http.connector = discord.utils.MISSING
+
+
+async def run_bots():
+    """Ejecuta concurrentemente en el mismo event loop ambos bots de Discord."""
+    tasks = [bot.start(TOKEN)]
+    if ECONOMY_TOKEN:
+        tasks.append(economy_bot.start(ECONOMY_TOKEN))
+    await asyncio.gather(*tasks)
+
+
 def start_bot_persistent():
-    """Bucle supervisor persistente para mantener el bot conectado 24/7 sin caídas."""
+    """Bucle supervisor persistente para mantener los dos bots conectados 24/7 sin caídas."""
     while True:
         try:
-            print("Iniciando conexión del bot con Discord...")
-            bot.run(TOKEN)
+            print("Iniciando conexión dual de bots con Discord (Asistente + Economia)...")
+            _reset_client(bot)
+            if ECONOMY_TOKEN:
+                _reset_client(economy_bot)
+            asyncio.run(run_bots())
         except (KeyboardInterrupt, SystemExit):
             print("Cierre manual solicitado.")
             break
         except Exception as e:
-            print(f"Excepción en bot.run(): {e}. Reintentando en 5 segundos...")
+            print(f"Excepción en run_bots(): {e}. Reintentando en 5 segundos...")
             time.sleep(5)
-        print("bot.run() finalizó. Reanudando en 5 segundos...")
+        print("run_bots() finalizó. Reanudando en 5 segundos...")
         time.sleep(5)
 
 

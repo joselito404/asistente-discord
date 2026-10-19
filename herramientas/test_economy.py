@@ -45,6 +45,10 @@ import discord
 import modulos.economia as eco
 from modulos.comandos import (
     ALL_SLASH_COMMANDS,
+    GENERAL_SLASH_COMMANDS,
+    ECONOMY_SLASH_COMMANDS,
+    register_general_commands,
+    register_economy_commands,
     cmd_slots,
     cmd_balance,
     cmd_trabajar,
@@ -490,22 +494,34 @@ def run_tests():
         assert final_bal["cash"] == expected_cash, f"Balance tras concurrencia {final_bal['cash']} != {expected_cash}"
         print("  ✅ TEST 16 PASADO: 10 hilos concurrentes sin condiciones de carrera.")
 
-        # TEST 17: Comprobación de los 31 Comandos Slash nativos
-        print("\n[TEST 17] Comprobación de los 31 Comandos Slash nativos...")
+        # TEST 17: Comprobación de la arquitectura Dual Runner y Slash Commands
+        print("\n[TEST 17] Comprobación de la arquitectura Dual Runner y Slash Commands...")
         assert len(ALL_SLASH_COMMANDS) == 31, f"Se esperaban 31 comandos, encontrados: {len(ALL_SLASH_COMMANDS)}"
-        cmd_names = [c.name for c in ALL_SLASH_COMMANDS]
+        assert len(GENERAL_SLASH_COMMANDS) == 22, f"Se esperaban 22 comandos generales, encontrados: {len(GENERAL_SLASH_COMMANDS)}"
+        assert len(ECONOMY_SLASH_COMMANDS) == 9, f"Se esperaban 9 comandos de economía, encontrados: {len(ECONOMY_SLASH_COMMANDS)}"
+
+        eco_cmd_names = [c.name for c in ECONOMY_SLASH_COMMANDS]
         for expected in ["slots", "balance", "trabajar", "transferir", "depositar", "retirar", "robar", "tienda", "salario"]:
-            assert expected in cmd_names, f"Comando /{expected} no está en ALL_SLASH_COMMANDS"
+            assert expected in eco_cmd_names, f"Comando /{expected} no está en ECONOMY_SLASH_COMMANDS"
 
         import bot_service
         for expected_attr in [
+            "bot", "tree", "economy_bot", "economy_tree", "ECONOMY_TOKEN",
+            "run_bots", "start_bot_persistent",
             "cmd_slots", "cmd_balance", "cmd_trabajar", "cmd_transferir",
             "cmd_depositar", "cmd_retirar", "cmd_robar", "cmd_tienda", "cmd_salario",
             "deposit_cash", "withdraw_cash", "execute_rob", "buy_shop_item", "claim_salary", "SlotEngine",
             "ShopInteractiveView", "build_shop_embed"
         ]:
             assert hasattr(bot_service, expected_attr), f"bot_service no tiene {expected_attr}"
-        print("  ✅ TEST 17 PASADO: Los 31 comandos slash y funciones reexportados en bot_service.")
+
+        tree_cmds = [c.name for c in bot_service.tree.get_commands()]
+        economy_tree_cmds = [c.name for c in bot_service.economy_tree.get_commands()]
+        assert len(tree_cmds) == 22, f"Se esperaban 22 comandos en tree de Asistente, encontrados: {len(tree_cmds)}"
+        assert len(economy_tree_cmds) == 9, f"Se esperaban 9 comandos en economy_tree, encontrados: {len(economy_tree_cmds)}"
+        assert "slots" not in tree_cmds, "slots no debería estar en el árbol general de Asistente"
+        assert "slots" in economy_tree_cmds, "slots debe estar en el árbol de economía"
+        print("  ✅ TEST 17 PASADO: Arquitectura Dual Runner validada (Asistente: 22 cmds | Economia Asistente: 9 cmds).")
 
         # TEST 18: Simulación Monte Carlo calibrada a RTP 110.0% (+/- 0.5%)
         print("\n[TEST 18] Simulación Monte Carlo (100.000 tiradas calibradas a RTP 110.0%)...")
