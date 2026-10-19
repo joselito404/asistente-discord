@@ -58,8 +58,37 @@ $$\text{Total Aura Fundamental} = \text{Voz (4.500)} + \text{Chat (3.500)} + \te
 
 ---
 
-## 5. Decisiones Pendientes de Validación
-- [x] Confirmación de los pesos definitivos sobre los 10.000 puntos de Aura (3 Pilares 45/35/20).
-- [ ] Algoritmo de fijación de precio de mercado para el 50% de mercado (Bonding curve AMM tipo Uniswap vs Libro de órdenes vs Spread fijo del 1%).
-- [ ] Frecuencia de actualización de velas del gráfico Pillow (Diaria vs Por sesión).
+## 5. Decisiones Aprobadas y Pendientes
+- [x] **Pesos Definitivos del Índice de Aura**: 3 Pilares Reales (45% Voz / 35% Chat / 20% Momentos sobre 10.000 pts) `[Confirmada · Jose · 18/10/2026]`.
+- [x] **Pilar 1 (Voz y Convivencia)**: Cerrado y blindado al 100% (mínimo 2 personas, mute 50%, deaf 0%, curva 3h/6h, streaming y heartbeat 5 min) `[Confirmada · Jose · 19/10/2026]`.
+- [x] **Algoritmo de Mercado (50%)**: Opción A — Modelo AMM / Bonding Curve continua tipo Uniswap con liquidez infinita contra la banca y comisión fija del 1% (spread de quema de Porros) `[Confirmada · Jose · 19/10/2026]`.
+- [x] **Diseño de Interfaz Gráfica (Híbrido Dual)**: Render nativo en Discord (Pillow) + Web interactiva en Vercel (TradingView Lightweight Charts) con estética idéntica a Trading 212 `[Confirmada · Jose · 19/10/2026]`.
+- [ ] **Pilar 2 (Chat y Comunidad)**: En debate activo de métricas y filtros anti-spam `[19/10/2026]`.
+- [ ] **Frecuencia de Formación de Velas Japonesas**: Temporalidad de cierre de velas (1 hora / 1 día).
+
+---
+
+## 6. Arquitectura de Interfaz y Gráficas de Cotización (Estilo Trading 212)
+
+Aprobado el modelo híbrido dual para máxima comodidad y profundidad visual:
+
+1. **Terminal Nativo en Discord (Comando `/bolsa [ticker]` o `/grafica`)**:
+   - **Renderizado Dinámico en Servidor**: Generación al vuelo de imagen PNG de alta definición mediante Python (`Pillow` / `mplfinance` personalizado).
+   - **Paleta Visual Trading 212**:
+     - Fondo negro puro (`#000000`).
+     - Velas japonesas alcistas en verde neón (`#00E676`) y bajistas en rojo vivo (`#FF5252`).
+     - Línea horizontal de precio actual en azul cian (`#00A3FF`) con etiqueta flotante de cotización.
+     - Eje derecho de precios y selector temporal inferior (`1D`, `1S`, `1M`, `3M`, `1A`, `MAX`).
+   - **Controles Interactivos de Discord (Components V2 / ActionRows)**:
+     - Fila 1: Botones de temporalidad `[ 1D ]` `[ 1S ]` `[ 1M ]` `[ 1A ]` `[ MAX ]` que redibujan la gráfica al instante editando el mensaje.
+     - Fila 2: Botón verde `[ 🛒 Comprar ]` y botón rojo `[ 💰 Vender ]` que abren ventanas modales nativas para introducir cantidad de acciones a operar.
+     - Fila 2 (Enlace): Botón `[ 🌐 Ver Terminal Web ]` con link directo.
+
+2. **Terminal Web Interactivo (Vercel / Next.js + TradingView)**:
+   - Despliegue de un portal complementario conectado a la API de Render (similar a Tribunal Gaming).
+   - Uso de la librería oficial **TradingView Lightweight Charts** (open-source):
+     - Paneo lateral fluido y zoom interactivo con la rueda del ratón.
+     - Tooltip en tiempo real al pasar el cursor (Apertura, Máximo, Mínimo, Cierre, Volumen).
+     - Libro de compras y ventas recientes en vivo.
+
 

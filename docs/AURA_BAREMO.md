@@ -28,6 +28,8 @@ $$\text{Aura Total} = \text{Voz (4.500)} + \text{Chat (3.500)} + \text{Momentos 
 
 ## 🎙️ Pilar 1: Voz y Convivencia en Directo (45% — 4.500 Puntos)
 
+> **Estado**: `Cerrado y Aprobado Definitivamente por Jose` `[Confirmada · Jose · 19/10/2026]`
+
 Es el núcleo donde se forja el servidor: partidas cooperativas, competitivo de Brawl Stars, charlas nocturnas y streaming de partidas.
 
 ### 1. Telemetría Automatizada (`on_voice_state_update`)
@@ -52,6 +54,9 @@ Se mide en tiempo real mediante el evento nativo de Discord sin grabaciones inva
 ---
 
 ## 💬 Pilar 2: Chat, Conversación y Comunidad (35% — 3.500 Puntos)
+
+> **Estado**: `En Debate y Refinamiento Activo con Jose` `[19/10/2026]`
+
 
 Mide la interacción social que mantiene vivo el servidor durante el día cuando no se puede jugar en llamada.
 
