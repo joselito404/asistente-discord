@@ -1,111 +1,98 @@
-# 🎰 Especificación de Diseño Viva: Tragaperras V2 de Alta Tensión (`docs/DISENO_TRAGAPERRAS_PORROS.md`)
+# 🎰 Especificación de Diseño Viva: Tragaperras 5x3 de Alta Tensión (`docs/DISENO_TRAGAPERRAS_PORROS.md`)
 
-> **Propósito**: Especificación formal de la máquina tragaperras nativa de alta fidelidad para el bot `Asistente`, superando el modelo plano de UnbelievaBoat mediante mecánicas reales de casino (9 líneas de pago, Comodines WILD, Scatters y Ronda de Free Spins).
+> **Propósito**: Especificación formal de la máquina tragaperras nativa en formato real de 5 rodillos $\times$ 3 filas (15 casilleros) para el bot `Asistente`, incorporando 10 líneas de pago intuitivas, patrón "El Ojo", Comodines WILD, Scatters con Free Spins escalonados y RTP calibrado al 110.0%.
 > **Estado**: `Vigente / Especificación Maestra (Regla Global §13)`
 > **Fecha de actualización**: 19 de octubre de 2026 `[Chat 1]`
 
 ---
 
-## 1. Fundamentos y Veredicto Técnico
+## 1. Fundamentos y Salto Generacional (5x3 vs 3x3)
 
-### ¿Por qué superar a UnbelievaBoat?
-1. **Mecánicas Reales de Casino**: UnbelievaBoat se limitaba a 5 líneas básicas con aciertos estáticos y sin emoción. La Tragaperras V2 introduce comodines dinámicos (**WILD**), bonificaciones en cualquier posición (**SCATTER**) y una fase de juego adicional (**Free Spins / Tiradas Gratis**).
-2. **Matemáticas Certificadas**: Calibración con simulador Monte Carlo para mantener un **RTP saludable del 94% - 96%** con un **Hit Rate superior (~42% - 45%)**, aumentando la frecuencia de premios y la retención del jugador sin desestabilizar la economía de Porros.
-3. **Persistencia Atómica Multihilo**: Almacenamiento directo en `datos/economia.json` con `safe_write_json` y cerrojo `threading.RLock()`.
-4. **Discord Components V2**: Contenedores interactivos (`type: 17`), divisores decorativos (`type: 14`) y botones persistentes para revancha inmediata y consulta de pagos.
-
----
-
-## 2. Catálogo de Símbolos, Pesos y Multiplicadores
-
-La tragaperras opera con 8 símbolos: 6 regulares (Brawl Stars Ranked), 1 Comodín (WILD) y 1 Dispersor de Bonificación (SCATTER):
-
-| Símbolo | Tipo | Emoji en Servidor | Multiplicador Base (3 en Línea) | Función / Efecto Especial | Peso en Rodillo |
-| :--- | :---: | :--- | :---: | :--- | :---: |
-| **WILD** | Especial | `<:absolutecinema:1478115607336714300>` | **$\times 65.0$** | **Comodín Universal**: Sustituye a cualquier símbolo regular (Gold a Pro). 3 Wilds pagan el mayor multiplicador fijo y en L1 otorgan Grand Jackpot. | 2 |
-| **SCATTER** | Especial | `<:Porro:1535685303317172305>` | **$\times 5.0$** | **Ronda de Bonus**: Paga en **cualquier posición** (no exige línea). Si caen **3 Scatters** en pantalla, otorga $\times 5$ de consolación y activa **5 Tiradas Gratis (Free Spins)** con multiplicador doble $\times 2$. | 4 |
-| **Ranked_Pro** | Regular | `<:Ranked_Pro:1550129987972104252>` | **$\times 32.0$** | Premio Supremo Regular. Si coincide con 3 en línea central (L1), otorga el **Grand Jackpot** (100% del bote). | 3 |
-| **Ranked_Masters** | Regular | `<:Ranked_Masters:1550129992837496833>` | **$\times 15.0$** | Premio Mítico. Si coincide en línea central (L1), otorga el **Mini Jackpot** (25% del bote). | 5 |
-| **Ranked_Legendary** | Regular | `<:Ranked_Legendary:1550129997774323732>` | **$\times 5.8$** | Premio Épico. | 9 |
-| **Ranked_Mythic** | Regular | `<:Ranked_Mythic:1550130000852820099>` | **$\times 3.0$** | Premio Raro. | 15 |
-| **Ranked_Diamond** | Regular | `<:Ranked_Diamond:1550130004074041434>` | **$\times 1.68$** | Premio Poco Común. | 24 |
-| **Ranked_Gold** | Regular | `<:Ranked_Gold:1550130006896812084>` | **$\times 0.86$** | Premio Base Común. | 38 |
-
-- **Moneda de Apuesta**: `<:Porro:1535685303317172305>` (`PORRO_EMOJI`).
+1. **Estándar Real de Casino**: La máquina pasa del formato rudimentario de 3x3 a una matriz **$5 \times 3$ (5 rodillos independientes de izquierda a derecha y 3 filas)**.
+2. **Premios Escalonados por Acierto**:
+   - **3 de 5 en línea**: Recuperación / premio base.
+   - **4 de 5 en línea**: *Big Win* ($\times 5$ a $\times 30$).
+   - **5 de 5 en línea (*Five of a Kind*)**: *Mega Win* supremo ($\times 20$ a $\times 250$).
+3. **Ergonomía Perfecta en Discord Móvil y PC**: 5 emojis de ancho entran con nitidez cristalina en una sola línea horizontal sin cortes ni saltos de línea en ninguna pantalla.
+4. **Calibración a RTP 110.0%**: La máquina opera en modo *High Payouts Ultra* con un valor esperado positivo ($EV+ = +10\%$) para la comunidad, garantizando que el juego sea rentable y estimulante.
 
 ---
 
-## 3. Matriz $3 \times 3$ y las 9 Líneas de Pago (Paylines)
+## 2. Catálogo de Símbolos y Tabla de Pagos (3, 4 y 5 en Línea)
 
-La matriz se indexa como `(fila, columna)` de izquierda a derecha:
+| Símbolo | Tipo | Emoji en Discord | 3 en Línea | 4 en Línea | 5 en Línea (*5-of-a-kind*) | Peso |
+| :--- | :---: | :--- | :---: | :---: | :---: | :---: |
+| **Ranked_Gold** | Regular | `<:Ranked_Gold:1550130006896812084>` | $\times 0.4$ | $\times 1.2$ | $\times 3.5$ | 38 |
+| **Ranked_Diamond** | Regular | `<:Ranked_Diamond:1550130004074041434>` | $\times 0.8$ | $\times 2.5$ | $\times 7.0$ | 24 |
+| **Ranked_Mythic** | Regular | `<:Ranked_Mythic:1550130000852820099>` | $\times 1.5$ | $\times 5.0$ | $\times 15.0$ | 15 |
+| **Ranked_Legendary** | Regular | `<:Ranked_Legendary:1550129997774323732>` | $\times 3.0$ | $\times 10.0$ | $\times 30.0$ | 9 |
+| **Ranked_Masters** | Regular | `<:Ranked_Masters:1550129992837496833>` | $\times 8.0$ | $\times 25.0$ | $\times 75.0$ *(+ Mini Jackpot)* | 5 |
+| **Ranked_Pro** | Regular | `<:Ranked_Pro:1550129987972104252>` | $\times 20.0$ | $\times 60.0$ | $\times 200.0$ *(+ Grand Jackpot)* | 3 |
+| **WILD** | Especial | `<:absolutecinema:1478115607336714300>` | $\times 25.0$ | $\times 80.0$ | $\times 250.0$ | 2 |
+| **SCATTER** | Especial | `<:Porro:1535685303317172305>` | $\times 5$ + 5 Spins | $\times 15$ + 8 Spins | $\times 50$ + 12 Spins | 4 |
+
+- **Función del WILD (`:absolutecinema:`)**: Comodín que sustituye a cualquier símbolo regular (Gold a Pro). En una línea con `[Pro, Pro, WILD, Pro, Diamond]`, cuenta como 4 Pro en línea.
+- **Función del SCATTER (`:Porro:`)**: Dispersor que paga en **cualquier posición** de la pantalla. Si caen $\ge 3$ Scatters, otorga el premio de consolación y activa la ronda de **Tiradas Gratis (Free Spins)** con multiplicador $\times 2$.
+
+---
+
+## 3. Matriz $5 \times 3$ y las 10 Líneas de Pago Clásicas
+
+La cuadrícula se compone de 15 posiciones `(fila, columna)`:
 
 ```text
-Rodillo 1    Rodillo 2    Rodillo 3
-[ (0,0) ]    [ (0,1) ]    [ (0,2) ]   -> Fila Superior (Top)
-[ (1,0) ]    [ (1,1) ]    [ (1,2) ]   -> Fila Central (Middle)
-[ (2,0) ]    [ (2,1) ]    [ (2,2) ]   -> Fila Inferior (Bottom)
+Rodillo 1    Rodillo 2    Rodillo 3    Rodillo 4    Rodillo 5
+[ (0,0) ]    [ (0,1) ]    [ (0,2) ]    [ (0,3) ]    [ (0,4) ]   -> Fila Superior (Top)
+[ (1,0) ]    [ (1,1) ]    [ (1,2) ]    [ (1,3) ]    [ (1,4) ]   -> Fila Central (Middle)
+[ (2,0) ]    [ (2,1) ]    [ (2,2) ]    [ (2,3) ]    [ (2,4) ]   -> Fila Inferior (Bottom)
 ```
 
-Se evalúan simultáneamente **9 líneas de pago** reales de izquierda a derecha:
+### Las 10 Líneas de Pago Limpias:
+1. **Línea 1 (Centro)**: `[(1,0), (1,1), (1,2), (1,3), (1,4)]`
+2. **Línea 2 (Arriba)**: `[(0,0), (0,1), (0,2), (0,3), (0,4)]`
+3. **Línea 3 (Abajo)**: `[(2,0), (2,1), (2,2), (2,3), (2,4)]`
+4. **Línea 4 ("V" Suave)**: `[(0,0), (1,1), (2,2), (1,3), (0,4)]` (Arriba $\to$ Abajo $\to$ Arriba)
+5. **Línea 5 ("V Invertida")**: `[(2,0), (1,1), (0,2), (1,3), (2,4)]` (Abajo $\to$ Arriba $\to$ Abajo)
+6. **Línea 6 (Diagonal Descendente)**: `[(0,0), (0,1), (1,2), (2,3), (2,4)]`
+7. **Línea 7 (Diagonal Ascendente)**: `[(2,0), (2,1), (1,2), (0,3), (0,4)]`
+8. **Línea 8 (Corona Superior)**: `[(1,0), (0,1), (0,2), (0,3), (1,4)]`
+9. **Línea 9 (Corona Inferior)**: `[(1,0), (2,1), (2,2), (2,3), (1,4)]`
+10. **Línea 10 (Onda Central)**: `[(1,0), (0,1), (1,2), (2,3), (1,4)]`
 
-| ID Línea | Nombre de Línea | Coordenadas `(Fila, Columna)` | Patrón Visual |
-| :---: | :--- | :--- | :---: |
-| **L1** | Horizontal Centro | `[(1,0), (1,1), (1,2)]` | `― ― ―` |
-| **L2** | Horizontal Arriba | `[(0,0), (0,1), (0,2)]` | `― ― ―` (Arriba) |
-| **L3** | Horizontal Abajo | `[(2,0), (2,1), (2,2)]` | `― ― ―` (Abajo) |
-| **L4** | Diagonal Descendente | `[(0,0), (1,1), (2,2)]` | `╲` |
-| **L5** | Diagonal Ascendente | `[(2,0), (1,1), (0,2)]` | `╱` |
-| **L6** | Zig-Zag en "V" | `[(0,0), (1,1), (0,2)]` | `╲ ╱` (Arriba - Centro - Arriba) |
-| **L7** | Zig-Zag en "V Invertida" | `[(2,0), (1,1), (2,2)]` | `╱ ╲` (Abajo - Centro - Abajo) |
-| **L8** | Onda Descendente | `[(0,0), (0,1), (1,2)]` | `― ― ╲` |
-| **L9** | Onda Ascendente | `[(2,0), (2,1), (1,2)]` | `― ― ╱` |
-
-### Reglas de Evaluación de Línea:
-1. Una línea premia si los 3 rodillos contienen el mismo símbolo regular, o una combinación de ese símbolo con uno o más comodines **WILD**.
-2. **Prioridad del Wild**: Si una línea contiene `[WILD, Gold, Gold]`, el Wild adopta el valor de `Gold`. Si una línea tiene `[WILD, Pro, WILD]`, los Wilds adoptan `Pro` (pagando $\times 50$). Tres Wilds juntos pagan su multiplicador supremo de $\times 100$.
-3. **Multi-Línea Acumulativa**: Si se premian múltiples líneas en un mismo giro, los multiplicadores se suman:
-   $$\text{Multiplicador Total} = \sum_{k \in \text{Líneas Ganadoras}} \text{Multiplicador}_k$$
-   $$\text{Ganancia Base} = \lfloor \text{Apuesta} \times \text{Multiplicador Total} \rfloor$$
-
----
-
-## 4. Mecánica Especial de Bonus: Free Spins (Tiradas Gratis)
-
-1. **Activación**: Se evalúan todos los 9 casilleros de la pantalla. Si aparecen **3 Scatters** (`<:Porro:...>`) en cualquier posición (sin necesidad de alinearse en payline):
-   - El jugador recibe inmediatamente un pago de consolación de $\times 5$ su apuesta.
-   - Se activa la **Ronda de 5 Tiradas Gratis**.
-2. **Dinámica de Free Spins**:
-   - Se presenta una interfaz especial con contenedor dorado (`accent_color: #FFD700`).
-   - Las 5 tiradas se ejecutan consecutivamente con un botón interactivo `[Girar Tirada Gratis (X restantes)]` o en secuencia automática con pausas dramáticas.
-   - **Coste**: $0$ Porros deducidos de la cartera.
-   - **Multiplicador Global**: Todas las ganancias obtenidas durante las Free Spins se multiplican por $\times 2$.
-   - **Re-trigger**: Si durante las tiradas gratis vuelven a salir 3 Scatters, se añaden $+3$ tiradas gratis adicionales.
-3. **Cierre de Bonus**: Al terminar, se muestra un resumen con el total de porros ganados en la sesión de tiradas gratis y se ingresa el premio íntegro al saldo del usuario.
+### Patrones Especiales de Pantalla:
+- **"El Ojo" (Marco Exterior - 12 Casilleros)**:
+  Los 12 casilleros del contorno exterior son el mismo símbolo o Wilds, dejando libres los 3 del centro `[(1,1), (1,2), (1,3)]`:
+  ```text
+  [ ⭐ ] [ ⭐ ] [ ⭐ ] [ ⭐ ] [ ⭐ ]
+  [ ⭐ ] [ 👁️ ] [ 👁️ ] [ 👁️ ] [ ⭐ ]
+  [ ⭐ ] [ ⭐ ] [ ⭐ ] [ ⭐ ] [ ⭐ ]
+  ```
+  *Premio Especial*: Otorga un multiplicador masivo de **$\times 50.0$** directo.
+- **Pantalla Completa (15 de 15)**: Todos los 15 casilleros llenos del mismo símbolo $\to$ **$\times 500.0$**.
 
 ---
 
-## 5. Bote Progresivo Escalonado (Jackpots)
+## 4. Ronda de Free Spins (Tiradas Gratis)
 
-El sistema de economía gestiona un bote progresivo acumulativo en `datos/economia.json` (`server_jackpot`):
-- **Alimentación**: El **3%** de todas las apuestas netas perdidas se inyecta directamente al bote.
-- **Niveles de Jackpots**:
-  - **Grand Jackpot (100% del bote acumulado)**: Se otorga al alinear 3 `Ranked_Pro` en la línea central (L1) o 3 `WILD` en la línea central. El bote se reinicia a su base de 25.000 Porros.
-  - **Mini Jackpot (25% del bote acumulado)**: Se otorga al alinear 3 `Ranked_Masters` en la línea central (L1). El 25% del bote se descuenta y se entrega al ganador.
-
----
-
-## 6. Calibración Matemática Monte Carlo (Modo High Payouts Ultra)
-
-- **RTP Objetivo (Return to Player)**: **$110.0\%$** (margen $109.5\% - 110.5\%$, modo ultra generoso con ventaja matemática positiva EV+ de un +10% para los jugadores de la comunidad).
-- **Hit Rate (Frecuencia de Acierto)**: $45.0\% - 48.0\%$ (alta frecuencia de premios gracias a las 9 líneas activas, comodines Wilds y rondas de bonus).
-- **Frecuencia de Free Spins**: 1 de cada ~70 - 85 tiradas (evento de bonificación emocionante y recurrente).
-- **Frecuencia de Grand Jackpot**: 1 de cada ~10.000 tiradas.
+- **3 Scatters**: $\times 5$ payout + **5 Tiradas Gratis** a $\times 2$.
+- **4 Scatters**: $\times 15$ payout + **8 Tiradas Gratis** a $\times 2$.
+- **5 Scatters**: $\times 50$ payout + **12 Tiradas Gratis** a $\times 2$.
+- Durante las tiradas gratis, el coste es **$0$ Porros**. Todo premio se duplica ($\times 2$).
+- **Re-trigger**: Si caen $\ge 3$ Scatters durante el bonus, se añaden $+3$ tiradas gratis adicionales.
 
 ---
 
-## 7. Interfaz Visual Discord (Components V2)
+## 5. Botes Progresivos Escalonados
 
-- **Normal Win**: Contenedor verde esmeralda (`#66B96A`), desglose de líneas ganadoras (`L1`, `L4`, etc.), payout y botones `[Volver a Girar]` y `[Tabla de Pagos]`.
-- **Big Win ($\ge \times 20$)**: Contenedor dorado con animación y mensaje destacado.
-- **Free Spins Trigger**: Contenedor violeta neón con aviso de bonus y botón para iniciar las tiradas gratis.
-- **No Win**: Contenedor rojo suave (`#EF5350`) con los mismos botones para revancha.
+- El **3%** de todas las apuestas netas perdidas alimenta continuamente `server_jackpot` en `datos/economia.json`.
+- **Grand Jackpot (100% del bote acumulado)**: Se otorga al sacar 5 `Ranked_Pro` o 5 `WILD` en la línea central (L1). Bote base: 25.000 Porros.
+- **Mini Jackpot (25% del bote)**: Se otorga al sacar 5 `Ranked_Masters` en la línea central (L1).
+
+---
+
+## 6. Calibración Monte Carlo (RTP 110.0%)
+
+- **RTP Objetivo**: **$110.0\%$** ($\pm 0.5\%$).
+- **Hit Rate**: $45.0\% - 48.0\%$.
+- **Frecuencia de Free Spins**: 1 de cada ~80 tiradas.
+- **Frecuencia de Grand Jackpot**: 1 de cada ~15.000 tiradas.
