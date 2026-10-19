@@ -109,10 +109,13 @@
 34. **Pos 39**: `Apps` (`1535673590106820668` | Color: `#607d8b` | 6 miembros) `[HOIST]` — Rol agrupador de bots.
 35. **Pos 38**: `Free stuff` (`1500434312053395549` | Bot Gestionado | 1 miembro: FreeStuff) `[HOIST]`.
 36. **Pos 37**: `Emoji.gg Bot` (`1535673366617530443` | Bot Gestionado | 1 miembro: Emoji.gg).
-37. **Pos 36 a 1**: **36 Auto-Roles de Comunidad y Juegos** (gestionados por Asistente en `#🎭roles🎭`):
-    - *Plataformas y Hobbies*: `PC` (4), `Consola` (4), `Familia de Steam` (3), `Cine` (6), `lectura` (2), `anime` (4), `manga` (5), `Manhwa` (4), `Español` (3), `ingles` (1), `Tryhard` (2), `Casual` (3), `nocturno` (1), `Falta Uno` (3), `recomendaciones de juegos` (2).
-    - *Géneros de Videojuegos*: `Co-op` (5), `Shooters` (3), `Survival` (4), `Extraction` (3), `Roguelike` (3), `Indie` (3), `RPG` (4), `Soulslike` (3), `Peleas` (3), `Deportes` (3), `Estrategia` (1), `Cartas` (1), `incremental` (2).
-    - *Juegos Específicos*: `Brawl Stars` (3), `Fornite` (2), `ARC Raiders` (2), `The finals` (1), `R.E.P.O` (3), `PVZ GW2` (1), `PEAK` (3), `Big Walk` (2).
+37. **Pos 36 a 1**: **36 Auto-Roles de Comunidad y Juegos** (gestionados 24/7 por Asistente en `#🎭roles🎭`):
+    - *🎮 Plataformas, Idiomas y Hobbies (Pos 35, 28-20, 19-16, 4)*:
+      `PC` (`1537577523011911772` | 4), `Consola` (`1537593228209950720` | 4), `Familia de Steam` (`1537593280232165396` | 3), `Cine` (`1537592958747148368` | 6), `lectura` (`1537593474721906759` | 2), `anime` (`1537593562772799498` | 4), `manga` (`1537593587670327356` | 5), `Manhwa` (`1537593440303325275` | 4), `nocturno` (`1537593627105038466` | 1), `Falta Uno` (`1537594120078368768` | 3), `Español` (`1537594201326489690` | 3), `ingles` (`1537594249720242216` | 1), `Tryhard` (`1537593357713412146` | 2), `Casual` (`1537593381830529104` | 3), `recomendaciones de juegos` (`1537914650274963598` | 2).
+    - *🎯 Géneros de Videojuegos (Pos 36, 33-29, 15-10, 2)*:
+      `Co-op` (`1537577153862967366` | 5), `Shooters` (`1537591932010766367` | 3), `Survival` (`1537592360291008612` | 4), `Extraction` (`1537592390142132396` | 3), `Roguelike` (`1537592856380706906` | 3), `Indie` (`1537592919815360632` | 3), `Peleas` (`1537594274093465683` | 3), `Deportes` (`1537594961837428776` | 3), `RPG` (`1537595229627224124` | 4), `Soulslike` (`1537595250695209000` | 3), `Estrategia` (`1537595282190237706` | 1), `Cartas` (`1537595303346053221` | 1), `incremental` (`1537934178283290664` | 2).
+    - *🕹️ Juegos Específicos (Pos 34, 9-5, 3, 1)*:
+      `Brawl Stars` (`1537591875656224820` | 3), `ARC Raiders` (`1537914271483297812` | 2), `Fornite` (`1537914329167302718` | 2), `The finals` (`1537914381277462719` | 1), `R.E.P.O` (`1537914482724970576` | 3), `PVZ GW2` (`1537914562823594024` | 1), `PEAK` (`1537914820223828038` | 3), `Big Walk` (`1548716906213543986` | 2).
 38. **Pos 0**: `@everyone` (`1446143936891715616`).
 
 ---

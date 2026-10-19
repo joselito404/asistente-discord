@@ -35,11 +35,14 @@ Ejecutar antes de cualquier commit o despliegue en Render Cloud:
 | `test_emoji_converter.py` | `python herramientas/test_emoji_converter.py` | Auto-conversor de emojis (:aura:, :Porro:, :gigachad:, Brawl Stars Ranked), insensibilidad a mayúsculas, protección de bloques de código y resiliencia ante pérdida de Server Boost (available=False fallback). |
 | `test_slots_engine.py` | `python herramientas/test_slots_engine.py` | Simulación Monte Carlo de 100k tiradas y calibración de RTP (94-96%) y win rate (36.5%) de la tragaperras. |
 | `test_economy.py` | `python herramientas/test_economy.py` | Suite integral de economía: persistencia atómica, saldos, jornada laboral (/trabajar), transferencias (/transferir), tragaperras (/slots) con Discord Components V2, bote progresivo y concurrencia multihilo. |
+| `test_refined_transcription.py` | `python herramientas/test_refined_transcription.py` | Pruebas de transcripción refinada de audio y mitigación de alucinaciones en llamadas. |
+| `test_transcribe_all.py` | `python herramientas/test_transcribe_all.py` | Validación en lote de transcripción de audios de prueba de voz. |
 
 ---
 
 ## 📦 3. Utilidades Auxiliares y Compilación
 
+- **Configuración de Entorno Local**: `registrar_protocolo_ide.ps1` (asocia el protocolo URL personalizado `antigravity-ide://` en el Registro de Windows para abrir el IDE).
 - **Compiladores de Documentación**: `build_pdf.js`, `build_cap10_pdf.js`, `build_audio_guide_pdf.js` (renderizado local de PDFs con `marked`).
 - **Análisis de Audio y Estadísticas**: `analyze_zip_durations.py`, `audit_zip_transcriptions.py`, `analyze_slots.ps1`, `calculate_stats.ps1`.
 - **Generación de Contenido**: `generate_trivia_pool.py`.
