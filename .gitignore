@@ -25,10 +25,13 @@ emojis_backup/
 datos_locales/emojis_backup/
 *.wav
 historico_chat/
-herramientas/
+herramientas/*
 !herramientas/test_economy.py
 !herramientas/test_slots_engine.py
 !herramientas/test_blackjack.py
+!herramientas/test_roulette.py
+!herramientas/test_coinflip.py
+!herramientas/test_casino_hub.py
 documentos_pdf/
 *.zip
 *.txt

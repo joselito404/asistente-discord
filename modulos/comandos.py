@@ -1,6 +1,6 @@
 """
 Módulo de Comandos Slash Nativos para los bots 'Asistente' y 'Economia Asistente' en Discord:
-Contiene los 33 comandos interactivos oficiales (@app_commands.command) divididos en Runner Dual:
+Contiene los 35 comandos interactivos oficiales (@app_commands.command) divididos en Runner Dual:
 - Comandos Generales del Asistente (22):
   * Multimedia y Arte: /dibuja, /musica
   * Gaming y Catálogo: /steam, /tribunal
@@ -8,8 +8,8 @@ Contiene los 33 comandos interactivos oficiales (@app_commands.command) dividido
   * Voz Neuronal y Gemini Live: /habla, /geminilive, /cambiar_voz, /unete, /desconecta, /para_audio
   * Minijuegos del Servidor: /trivial, /ranking_trivial, /tres_en_raya, /conecta4, /ajedrez
   * Moderación y Reemplazo de Carl-bot: /autoroles, /sugerencia
-- Comandos de Economía y Casino de Economia Asistente (11):
-  * Economía de Porros y Casino: /slots, /balance, /trabajar, /transferir, /depositar, /retirar, /robar, /tienda, /salario, /blackjack, /bj
+- Comandos de Economía y Casino de Economia Asistente (13):
+  * Economía de Porros y Casino: /slots, /balance, /trabajar, /transferir, /depositar, /retirar, /robar, /tienda, /salario, /blackjack, /bj, /ruleta, /coinflip
 """
 
 import os
@@ -1555,6 +1555,282 @@ async def cmd_bj(interaction: discord.Interaction, apuesta: str = "100"):
     await _handle_blackjack_command(interaction, apuesta)
 
 
+async def _handle_roulette_command(
+    interaction: discord.Interaction,
+    apuesta: str = "100",
+    tipo: str = "rojo",
+    numero: Optional[int] = None,
+):
+    from modulos.economia import (
+        parse_roulette_bet,
+        normalize_roulette_bet_type,
+        roulette_engine,
+        build_roulette_embed,
+        RouletteActionView,
+        ROULETTE_BET_INFO,
+    )
+
+    norm_type = normalize_roulette_bet_type(tipo)
+    if norm_type not in ROULETTE_BET_INFO:
+        await interaction.response.send_message(
+            f"❌ Tipo de apuesta '{tipo}' no válido. Elige una opción oficial del menú.",
+            ephemeral=True,
+        )
+        return
+
+    if norm_type == "pleno":
+        if numero is None:
+            await interaction.response.send_message(
+                "❌ Para apostar a **Pleno**, debes indicar el parámetro `numero` con un valor del 0 al 36.",
+                ephemeral=True,
+            )
+            return
+        if not (0 <= numero <= 36):
+            await interaction.response.send_message(
+                "❌ El número para Pleno debe estar comprendido entre **0** y **36**.",
+                ephemeral=True,
+            )
+            return
+
+    ok, bet, err = parse_roulette_bet(interaction.user.id, apuesta)
+    if not ok:
+        await interaction.response.send_message(f"❌ {err}", ephemeral=True)
+        return
+
+    try:
+        res = roulette_engine.spin_wheel(
+            user_id=interaction.user.id,
+            bet_amount=bet,
+            bet_type=norm_type,
+            bet_number=numero,
+        )
+        embed = build_roulette_embed(user=interaction.user, result=res)
+        view = RouletteActionView(
+            user_id=interaction.user.id,
+            user=interaction.user,
+            bet_amount=bet,
+            bet_type=norm_type,
+            bet_number=numero,
+            engine=roulette_engine,
+        )
+        await interaction.response.send_message(embed=embed, view=view)
+        try:
+            view.message = await interaction.original_response()
+        except Exception:
+            pass
+    except Exception as e:
+        await interaction.response.send_message(f"❌ Error al procesar la ruleta: {e}", ephemeral=True)
+
+
+@app_commands.command(name="ruleta", description="Juega a la Ruleta Europea de 37 casillas (RTP 97.30%)")
+@app_commands.describe(
+    apuesta="Cantidad de Porros a apostar (mínimo 50) o 'all'/'todo'",
+    tipo="Tipo de apuesta (Rojo, Negro, Par, Impar, Docenas, Columnas, Pleno...)",
+    numero="Número exacto (0-36). Requerido si eliges 'Pleno'",
+)
+@app_commands.choices(
+    tipo=[
+        app_commands.Choice(name="🔴 Rojo", value="rojo"),
+        app_commands.Choice(name="⚫ Negro", value="negro"),
+        app_commands.Choice(name="⚖️ Par", value="par"),
+        app_commands.Choice(name="⚡ Impar", value="impar"),
+        app_commands.Choice(name="📉 1-18 (Baja)", value="baja"),
+        app_commands.Choice(name="📈 19-36 (Alta)", value="alta"),
+        app_commands.Choice(name="1️⃣ 1ª Docena (1-12)", value="docena1"),
+        app_commands.Choice(name="2️⃣ 2ª Docena (13-24)", value="docena2"),
+        app_commands.Choice(name="3️⃣ 3ª Docena (25-36)", value="docena3"),
+        app_commands.Choice(name="🏛️ Columna 1", value="columna1"),
+        app_commands.Choice(name="🏛️ Columna 2", value="columna2"),
+        app_commands.Choice(name="🏛️ Columna 3", value="columna3"),
+        app_commands.Choice(name="🎯 Pleno (0-36)", value="pleno"),
+    ]
+)
+async def cmd_ruleta(
+    interaction: discord.Interaction,
+    apuesta: str = "100",
+    tipo: str = "rojo",
+    numero: Optional[int] = None,
+):
+    await _handle_roulette_command(interaction, apuesta, tipo, numero)
+
+
+async def _handle_coinflip_command(
+    interaction: discord.Interaction,
+    apuesta: str = "100",
+    lado: Optional[str] = "cara",
+    rival: Optional[discord.Member] = None,
+):
+    from modulos.economia import (
+        parse_coinflip_bet,
+        normalize_coinflip_side,
+        coinflip_engine,
+        build_coinflip_embed,
+        CoinflipActionView,
+        CoinflipChallengeView,
+        ACTIVE_COINFLIP_DUELS,
+        ECONOMY_LOCK,
+        modify_balance,
+        PORRO_EMOJI,
+    )
+
+    norm_lado = normalize_coinflip_side(lado)
+
+    # Modo PvE: Lanzamiento rápido contra la casa (sin rival)
+    if rival is None:
+        ok, bet, err = parse_coinflip_bet(interaction.user.id, apuesta)
+        if not ok:
+            await interaction.response.send_message(f"❌ {err}", ephemeral=True)
+            return
+
+        try:
+            res = coinflip_engine.play_pve(
+                user_id=interaction.user.id,
+                bet_amount=bet,
+                choice=norm_lado,
+            )
+            embed = build_coinflip_embed(mode="pve", user=interaction.user, result=res)
+            view = CoinflipActionView(
+                user_id=interaction.user.id,
+                user=interaction.user,
+                bet_amount=bet,
+                side=norm_lado,
+                engine=coinflip_engine,
+            )
+            await interaction.response.send_message(embed=embed, view=view)
+            try:
+                view.message = await interaction.original_response()
+            except Exception:
+                pass
+        except Exception as e:
+            await interaction.response.send_message(f"❌ Error al procesar Coinflip: {e}", ephemeral=True)
+        return
+
+    # Modo PvP: Duelo entre dos miembros
+    if rival.id == interaction.user.id:
+        await interaction.response.send_message(
+            "❌ No puedes desafiarte a ti mismo. Si quieres jugar solo, no especifiques ningún rival para apostar contra la casa.",
+            ephemeral=True,
+        )
+        return
+
+    if getattr(rival, "bot", False):
+        await interaction.response.send_message(
+            "❌ No puedes retar a un bot a un duelo de Coinflip. Los duelos son exclusivos entre miembros.",
+            ephemeral=True,
+        )
+        return
+
+    ok, bet, err = parse_coinflip_bet(interaction.user.id, apuesta)
+    if not ok:
+        await interaction.response.send_message(f"❌ {err}", ephemeral=True)
+        return
+
+    with ECONOMY_LOCK:
+        if str(interaction.user.id) in ACTIVE_COINFLIP_DUELS or interaction.user.id in ACTIVE_COINFLIP_DUELS:
+            await interaction.response.send_message(
+                "❌ Ya tienes un duelo de Coinflip activo en curso. Termínalo o cancélalo antes de retar a otro miembro.",
+                ephemeral=True,
+            )
+            return
+
+        if str(rival.id) in ACTIVE_COINFLIP_DUELS or rival.id in ACTIVE_COINFLIP_DUELS:
+            await interaction.response.send_message(
+                f"❌ **{rival.display_name}** ya tiene un desafío activo en curso. Espera a que termine su duelo.",
+                ephemeral=True,
+            )
+            return
+
+        # Deducir y retener la fianza del retador atómicamente bajo ECONOMY_LOCK
+        modify_balance(interaction.user.id, cash_delta=-bet)
+        ACTIVE_COINFLIP_DUELS[str(interaction.user.id)] = True
+        ACTIVE_COINFLIP_DUELS[str(rival.id)] = True
+
+    c_side = norm_lado
+    r_side = "cruz" if c_side == "cara" else "cara"
+
+    view = CoinflipChallengeView(
+        challenger_id=interaction.user.id,
+        challenger=interaction.user,
+        rival_id=rival.id,
+        rival=rival,
+        bet_amount=bet,
+        challenger_side=c_side,
+        engine=coinflip_engine,
+    )
+    with ECONOMY_LOCK:
+        ACTIVE_COINFLIP_DUELS[str(interaction.user.id)] = view
+        ACTIVE_COINFLIP_DUELS[str(rival.id)] = view
+
+    embed = build_coinflip_embed(
+        mode="pvp_pending",
+        challenger=interaction.user,
+        rival=rival,
+        bet=bet,
+        challenger_side=c_side,
+        rival_side=r_side,
+    )
+
+    try:
+        await interaction.response.send_message(
+            content=f"⚔️ {rival.mention}, ¡has sido desafiado a un duelo de Coinflip por {interaction.user.mention}!",
+            embed=embed,
+            view=view,
+        )
+        try:
+            view.message = await interaction.original_response()
+        except Exception:
+            pass
+    except Exception as e:
+        with ECONOMY_LOCK:
+            modify_balance(interaction.user.id, cash_delta=+bet)
+            ACTIVE_COINFLIP_DUELS.pop(str(interaction.user.id), None)
+            ACTIVE_COINFLIP_DUELS.pop(str(rival.id), None)
+            ACTIVE_COINFLIP_DUELS.pop(interaction.user.id, None)
+            ACTIVE_COINFLIP_DUELS.pop(rival.id, None)
+        await interaction.response.send_message(f"❌ Error al iniciar el desafío: {e}", ephemeral=True)
+
+
+@app_commands.command(
+    name="coinflip",
+    description="Lanza una moneda 50/50 contra la casa (PvE) o desafía a un miembro en duelo (PvP)",
+)
+@app_commands.describe(
+    apuesta="Cantidad de Porros a apostar (mínimo 50) o 'all'/'todo'",
+    lado="Lado de la moneda que eliges (por defecto Cara)",
+    rival="Miembro al que desafiar en duelo PvP (opcional: si no se indica juegas contra la casa)",
+)
+@app_commands.choices(
+    lado=[
+        app_commands.Choice(name="🪙 Cara", value="cara"),
+        app_commands.Choice(name="🪙 Cruz", value="cruz"),
+    ]
+)
+async def cmd_coinflip(
+    interaction: discord.Interaction,
+    apuesta: str = "100",
+    lado: Optional[str] = "cara",
+    rival: Optional[discord.Member] = None,
+):
+    await _handle_coinflip_command(interaction, apuesta, lado, rival)
+
+
+@app_commands.command(
+    name="casino",
+    description="Centro de Control del Casino Central: catálogo interactivo de juegos, reglas y bote",
+)
+async def cmd_casino(interaction: discord.Interaction):
+    from modulos.economia import CasinoHubView, build_casino_hub_embed
+
+    view = CasinoHubView(author_id=interaction.user.id)
+    embed = build_casino_hub_embed(interaction.user, selected_game=None)
+
+    await interaction.response.send_message(embed=embed, view=view)
+    try:
+        view.message = await interaction.original_response()
+    except Exception:
+        pass
+
+
 # ==========================================
 # LISTAS DE COMANDOS SLASH (RUNNER DUAL)
 # ==========================================
@@ -1585,7 +1861,7 @@ GENERAL_SLASH_COMMANDS = [
     cmd_sugerencia,
 ]
 
-# 11 Comandos de Economía y Casino para el Bot 'Economia Asistente'
+# 14 Comandos de Economía y Casino para el Bot 'Economia Asistente'
 ECONOMY_SLASH_COMMANDS = [
     cmd_slots,
     cmd_balance,
@@ -1598,9 +1874,12 @@ ECONOMY_SLASH_COMMANDS = [
     cmd_salario,
     cmd_blackjack,
     cmd_bj,
+    cmd_ruleta,
+    cmd_coinflip,
+    cmd_casino,
 ]
 
-# Total de 33 comandos para retrocompatibilidad total
+# Total de 36 comandos para retrocompatibilidad total
 ALL_SLASH_COMMANDS = GENERAL_SLASH_COMMANDS + ECONOMY_SLASH_COMMANDS
 
 
@@ -1616,7 +1895,7 @@ def register_general_commands(tree: app_commands.CommandTree):
 
 
 def register_economy_commands(tree: app_commands.CommandTree):
-    """Registra los 9 comandos slash de economía en el árbol del bot Economia Asistente."""
+    """Registra los 14 comandos slash de economía en el árbol del bot Economia Asistente."""
     for cmd in ECONOMY_SLASH_COMMANDS:
         try:
             tree.add_command(cmd)
@@ -1630,4 +1909,5 @@ def register_slash_commands(tree: app_commands.CommandTree):
     """Registra de forma segura todos los comandos slash (generales y economía) en el árbol de comandos."""
     register_general_commands(tree)
     register_economy_commands(tree)
+
 

@@ -517,12 +517,12 @@ def run_tests():
 
         # TEST 17: Comprobación de la arquitectura Dual Runner y Slash Commands
         print("\n[TEST 17] Comprobación de la arquitectura Dual Runner y Slash Commands...")
-        assert len(ALL_SLASH_COMMANDS) == 33, f"Se esperaban 33 comandos, encontrados: {len(ALL_SLASH_COMMANDS)}"
+        assert len(ALL_SLASH_COMMANDS) == 36, f"Se esperaban 36 comandos, encontrados: {len(ALL_SLASH_COMMANDS)}"
         assert len(GENERAL_SLASH_COMMANDS) == 22, f"Se esperaban 22 comandos generales, encontrados: {len(GENERAL_SLASH_COMMANDS)}"
-        assert len(ECONOMY_SLASH_COMMANDS) == 11, f"Se esperaban 11 comandos de economía, encontrados: {len(ECONOMY_SLASH_COMMANDS)}"
+        assert len(ECONOMY_SLASH_COMMANDS) == 14, f"Se esperaban 14 comandos de economía, encontrados: {len(ECONOMY_SLASH_COMMANDS)}"
 
         eco_cmd_names = [c.name for c in ECONOMY_SLASH_COMMANDS]
-        for expected in ["slots", "balance", "trabajar", "transferir", "depositar", "retirar", "robar", "tienda", "salario", "blackjack", "bj"]:
+        for expected in ["slots", "balance", "trabajar", "transferir", "depositar", "retirar", "robar", "tienda", "salario", "blackjack", "bj", "ruleta", "coinflip", "casino"]:
             assert expected in eco_cmd_names, f"Comando /{expected} no está en ECONOMY_SLASH_COMMANDS"
 
         import bot_service
@@ -531,23 +531,32 @@ def run_tests():
             "run_bots", "start_bot_persistent",
             "cmd_slots", "cmd_balance", "cmd_trabajar", "cmd_transferir",
             "cmd_depositar", "cmd_retirar", "cmd_robar", "cmd_tienda", "cmd_salario",
-            "cmd_blackjack", "cmd_bj",
+            "cmd_blackjack", "cmd_bj", "cmd_ruleta", "cmd_coinflip", "cmd_casino",
             "deposit_cash", "withdraw_cash", "execute_rob", "buy_shop_item", "claim_salary", "SlotEngine",
             "ShopInteractiveView", "build_shop_embed",
-            "BlackjackHand", "BlackjackEngine", "BlackjackView"
+            "BlackjackHand", "BlackjackEngine", "BlackjackView",
+            "RouletteEngine", "RouletteActionView",
+            "CoinflipEngine", "CoinflipActionView", "CoinflipChallengeView",
+            "CasinoHubView", "build_casino_hub_embed"
         ]:
             assert hasattr(bot_service, expected_attr), f"bot_service no tiene {expected_attr}"
 
         tree_cmds = [c.name for c in bot_service.tree.get_commands()]
         economy_tree_cmds = [c.name for c in bot_service.economy_tree.get_commands()]
         assert len(tree_cmds) == 22, f"Se esperaban 22 comandos en tree de Asistente, encontrados: {len(tree_cmds)}"
-        assert len(economy_tree_cmds) == 11, f"Se esperaban 11 comandos en economy_tree, encontrados: {len(economy_tree_cmds)}"
+        assert len(economy_tree_cmds) == 14, f"Se esperaban 14 comandos en economy_tree, encontrados: {len(economy_tree_cmds)}"
         assert "slots" not in tree_cmds, "slots no debería estar en el árbol general de Asistente"
         assert "blackjack" not in tree_cmds, "blackjack no debería estar en el árbol general de Asistente"
+        assert "ruleta" not in tree_cmds, "ruleta no debería estar en el árbol general de Asistente"
+        assert "coinflip" not in tree_cmds, "coinflip no debería estar en el árbol general de Asistente"
+        assert "casino" not in tree_cmds, "casino no debería estar en el árbol general de Asistente"
         assert "slots" in economy_tree_cmds, "slots debe estar en el árbol de economía"
         assert "blackjack" in economy_tree_cmds, "blackjack debe estar en el árbol de economía"
         assert "bj" in economy_tree_cmds, "bj debe estar en el árbol de economía"
-        print("  ✅ TEST 17 PASADO: Arquitectura Dual Runner validada (Asistente: 22 cmds | Economia Asistente: 11 cmds).")
+        assert "ruleta" in economy_tree_cmds, "ruleta debe estar en el árbol de economía"
+        assert "coinflip" in economy_tree_cmds, "coinflip debe estar en el árbol de economía"
+        assert "casino" in economy_tree_cmds, "casino debe estar en el árbol de economía"
+        print("  ✅ TEST 17 PASADO: Arquitectura Dual Runner validada (Asistente: 22 cmds | Economia Asistente: 14 cmds).")
 
         # TEST 18: Simulación Monte Carlo calibrada a RTP 110.0% (+/- 0.5%)
         print("\n[TEST 18] Simulación Monte Carlo (100.000 tiradas calibradas a RTP 110.0%)...")

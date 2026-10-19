@@ -6,8 +6,8 @@ Arquitectura Modular (Paquete 'modulos/'):
 - modulos.voz: Parche DAVE E2EE, TTS neuronal Edge/Gemini, Gemini Live bidireccional y retención 24h.
 - modulos.autoroles: Reemplazo integral 24/7 de Carl-bot (Auto-roles con toggle/personal y sugerencias).
 - modulos.chat_ia: Modelos Gemini, System Prompt, búsqueda web, niveles Cakey Bot, XP, memoria y router.
-- modulos.comandos: Registro oficial de Comandos Slash (22 Generales + 11 Economía).
-- modulos.economia: Motor nativo de economía comunitaria, banca, robos, tienda, salarios, tragaperras 5x3 y Blackjack 21.
+- modulos.comandos: Registro oficial de Comandos Slash (22 Generales + 13 Economía).
+- modulos.economia: Motor nativo de economía comunitaria, banca, robos, tienda, salarios, tragaperras 5x3, Blackjack 21, Ruleta Europea y Coinflip Dual.
 - modulos.web_server: Servidor HTTP multihilo en puerto 10000 para health-check de Render y audios.
 
 bot_service.py actúa como el conector y orquestador central con Arquitectura de Runner Dual.
@@ -320,6 +320,29 @@ from modulos.economia import (
     parse_blackjack_bet,
     build_blackjack_embed,
     BlackjackView,
+    ROULETTE_SEQUENCE,
+    ROULETTE_RED,
+    ROULETTE_BLACK,
+    ROULETTE_GREEN,
+    ROULETTE_BET_INFO,
+    RouletteEngine,
+    roulette_engine,
+    RouletteActionView,
+    parse_roulette_bet,
+    build_roulette_embed,
+    format_roulette_pocket,
+    normalize_roulette_bet_type,
+    is_roulette_winner,
+    ACTIVE_COINFLIP_DUELS,
+    CoinflipEngine,
+    coinflip_engine,
+    CoinflipActionView,
+    CoinflipChallengeView,
+    parse_coinflip_bet,
+    normalize_coinflip_side,
+    build_coinflip_embed,
+    CasinoHubView,
+    build_casino_hub_embed,
 )
 
 from modulos.comandos import (
@@ -362,6 +385,9 @@ from modulos.comandos import (
     cmd_salario,
     cmd_blackjack,
     cmd_bj,
+    cmd_ruleta,
+    cmd_coinflip,
+    cmd_casino,
 )
 
 # Registrar comandos en sus árboles correspondientes (Dual Runner)
@@ -562,7 +588,7 @@ async def on_ready():
         economy_tree.copy_global_to(guild=guild_obj)
         await economy_tree.sync(guild=guild_obj)
         bot_log(f"Bot de Economía '{economy_bot.user}' conectado y listo en Discord.")
-        bot_log(f"Comandos de Economía (9) sincronizados limpiamente en el servidor ID {GUILD_ID}.")
+        bot_log(f"Comandos de Economía (14) sincronizados limpiamente en el servidor ID {GUILD_ID}.")
     except Exception as e:
         bot_log(f"Aviso sincronización comandos de economía: {e}")
 
