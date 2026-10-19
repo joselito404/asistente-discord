@@ -51,11 +51,11 @@ Cualquier agente o desarrollador autorizado que trabaje en nuevas funcionalidade
    - Jornada laboral (`/trabajar`): historias cómicas del lore del servidor (`WORK_MESSAGES`), retribución de 200 a 800 porros y cooldown estricto de 2 horas.
    - Máquina tragaperras 5x3 de Alta Tensión (`/slots`):
      * Matriz 5 rodillos $\times$ 3 filas (15 casilleros) y 8 símbolos: 6 Brawl Stars Ranked, Comodín WILD (`<:absolutecinema:...>`) y Dispersor SCATTER (`<:Porro:...>`).
-     * 10 Líneas de Pago Reales evaluadas de izquierda a derecha para 3, 4 y 5 aciertos (`SLOT_PAYLINES`).
-     * Patrón Especial "El Ojo" (marco exterior de 12 casillas a $\times 50.0$) y "Pantalla Completa" (15 casillas a $\times 500.0$).
+     * 7 Líneas de Pago Limpias evaluadas de izquierda a derecha para 3, 4 y 5 aciertos (`SLOT_PAYLINES`).
+     * Patrón Especial "Pantalla Completa" (15 casillas a $\times 500.0$).
      * Ronda de Free Spins escalonada (3/4/5 Scatters $\to$ 5/8/12 giros a $\times 2$ con re-triggers $+3$).
      * Bote Progresivo Escalonado: Grand Jackpot (100% bote con 5 Pro o 5 Wild en L1 central) y Mini Jackpot (25% bote con 5 Masters en L1).
-     * Calibración Monte Carlo a RTP 110.0% ($\pm 0.5\%$, Hit Rate ~51.8%, modo High Payouts EV+ ordenado por Jose).
+     * Calibración Monte Carlo a RTP 110.0% ($\pm 0.5\%$, Hit Rate ~43.80%, modo High Payouts EV+ ordenado por Jose).
      * Interfaz nativa con **Discord Components V2** (`SlotsLayoutView`): contenedores tipo 17 con `accent_color`, separadores tipo 14, textos tipo 10 y botones `[Play Again]`, `[🌀 Jugar Tiradas Gratis]` y `[Payouts]` en fila de acciones tipo 1.
 
 ## Cómo se usa e integra con `bot_service.py`

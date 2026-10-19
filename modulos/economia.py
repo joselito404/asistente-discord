@@ -59,67 +59,67 @@ ECONOMY_LOCK = threading.RLock()
 
 # Símbolos oficiales de Tragaperras 5x3: 6 Brawl Stars Ranked + WILD + SCATTER
 # Suma de pesos = 38 + 24 + 15 + 9 + 5 + 3 + 2 + 4 = 100
-# Calibrado a RTP 110.0% (+/- 0.5%) y Hit Rate ~51.8% con 10 líneas, El Ojo y Free Spins
+# Calibrado a RTP 110.0% (+/- 0.5%) y Hit Rate ~43.8% con las 7 líneas aprobadas por Jose
 SLOT_SYMBOLS = {
     "Gold": {
         "id": "1550130006896812084",
         "emoji": "<:Ranked_Gold:1550130006896812084>",
         "name": "Ranked_Gold",
-        "mults": {3: 0.24, 4: 0.78, 5: 2.5},
+        "mults": {3: 0.34, 4: 1.05, 5: 3.5},
         "weight": 38,
     },
     "Diamond": {
         "id": "1550130004074041434",
         "emoji": "<:Ranked_Diamond:1550130004074041434>",
         "name": "Ranked_Diamond",
-        "mults": {3: 0.48, 4: 1.55, 5: 5.0},
+        "mults": {3: 0.67, 4: 2.15, 5: 6.9},
         "weight": 24,
     },
     "Mythic": {
         "id": "1550130000852820099",
         "emoji": "<:Ranked_Mythic:1550130000852820099>",
         "name": "Ranked_Mythic",
-        "mults": {3: 1.0, 4: 3.5, 5: 12.0},
+        "mults": {3: 1.4, 4: 4.9, 5: 16.0},
         "weight": 15,
     },
     "Legendary": {
         "id": "1550129997774323732",
         "emoji": "<:Ranked_Legendary:1550129997774323732>",
         "name": "Ranked_Legendary",
-        "mults": {3: 2.2, 4: 8.0, 5: 25.0},
+        "mults": {3: 3.0, 4: 10.5, 5: 34.0},
         "weight": 9,
     },
     "Masters": {
         "id": "1550129992837496833",
         "emoji": "<:Ranked_Masters:1550129992837496833>",
         "name": "Ranked_Masters",
-        "mults": {3: 6.0, 4: 20.0, 5: 60.0},
+        "mults": {3: 8.5, 4: 27.0, 5: 84.0},
         "weight": 5,
     },
     "Pro": {
         "id": "1550129987972104252",
         "emoji": "<:Ranked_Pro:1550129987972104252>",
         "name": "Ranked_Pro",
-        "mults": {3: 15.0, 4: 50.0, 5: 160.0},
+        "mults": {3: 21.0, 4: 68.0, 5: 220.0},
         "weight": 3,
     },
     "Wild": {
         "id": "1478115607336714300",
         "emoji": "<:absolutecinema:1478115607336714300>",
         "name": "WILD",
-        "mults": {3: 20.0, 4: 65.0, 5: 200.0},
+        "mults": {3: 27.0, 4: 88.0, 5: 275.0},
         "weight": 2,
     },
     "Scatter": {
         "id": "1535685303317172305",
         "emoji": "<:Porro:1535685303317172305>",
         "name": "SCATTER",
-        "mults": {3: 3.0, 4: 10.0, 5: 35.0},
+        "mults": {3: 4.0, 4: 13.0, 5: 48.0},
         "weight": 4,
     },
 }
 
-# 10 Líneas de pago clásicas en matriz 5x3 (evaluadas de izquierda a derecha)
+# Las 7 Líneas de pago definitivas aprobadas por Jose en matriz 5x3 (evaluadas de izquierda a derecha)
 SLOT_PAYLINES = [
     ("L1: Centro", [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)]),
     ("L2: Arriba", [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)]),
@@ -128,16 +128,6 @@ SLOT_PAYLINES = [
     ("L5: V Invertida", [(2, 0), (1, 1), (0, 2), (1, 3), (2, 4)]),
     ("L6: Diagonal Descendente", [(0, 0), (0, 1), (1, 2), (2, 3), (2, 4)]),
     ("L7: Diagonal Ascendente", [(2, 0), (2, 1), (1, 2), (0, 3), (0, 4)]),
-    ("L8: Corona Superior", [(1, 0), (0, 1), (0, 2), (0, 3), (1, 4)]),
-    ("L9: Corona Inferior", [(1, 0), (2, 1), (2, 2), (2, 3), (1, 4)]),
-    ("L10: Onda Central", [(1, 0), (0, 1), (1, 2), (2, 3), (1, 4)]),
-]
-
-# Casillas del marco exterior (Patrón "El Ojo" - 12 casillas)
-EYE_COORDS = [
-    (0, 0), (0, 1), (0, 2), (0, 3), (0, 4),
-    (1, 0),                         (1, 4),
-    (2, 0), (2, 1), (2, 2), (2, 3), (2, 4),
 ]
 
 # Textos cómicos y temáticos de trabajo vinculados a la vida y lore del servidor
@@ -1031,13 +1021,13 @@ class SlotEngine:
         is_free_spin: bool = False,
     ) -> Dict[str, Any]:
         """
-        Evalúa las 10 líneas de pago, patrón El Ojo, Pantalla Completa,
+        Evalúa las 7 líneas de pago clásicas aprobadas por Jose, Pantalla Completa,
         comodines WILD, dispersores SCATTER, multiplicadores y Free Spins.
         """
         winning_lines = []
         total_mult = 0.0
 
-        # 1. Evaluación de las 10 Líneas de Pago Clásicas
+        # 1. Evaluación de las 7 Líneas de Pago Clásicas
         for line_name, coords in SLOT_PAYLINES:
             line_syms = [grid[r][c] for r, c in coords]
             sym, count, mult = self.evaluate_line(line_syms)
@@ -1052,36 +1042,7 @@ class SlotEngine:
                     "mult": round(final_mult, 2),
                 })
 
-        # 2. Patrón Especial "El Ojo" (Marco Exterior - 12 casilleros)
-        border_syms = [grid[r][c] for r, c in EYE_COORDS]
-        eye_hit = False
-        if "Scatter" not in border_syms:
-            non_wilds = [s for s in border_syms if s != "Wild"]
-            if len(non_wilds) == 0:
-                eye_mult = 50.0 * multiplier
-                total_mult += eye_mult
-                eye_hit = True
-                winning_lines.append({
-                    "line": "👁️ Patrón 'El Ojo' (12x WILD)",
-                    "symbol": "Wild",
-                    "count": 12,
-                    "emoji": self.symbols["Wild"]["emoji"],
-                    "mult": round(eye_mult, 2),
-                })
-            elif all(s == non_wilds[0] for s in non_wilds):
-                matched = non_wilds[0]
-                eye_mult = 50.0 * multiplier
-                total_mult += eye_mult
-                eye_hit = True
-                winning_lines.append({
-                    "line": f"👁️ Patrón 'El Ojo' (12x {self.symbols[matched]['name']})",
-                    "symbol": matched,
-                    "count": 12,
-                    "emoji": self.symbols[matched]["emoji"],
-                    "mult": round(eye_mult, 2),
-                })
-
-        # 3. Pantalla Completa (15 de 15)
+        # 2. Pantalla Completa (15 de 15)
         all_syms = [grid[r][c] for r in range(3) for c in range(5)]
         full_screen_hit = False
         if "Scatter" not in all_syms:
@@ -1099,7 +1060,7 @@ class SlotEngine:
                     "mult": round(full_mult, 2),
                 })
 
-        # 4. Evaluación de Dispersores SCATTER (en cualquier posición de los 15 casilleros)
+        # 3. Evaluación de Dispersores SCATTER (en cualquier posición de los 15 casilleros)
         scatter_count = sum(row.count("Scatter") for row in grid)
         free_spins_triggered = False
         free_spins_count = 0
@@ -1107,13 +1068,13 @@ class SlotEngine:
 
         if scatter_count >= 3:
             if scatter_count == 3:
-                sc_mult = 3.0
+                sc_mult = 4.0
                 fs_c = 5
             elif scatter_count == 4:
-                sc_mult = 10.0
+                sc_mult = 13.0
                 fs_c = 8
             else:  # >= 5
-                sc_mult = 35.0
+                sc_mult = 48.0
                 fs_c = 12
 
             sc_final = sc_mult * multiplier
@@ -1132,7 +1093,7 @@ class SlotEngine:
         payout = int(bet * total_mult)
         net = payout - (0 if is_free_spin else bet)
 
-        # 5. Detección de Botes Progresivos en la Línea Central (L1: 5 casillas)
+        # 4. Detección de Botes Progresivos en la Línea Central (L1: 5 casillas)
         l1_syms = [grid[1][c] for c in range(5)]
         grand_jackpot_hit = (
             all(s == "Pro" for s in l1_syms) or
@@ -1140,7 +1101,7 @@ class SlotEngine:
         )
         mini_jackpot_hit = all(s == "Masters" for s in l1_syms)
 
-        # 6. Título y color según el resultado
+        # 5. Título y color según el resultado
         if grand_jackpot_hit:
             title = "### 💥 ¡¡GRAND JACKPOT DEL SERVIDOR!! 💥"
             accent_color = 16766720  # Dorado intenso
@@ -1150,9 +1111,6 @@ class SlotEngine:
         elif full_screen_hit:
             title = "### 🌟 ¡¡PANTALLA COMPLETA 15/15!! 🌟"
             accent_color = 16766720
-        elif eye_hit:
-            title = "### 👁️ ¡¡PATRÓN EL OJO DESBLOQUEADO!! 👁️"
-            accent_color = 10181046  # Violeta neón
         elif free_spins_triggered and not is_free_spin:
             title = "### 🌀 ¡¡RONDA DE FREE SPINS DESBLOQUEADA!! 🌀"
             accent_color = 10181046  # Violeta neón #9B59B6
@@ -1184,7 +1142,6 @@ class SlotEngine:
             "free_spins_multiplier": free_spins_multiplier,
             "grand_jackpot_hit": grand_jackpot_hit,
             "mini_jackpot_hit": mini_jackpot_hit,
-            "eye_hit": eye_hit,
             "full_screen_hit": full_screen_hit,
             "is_free_spin": is_free_spin,
         }
@@ -1401,24 +1358,22 @@ def build_payouts_text() -> str:
     jackpot = get_server_jackpot()
     lines = [
         "🎰 **TABLA DE PAGOS Y REGLAS — TRAGAPERRAS 5×3 DE PORROS**",
-        "La máquina evalúa **10 líneas de pago reales simultáneas** en cuadrícula de 5 rodillos × 3 filas:",
+        "La máquina evalúa **7 líneas de pago clásicas reales** en cuadrícula de 5 rodillos × 3 filas:",
         "• **L1**: Centro | **L2**: Arriba | **L3**: Abajo",
         "• **L4**: V Suave | **L5**: V Invertida | **L6**: Diagonal Descendente | **L7**: Diagonal Ascendente",
-        "• **L8**: Corona Superior | **L9**: Corona Inferior | **L10**: Onda Central",
         "",
-        "**Multiplicadores por acierto (3 / 4 / 5 en línea):**",
-        "• <:absolutecinema:1478115607336714300> **WILD (Comodín)**: **×20.0** / **×65.0** / **×200.0** — Sustituye a cualquier regular. 5 en L1 = ¡Grand Jackpot!",
-        "• <:Ranked_Pro:1550129987972104252> **Ranked Pro**: **×15.0** / **×50.0** / **×160.0** — 5 en L1 = **Grand Jackpot** (100% bote).",
-        "• <:Ranked_Masters:1550129992837496833> **Ranked Masters**: **×6.0** / **×20.0** / **×60.0** — 5 en L1 = **Mini Jackpot** (25% bote).",
-        "• <:Ranked_Legendary:1550129997774323732> **Ranked Legendary**: **×2.2** / **×8.0** / **×25.0**",
-        "• <:Ranked_Mythic:1550130000852820099> **Ranked Mythic**: **×1.0** / **×3.5** / **×12.0**",
-        "• <:Ranked_Diamond:1550130004074041434> **Ranked Diamond**: **×0.48** / **×1.55** / **×5.0**",
-        "• <:Ranked_Gold:1550130006896812084> **Ranked Gold**: **×0.24** / **×0.78** / **×2.5**",
+        "**Multiplicadores por acierto (3 / 4 / 5 en línea de izquierda a derecha):**",
+        "• <:absolutecinema:1478115607336714300> **WILD (Comodín)**: **×27.0** / **×88.0** / **×275.0** — Sustituye a cualquier regular. 5 en L1 = ¡Grand Jackpot!",
+        "• <:Ranked_Pro:1550129987972104252> **Ranked Pro**: **×21.0** / **×68.0** / **×220.0** — 5 en L1 = **Grand Jackpot** (100% bote).",
+        "• <:Ranked_Masters:1550129992837496833> **Ranked Masters**: **×8.5** / **×27.0** / **×84.0** — 5 en L1 = **Mini Jackpot** (25% bote).",
+        "• <:Ranked_Legendary:1550129997774323732> **Ranked Legendary**: **×3.0** / **×10.5** / **×34.0**",
+        "• <:Ranked_Mythic:1550130000852820099> **Ranked Mythic**: **×1.4** / **×4.9** / **×16.0**",
+        "• <:Ranked_Diamond:1550130004074041434> **Ranked Diamond**: **×0.67** / **×2.15** / **×6.9**",
+        "• <:Ranked_Gold:1550130006896812084> **Ranked Gold**: **×0.34** / **×1.05** / **×3.5**",
         "",
-        "**Patrones Especiales de Pantalla:**",
-        "• 👁️ **El Ojo (Marco de 12 casilleros)**: **×50.0** directo si las 12 exteriores son iguales o Wilds.",
-        "• 🌟 **Pantalla Completa (15 casilleros)**: **×500.0** directo.",
-        "• <:Porro:1535685303317172305> **SCATTER (3 / 4 / 5 en pantalla)**: **×3.0** + 5 Spins / **×10.0** + 8 Spins / **×35.0** + 12 Spins (a ×2).",
+        "**Patrones Especiales y Bonos:**",
+        "• 🌟 **Pantalla Completa (15 casilleros)**: **×500.0** directo al llenar toda la cuadrícula del mismo símbolo o Wilds.",
+        "• <:Porro:1535685303317172305> **SCATTER (3 / 4 / 5 en pantalla)**: **×4.0** + 5 Spins / **×13.0** + 8 Spins / **×48.0** + 12 Spins (a ×2).",
         "",
         f"💰 **Bote Progresivo Acumulado:** {PORRO_EMOJI} **{jackpot:,}** Porros *(3% de pérdidas netas alimenta el bote)*",
     ]
