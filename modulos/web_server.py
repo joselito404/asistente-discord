@@ -73,9 +73,12 @@ def run_health_check_server():
                                 "members": [m.display_name for m in getattr(vc.channel, "members", []) if not m.bot],
                             }
                         )
+                    economy_bot = getattr(bs, "economy_bot", None)
                     payload = {
                         "bot_ready": bot.is_ready() if bot else False,
                         "bot_user": str(bot.user) if (bot and bot.user) else None,
+                        "economy_bot_ready": economy_bot.is_ready() if economy_bot else False,
+                        "economy_bot_user": str(economy_bot.user) if (economy_bot and economy_bot.user) else None,
                         "voice_clients": voice_data,
                         "server_time": spain_now_fn(),
                     }

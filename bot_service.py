@@ -580,16 +580,6 @@ from modulos.web_server import (
 )
 
 
-def _reset_client(client: discord.Client):
-    """Reinicia limpiamente el estado interno del cliente para permitir re-conexión sin colisión de sesión aiohttp."""
-    if client:
-        client._closed = False
-        client._closing_task = None
-        client.loop = discord.utils.MISSING
-        if hasattr(client, "http"):
-            client.http.connector = discord.utils.MISSING
-
-
 async def run_bots():
     """Ejecuta concurrentemente en el mismo event loop ambos bots de Discord."""
     tasks = [bot.start(TOKEN)]
@@ -602,18 +592,15 @@ def start_bot_persistent():
     """Bucle supervisor persistente para mantener los dos bots conectados 24/7 sin caídas."""
     while True:
         try:
-            print("Iniciando conexión dual de bots con Discord (Asistente + Economia)...")
-            _reset_client(bot)
-            if ECONOMY_TOKEN:
-                _reset_client(economy_bot)
+            bot_log("Iniciando conexión dual de bots con Discord (Asistente + Economia)...")
             asyncio.run(run_bots())
         except (KeyboardInterrupt, SystemExit):
-            print("Cierre manual solicitado.")
+            bot_log("Cierre manual solicitado.")
             break
         except Exception as e:
-            print(f"Excepción en run_bots(): {e}. Reintentando en 5 segundos...")
+            bot_log(f"Excepción en run_bots(): {e}. Reintentando en 5 segundos...")
             time.sleep(5)
-        print("run_bots() finalizó. Reanudando en 5 segundos...")
+        bot_log("run_bots() finalizó. Reanudando en 5 segundos...")
         time.sleep(5)
 
 
