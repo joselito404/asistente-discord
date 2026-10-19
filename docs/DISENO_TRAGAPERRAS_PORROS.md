@@ -22,13 +22,13 @@
 
 | Símbolo | Tipo | Emoji en Discord | 3 en Línea | 4 en Línea | 5 en Línea (*5-of-a-kind*) | Peso |
 | :--- | :---: | :--- | :---: | :---: | :---: | :---: |
-| **Ranked_Gold** | Regular | `<:Ranked_Gold:1550130006896812084>` | $\times 0.34$ | $\times 1.05$ | $\times 3.5$ | 38 |
-| **Ranked_Diamond** | Regular | `<:Ranked_Diamond:1550130004074041434>` | $\times 0.67$ | $\times 2.15$ | $\times 6.9$ | 24 |
-| **Ranked_Mythic** | Regular | `<:Ranked_Mythic:1550130000852820099>` | $\times 1.4$ | $\times 4.9$ | $\times 16.0$ | 15 |
-| **Ranked_Legendary** | Regular | `<:Ranked_Legendary:1550129997774323732>` | $\times 3.0$ | $\times 10.5$ | $\times 34.0$ | 9 |
-| **Ranked_Masters** | Regular | `<:Ranked_Masters:1550129992837496833>` | $\times 8.5$ | $\times 27.0$ | $\times 84.0$ *(+ Mini Jackpot)* | 5 |
-| **Ranked_Pro** | Regular | `<:Ranked_Pro:1550129987972104252>` | $\times 21.0$ | $\times 68.0$ | $\times 220.0$ *(+ Grand Jackpot)* | 3 |
-| **WILD** | Especial | `<:absolutecinema:1478115607336714300>` | $\times 27.0$ | $\times 88.0$ | $\times 275.0$ *(+ Grand Jackpot)* | 2 |
+| **Ranked_Gold** | Regular | `<:Ranked_Gold:1550130006896812084>` | $\times 0.19$ | $\times 0.58$ | $\times 1.95$ | 38 |
+| **Ranked_Diamond** | Regular | `<:Ranked_Diamond:1550130004074041434>` | $\times 0.37$ | $\times 1.20$ | $\times 3.80$ | 24 |
+| **Ranked_Mythic** | Regular | `<:Ranked_Mythic:1550130000852820099>` | $\times 0.78$ | $\times 2.70$ | $\times 8.90$ | 15 |
+| **Ranked_Legendary** | Regular | `<:Ranked_Legendary:1550129997774323732>` | $\times 1.65$ | $\times 5.80$ | $\times 18.80$ | 9 |
+| **Ranked_Masters** | Regular | `<:Ranked_Masters:1550129992837496833>` | $\times 4.70$ | $\times 15.0$ | $\times 46.50$ *(+ Mini Jackpot)* | 5 |
+| **Ranked_Pro** | Regular | `<:Ranked_Pro:1550129987972104252>` | $\times 11.60$ | $\times 37.5$ | $\times 122.0$ *(+ Grand Jackpot)* | 3 |
+| **WILD** | Especial | `<:absolutecinema:1478115607336714300>` | $\times 15.0$ | $\times 49.0$ | $\times 152.0$ *(+ Grand Jackpot)* | 2 |
 | **SCATTER** | Especial | `<:Porro:1535685303317172305>` | $\times 4.0$ + 5 Spins | $\times 13.0$ + 8 Spins | $\times 48.0$ + 12 Spins | 4 |
 
 - **Función del WILD (`:absolutecinema:`)**: Comodín que sustituye a cualquier símbolo regular (Gold a Pro). En una línea con `[Pro, Pro, WILD, Pro, Diamond]`, cuenta como 4 Pro en línea.
@@ -56,6 +56,9 @@ Rodillo 1    Rodillo 2    Rodillo 3    Rodillo 4    Rodillo 5
 6. **Línea 6 (Diagonal Descendente)**: `[(0,0), (0,1), (1,2), (2,3), (2,4)]` (Rampa descendente de esquina a esquina)
 7. **Línea 7 (Diagonal Ascendente)**: `[(2,0), (2,1), (1,2), (0,3), (0,4)]` (Rampa ascendente de esquina a esquina)
 
+> 💡 **Regla de Conexión de Líneas (Opción B: Consecutivos en Cualquier Posición)**:  
+> Las combinaciones de 3 o 4 símbolos iguales (o combinados con Comodín WILD) premian si aparecen de forma consecutiva en **cualquier parte de la línea** (`[0,1,2]`, `[1,2,3]` o `[2,3,4]` para 3 aciertos; `[0,1,2,3]` o `[1,2,3,4]` para 4 aciertos; y `[0,1,2,3,4]` para 5 aciertos). No se exige que la combinación empiece obligatoriamente en el rodillo 1, garantizando que rachas visuales en el centro o final de la fila siempre tengan premio.
+
 ### Patrón Especial de Pantalla:
 - **Pantalla Completa (15 de 15)**: Todos los 15 casilleros llenos del mismo símbolo o Wilds $\to$ **$\times 500.0$** directo.
 
@@ -79,9 +82,9 @@ Rodillo 1    Rodillo 2    Rodillo 3    Rodillo 4    Rodillo 5
 
 ---
 
-## 6. Calibración Monte Carlo (RTP 110.0%)
+## 6. Calibración Monte Carlo (RTP 110.0% con Opción B)
 
-- **RTP Objetivo / Real**: **$110.0\%$** ($\pm 0.5\%$, calibración en 100k tiradas: `110.08%`, promedio 500k tiradas: `110.70%`).
-- **Hit Rate**: **$43.80\%$** (premio en ~4 de cada 9 tiradas).
-- **Frecuencia de Free Spins**: 1 de cada ~50 tiradas.
+- **RTP Objetivo / Real**: **$110.0\%$** ($\pm 0.5\%$, calibración en 100k tiradas: `110.03%`).
+- **Hit Rate**: **$73.83\%$** (premio en ~3 de cada 4 tiradas, dinamismo continuo gracias a las rachas consecutivas de 3 y 4 símbolos en cualquier posición de la línea).
+- **Frecuencia de Free Spins**: 1 de cada ~50 tiradas (1.952 eventos y 11.215 tiradas gratis jugadas en 100k).
 - **Frecuencia de Grand Jackpot**: 1 de cada ~15.000 tiradas.

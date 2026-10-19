@@ -337,8 +337,29 @@ def run_tests():
             assert len(matching) == 1, f"Fallo al detectar {line_name}"
             assert matching[0]["symbol"] == "Diamond"
             assert matching[0]["count"] == 5
-            assert matching[0]["mult"] == 6.9  # 5 Diamond paga x6.9
-        print("  ✅ TEST 9 PASADO: Las 7 líneas de pago 5x3 evaluadas con éxito.")
+            assert matching[0]["mult"] == 3.80  # 5 Diamond paga x3.80 calibrado
+
+        # Verificación explícita de Opción B (3 y 4 aciertos en cualquier ventana de la línea)
+        # a) 3 aciertos en cols 0, 1, 2
+        sym_a, count_a, mult_a = engine.evaluate_line(["Gold", "Gold", "Gold", "Diamond", "Mythic"])
+        assert sym_a == "Gold" and count_a == 3 and mult_a == 0.19, f"Fallo en ventana 0-2: {(sym_a, count_a, mult_a)}"
+
+        # b) 3 aciertos en cols 1, 2, 3
+        sym_b, count_b, mult_b = engine.evaluate_line(["Diamond", "Gold", "Gold", "Gold", "Mythic"])
+        assert sym_b == "Gold" and count_b == 3 and mult_b == 0.19, f"Fallo en ventana 1-3: {(sym_b, count_b, mult_b)}"
+
+        # c) 3 aciertos en cols 2, 3, 4
+        sym_c, count_c, mult_c = engine.evaluate_line(["Diamond", "Mythic", "Gold", "Gold", "Gold"])
+        assert sym_c == "Gold" and count_c == 3 and mult_c == 0.19, f"Fallo en ventana 2-4: {(sym_c, count_c, mult_c)}"
+
+        # 4 aciertos en cols 0, 1, 2, 3 y cols 1, 2, 3, 4
+        sym_4a, count_4a, mult_4a = engine.evaluate_line(["Gold", "Gold", "Gold", "Gold", "Mythic"])
+        assert sym_4a == "Gold" and count_4a == 4 and mult_4a == 0.58, f"Fallo en 4 cols 0-3: {(sym_4a, count_4a, mult_4a)}"
+
+        sym_4b, count_4b, mult_4b = engine.evaluate_line(["Diamond", "Gold", "Gold", "Gold", "Gold"])
+        assert sym_4b == "Gold" and count_4b == 4 and mult_4b == 0.58, f"Fallo en 4 cols 1-4: {(sym_4b, count_4b, mult_4b)}"
+
+        print("  ✅ TEST 9 PASADO: Las 7 líneas de pago 5x3 y Opción B (rachas en cualquier ventana) evaluadas con éxito.")
 
         # TEST 10: Comodín WILD (3, 4 y 5 aciertos, y sustitución en líneas regulares)
         print("\n[TEST 10] Comodín WILD (3, 4 y 5 aciertos y sustituciones)...")
@@ -352,9 +373,9 @@ def run_tests():
         wl_5w = [wl for wl in res_5w["winning_lines"] if "L1: Centro" in wl["line"]][0]
         assert wl_5w["symbol"] == "Wild"
         assert wl_5w["count"] == 5
-        assert wl_5w["mult"] == 275.0, f"5 Wilds deben pagar x275.0, obtenido: {wl_5w['mult']}"
+        assert wl_5w["mult"] == 152.0, f"5 Wilds deben pagar x152.0, obtenido: {wl_5w['mult']}"
 
-        # 10b: 1 Wild + 4 Pro en L1 -> paga 5 Pro (x220.0)
+        # 10b: 1 Wild + 4 Pro en L1 -> paga 5 Pro (x122.0)
         grid_1w_4pro = [
             ["Gold", "Diamond", "Gold", "Diamond", "Gold"],
             ["Wild", "Pro", "Pro", "Pro", "Pro"],
@@ -364,7 +385,7 @@ def run_tests():
         wl_1w = [wl for wl in res_1w["winning_lines"] if "L1: Centro" in wl["line"]][0]
         assert wl_1w["symbol"] == "Pro"
         assert wl_1w["count"] == 5
-        assert wl_1w["mult"] == 220.0, f"1 Wild + 4 Pro debe pagar x220.0, obtenido: {wl_1w['mult']}"
+        assert wl_1w["mult"] == 122.0, f"1 Wild + 4 Pro debe pagar x122.0, obtenido: {wl_1w['mult']}"
         print("  ✅ TEST 10 PASADO: Comodín WILD para 3, 4 y 5 aciertos validado.")
 
         # TEST 11: Retirada de 'El Ojo' y verificación de sólo líneas limpias
@@ -532,9 +553,9 @@ def run_tests():
         win_rate = sim_res["win_rate_percent"]
         print(f"  📊 Resultado Monte Carlo 5x3: Spins={sim_res['spins']:,} | RTP={rtp}% | HitRate={win_rate}% | Scatters={sim_res['scatters_hit']:,} | FreeSpinsJugadas={sim_res['free_spins_played']:,}")
 
-        # Rango admisible para RTP de 110%: 108.5% - 111.5% (o +/- 1.0% en simulaciones de 100k)
-        assert 108.5 <= rtp <= 111.5, f"RTP fuera de rango esperado de 110%: {rtp}%"
-        assert 42.0 <= win_rate <= 46.0, f"Hit Rate fuera de rango esperado (~43.8%): {win_rate}%"
+        # Rango admisible para RTP de 110%: 109.0% - 111.0% (objetivo 110.0% +/- 0.5%)
+        assert 109.0 <= rtp <= 111.0, f"RTP fuera de rango esperado de 110%: {rtp}%"
+        assert 72.0 <= win_rate <= 76.0, f"Hit Rate fuera de rango esperado (~73.8% con Opción B): {win_rate}%"
         assert sim_res["scatters_hit"] > 1000, "Frecuencia de scatters insuficiente"
         assert sim_res["free_spins_played"] > 6000, "Free spins no se jugaron adecuadamente"
         print(f"  ✅ TEST 18 PASADO: Simulación Monte Carlo 5x3 validada con RTP={rtp}% (~110.0%) y HitRate={win_rate}%.")

@@ -44,22 +44,22 @@ En sustitución de la transcripción continua por IA (inviable 24/7), se mide la
 
 ## 4. Distribución del Índice de Aura (10.000 Puntos Máximos)
 
-*Actualmente en discusión y debate de porcentajes con Jose.*
+> **Estado**: `Aprobado por Jose` `[Confirmada · Jose · 18/10/2026]` (Detalle completo en [`docs/AURA_BAREMO.md`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/AURA_BAREMO.md)).
 
-Candidatura de 4 Pilares:
+Tras descartar los minijuegos artificiales del bot (`/trivial`, `/ajedrez`, `/tribunal`) por no tener impacto en el día a día del grupo, el Índice se estructura en los **3 Pilares Reales de Convivencia**:
 
-| Pilar | % Propuesto | Puntos | Qué Computa |
+| Pilar | % Oficial | Puntos Máximos | Qué Computa |
 | :--- | :---: | :---: | :--- |
-| **🎙️ Convivencia en Voz** | 30% | 3.000 pts | Minutos activos con curva suave, presencia en salas de ≥2 y streaming. |
-| **💬 Dinámica en Chat** | 30% | 3.000 pts | Constancia de días activos, menciones/respuestas cruzadas y canales transitados. |
-| **🎮 Competición y Bot** | 20% | 2.000 pts | Puntos en `/trivial`, partidas de `/ajedrez`, casos de `/tribunal` y casino PvP. |
-| **🌟 Impacto y Momentos** | 20% | 2.000 pts | Memes y clips con reacciones `⭐`, sugerencias aprobadas y momentos del servidor. |
+| **🎙️ Convivencia en Voz** | 45% | 4.500 pts | Minutos en llamada (mínimo 2 personas, mute 50%, deaf 0%, curva 0-3h 100%, 3-6h 75%, >6h 50%) y streaming. |
+| **💬 Chat y Comunidad** | 35% | 3.500 pts | Constancia por zonas ($\times 1{,}5$ Gaming/General, $\times 0{,}3$ Casino/Bots), respuestas recibidas, celebraciones ($\ge 2$ reactores) y alcance. |
+| **🌟 Momentos de Lore y Hazañas** | 20% | 2.000 pts | Base 1.000 pts $\pm$ momentos citables reales (hazañas, memes top, Steam vs plantones, "luego" eterno, dejar en visto). |
 
-$$\text{Total Aura Fundamental} = \text{Voz} + \text{Chat} + \text{Competición} + \text{Impacto} = 10.000 \text{ pts}$$
+$$\text{Total Aura Fundamental} = \text{Voz (4.500)} + \text{Chat (3.500)} + \text{Momentos (2.000)} = 10.000 \text{ pts}$$
 
 ---
 
 ## 5. Decisiones Pendientes de Validación
-- [ ] Confirmación de los pesos definitivos sobre los 10.000 puntos de Aura.
-- [ ] Algoritmo de fijación de precio de mercado (Bonding curve AMM tipo Uniswap vs Libro de órdenes vs Spread fijo).
+- [x] Confirmación de los pesos definitivos sobre los 10.000 puntos de Aura (3 Pilares 45/35/20).
+- [ ] Algoritmo de fijación de precio de mercado para el 50% de mercado (Bonding curve AMM tipo Uniswap vs Libro de órdenes vs Spread fijo del 1%).
 - [ ] Frecuencia de actualización de velas del gráfico Pillow (Diaria vs Por sesión).
+

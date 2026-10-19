@@ -1,124 +1,120 @@
-# Tabla de medición de Aura (borrador v3)
+# 👑 Especificación Maestra de Medición de Aura (`docs/AURA_BAREMO.md`)
 
-> Estado: **borrador pendiente de aprobar por Jose**. El ranking del 13-oct-2026 fue un test y no se publica.
-> v2 [Chat 2]: reescrita tras leer el historial completo de texto (6.500 mensajes humanos, 4-dic-2025 a 13-oct-2026). Los ejemplos son casos reales del servidor.
-> Se llama **aura de chat**: solo cuenta lo escrito en canales de texto. Lo que pasa en voz no existe para este ranking.
+> **Estado**: `Vigente / Aprobada por Jose` `[Confirmada · Jose · 18/10/2026]`
+> **Origen y Evolución**:
+> - v1 (13/10/2026): Primer borrador exploratorio de chat de texto (Chat 2).
+> - v2-v3 (13/10/2026): Ajuste de momentos tras lectura del historial y descarte de "dropear".
+> - **v4 Oficial (18/10/2026)**: Descarte total de minijuegos artificiales del bot (`/trivial`, `/ajedrez`, `/tribunal`) y reestructuración completa en los **3 Pilares Reales de Convivencia** (45% Voz / 35% Chat / 20% Momentos) sobre **10.000 puntos máximos** con telemetría de voz anti-AFK e integración 50/50 en la Bolsa Sanvi.
 
-Máximo 10.000 puntos: **6.000 de base medible + 4.000 de momentos**.
+---
 
-## 1. Dos rankings
+## 🏛️ Los 3 Pilares Reales del Servidor (10.000 Puntos Máximos)
 
-| | Temporada | Histórico |
-|---|---|---|
-| Periodo | Un mes natural | Todo el historial del servidor |
-| Quién entra | 5 días activos o más ese mes | 50 mensajes o más en total |
-| Mensajes que se leen | Todos los del mes, de todos | Todos, de todos |
-| Momentos por persona | 5 | 10 (cada uno cuenta la mitad) |
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│                      ÍNDICE DE AURA (10.000 PUNTOS)                    │
+├───────────────────────────────┬────────────┬───────────────────────────┤
+│ Pilar                         │ Porcentaje │ Puntos Máximos            │
+├───────────────────────────────┼────────────┼───────────────────────────┤
+│ 🎙️ 1. Voz y Convivencia      │ 45%        │ 4.500 pts                 │
+│ 💬 2. Chat y Comunidad        │ 35%        │ 3.500 pts                 │
+│ 🌟 3. Momentos y Hazañas      │ 20%        │ 2.000 pts                 │
+└───────────────────────────────┴────────────┴───────────────────────────┘
+```
 
-- En el histórico la antigüedad cuenta a propósito: es la trayectoria. Quien llega tarde compite en igualdad en la temporada.
-- La tabla se cierra **antes** de calcular cada temporada y es la misma para todos, incluido el admin.
+$$\text{Aura Total} = \text{Voz (4.500)} + \text{Chat (3.500)} + \text{Momentos (2.000)} = 10.000 \text{ pts}$$
 
-## 2. Peso de cada zona
+---
 
-| Zona | Peso |
-|---|---|
-| Zona Gaming | ×1,5 |
-| General & Comunidad | ×1,5 |
-| Brawl Stars, Torneos, Shitpost, Categoría Pro, Extra | ×1,0 |
-| Casino & Economía | ×0,3 |
-| `#bots` y `#comandos` | ×0,3 |
-| Administración | ×0 |
+## 🎙️ Pilar 1: Voz y Convivencia en Directo (45% — 4.500 Puntos)
 
-## 3. Base medible (0 a 6.000)
+Es el núcleo donde se forja el servidor: partidas cooperativas, competitivo de Brawl Stars, charlas nocturnas y streaming de partidas.
 
-Cuatro métricas de 1.500 puntos cada una. En cada métrica, el mejor recibe 1.500 y el resto en proporción. Solo llega a 6.000 quien sea el mejor en las cuatro.
+### 1. Telemetría Automatizada (`on_voice_state_update`)
+Se mide en tiempo real mediante el evento nativo de Discord sin grabaciones invasivas:
 
-| Métrica | Qué cuenta | Por qué así |
-|---|---|---|
-| **Constancia** | Días con al menos un mensaje. El día vale el peso de la mejor zona donde escribiste. | Escribir 30 mensajes seguidos para subir de nivel (29-ago) cuenta como un día, igual que escribir uno. |
-| **Conversación** | Respuestas y menciones que recibes de otros miembros, como mucho una por persona y día. | El 27-feb una sola persona recibió unas 150 menciones en un minuto. Eso cuenta 2 (dos personas, un día). |
-| **Celebración** | Mensajes tuyos con reacción de al menos 2 personas distintas. La tuya no cuenta. | El 5-ago hubo mensajes con 36, 44 y 48 reacciones, y el 8-ago alguien reaccionó a todo el canal. |
-| **Alcance** | Cuántos miembros distintos te han respondido, mencionado o reaccionado en el periodo. | Mide si te busca el grupo o solo un colega. |
+1. **Filtro Anti-Farmeo (Mínimo 2 personas)**:
+   - Los minutos en sala solo computan si hay **al menos 2 miembros humanos** en el canal.
+   - Estar solo en sala = **0 puntos** (bloqueo absoluto de farmeo AFK nocturno).
+2. **Tratamiento de Muteo vs Ensordecido**:
+   - `self_deaf == True` (Ensordecido): **0% de rendimiento**. Si no escuchas a tus colegas, no estás en la convivencia.
+   - `self_mute == True` (Muteado de micro pero escuchando): **50% de rendimiento**. Reconoce a quienes juegan y escuchan las partidas sin micro o de noche por ruido familiar.
+3. **Curva Suave de Rendimientos Decrecientes Diarios**:
+   - **0 a 3 horas (0 a 180 min)**: **100%** de puntos.
+   - **3 a 6 horas (180 a 360 min)**: **75%** de puntos.
+   - **Más de 6 horas (> 360 min)**: **50%** de puntos.
+   - *Finalidad*: No castiga las tardes sanas de vicio en grupo y mitiga anomalías desproporcionadas de 14 horas seguidas.
+4. **Bonus por Retransmisión (`self_stream`)**:
+   - Compartir pantalla de la partida o retransmitir contenido para los colegas otorga un multiplicador de bonificación sobre el tiempo en sala.
+5. **Heartbeat de Persistencia (Cada 5 minutos)**:
+   - Chequeo periódico en segundo plano que consolida minutos en memoria/JSON, tolerando reinicios de Render sin perder más de 4 minutos de sesión.
 
-No cuentan: mensajes a bots o de bots, menciones a `@Asistente`, comandos, ni mensajes que sean solo un enlace o un código de sala.
+---
 
-## 4. Momentos de aura (0 a 4.000)
+## 💬 Pilar 2: Chat, Conversación y Comunidad (35% — 3.500 Puntos)
 
-Todos empiezan con **2.000**. Cada momento suma o resta sus puntos directamente. Mínimo 0, máximo 4.000.
+Mide la interacción social que mantiene vivo el servidor durante el día cuando no se puede jugar en llamada.
 
-Cada momento necesita un mensaje real que se pueda citar. Sin cita no hay puntos.
+### 1. Ponderación por Zonas del Servidor
+No todas las salas tienen el mismo valor cultural:
 
-### Suman
+| Zona / Canales | Multiplicador |
+| :--- | :---: |
+| **Zona Gaming** (`#🎮gaming-general🎮`, recomendaciones) | $\times 1{,}5$ |
+| **General & Comunidad** (`#🗨️la-shit-de-todos-los-dias🗨️`, `#📖cultura📖`) | $\times 1{,}5$ |
+| **Shitpost, Brawl Stars, Torneos, Categoría Pro, Extra** | $\times 1{,}0$ |
+| **Casino & Economía** | $\times 0{,}3$ |
+| **`#🤖bots🤖` y `#⌨️comandos⌨️`** | $\times 0{,}3$ |
+| **Administración** | $\times 0{,}0$ |
 
-| Momento | Puntos | Ejemplo real |
-|---|---|---|
-| **Hazaña en un juego** que consta en el chat: clutch, logro, pasarse un juego | +200 a +500 | Pasarse REANIMAL entre dos en 4 horas y media. El collar de perro de ARC Raiders en el primer cajón. |
-| **Frase mítica**: hace reír y la celebran al menos 2 personas | +150 a +400 | "Engancha más q la heroína". "Estoy más perdido que en el nivel de las lucecitas del Escape the Backrooms". "Has hecho más en 3 días q Mojang en 1 año". |
-| **Construir algo para el servidor**: canal, web, sistema, evento, bot | +200 a +500 | La web del Tribunal. La familia de Steam. El reglamento y las encuestas de torneos. Los Miis de todos en Tomodachi Life. |
-| **Aportar a la familia de Steam** o regalar un juego | +150 a +350 | "Llevo 45 min metiendo juegos de terror decentes". Regalar el PEAK a otro miembro. |
-| **Convocar un plan que sale adelante** | +150 a +300 | La primera sesión de Big Walk (12-sep). |
-| **Salvarle el día a alguien** con un aviso o una ayuda | +150 a +300 | "Me has salvado la vida" (el correo de murciaeduca). El aviso de clases suspendidas por lluvia. |
-| **Defender a un colega** que no está delante | +150 a +300 | "No me gusta que hables así de mis amigos". |
-| **Aguantar un pique con estilo** | +100 a +300 | "José, habla por ti, no por la IA". "Oblígame". |
-| **Redención**: arreglar por fin lo que arrastrabas | +100 a +250 | Arreglar el micro tras meses. Ponerse los roles dos semanas después. |
-| **Recomendación que alguien sigue** | +100 a +200 | "El Silksong una joyita, gracias". Empezar Solo Leveling por recomendación. |
+### 2. Cuatro Métricas Base de Chat:
+1. **Constancia**: Días con al menos un mensaje válido, ponderado por la mejor zona del día. (Escribir 30 mensajes seguidos para farmear nivel cuenta como 1 día).
+2. **Conversación**: Respuestas y menciones recibidas de otros miembros (tope: 1 por persona y día para evitar spam).
+3. **Celebración**: Mensajes con reacciones de al menos 2 personas distintas (auto-reacciones excluidas).
+4. **Alcance**: Cuántos miembros distintos han respondido, mencionado o reaccionado al usuario en el periodo.
 
-### Restan
+> ℹ️ *Exclusiones*: No computan mensajes a bots, menciones a `@Asistente`, comandos, ni mensajes vacíos con solo un enlace o código de sala.
 
-| Momento | Puntos | Ejemplo real |
-|---|---|---|
-| **Plantón**: confirmar y no aparecer, sin avisar | −200 a −400 | "El miércoles sin falta voy" cuando se grababa el martes. |
-| **El "luego" eterno**: aplazar sin fecha, una y otra vez | −100 a −300 | "Yo no puedo ahora / Y no sé si luego". "Ya veré". "Otro día". |
-| **Respuesta seca a un plan** | −100 a −300 | "Idk" a si vuelves a la familia de Steam. "No" a secas. |
-| **Excusa de ganas** que se repite (pereza, "en pruebas", "lo tenía silenciado") | −100 a −300 | "Me desinstalé los juegos por liberar espacio y me da pereza" (eran 3 GB). El PC "en pruebas" de abril a septiembre. |
-| **Autogol**: presumir y que te pillen | −100 a −350 | Ver películas "en IMAX… en la tele de mi casa, desde Disney+". "Me eligieron para jugar al Onimusha" (era gratis). |
-| **Trampear un sistema del servidor** | −200 a −400 | Spamear para subir de nivel. Escribir letra a letra para sumar XP. Vetar 50 juegos del Tribunal. |
-| **Spam o trolear donde no toca** | −100 a −300 | Bromas en `#anuncios` y `#normas`. Mencionar a alguien decenas de veces seguidas. Quince enlaces de golpe. |
-| **Ridículo en un juego** que consta en el chat | −100 a −300 | Morir por pararse a escribir en el chat. |
-| **Llorar una derrota** o echar la culpa a los randoms | −100 a −250 | "ODIO ESTA PUTA MIERDA". "ME CAGO EN LOS MUERTOS DE LOS RANDOM". |
-| **Deber y no pagar** (solo porros y juegos, nunca dinero real) | −100 a −250 | Los 12k porros prestados. |
-| **Picarse con un bot** | −100 a −250 | Treinta mensajes amenazando a Asistente con echarlo del servidor. |
-| **Dejar en visto** (resta a quien no contesta) | −100 a −250 | Ocho menciones para una partida sin respuesta. "@Alex ¿sigues vivo?". |
-| **Hablarle a las paredes** (resta a quien habla) | −50 a −150 | Insistir varios días con un tema que nadie había pedido ni sigue. |
+---
 
-### Dejar en visto o hablarle a las paredes: cómo se distingue
+## 🌟 Pilar 3: Momentos de Lore y Hazañas (20% — 2.000 Puntos)
 
-Son las dos caras de un mensaje sin respuesta. Decide a quién resta lo que había antes del silencio:
+El carisma, los memes legendarios y el historial de comportamiento. Todos parten de **1.000 puntos base**. Cada momento suma o resta puntos con un mensaje citable real. (Rango final: 0 a 2.000 pts).
 
-| Situación | Resta a |
-|---|---|
-| Te mencionan o te preguntan directamente y no contestas en 48 horas | Quien no contesta |
-| Es la continuación de una conversación o un plan en el que ya participabas | Quien no contesta |
-| El tema ya había interesado: alguien preguntó, reaccionó o participó antes | Quienes dejaron de contestar |
-| Nadie lo pidió, no hay mención ni pregunta directa, y se insiste 3 veces o más sin respuesta ni reacción | Quien habla |
+### Acciones que Suman (+ Puntos):
+- **Hazaña en un juego**: Clutch, pasarse un juego juntos, hito cooperativo difícil (+150 a +350 pts).
+- **Frase mítica del lore**: Hace reír y la celebran al menos 2 personas (+100 a +250 pts).
+- **Construir algo para el servidor**: Crear la web del Tribunal, familia de Steam, torneos (+150 a +350 pts).
+- **Aportar a la familia de Steam o regalar un juego** (+100 a +250 pts).
+- **Convocar un plan que sale adelante**: Organizar sesión de juego (+100 a +200 pts).
+- **Salvarle el día a un colega**: Avisos académicos, ayuda técnica o de hardware (+100 a +200 pts).
+- **Defender a un amigo que no está delante** (+100 a +200 pts).
+- **Redención**: Arreglar el micro tras meses, ponerse los roles (+50 a +150 pts).
 
-- Un solo mensaje sin respuesta no es ninguna de las dos cosas.
-- Una mención a `@everyone` o `@here` no cuenta como mención directa.
-- Si hay duda entre las dos, no puntúa.
+### Acciones que Restan (- Puntos):
+- **Plantón**: Confirmar asistencia a una partida y no aparecer sin avisar (-150 a -300 pts).
+- **El "luego" eterno**: Aplazar sin fecha una y otra vez ("ya veré", "otro día") (-75 a -200 pts).
+- **Excusa de ganas recurrente**: Pereza constante para instalar 3 GB o unirse (-75 a -200 pts).
+- **Trampear un sistema**: Spamear letras para subir de nivel en Cakey Bot (-150 a -300 pts).
+- **Llorar una derrota o culpar a los randoms de forma tóxica** (-50 a -150 pts).
+- **Deber y no pagar**: Solo deudas de Porros en el casino, nunca dinero real (-75 a -150 pts).
+- **Dejar en visto**: Te preguntan o mencionan directamente para jugar y no contestas en 48h (-75 a -150 pts).
+- **Hablarle a las paredes**: Insistir 3 o más veces con un tema que nadie sigue (-50 a -100 pts).
 
-### Qué no resta nunca
+### Qué NO Resta Jamás:
+- Falta de medios (no tener PC, micro, gráfica o dinero).
+- Obligaciones reales (estudios, exámenes, trabajo, familia, médico).
+- Avisar con antelación de que no se puede jugar (eso es educación, no plantón).
+- Dropear un juego (jugar a lo que a uno le divierte es libre).
+- Proponer un plan que no sale por falta de quórum (la iniciativa suma, la falta de gente no castiga).
 
-- **Falta de medios**: no tener PC, micro, wifi o dinero.
-- **Obligaciones**: exámenes, trabajo, padres, médico.
-- **Avisar a tiempo** de que no puedes: no es un plantón.
-- **Dropear un juego**: no puntúa. Solo se sabría de quien lo cuenta, y contarlo no puede salir peor que callarlo.
-- **Organizar algo que se cancela por falta de gente**: el esfuerzo suma, la cancelación no resta al organizador.
+---
 
-### Límites
+## 📈 Integración con la Bolsa Sanvi (`Sanvi Exchange`)
 
-- **Casino**: como mucho un momento de casino por persona, entre −200 y +200.
-- **Una vez por tipo**: en una misma temporada, el mismo tipo de momento solo puntúa una vez por persona. Así nadie se hunde ni se dispara por un único vicio.
-- **Solo conducta en el servidor**: nada sobre físico, familia, salud, notas o vida privada, ni para puntuar ni para citar.
-- **Insultos de odio**: no suman aunque tengan reacciones, y no se citan.
+El Aura Total opera como el **Valor Fundamental (50%)** de la cotización de cada miembro en la Bolsa:
 
-## 5. Quién juzga y cómo se reclama
+$$P_{\text{acción}} = 0{,}50 \cdot P_{\text{fundamental}} (\text{Aura / 10.000}) + 0{,}50 \cdot P_{\text{mercado}} (\text{Oferta y Demanda})$$
 
-- Los momentos los juzga **Claude**, leyendo todos los mensajes del periodo de todos los miembros.
-- Cada momento se publica con su cita, su tipo y sus puntos, para que cualquiera pueda rehacer la suma.
-- **Recurso**: quien no esté de acuerdo con un momento suyo puede pedir revisión; el servidor vota con reacciones y la mayoría decide.
-
-## 6. Pendiente
-
-- Aprobar o cambiar los rangos de puntos.
-- Decidir si la temporada es el mes natural.
-- Comando `/aura`: más adelante.
+- **Suelo Fundamental (50%)**: Usuarios con alto Aura tienen un suelo de cotización elevado e inmune a especulaciones destructivas. Cuentas inactivas o fantasma tienen un suelo cercano a 0.
+- **Presión de Mercado (50%)**: Las compras y ventas reales con Porros hacen oscilar el precio en el corto plazo, generando volatilidad y especulación divertida.
