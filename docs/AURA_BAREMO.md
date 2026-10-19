@@ -28,7 +28,7 @@ $$\text{Aura Total} = \text{Voz (4.500)} + \text{Chat (3.500)} + \text{Momentos 
 
 ## 🎙️ Pilar 1: Voz y Convivencia en Directo (45% — 4.500 Puntos)
 
-> **Estado**: `Cerrado y Aprobado Definitivamente por Jose` `[Confirmada · Jose · 19/10/2026]`
+> **Estado**: `[Aprobado · Jose · 19/10/2026]`
 
 Es el núcleo donde se forja el servidor: partidas cooperativas, competitivo de Brawl Stars, charlas nocturnas y streaming de partidas.
 
@@ -55,7 +55,8 @@ Se mide en tiempo real mediante el evento nativo de Discord sin grabaciones inva
 
 ## 💬 Pilar 2: Chat, Conversación y Comunidad (35% — 3.500 Puntos)
 
-> **Estado**: `En Debate y Refinamiento Activo con Jose` `[19/10/2026]`
+> **Estado**: `[Propuesta · Chat 1 · 19/10/2026]` · `[Pendiente de matizar: reparto de puntos entre métricas, longitud mínima de mensaje y ventana móvil]`
+
 
 
 Mide la interacción social que mantiene vivo el servidor durante el día cuando no se puede jugar en llamada.
@@ -84,7 +85,10 @@ No todas las salas tienen el mismo valor cultural:
 
 ## 🌟 Pilar 3: Momentos de Lore y Hazañas (20% — 2.000 Puntos)
 
+> **Estado**: `[Propuesta · Chat 1 · 19/10/2026]` · `[Pendiente de matizar: sistema de registro de momentos y caducidad]`
+
 El carisma, los memes legendarios y el historial de comportamiento. Todos parten de **1.000 puntos base**. Cada momento suma o resta puntos con un mensaje citable real. (Rango final: 0 a 2.000 pts).
+
 
 ### Acciones que Suman (+ Puntos):
 - **Hazaña en un juego**: Clutch, pasarse un juego juntos, hito cooperativo difícil (+150 a +350 pts).
