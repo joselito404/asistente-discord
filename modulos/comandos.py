@@ -1,6 +1,6 @@
 """
 Módulo de Comandos Slash Nativos para los bots 'Asistente' y 'Economia Asistente' en Discord:
-Contiene los 31 comandos interactivos oficiales (@app_commands.command) divididos en Runner Dual:
+Contiene los 33 comandos interactivos oficiales (@app_commands.command) divididos en Runner Dual:
 - Comandos Generales del Asistente (22):
   * Multimedia y Arte: /dibuja, /musica
   * Gaming y Catálogo: /steam, /tribunal
@@ -8,8 +8,8 @@ Contiene los 31 comandos interactivos oficiales (@app_commands.command) dividido
   * Voz Neuronal y Gemini Live: /habla, /geminilive, /cambiar_voz, /unete, /desconecta, /para_audio
   * Minijuegos del Servidor: /trivial, /ranking_trivial, /tres_en_raya, /conecta4, /ajedrez
   * Moderación y Reemplazo de Carl-bot: /autoroles, /sugerencia
-- Comandos de Economía y Casino de Economia Asistente (9):
-  * Economía de Porros y Casino: /slots, /balance, /trabajar, /transferir, /depositar, /retirar, /robar, /tienda, /salario
+- Comandos de Economía y Casino de Economia Asistente (11):
+  * Economía de Porros y Casino: /slots, /balance, /trabajar, /transferir, /depositar, /retirar, /robar, /tienda, /salario, /blackjack, /bj
 """
 
 import os
@@ -1426,6 +1426,135 @@ async def cmd_salario(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed)
 
 
+async def _handle_blackjack_command(interaction: discord.Interaction, apuesta: str = "100"):
+    from modulos.economia import (
+        parse_blackjack_bet,
+        modify_balance,
+        modify_server_jackpot,
+        BlackjackHand,
+        blackjack_engine,
+        BlackjackView,
+        build_blackjack_embed,
+        ACTIVE_BLACKJACK_GAMES,
+        ECONOMY_LOCK,
+        PORRO_EMOJI,
+        JACKPOT_FEED_PERCENT,
+        format_bj_card,
+    )
+
+    ok, bet, err = parse_blackjack_bet(interaction.user.id, apuesta)
+    if not ok:
+        await interaction.response.send_message(f"❌ {err}", ephemeral=True)
+        return
+
+    with ECONOMY_LOCK:
+        if interaction.user.id in ACTIVE_BLACKJACK_GAMES:
+            await interaction.response.send_message(
+                "❌ Ya tienes una partida de Blackjack activa en curso. Termínala antes de iniciar otra.",
+                ephemeral=True,
+            )
+            return
+
+        modify_balance(interaction.user.id, cash_delta=-bet)
+        ACTIVE_BLACKJACK_GAMES[interaction.user.id] = True
+
+    try:
+        player_hand = BlackjackHand([blackjack_engine.draw(), blackjack_engine.draw()])
+        dealer_hand = BlackjackHand([blackjack_engine.draw(), blackjack_engine.draw()])
+
+        player_bj = player_hand.is_blackjack
+        dealer_bj = dealer_hand.is_blackjack
+
+        if player_bj or dealer_bj:
+            with ECONOMY_LOCK:
+                ACTIVE_BLACKJACK_GAMES.pop(interaction.user.id, None)
+                if player_bj and dealer_bj:
+                    modify_balance(interaction.user.id, cash_delta=bet)
+                    res_msg = (
+                        f"🤝 **¡Empate (Push)!**\n"
+                        f"¡Tanto tú como el crupier tenéis **Blackjack Natural** de inicio!\n"
+                        f"Se te devuelve tu apuesta de **{bet:,}** Porros ({PORRO_EMOJI})."
+                    )
+                    color = 0xF1C40F
+                elif player_bj:
+                    win_net = int(bet * 1.5)
+                    payout = bet + win_net
+                    modify_balance(interaction.user.id, cash_delta=payout)
+                    res_msg = (
+                        f"🔥 **¡BLACKJACK NATURAL!** 🃏\n"
+                        f"¡Has conseguido 21 de inicio!\n"
+                        f"**Pago 3:2:** ¡Has ganado **+{win_net:,}** Porros limpios ({PORRO_EMOJI})!\n"
+                        f"💰 Total ingresado en efectivo: **{payout:,}** Porros."
+                    )
+                    color = 0x2ECC71
+                else:
+                    jackpot_feed = max(1, int(bet * JACKPOT_FEED_PERCENT))
+                    modify_server_jackpot(jackpot_feed)
+                    res_msg = (
+                        f"💀 **¡El crupier tiene Blackjack Natural!** 🃏\n"
+                        f"El crupier ha conseguido 21 con [ {format_bj_card(dealer_hand.cards[0])} ] [ {format_bj_card(dealer_hand.cards[1])} ].\n"
+                        f"Has perdido **{bet:,}** Porros ({PORRO_EMOJI}).\n"
+                        f"🎰 Se han añadido **+{jackpot_feed:,}** Porros al bote del servidor."
+                    )
+                    color = 0xE74C3C
+
+            embed = build_blackjack_embed(
+                user=interaction.user,
+                player_hand=player_hand,
+                dealer_hand=dealer_hand,
+                bet=bet,
+                dealer_revealed=True,
+                result_text=res_msg,
+                color=color,
+            )
+            await interaction.response.send_message(embed=embed)
+            return
+
+        view = BlackjackView(
+            user_id=interaction.user.id,
+            user=interaction.user,
+            bet=bet,
+            engine=blackjack_engine,
+            player_hand=player_hand,
+            dealer_hand=dealer_hand,
+        )
+        with ECONOMY_LOCK:
+            ACTIVE_BLACKJACK_GAMES[interaction.user.id] = view
+
+        embed = build_blackjack_embed(
+            user=interaction.user,
+            player_hand=player_hand,
+            dealer_hand=dealer_hand,
+            bet=bet,
+            dealer_revealed=False,
+            result_text="Tu turno: Elige si **Pedir**, **Plantarte** o **Doblar** tu apuesta.",
+            color=0x3498DB,
+        )
+        await interaction.response.send_message(embed=embed, view=view)
+        try:
+            view.message = await interaction.original_response()
+        except Exception:
+            pass
+
+    except Exception as e:
+        with ECONOMY_LOCK:
+            modify_balance(interaction.user.id, cash_delta=bet)
+            ACTIVE_BLACKJACK_GAMES.pop(interaction.user.id, None)
+        raise e
+
+
+@app_commands.command(name="blackjack", description="Juega al Blackjack 21 nativo contra el crupier apostando Porros")
+@app_commands.describe(apuesta="Cantidad de Porros a apostar (mínimo 50) o 'all'/'todo'")
+async def cmd_blackjack(interaction: discord.Interaction, apuesta: str = "100"):
+    await _handle_blackjack_command(interaction, apuesta)
+
+
+@app_commands.command(name="bj", description="Alias rápido ergonómico para jugar al Blackjack 21")
+@app_commands.describe(apuesta="Cantidad de Porros a apostar (mínimo 50) o 'all'/'todo'")
+async def cmd_bj(interaction: discord.Interaction, apuesta: str = "100"):
+    await _handle_blackjack_command(interaction, apuesta)
+
+
 # ==========================================
 # LISTAS DE COMANDOS SLASH (RUNNER DUAL)
 # ==========================================
@@ -1456,7 +1585,7 @@ GENERAL_SLASH_COMMANDS = [
     cmd_sugerencia,
 ]
 
-# 9 Comandos de Economía y Casino para el Bot 'Economia Asistente'
+# 11 Comandos de Economía y Casino para el Bot 'Economia Asistente'
 ECONOMY_SLASH_COMMANDS = [
     cmd_slots,
     cmd_balance,
@@ -1467,9 +1596,11 @@ ECONOMY_SLASH_COMMANDS = [
     cmd_robar,
     cmd_tienda,
     cmd_salario,
+    cmd_blackjack,
+    cmd_bj,
 ]
 
-# Total de 31 comandos para retrocompatibilidad total
+# Total de 33 comandos para retrocompatibilidad total
 ALL_SLASH_COMMANDS = GENERAL_SLASH_COMMANDS + ECONOMY_SLASH_COMMANDS
 
 

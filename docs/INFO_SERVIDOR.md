@@ -404,3 +404,7 @@
 - **18/10/2026 (12:08)**: **Retirada de Carl-bot y Migración a Auto-Roles 24/7 de Asistente**:
   - Sustitución completa de los mensajes de Carl-bot en `#🎭roles🎭` por el nuevo panel nativo de Asistente con botonera por categorías, vistas privadas con checks premarcados (✅) y contadores de miembros en tiempo real (`• 👥 X`).
   - Actualización del tópico del canal y comunicado oficial en `#📣anuncios📣` confirmando la conservación al 100% de todos los roles asignados de la comunidad.
+- **19/10/2026**: **Despliegue del Runner Dual ('Asistente' + 'Economia Asistente') y Lanzamiento de Blackjack 21 Nativo**:
+  - Separación de funciones en dos bots concurrentes en Render Cloud: `Asistente` (22 comandos generales) y `Economia Asistente` (11 comandos de finanzas y casino).
+  - Estreno del minijuego de Blackjack 21 interactivo (`/blackjack` y `/bj`) con zapato de 6 barajas, botones Discord (`[🃏 Pedir]`, `[🛑 Plantarse]`, `[⚡ Doblar]`), crupier plantado en 17, pago 3:2 en Blackjack natural y auto-stand en 60s.
+

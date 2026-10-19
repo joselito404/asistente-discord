@@ -6,8 +6,8 @@ Arquitectura Modular (Paquete 'modulos/'):
 - modulos.voz: Parche DAVE E2EE, TTS neuronal Edge/Gemini, Gemini Live bidireccional y retención 24h.
 - modulos.autoroles: Reemplazo integral 24/7 de Carl-bot (Auto-roles con toggle/personal y sugerencias).
 - modulos.chat_ia: Modelos Gemini, System Prompt, búsqueda web, niveles Cakey Bot, XP, memoria y router.
-- modulos.comandos: Registro oficial de Comandos Slash (22 Generales + 9 Economía).
-- modulos.economia: Motor nativo de economía comunitaria, banca, robos, tienda, salarios y tragaperras 5x3.
+- modulos.comandos: Registro oficial de Comandos Slash (22 Generales + 11 Economía).
+- modulos.economia: Motor nativo de economía comunitaria, banca, robos, tienda, salarios, tragaperras 5x3 y Blackjack 21.
 - modulos.web_server: Servidor HTTP multihilo en puerto 10000 para health-check de Render y audios.
 
 bot_service.py actúa como el conector y orquestador central con Arquitectura de Runner Dual.
@@ -313,6 +313,13 @@ from modulos.economia import (
     calculate_accumulated_salary,
     can_claim_salary,
     claim_salary,
+    BlackjackHand,
+    BlackjackEngine,
+    blackjack_engine,
+    ACTIVE_BLACKJACK_GAMES,
+    parse_blackjack_bet,
+    build_blackjack_embed,
+    BlackjackView,
 )
 
 from modulos.comandos import (
@@ -353,6 +360,8 @@ from modulos.comandos import (
     cmd_robar,
     cmd_tienda,
     cmd_salario,
+    cmd_blackjack,
+    cmd_bj,
 )
 
 # Registrar comandos en sus árboles correspondientes (Dual Runner)

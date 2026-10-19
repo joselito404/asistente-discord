@@ -23,6 +23,7 @@ import sys
 import json
 import math
 import random
+import asyncio
 import threading
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple, Any, Union
@@ -1944,3 +1945,476 @@ async def handle_slots_interaction(interaction: discord.Interaction) -> bool:
         return True
 
     return False
+
+
+# ==========================================
+# 8. CASINO NATIVO: BLACKJACK 21
+# ==========================================
+
+BJ_SUITS = ["♠️", "♥️", "♦️", "♣️"]
+BJ_RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
+
+
+def format_bj_card(card: Tuple[str, str]) -> str:
+    """Devuelve la representación visual de una carta, ej: 'A♠️', '10♦️'."""
+    suit, rank = card
+    return f"{rank}{suit}"
+
+
+def get_bj_card_value(card: Tuple[str, str]) -> int:
+    """Devuelve el valor numérico base de una carta (As cuenta como 11 aquí)."""
+    _, rank = card
+    if rank in ("J", "Q", "K"):
+        return 10
+    elif rank == "A":
+        return 11
+    else:
+        return int(rank)
+
+
+class BlackjackHand:
+    """Mano de cartas de Blackjack con evaluación dinámica de Ases flexibles y detección de Blackjack natural."""
+
+    def __init__(self, cards: Optional[List[Tuple[str, str]]] = None):
+        self.cards: List[Tuple[str, str]] = list(cards) if cards else []
+
+    def add_card(self, card: Tuple[str, str]) -> None:
+        self.cards.append(card)
+
+    @property
+    def value(self) -> int:
+        total = 0
+        aces = 0
+        for card in self.cards:
+            total += get_bj_card_value(card)
+            if card[1] == "A":
+                aces += 1
+        while total > 21 and aces > 0:
+            total -= 10
+            aces -= 1
+        return total
+
+    @property
+    def is_soft(self) -> bool:
+        total = 0
+        aces = 0
+        for card in self.cards:
+            total += get_bj_card_value(card)
+            if card[1] == "A":
+                aces += 1
+        while total > 21 and aces > 0:
+            total -= 10
+            aces -= 1
+        return aces > 0 and total <= 21
+
+    @property
+    def is_blackjack(self) -> bool:
+        """Blackjack natural inicial: exactamente 2 cartas sumando 21."""
+        return len(self.cards) == 2 and self.value == 21
+
+    @property
+    def is_bust(self) -> bool:
+        return self.value > 21
+
+    def format_cards(self, hide_first: bool = False) -> str:
+        """Formatea las cartas como '[ 🂠 ? ] [ K♠️ ]' o '[ A♣️ ] [ 8♥️ ]'."""
+        if not self.cards:
+            return "[ Mano vacía ]"
+        if hide_first:
+            parts = ["[ 🂠 ? ]"]
+            for c in self.cards[1:]:
+                parts.append(f"[ {format_bj_card(c)} ]")
+            return " ".join(parts)
+        return " ".join(f"[ {format_bj_card(c)} ]" for c in self.cards)
+
+    def format_score(self, hide_first: bool = False) -> str:
+        """Devuelve el texto descriptivo de la puntuación."""
+        if hide_first:
+            if len(self.cards) > 1:
+                vis_val = get_bj_card_value(self.cards[1])
+                return f"{vis_val} + ?"
+            return "?"
+        if self.is_blackjack:
+            return "21 (Blackjack)"
+        if self.is_bust:
+            return f"{self.value} (Bust)"
+        if self.is_soft and self.value < 21:
+            return f"{self.value} (Soft)"
+        return str(self.value)
+
+
+class BlackjackEngine:
+    """Motor de Blackjack con zapato de 6 barajas (312 cartas) y rebarajado automático al bajar de 52 cartas."""
+
+    def __init__(self, num_decks: int = 6):
+        self.num_decks = num_decks
+        self.cards: List[Tuple[str, str]] = []
+        self.reset_shoe()
+
+    def reset_shoe(self) -> None:
+        single_deck = [(suit, rank) for suit in BJ_SUITS for rank in BJ_RANKS]
+        self.cards = single_deck * self.num_decks
+        random.shuffle(self.cards)
+
+    def draw(self) -> Tuple[str, str]:
+        if len(self.cards) < 52:
+            self.reset_shoe()
+        return self.cards.pop()
+
+    def play_dealer_turn(self, dealer_hand: BlackjackHand) -> None:
+        """El crupier debe pedir con 16 o menos y plantarse obligatoriamente con 17 o más (S17)."""
+        while dealer_hand.value < 17:
+            dealer_hand.add_card(self.draw())
+
+
+# Instancia global del zapato para simular la mesa persistente de casino
+blackjack_engine = BlackjackEngine(num_decks=6)
+
+# Registro de partidas activas para impedir partidas simultáneas por el mismo usuario
+ACTIVE_BLACKJACK_GAMES: Dict[int, Any] = {}
+
+
+def parse_blackjack_bet(user_id: Any, apuesta_str: str) -> Tuple[bool, int, str]:
+    """Valida y calcula el monto de la apuesta en Porros (mínimo 50 o 'all'/'todo'/'max')."""
+    bal = get_balance(user_id)
+    cash = bal["cash"]
+    clean_str = str(apuesta_str).strip().lower()
+
+    if clean_str in ("all", "todo", "max"):
+        bet = cash
+    else:
+        try:
+            bet = int(clean_str)
+        except ValueError:
+            return False, 0, "Cantidad de apuesta inválida. Debe ser un número entero mayor o igual a 50 o 'all'/'todo'."
+
+    if bet < 50:
+        return False, 0, f"La apuesta mínima en Blackjack es de 50 Porros ({PORRO_EMOJI})."
+
+    if cash < bet:
+        return False, 0, f"No tienes suficientes Porros en efectivo ({cash:,} disponibles). Usa `/trabajar` o retira de tu `/banco`."
+
+    return True, bet, ""
+
+
+def build_blackjack_embed(
+    user: Union[discord.User, discord.Member],
+    player_hand: BlackjackHand,
+    dealer_hand: BlackjackHand,
+    bet: int,
+    dealer_revealed: bool = False,
+    result_text: Optional[str] = None,
+    color: int = 0x3498DB,
+    auto_stand: bool = False,
+) -> discord.Embed:
+    """Construye el Embed de alta fidelidad visual para la partida de Blackjack."""
+    embed = discord.Embed(
+        title="🎰 Blackjack 21 — Casino Asistente",
+        color=color,
+        timestamp=datetime.now(timezone.utc),
+    )
+    desc_lines = []
+    if auto_stand:
+        desc_lines.append("⏱️ *Turno resuelto automáticamente por inactividad de 60s (Auto-Stand).*")
+    if result_text:
+        desc_lines.append(result_text)
+    else:
+        desc_lines.append("Tu turno: Elige si **Pedir**, **Plantarte** o **Doblar** tu apuesta.")
+    embed.description = "\n\n".join(desc_lines)
+
+    dealer_cards_str = dealer_hand.format_cards(hide_first=not dealer_revealed)
+    dealer_score_str = dealer_hand.format_score(hide_first=not dealer_revealed)
+    embed.add_field(
+        name="🤵 Crupier (Casa)",
+        value=f"{dealer_cards_str}\n**Puntuación:** `{dealer_score_str}`",
+        inline=False,
+    )
+
+    player_cards_str = player_hand.format_cards()
+    player_score_str = player_hand.format_score()
+    embed.add_field(
+        name=f"🧑 {user.display_name} (Jugador)",
+        value=f"{player_cards_str}\n**Puntuación:** `{player_score_str}`",
+        inline=False,
+    )
+
+    embed.add_field(
+        name="💰 Apuesta",
+        value=f"{PORRO_EMOJI} **{bet:,}** Porros",
+        inline=True,
+    )
+    embed.add_field(
+        name="🎰 Bote Acumulado",
+        value=f"{PORRO_EMOJI} **{get_server_jackpot():,}** Porros",
+        inline=True,
+    )
+
+    embed.set_footer(text="Blackjack 21 • Casino Oficial • 6 Barajas (S17)")
+    if hasattr(user, "display_avatar") and user.display_avatar:
+        embed.set_author(name=user.display_name, icon_url=str(user.display_avatar.url))
+    return embed
+
+
+class BlackjackView(discord.ui.View):
+    """Vista interactiva nativa con botones para Blackjack 21 con timeout de 60s y auto-stand."""
+
+    def __init__(
+        self,
+        user_id: int,
+        user: Union[discord.User, discord.Member],
+        bet: int,
+        engine: Optional[BlackjackEngine] = None,
+        player_hand: Optional[BlackjackHand] = None,
+        dealer_hand: Optional[BlackjackHand] = None,
+    ):
+        super().__init__(timeout=60.0)
+        self.user_id = user_id
+        self.user = user
+        self.bet = bet
+        self.engine = engine or blackjack_engine
+        self.player_hand = player_hand or BlackjackHand()
+        self.dealer_hand = dealer_hand or BlackjackHand()
+        self.message: Optional[discord.Message] = None
+        self.resolved = False
+        self._lock = asyncio.Lock()
+
+        # Chequeo inicial para el botón Doblar: solo con 2 cartas y si tiene efectivo para igualar
+        bal = get_balance(self.user_id)
+        if bal["cash"] < self.bet or len(self.player_hand.cards) != 2:
+            self.set_double_disabled(True)
+
+    def set_double_disabled(self, disabled: bool) -> None:
+        for child in self.children:
+            if isinstance(child, discord.ui.Button) and child.custom_id == "bj:double":
+                child.disabled = disabled
+
+    def disable_all_buttons(self) -> None:
+        for child in self.children:
+            if isinstance(child, discord.ui.Button):
+                child.disabled = True
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id != self.user_id:
+            await interaction.response.send_message(
+                "❌ Esta partida de Blackjack no es tuya. Usa `/blackjack` para iniciar tu propia mesa.",
+                ephemeral=True,
+            )
+            return False
+        return True
+
+    async def do_hit(self, interaction: discord.Interaction) -> None:
+        async with self._lock:
+            if self.resolved:
+                return
+
+            card = self.engine.draw()
+            self.player_hand.add_card(card)
+            self.set_double_disabled(True)
+
+            if self.player_hand.is_bust:
+                self.resolved = True
+                self.disable_all_buttons()
+                jackpot_feed = max(1, int(self.bet * JACKPOT_FEED_PERCENT))
+                with ECONOMY_LOCK:
+                    modify_server_jackpot(jackpot_feed)
+                    ACTIVE_BLACKJACK_GAMES.pop(self.user_id, None)
+
+                embed = build_blackjack_embed(
+                    user=self.user,
+                    player_hand=self.player_hand,
+                    dealer_hand=self.dealer_hand,
+                    bet=self.bet,
+                    dealer_revealed=True,
+                    result_text=(
+                        f"💥 **¡Te has pasado! (Bust: {self.player_hand.value})**\n"
+                        f"Has perdido **{self.bet:,}** Porros ({PORRO_EMOJI}).\n"
+                        f"🎰 Se han añadido **+{jackpot_feed:,}** Porros al bote del servidor."
+                    ),
+                    color=0xE74C3C,
+                )
+                await interaction.response.edit_message(embed=embed, view=self)
+                self.stop()
+                return
+
+            if self.player_hand.value == 21:
+                await self._resolve_dealer_and_finish(interaction)
+                return
+
+            embed = build_blackjack_embed(
+                user=self.user,
+                player_hand=self.player_hand,
+                dealer_hand=self.dealer_hand,
+                bet=self.bet,
+                dealer_revealed=False,
+                result_text="Has pedido carta. ¿Deseas **Pedir** otra o **Plantarte**?",
+                color=0x3498DB,
+            )
+            await interaction.response.edit_message(embed=embed, view=self)
+
+    async def do_stand(self, interaction: discord.Interaction) -> None:
+        async with self._lock:
+            if self.resolved:
+                return
+            await self._resolve_dealer_and_finish(interaction)
+
+    async def do_double(self, interaction: discord.Interaction) -> None:
+        async with self._lock:
+            if self.resolved:
+                return
+
+            if len(self.player_hand.cards) != 2:
+                await interaction.response.send_message(
+                    "❌ Solo puedes doblar la apuesta en tu primer turno con exactamente 2 cartas.",
+                    ephemeral=True,
+                )
+                return
+
+            bal = get_balance(self.user_id)
+            if bal["cash"] < self.bet:
+                await interaction.response.send_message(
+                    f"❌ No tienes suficientes Porros en efectivo para doblar la apuesta ({bal['cash']:,} disponibles, necesitas {self.bet:,}).",
+                    ephemeral=True,
+                )
+                self.set_double_disabled(True)
+                try:
+                    await interaction.message.edit(view=self)
+                except Exception:
+                    pass
+                return
+
+            # Descontar la apuesta adicional para duplicar
+            with ECONOMY_LOCK:
+                modify_balance(self.user_id, cash_delta=-self.bet)
+            self.bet *= 2
+            self.set_double_disabled(True)
+
+            # Recibir exactamente 1 carta
+            card = self.engine.draw()
+            self.player_hand.add_card(card)
+
+            if self.player_hand.is_bust:
+                self.resolved = True
+                self.disable_all_buttons()
+                jackpot_feed = max(1, int(self.bet * JACKPOT_FEED_PERCENT))
+                with ECONOMY_LOCK:
+                    modify_server_jackpot(jackpot_feed)
+                    ACTIVE_BLACKJACK_GAMES.pop(self.user_id, None)
+
+                embed = build_blackjack_embed(
+                    user=self.user,
+                    player_hand=self.player_hand,
+                    dealer_hand=self.dealer_hand,
+                    bet=self.bet,
+                    dealer_revealed=True,
+                    result_text=(
+                        f"💥 **¡Doblaste y te has pasado! (Bust: {self.player_hand.value})**\n"
+                        f"Has perdido **{self.bet:,}** Porros ({PORRO_EMOJI}).\n"
+                        f"🎰 Se han añadido **+{jackpot_feed:,}** Porros al bote del servidor."
+                    ),
+                    color=0xE74C3C,
+                )
+                await interaction.response.edit_message(embed=embed, view=self)
+                self.stop()
+                return
+
+            # Resolver crupier inmediatamente tras doblar
+            await self._resolve_dealer_and_finish(interaction)
+
+    @discord.ui.button(label="🃏 Pedir", style=discord.ButtonStyle.primary, custom_id="bj:hit")
+    async def hit(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.do_hit(interaction)
+
+    @discord.ui.button(label="🛑 Plantarse", style=discord.ButtonStyle.danger, custom_id="bj:stand")
+    async def stand(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.do_stand(interaction)
+
+    @discord.ui.button(label="⚡ Doblar", style=discord.ButtonStyle.success, custom_id="bj:double")
+    async def double(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.do_double(interaction)
+
+    async def _resolve_dealer_and_finish(
+        self,
+        interaction: Optional[discord.Interaction] = None,
+        auto_stand: bool = False,
+    ) -> None:
+        self.resolved = True
+        self.disable_all_buttons()
+
+        # Turno del Crupier
+        self.engine.play_dealer_turn(self.dealer_hand)
+
+        player_score = self.player_hand.value
+        dealer_score = self.dealer_hand.value
+        dealer_bust = self.dealer_hand.is_bust
+
+        payout = 0
+        jackpot_feed = 0
+
+        with ECONOMY_LOCK:
+            if dealer_bust:
+                win_net = self.bet
+                payout = self.bet * 2
+                modify_balance(self.user_id, cash_delta=payout)
+                res_msg = (
+                    f"🎉 **¡El crupier se ha pasado! (Bust: {dealer_score})**\n"
+                    f"¡Has ganado **+{win_net:,}** Porros limpios ({PORRO_EMOJI})!\n"
+                    f"💰 Total ingresado en efectivo: **{payout:,}** Porros."
+                )
+                color = 0x2ECC71
+            elif player_score > dealer_score:
+                win_net = self.bet
+                payout = self.bet * 2
+                modify_balance(self.user_id, cash_delta=payout)
+                res_msg = (
+                    f"🎉 **¡Has ganado a la casa!**\n"
+                    f"Tu puntuación (**{player_score}**) supera a la del crupier (**{dealer_score}**).\n"
+                    f"¡Has ganado **+{win_net:,}** Porros limpios ({PORRO_EMOJI})!\n"
+                    f"💰 Total ingresado en efectivo: **{payout:,}** Porros."
+                )
+                color = 0x2ECC71
+            elif player_score == dealer_score:
+                payout = self.bet
+                modify_balance(self.user_id, cash_delta=payout)
+                res_msg = (
+                    f"🤝 **¡Empate (Push)!**\n"
+                    f"Mismo puntaje (**{player_score}**). Se te devuelve tu apuesta íntegra de **{payout:,}** Porros ({PORRO_EMOJI})."
+                )
+                color = 0xF1C40F
+            else:
+                jackpot_feed = max(1, int(self.bet * JACKPOT_FEED_PERCENT))
+                modify_server_jackpot(jackpot_feed)
+                res_msg = (
+                    f"💀 **La casa gana.**\n"
+                    f"El crupier (**{dealer_score}**) supera tu puntuación (**{player_score}**).\n"
+                    f"Has perdido **{self.bet:,}** Porros ({PORRO_EMOJI}).\n"
+                    f"🎰 Se han añadido **+{jackpot_feed:,}** Porros al bote del servidor."
+                )
+                color = 0xE74C3C
+
+            ACTIVE_BLACKJACK_GAMES.pop(self.user_id, None)
+
+        embed = build_blackjack_embed(
+            user=self.user,
+            player_hand=self.player_hand,
+            dealer_hand=self.dealer_hand,
+            bet=self.bet,
+            dealer_revealed=True,
+            result_text=res_msg,
+            color=color,
+            auto_stand=auto_stand,
+        )
+
+        if interaction and not interaction.response.is_done():
+            await interaction.response.edit_message(embed=embed, view=self)
+        elif self.message:
+            try:
+                await self.message.edit(embed=embed, view=self)
+            except Exception:
+                pass
+        self.stop()
+
+    async def on_timeout(self) -> None:
+        async with self._lock:
+            if self.resolved:
+                return
+            await self._resolve_dealer_and_finish(interaction=None, auto_stand=True)

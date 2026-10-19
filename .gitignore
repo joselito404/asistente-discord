@@ -28,6 +28,7 @@ historico_chat/
 herramientas/
 !herramientas/test_economy.py
 !herramientas/test_slots_engine.py
+!herramientas/test_blackjack.py
 documentos_pdf/
 *.zip
 *.txt
