@@ -28,7 +28,8 @@ $$\text{Aura Total} = \text{Voz (4.500)} + \text{Chat (3.500)} + \text{Momentos 
 
 ## 🎙️ Pilar 1: Voz y Convivencia en Directo (45% — 4.500 Puntos)
 
-> **Estado**: `[Aprobado · Jose · 19/10/2026]`
+> **Estado**: `[Reabierto para revisión · Jose · 19/10/2026]`
+
 
 Es el núcleo donde se forja el servidor: partidas cooperativas, competitivo de Brawl Stars, charlas nocturnas y streaming de partidas.
 
