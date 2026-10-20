@@ -25,7 +25,8 @@ import math
 import random
 import asyncio
 import threading
-from datetime import datetime, timezone
+from collections import Counter
+from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Tuple, Any, Union
 
 import discord
@@ -149,6 +150,37 @@ WORK_MESSAGES = [
     "Compartiste tu playlist secreta en el canal de música y la peña admitió con resignación que tenías buen gusto.",
 ]
 
+# Textos de delitos (/crimen) inspirados en el lore del servidor
+CRIME_SUCCESS_MESSAGES = [
+    "Interceptaste un furgón blindado con cargamento de GPUs RTX 5060 camino a la torre AM5 y colocaste el botín en el mercado negro.",
+    "Falsificaste un acta de El Tribunal Gaming para cobrar los derechos de autor de los veredictos sin que los Magistrados se enteraran.",
+    "Entraste de madrugada al almacén clandestino de UnbelievaBoat y vaciaste la cámara acorazada antes de su jubilación.",
+    "Hackeaste la máquina de bebidas de la sala de voz y te llevaste un palé entero de Monster Blanco sin dejar huellas.",
+    "Organizaste una timba ilegal de ajedrez rápido con Stockfish trucado y desplumaste a tres incautos seguidos.",
+    "Desviaste un contenedor de merchandising exclusivo de manhwas en el puerto y lo vendiste a precio de coleccionista.",
+    "Clonaste la tarjeta de acceso VIP del Casino Central Sanvi y diste el cambiazo en la caja de fichas antes del relevo.",
+    "Secuestraste temporalmente el bot de música en #llamada y cobraste rescate en Porros para quitar el bucle de reggaetón.",
+    "Manipulaste las cuotas de una apuesta clandestina de Brawl Stars Ranked y te embolsaste toda la banca.",
+    "Te colaste en los servidores de Cakey Bot disfrazado de técnico de mantenimiento y saliste con los bolsillos llenos.",
+    "Vendiste pases VIP falsos para la premiere del próximo arco de Solo Leveling y desapareciste en patinete eléctrico.",
+    "Abiste la caja fuerte de la taberna del servidor con una horquilla y un clip mientras todos debatían en #general.",
+]
+
+CRIME_FAIL_MESSAGES = [
+    "Intentaste puentear la alarma del Casino Central Sanvi, pero activaste los láseres y la patrulla te confiscó la fianza.",
+    "Fuiste a vender GPUs de contrabando y el comprador resultó ser un inspector encubierto de El Tribunal Gaming.",
+    "Te quedaste dormido esperando a que abriera la bóveda del banco y te despertaron las sirenas de la redada policial.",
+    "Tropezaste con el cable Ethernet del servidor en plena huida, desconectaste el router y te atraparon en el suelo.",
+    "Intentaste sobornar al guardia de seguridad con Porros de chocolate y te cayó una multa ejemplar por desacato.",
+    "Dejaste tu cuenta de Discord abierta en el ordenador del golpe y la policía te identificó en menos de dos minutos.",
+    "La bolsa con el botín tenía un agujero, fuiste dejando un rastro de Porros hasta tu casa y te llamaron al timbre.",
+    "Intentaste hackear el cajero automático usando un script copiado sin leer y bloqueaste tu propia cuenta con multa.",
+    "El conductor de la furgoneta de escape se puso a jugar una ranked de Brawl Stars y os acorralaron en la rotonda.",
+    "Confundiste la puerta trasera de la joyería con la comisaría del barrio y entraste directo al calabozo.",
+    "Un dron de vigilancia te grabó en 4K intentando forzar la máquina expendedora de Monster Blanco.",
+    "Sonó tu micrófono abierto en mitad del golpe sigiloso y los agentes te esperaron en la salida con la receta lista.",
+]
+
 # Catálogo Oficial de la Tienda (9 Ítems)
 SHOP_ITEMS: Dict[str, Dict[str, Any]] = {
     "cartera_blindada": {
@@ -189,12 +221,12 @@ SHOP_ITEMS: Dict[str, Dict[str, Any]] = {
         "description": "Rol cosmético exclusivo de Discord en rojo casino (#E74C3C).",
         "unique": True,
     },
-    "pollo_pelea": {
-        "id": "pollo_pelea",
-        "name": "🍗 Pollo de Pelea Dopado",
+    "monster_blanco": {
+        "id": "monster_blanco",
+        "name": "🥤 Monster Blanco",
         "price": 25000,
-        "type": "item",
-        "description": "Ítem de inventario de combate para duelos de cockfight y apuestas clandestinas.",
+        "type": "consumable",
+        "description": "Bebida energética suprema. Al usarla con /usar resetea al instante tus cooldowns de /trabajar, /crimen y /robar.",
         "unique": False,
     },
     "chute_xp": {
@@ -205,8 +237,8 @@ SHOP_ITEMS: Dict[str, Dict[str, Any]] = {
         "role_id": "1549880939205623972",
         "role_name": "⚡ Chute de XP (24h)",
         "duration_hours": 24,
-        "description": "Pase temporal con boost de +5% de XP en Cakey Bot durante 24 horas.",
-        "unique": True,
+        "description": "Pase temporal con boost de +5% de XP en Cakey Bot durante 24 horas (se guarda en /inventario y se activa con /usar).",
+        "unique": False,
     },
     "pase_semanal_xp": {
         "id": "pase_semanal_xp",
@@ -216,8 +248,8 @@ SHOP_ITEMS: Dict[str, Dict[str, Any]] = {
         "role_id": "1549880941466357940",
         "role_name": "🔥 Pase Semanal de XP",
         "duration_hours": 168,
-        "description": "Pase temporal con boost de +10% de XP en Cakey Bot durante 7 días.",
-        "unique": True,
+        "description": "Pase temporal con boost de +10% de XP en Cakey Bot durante 7 días (se guarda en /inventario y se activa con /usar).",
+        "unique": False,
     },
     "pase_mensual_xp": {
         "id": "pase_mensual_xp",
@@ -227,8 +259,8 @@ SHOP_ITEMS: Dict[str, Dict[str, Any]] = {
         "role_id": "1549880942909329539",
         "role_name": "💠 Pase Mensual de XP",
         "duration_hours": 720,
-        "description": "Pase temporal con boost de +15% de XP en Cakey Bot durante 30 días.",
-        "unique": True,
+        "description": "Pase temporal con boost de +15% de XP en Cakey Bot durante 30 días (se guarda en /inventario y se activa con /usar).",
+        "unique": False,
     },
     "aura_xp": {
         "id": "aura_xp",
@@ -350,9 +382,11 @@ def ensure_user(user_id: Any, default_cash: int = DEFAULT_STARTING_CASH) -> Dict
                 "cash": default_cash,
                 "bank": DEFAULT_STARTING_BANK,
                 "last_work": None,
+                "last_crime": None,
                 "last_rob": None,
                 "last_salary": None,
                 "inventory": [],
+                "active_buffs": [],
                 "portfolio": {},
             }
             save_economy_data(data)
@@ -363,9 +397,11 @@ def ensure_user(user_id: Any, default_cash: int = DEFAULT_STARTING_CASH) -> Dict
                 ("cash", default_cash),
                 ("bank", DEFAULT_STARTING_BANK),
                 ("last_work", None),
+                ("last_crime", None),
                 ("last_rob", None),
                 ("last_salary", None),
                 ("inventory", []),
+                ("active_buffs", []),
                 ("portfolio", {}),
             ]:
                 if field not in user:
@@ -409,9 +445,11 @@ def modify_balance(
                 "cash": DEFAULT_STARTING_CASH,
                 "bank": DEFAULT_STARTING_BANK,
                 "last_work": None,
+                "last_crime": None,
                 "last_rob": None,
                 "last_salary": None,
                 "inventory": [],
+                "active_buffs": [],
                 "portfolio": {},
             }
         user = users[uid]
@@ -569,8 +607,81 @@ def transfer_funds(
         return True, "Transferencia realizada con éxito.", new_sender, new_recipient
 
 
-def can_work(user_id: Any, cooldown_seconds: int = 7200) -> Tuple[bool, float]:
-    """Comprueba si un usuario puede trabajar según su cooldown (por defecto 2 horas)."""
+LEVEL_ROLE_MULTIPLIERS = [
+    (
+        1.40,
+        "👑 +40% Bono Nivel",
+        {"1543230295770267658", "1543230392348446750", "1543230459373293718"},
+        ["mítico", "mitico", "ancestral", "supremo"],
+    ),
+    (
+        1.30,
+        "🌟 +30% Bono Nivel",
+        {"1543230221308657704"},
+        ["legendario"],
+    ),
+    (
+        1.25,
+        "⚔️ +25% Bono Nivel",
+        {"1543229770437628075", "1543230152295452833"},
+        ["élite", "elite", "maestro"],
+    ),
+    (
+        1.20,
+        "🌸 +20% Bono Nivel",
+        {"1543228972354109464", "1543229622869561477"},
+        ["experimentado", "alto rango"],
+    ),
+    (
+        1.10,
+        "🔷 +10% Bono Nivel",
+        {"1543009740001640539", "1543226107929567343"},
+        ["rango medio", "veterano"],
+    ),
+]
+
+
+def get_level_role_multiplier(
+    member: Optional[Any] = None,
+    user_roles: Optional[List[str]] = None,
+) -> Tuple[float, Optional[str]]:
+    """
+    Evalúa los roles del miembro (por nombre o ID oficial) y devuelve el multiplicador
+    más alto aplicable para /trabajar y /crimen: (multiplicador, etiqueta_bono).
+    """
+    role_ids = set()
+    role_names_lower = []
+
+    if member is not None and hasattr(member, "roles"):
+        for r in member.roles:
+            rid = str(getattr(r, "id", ""))
+            rname = str(getattr(r, "name", "")).lower()
+            if rid:
+                role_ids.add(rid)
+            if rname:
+                role_names_lower.append(rname)
+
+    if user_roles:
+        for r in user_roles:
+            r_str = str(r).strip()
+            role_ids.add(r_str)
+            role_names_lower.append(r_str.lower())
+
+    if not role_ids and not role_names_lower:
+        return 1.0, None
+
+    for mult, label, target_ids, target_kws in LEVEL_ROLE_MULTIPLIERS:
+        if role_ids & target_ids:
+            return mult, label
+        for r_name in role_names_lower:
+            if any(kw in r_name for kw in target_kws):
+                return mult, label
+
+    return 1.0, None
+
+
+def can_work(user_id: Any, cooldown_seconds: int = 14400) -> Tuple[bool, float]:
+    """Comprueba si un usuario puede trabajar según su cooldown (por defecto 4 horas = 14400s)."""
     user = ensure_user(user_id)
     last_work_str = user.get("last_work")
     if not last_work_str:
@@ -589,11 +700,13 @@ def can_work(user_id: Any, cooldown_seconds: int = 7200) -> Tuple[bool, float]:
 
 def execute_work(
     user_id: Any,
-    cooldown_seconds: int = 7200,
-    min_reward: int = 200,
-    max_reward: int = 800,
+    cooldown_seconds: int = 14400,
+    min_reward: int = 1000,
+    max_reward: int = 2500,
+    member: Optional[Any] = None,
+    user_roles: Optional[List[str]] = None,
 ) -> Tuple[bool, str, int]:
-    """Ejecuta una jornada laboral y abona la recompensa si no está en cooldown."""
+    """Ejecuta una jornada laboral y abona la recompensa con multiplicador de rol de nivel si no está en cooldown."""
     uid = str(user_id)
     with ECONOMY_LOCK:
         allowed, remaining = can_work(uid, cooldown_seconds)
@@ -613,16 +726,134 @@ def execute_work(
                 0,
             )
 
-        reward = random.randint(min_reward, max_reward)
+        base_reward = random.randint(min_reward, max_reward)
+        mult, mult_label = get_level_role_multiplier(member, user_roles)
+        reward = int(round(base_reward * mult))
         job_story = random.choice(WORK_MESSAGES)
+        if mult > 1.0 and mult_label:
+            job_story = f"{job_story}\n*(Bono aplicado: **{mult_label}** — Base: {base_reward:,} Porros)*"
 
         modify_balance(uid, cash_delta=reward)
         data = load_economy_data()
         data["users"][uid]["last_work"] = datetime.now(timezone.utc).isoformat()
+        if member is not None and hasattr(member, "name") and member.name:
+            data["users"][uid]["username"] = str(member.name)
         save_economy_data(data)
 
-        _bot_log(f"💼 [Trabajo] {uid} ganó {reward:,} Porros con: '{job_story[:40]}...'")
+        _bot_log(f"💼 [Trabajo] {uid} ganó {reward:,} Porros (x{mult}) con: '{job_story[:40]}...'")
         return True, job_story, reward
+
+
+def can_crime(user_id: Any, cooldown_seconds: int = 43200) -> Tuple[bool, float]:
+    """Comprueba si un usuario puede cometer un delito (/crimen) según su cooldown (por defecto 12 horas = 43200s)."""
+    user = ensure_user(user_id)
+    last_crime_str = user.get("last_crime")
+    if not last_crime_str:
+        return True, 0.0
+
+    try:
+        last_crime_dt = datetime.fromisoformat(last_crime_str)
+        now = datetime.now(timezone.utc)
+        elapsed = (now - last_crime_dt).total_seconds()
+        if elapsed >= cooldown_seconds:
+            return True, 0.0
+        return False, cooldown_seconds - elapsed
+    except Exception:
+        return True, 0.0
+
+
+def execute_crime(
+    user_id: Any,
+    member: Optional[Any] = None,
+    user_roles: Optional[List[str]] = None,
+    cooldown_seconds: int = 43200,
+    min_reward: int = 1800,
+    max_reward: int = 3500,
+) -> Tuple[bool, str, int]:
+    """
+    Ejecuta un delito de alto riesgo (/crimen):
+    - Cooldown por defecto: 12 horas (43.200s).
+    - 50% éxito: gana entre 1.800 y 3.500 Porros base multiplicados por el bono de rol de nivel.
+    - 50% fallo: multa del 10% del efectivo (cash) con suelo mínimo de 500 Porros (sin dejar cash negativo).
+      El 3% de la multa alimenta el server_jackpot.
+    """
+    uid = str(user_id)
+    with ECONOMY_LOCK:
+        allowed, remaining = can_crime(uid, cooldown_seconds)
+        if not allowed:
+            hours = int(remaining // 3600)
+            minutes = int((remaining % 3600) // 60)
+            seconds = int(remaining % 60)
+            if hours > 0:
+                time_str = f"**{hours}h {minutes}m**"
+            elif minutes > 0:
+                time_str = f"**{minutes}m {seconds}s**"
+            else:
+                time_str = f"**{seconds}s**"
+            return (
+                False,
+                f"⏳ La policía sigue patrullando tras tu último golpe. Tienes que esperar {time_str} para volver a usar `/crimen`.",
+                0,
+            )
+
+        now_iso = datetime.now(timezone.utc).isoformat()
+        success = random.random() < 0.50
+
+        if success:
+            base_reward = random.randint(min_reward, max_reward)
+            mult, mult_label = get_level_role_multiplier(member, user_roles)
+            reward = int(round(base_reward * mult))
+            story = random.choice(CRIME_SUCCESS_MESSAGES)
+            bonus_line = f"\n*(Bono aplicado: **{mult_label}** — Base: {base_reward:,} Porros)*" if (mult > 1.0 and mult_label) else ""
+
+            modify_balance(uid, cash_delta=reward)
+            data = load_economy_data()
+            data["users"][uid]["last_crime"] = now_iso
+            if member is not None and hasattr(member, "name") and member.name:
+                data["users"][uid]["username"] = str(member.name)
+            save_economy_data(data)
+
+            msg = (
+                f"🦹 **¡GOLPE CRIMINAL EXITOSO!**\n"
+                f"{story}{bonus_line}\n\n"
+                f"**Botín conseguido:** {PORRO_EMOJI} **+{reward:,}** Porros"
+            )
+            _bot_log(f"🦹 [Crimen Exitoso] {uid} ganó {reward:,} Porros (x{mult}).")
+            return True, msg, reward
+        else:
+            bal = get_balance(uid)
+            cash = bal["cash"]
+            fine = min(cash, max(500, int(round(cash * 0.10)))) if cash > 0 else 0
+            story = random.choice(CRIME_FAIL_MESSAGES)
+
+            if fine > 0:
+                modify_balance(uid, cash_delta=-fine)
+                jackpot_feed = max(1, int(fine * JACKPOT_FEED_PERCENT))
+                modify_server_jackpot(jackpot_feed)
+            else:
+                jackpot_feed = 0
+
+            data = load_economy_data()
+            data["users"][uid]["last_crime"] = now_iso
+            if member is not None and hasattr(member, "name") and member.name:
+                data["users"][uid]["username"] = str(member.name)
+            save_economy_data(data)
+
+            if fine > 0:
+                fine_text = (
+                    f"**Multa confiscada (10%, mín. 500):** {PORRO_EMOJI} **-{fine:,}** Porros\n"
+                    f"-# *🎰 +{jackpot_feed:,} Porros enviados al bote acumulado del servidor.*"
+                )
+            else:
+                fine_text = "**Multa:** Te pillaron sin un solo Porro encima, así que te soltaron tras pasar por el calabozo."
+
+            msg = (
+                f"🚓 **¡REDADA POLICIAL!**\n"
+                f"{story}\n\n"
+                f"{fine_text}"
+            )
+            _bot_log(f"🚓 [Crimen Fallido] {uid} perdió {fine:,} Porros de multa.")
+            return False, msg, -fine
 
 
 # ==========================================
@@ -844,14 +1075,14 @@ def build_shop_embed(user_id: Any) -> discord.Embed:
         inline=False,
     )
 
-    # 2. Ítems de Inventario
+    # 2. Ítems de Inventario y Consumibles
     embed.add_field(
-        name="🎒 Ítems de Inventario",
+        name="🎒 Ítems de Inventario y Consumibles",
         value=(
             f"• **🚬 Porro de Oro** — {PORRO_EMOJI} **75,000** Porros\n"
             f"  *Coleccionable de inventario de máximo prestigio y flexeo.*\n"
-            f"• **🍗 Pollo de Pelea Dopado** — {PORRO_EMOJI} **25,000** Porros\n"
-            f"  *Ítem de combate para duelos de cockfight y apuestas.*"
+            f"• **🥤 Monster Blanco** — {PORRO_EMOJI} **25,000** Porros\n"
+            f"  *Consumible supremo: úsalo con `/usar` para resetear al instante `/trabajar`, `/crimen` y `/robar`.*"
         ),
         inline=False,
     )
@@ -861,13 +1092,13 @@ def build_shop_embed(user_id: Any) -> discord.Embed:
         name="⚡ Pases y Bonos de Experiencia (XP)",
         value=(
             f"• **⚡ Chute de XP (24h)** — {PORRO_EMOJI} **15,000** Porros\n"
-            f"  *Boost temporal de +5% de XP en Cakey Bot durante 24 horas.*\n"
+            f"  *Boost temporal de +5% de XP en Cakey Bot durante 24h (se guarda en `/inventario` y se activa con `/usar`).*\n"
             f"• **🔥 Pase Semanal de XP** — {PORRO_EMOJI} **75,000** Porros\n"
-            f"  *Boost temporal de +10% de XP en Cakey Bot durante 7 días.*\n"
+            f"  *Boost temporal de +10% de XP en Cakey Bot durante 7 días (se guarda en `/inventario` y se activa con `/usar`).*\n"
             f"• **💠 Pase Mensual de XP** — {PORRO_EMOJI} **250,000** Porros\n"
-            f"  *Boost temporal de +15% de XP en Cakey Bot durante 30 días.*\n"
+            f"  *Boost temporal de +15% de XP en Cakey Bot durante 30 días (se guarda en `/inventario` y se activa con `/usar`).*\n"
             f"• **👑 Aura de XP Permanente** — {PORRO_EMOJI} **1,000,000** Porros\n"
-            f"  *Pase perpetuo élite con boost de +10% de XP permanente.*"
+            f"  *Pase perpetuo élite con boost de +10% de XP permanente (se asigna al instante).*"
         ),
         inline=False,
     )
@@ -908,27 +1139,27 @@ class ShopItemSelect(discord.ui.Select):
                 emoji="🎰",
             ),
             discord.SelectOption(
-                label="🍗 Pollo de Pelea Dopado (25k)",
-                value="pollo_pelea",
-                description="25.000 Porros • Duelos de combate",
-                emoji="🍗",
+                label="🥤 Monster Blanco (25k)",
+                value="monster_blanco",
+                description="25.000 Porros • Resetea trabajar, crimen y robar",
+                emoji="🥤",
             ),
             discord.SelectOption(
                 label="⚡ Chute de XP 24h (15k)",
                 value="chute_xp",
-                description="15.000 Porros • Boost +5% XP por 24h",
+                description="15.000 Porros • Boost +5% XP por 24h (activar con /usar)",
                 emoji="⚡",
             ),
             discord.SelectOption(
                 label="🔥 Pase Semanal de XP (75k)",
                 value="pase_semanal_xp",
-                description="75.000 Porros • Boost +10% XP por 7d",
+                description="75.000 Porros • Boost +10% XP por 7d (activar con /usar)",
                 emoji="🔥",
             ),
             discord.SelectOption(
                 label="💠 Pase Mensual de XP (250k)",
                 value="pase_mensual_xp",
-                description="250.000 Porros • Boost +15% XP por 30d",
+                description="250.000 Porros • Boost +15% XP por 30d (activar con /usar)",
                 emoji="💠",
             ),
             discord.SelectOption(
@@ -1020,9 +1251,17 @@ class ShopInteractiveView(discord.ui.View):
             await interaction.response.send_message(msg, ephemeral=True)
             return
 
-        # Auto-asignación de rol si es de tipo 'role'
+        # Auto-asignación de rol solo para roles permanentes (sin duration_hours)
         role_added = False
-        if item_data and item_data.get("type") == "role" and hasattr(interaction.user, "add_roles"):
+        is_temp_or_consumable = bool(
+            item_data and (item_data.get("duration_hours") or item_data.get("type") == "consumable")
+        )
+        if (
+            item_data
+            and item_data.get("type") == "role"
+            and not item_data.get("duration_hours")
+            and hasattr(interaction.user, "add_roles")
+        ):
             role_id_str = item_data.get("role_id")
             if role_id_str and interaction.guild:
                 role = interaction.guild.get_role(int(role_id_str))
@@ -1044,11 +1283,20 @@ class ShopInteractiveView(discord.ui.View):
         )
         if role_added:
             confirm_embed.add_field(
-                name="🎭 Rol Asignado",
+                name="🎭 Rol Permanente Asignado",
                 value=f"¡El rol `{item_data['name']}` ha sido añadido a tu perfil de Discord!",
                 inline=False,
             )
-        confirm_embed.set_footer(text="Gracias por tu compra • Consulta tu inventario con /balance")
+        elif is_temp_or_consumable:
+            confirm_embed.add_field(
+                name="🎒 Guardado en tu Inventario",
+                value=(
+                    f"**{item_data['name']}** se ha guardado en tu `/inventario`.\n"
+                    f"✨ Cuando quieras activarlo o consumirlo, ejecuta **`/usar`**."
+                ),
+                inline=False,
+            )
+        confirm_embed.set_footer(text="Gracias por tu compra • Consulta tus objetos con /inventario")
 
         await interaction.response.send_message(embed=confirm_embed, ephemeral=True)
 
@@ -1068,6 +1316,631 @@ class ShopInteractiveView(discord.ui.View):
                 await self.message.edit(view=self)
             except Exception:
                 pass
+
+
+# ==========================================
+# INVENTARIO, /USAR Y EXPIRACIÓN DE BUFFOS
+# ==========================================
+
+USABLE_ITEM_KEYS = ("monster_blanco", "chute_xp", "pase_semanal_xp", "pase_mensual_xp")
+
+
+def use_inventory_item(
+    user_id: Any,
+    item_key: str,
+) -> Tuple[bool, str, Optional[Dict[str, Any]]]:
+    """
+    Consume un artículo activable del inventario del usuario (/usar):
+    - 'monster_blanco': elimina 1 unidad y resetea last_work, last_crime y last_rob.
+    - Pases temporales de XP ('chute_xp', 'pase_semanal_xp', 'pase_mensual_xp'):
+      elimina 1 unidad y registra/extiende su entrada en user['active_buffs'].
+    """
+    uid = str(user_id)
+    key_clean = item_key.strip().lower()
+
+    matched_item = None
+    for k in USABLE_ITEM_KEYS:
+        it = SHOP_ITEMS.get(k)
+        if not it:
+            continue
+        if k == key_clean or it["name"].lower() == key_clean or k in key_clean:
+            matched_item = it
+            break
+
+    if not matched_item:
+        return (
+            False,
+            f"❌ El artículo '{item_key}' no es un consumible ni un pase activable con `/usar`.",
+            None,
+        )
+
+    item_id = matched_item["id"]
+    item_name = matched_item["name"]
+
+    with ECONOMY_LOCK:
+        user = ensure_user(uid)
+        inv = user.setdefault("inventory", [])
+        if item_name not in inv:
+            return (
+                False,
+                f"❌ No tienes **{item_name}** en tu `/inventario`. Puedes adquirirlo en `/tienda`.",
+                None,
+            )
+
+        # Consumir 1 unidad
+        inv.remove(item_name)
+        now = datetime.now(timezone.utc)
+
+        if item_id == "monster_blanco":
+            user["last_work"] = None
+            user["last_crime"] = None
+            user["last_rob"] = None
+            data = load_economy_data()
+            save_economy_data(data)
+            msg = (
+                "🥤 ¡Te has tomado un **Monster Blanco** bien frío!\n"
+                "⚡ Tus tiempos de espera de **`/trabajar`**, **`/crimen`** y **`/robar`** han quedado **a cero** al instante."
+            )
+            _bot_log(f"🥤 [Usar] {uid} consumió Monster Blanco y reseteó sus cooldowns.")
+            return True, msg, matched_item
+
+        duration_hours = int(matched_item.get("duration_hours", 0))
+        role_id = matched_item.get("role_id")
+        active_buffs = user.setdefault("active_buffs", [])
+
+        existing_buff = None
+        for b in active_buffs:
+            if b.get("item_id") == item_id:
+                existing_buff = b
+                break
+
+        if existing_buff:
+            try:
+                curr_exp = datetime.fromisoformat(existing_buff["expires_at"])
+                if curr_exp > now:
+                    new_exp = curr_exp + timedelta(hours=duration_hours)
+                    extended = True
+                else:
+                    new_exp = now + timedelta(hours=duration_hours)
+                    extended = False
+            except Exception:
+                new_exp = now + timedelta(hours=duration_hours)
+                extended = False
+            existing_buff["expires_at"] = new_exp.isoformat()
+            existing_buff["name"] = item_name
+            existing_buff["role_id"] = role_id
+        else:
+            new_exp = now + timedelta(hours=duration_hours)
+            extended = False
+            active_buffs.append({
+                "item_id": item_id,
+                "name": item_name,
+                "role_id": role_id,
+                "activated_at": now.isoformat(),
+                "expires_at": new_exp.isoformat(),
+            })
+
+        data = load_economy_data()
+        save_economy_data(data)
+
+        total_rem_hours = max(1, int(round((new_exp - now).total_seconds() / 3600)))
+        if extended:
+            msg = (
+                f"⚡ ¡Has extendido tu **{item_name}** por **+{duration_hours}h** adicionales!\n"
+                f"⏳ **Duración total restante:** ~**{total_rem_hours} horas**."
+            )
+        else:
+            msg = (
+                f"✨ ¡Has activado **{item_name}** desde tu inventario!\n"
+                f"⏳ **Duración activa:** **{duration_hours} horas**."
+            )
+        _bot_log(f"⚡ [Usar] {uid} activó '{item_name}' hasta {new_exp.isoformat()}.")
+        return True, msg, matched_item
+
+
+def check_and_expire_buffs(now_dt: Optional[datetime] = None) -> List[Dict[str, Any]]:
+    """
+    Recorre los usuarios en datos/economia.json, detecta pases temporales de XP cuya
+    fecha expires_at haya vencido (<= now_dt), los elimina de active_buffs y devuelve
+    la lista de buffs expirados para retirar sus roles en Discord.
+    """
+    now = now_dt or datetime.now(timezone.utc)
+    expired_list: List[Dict[str, Any]] = []
+
+    with ECONOMY_LOCK:
+        data = load_economy_data()
+        users = data.get("users", {})
+        modified = False
+
+        for uid, udata in users.items():
+            buffs = udata.get("active_buffs")
+            if not buffs or not isinstance(buffs, list):
+                continue
+
+            kept_buffs = []
+            for b in buffs:
+                exp_str = b.get("expires_at")
+                if not exp_str:
+                    modified = True
+                    continue
+                try:
+                    exp_dt = datetime.fromisoformat(exp_str)
+                    if exp_dt.tzinfo is None:
+                        exp_dt = exp_dt.replace(tzinfo=timezone.utc)
+                except Exception:
+                    modified = True
+                    continue
+
+                if exp_dt <= now:
+                    expired_list.append({
+                        "user_id": str(uid),
+                        "item_id": b.get("item_id"),
+                        "role_id": b.get("role_id"),
+                        "name": b.get("name"),
+                        "expires_at": exp_str,
+                    })
+                    modified = True
+                else:
+                    kept_buffs.append(b)
+
+            if len(kept_buffs) != len(buffs):
+                udata["active_buffs"] = kept_buffs
+                modified = True
+
+        if modified:
+            save_economy_data(data)
+
+    return expired_list
+
+
+def _format_remaining_time(expires_at_str: str, now: Optional[datetime] = None) -> str:
+    now_dt = now or datetime.now(timezone.utc)
+    try:
+        exp_dt = datetime.fromisoformat(expires_at_str)
+        if exp_dt.tzinfo is None:
+            exp_dt = exp_dt.replace(tzinfo=timezone.utc)
+        rem_sec = max(0, int((exp_dt - now_dt).total_seconds()))
+        days = rem_sec // 86400
+        hours = (rem_sec % 86400) // 3600
+        mins = (rem_sec % 3600) // 60
+        if days > 0:
+            return f"{days}d {hours}h restantes"
+        if hours > 0:
+            return f"{hours}h {mins}m restantes"
+        return f"{mins}m restantes"
+    except Exception:
+        return "Tiempo desconocido"
+
+
+def build_inventory_embed(
+    user_id: Any,
+    display_name: str,
+    avatar_url: Optional[str] = None,
+) -> discord.Embed:
+    """Construye el embed de /inventario detallando objetos agrupados, roles permanentes y pases XP activos."""
+    check_and_expire_buffs()
+    user = ensure_user(user_id)
+    bal = get_balance(user_id)
+    inv = user.get("inventory", [])
+    active_buffs = user.get("active_buffs", [])
+
+    counts = Counter(inv)
+    perm_role_names = {
+        it["name"]
+        for it in SHOP_ITEMS.values()
+        if it.get("type") == "role" and not it.get("duration_hours")
+    }
+    usable_names = {
+        SHOP_ITEMS[k]["name"]
+        for k in USABLE_ITEM_KEYS
+        if k in SHOP_ITEMS
+    }
+
+    perm_owned = []
+    usable_owned = []
+    collectibles_owned = []
+
+    for item_name, qty in counts.items():
+        qty_str = f" **×{qty}**" if qty > 1 else ""
+        if item_name in perm_role_names:
+            perm_owned.append(f"• {item_name}")
+        elif item_name in usable_names:
+            usable_owned.append(f"• {item_name}{qty_str} *(usable con `/usar`)*")
+        else:
+            collectibles_owned.append(f"• {item_name}{qty_str}")
+
+    embed = discord.Embed(
+        title=f"🎒 Inventario y Pases de {display_name}",
+        description=(
+            f"💵 **Efectivo:** {PORRO_EMOJI} **{bal['cash']:,}** | "
+            f"🏦 **Banco:** {PORRO_EMOJI} **{bal['bank']:,}** | "
+            f"💎 **Total:** {PORRO_EMOJI} **{bal['total']:,}**"
+        ),
+        color=0x9B59B6,
+        timestamp=datetime.now(timezone.utc),
+    )
+    if avatar_url:
+        embed.set_thumbnail(url=avatar_url)
+
+    embed.add_field(
+        name="🎭 Roles Permanentes Adquiridos",
+        value="\n".join(perm_owned) if perm_owned else "*Ningún rol permanente en propiedad.*",
+        inline=False,
+    )
+    embed.add_field(
+        name="🧪 Consumibles y Pases Listos para `/usar`",
+        value="\n".join(usable_owned) if usable_owned else "*No tienes consumibles ni pases pendientes de activar.*",
+        inline=False,
+    )
+    embed.add_field(
+        name="🏆 Coleccionables y Trofeos",
+        value="\n".join(collectibles_owned) if collectibles_owned else "*Sin coleccionables en la vitrina.*",
+        inline=False,
+    )
+
+    now = datetime.now(timezone.utc)
+    if active_buffs:
+        buff_lines = []
+        for b in active_buffs:
+            b_name = b.get("name", b.get("item_id", "Pase XP"))
+            rem_str = _format_remaining_time(b.get("expires_at", ""), now)
+            buff_lines.append(f"• **{b_name}** — ⏳ `{rem_str}`")
+        buff_val = "\n".join(buff_lines)
+    else:
+        buff_val = "*Ningún pase temporal de XP activo en este momento.*"
+
+    embed.add_field(
+        name="⚡ Pases Temporales de XP Activos",
+        value=buff_val,
+        inline=False,
+    )
+    embed.set_footer(text="Usa /tienda para comprar artículos y /usar para activar consumibles o pases XP")
+    return embed
+
+
+class InventoryView(discord.ui.View):
+    """Vista interactiva efímera de /inventario con botón para presumir el inventario en público."""
+
+    def __init__(
+        self,
+        author_id: Any,
+        target_id: Any,
+        target_display_name: str,
+        target_avatar_url: Optional[str] = None,
+        timeout: float = 120.0,
+    ):
+        super().__init__(timeout=timeout)
+        self.author_id = int(author_id)
+        self.target_id = int(target_id)
+        self.target_display_name = target_display_name
+        self.target_avatar_url = target_avatar_url
+
+    @discord.ui.button(
+        label="📢 Mostrar en público",
+        style=discord.ButtonStyle.primary,
+        custom_id="inventory:show_public",
+    )
+    async def show_public_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.author_id:
+            await interaction.response.send_message(
+                "❌ Solo quien consultó este inventario puede publicarlo.",
+                ephemeral=True,
+            )
+            return
+
+        button.disabled = True
+        button.label = "✅ Mostrado en público"
+        pub_embed = build_inventory_embed(
+            self.target_id,
+            self.target_display_name,
+            self.target_avatar_url,
+        )
+        await interaction.response.edit_message(view=self)
+        await interaction.followup.send(
+            content=f"📢 **{interaction.user.display_name}** ha compartido el inventario de **{self.target_display_name}**:",
+            embed=pub_embed,
+            ephemeral=False,
+        )
+
+
+# ==========================================
+# CLASIFICACIÓN DE RIQUEZA (/RANKING)
+# ==========================================
+
+def get_economy_leaderboard(sort_by: str = "total", limit: int = 10) -> List[Dict[str, Any]]:
+    """
+    Devuelve la clasificación de usuarios ordenada de mayor a menor según:
+    - 'total' (cash + bank)
+    - 'cash' (efectivo)
+    - 'bank' (banco)
+    """
+    field = sort_by.strip().lower()
+    if field not in ("total", "cash", "bank"):
+        field = "total"
+
+    with ECONOMY_LOCK:
+        data = load_economy_data()
+        users = data.get("users", {})
+        entries: List[Dict[str, Any]] = []
+        for uid, udata in users.items():
+            cash = int(udata.get("cash", 0))
+            bank = int(udata.get("bank", 0))
+            total = cash + bank
+            entries.append({
+                "user_id": str(uid),
+                "username": udata.get("username"),
+                "cash": cash,
+                "bank": bank,
+                "total": total,
+            })
+
+    entries.sort(key=lambda x: (x[field], x["total"], x["cash"]), reverse=True)
+    for idx, item in enumerate(entries, start=1):
+        item["rank"] = idx
+
+    if limit and limit > 0:
+        return entries[:limit]
+    return entries
+
+
+def build_ranking_embed(
+    sort_by: str = "total",
+    requester_id: Optional[Any] = None,
+    guild: Optional[discord.Guild] = None,
+) -> discord.Embed:
+    """Construye el embed público de /ranking con el Top 10 y la posición del solicitante."""
+    field = sort_by.strip().lower()
+    if field not in ("total", "cash", "bank"):
+        field = "total"
+
+    all_entries = get_economy_leaderboard(sort_by=field, limit=0)
+    top_entries = all_entries[:10]
+
+    titles = {
+        "total": "🏆 Clasificación de Riqueza — 💎 Patrimonio Total",
+        "cash": "🏆 Clasificación de Riqueza — 💵 Efectivo en Mano",
+        "bank": "🏆 Clasificación de Riqueza — 🏦 Cámara Bancaria",
+    }
+    colors = {
+        "total": 0xF1C40F,
+        "cash": 0x2ECC71,
+        "bank": 0x3498DB,
+    }
+
+    medals = {1: "🥇", 2: "🥈", 3: "🥉"}
+    lines = []
+
+    for entry in top_entries:
+        rank = entry["rank"]
+        uid_str = entry["user_id"]
+        medal = medals.get(rank, f"`#{rank:02d}`")
+
+        display_label = None
+        if guild is not None:
+            try:
+                member = guild.get_member(int(uid_str))
+                if member:
+                    display_label = f"**{member.display_name}** (`@{member.name}`)"
+            except Exception:
+                pass
+        if not display_label:
+            uname = entry.get("username")
+            display_label = f"**@{uname}**" if uname else f"<@{uid_str}>"
+
+        if field == "total":
+            val_str = f"{PORRO_EMOJI} **{entry['total']:,}** *(💵 {entry['cash']:,} | 🏦 {entry['bank']:,})*"
+        elif field == "cash":
+            val_str = f"{PORRO_EMOJI} **{entry['cash']:,}** en efectivo *(💎 Total: {entry['total']:,})*"
+        else:
+            val_str = f"{PORRO_EMOJI} **{entry['bank']:,}** en banco *(💎 Total: {entry['total']:,})*"
+
+        lines.append(f"{medal} {display_label} — {val_str}")
+
+    desc = "\n".join(lines) if lines else "*Todavía no hay usuarios registrados en la economía.*"
+    jackpot = get_server_jackpot()
+
+    embed = discord.Embed(
+        title=titles[field],
+        description=(
+            f"🎰 **Bote Progresivo del Servidor:** {PORRO_EMOJI} **{jackpot:,}** Porros\n\n"
+            f"{desc}"
+        ),
+        color=colors[field],
+        timestamp=datetime.now(timezone.utc),
+    )
+
+    if requester_id is not None:
+        req_uid = str(requester_id)
+        req_entry = next((e for e in all_entries if e["user_id"] == req_uid), None)
+        if req_entry:
+            embed.set_footer(
+                text=(
+                    f"Tu posición: #{req_entry['rank']} de {len(all_entries)} • "
+                    f"Total: {req_entry['total']:,} Porros (Efectivo: {req_entry['cash']:,} | Banco: {req_entry['bank']:,})"
+                )
+            )
+        else:
+            embed.set_footer(text=f"Total de participantes registrados: {len(all_entries)}")
+    else:
+        embed.set_footer(text=f"Total de participantes registrados: {len(all_entries)}")
+
+    return embed
+
+
+class RankingCategorySelect(discord.ui.Select):
+    """Selector interactivo para cambiar la categoría del ranking en vivo."""
+
+    def __init__(self, current_sort: str = "total"):
+        options = [
+            discord.SelectOption(
+                label="💎 Patrimonio Total (Efectivo + Banco)",
+                value="total",
+                description="Los miembros más ricos del servidor en total",
+                emoji="💎",
+                default=(current_sort == "total"),
+            ),
+            discord.SelectOption(
+                label="💵 Efectivo en Mano (Cash)",
+                value="cash",
+                description="Quienes llevan más Porros sueltos encima (¡atracables!)",
+                emoji="💵",
+                default=(current_sort == "cash"),
+            ),
+            discord.SelectOption(
+                label="🏦 Saldo en el Banco (Bank)",
+                value="bank",
+                description="Las mayores fortunas protegidas en cámara acorazada",
+                emoji="🏦",
+                default=(current_sort == "bank"),
+            ),
+        ]
+        super().__init__(
+            placeholder="📊 Cambiar categoría del ranking...",
+            min_values=1,
+            max_values=1,
+            options=options,
+            row=0,
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        view: "RankingView" = self.view
+        selected_sort = self.values[0]
+        view.sort_by = selected_sort
+        for opt in self.options:
+            opt.default = (opt.value == selected_sort)
+
+        embed = build_ranking_embed(
+            sort_by=selected_sort,
+            requester_id=interaction.user.id,
+            guild=interaction.guild,
+        )
+        await interaction.response.edit_message(embed=embed, view=view)
+
+
+class RankingView(discord.ui.View):
+    """Vista interactiva pública de /ranking."""
+
+    def __init__(self, author_id: Optional[Any] = None, sort_by: str = "total", timeout: float = 180.0):
+        super().__init__(timeout=timeout)
+        self.author_id = int(author_id) if author_id is not None else None
+        self.sort_by = sort_by
+        self.message: Optional[discord.Message] = None
+        self.select_menu = RankingCategorySelect(current_sort=sort_by)
+        self.add_item(self.select_menu)
+
+    async def on_timeout(self):
+        for item in self.children:
+            item.disabled = True
+        if self.message:
+            try:
+                await self.message.edit(view=self)
+            except Exception:
+                pass
+
+
+# ==========================================
+# PANEL FINANCIERO DE ADMINISTRACIÓN (/ADMIN_DINERO)
+# ==========================================
+
+def _normalize_target_field(target_field: str) -> str:
+    tf = str(target_field).strip().lower()
+    if tf in ("bank", "banco"):
+        return "bank"
+    return "cash"
+
+
+def admin_modify_money(
+    target_user_id: Any,
+    action: str,
+    amount: int,
+    target_field: str = "cash",
+    username: Optional[str] = None,
+) -> Tuple[bool, str, Dict[str, int]]:
+    """
+    Ejecuta una operación administrativa ('dar', 'quitar', 'fijar') sobre el saldo
+    de efectivo ('cash') o banco ('bank') de un miembro.
+    """
+    act = str(action).strip().lower()
+    field = _normalize_target_field(target_field)
+    field_label = "Efectivo (Cash)" if field == "cash" else "Banco (Bank)"
+    uid = str(target_user_id)
+
+    if act not in ("dar", "quitar", "fijar"):
+        return False, f"❌ Acción administrativa inválida: '{action}'. Usa 'dar', 'quitar' o 'fijar'.", get_balance(uid)
+
+    if act in ("dar", "quitar") and amount <= 0:
+        return False, "❌ Para dar o quitar Porros, la cantidad debe ser un entero mayor que 0.", get_balance(uid)
+
+    if act == "fijar" and amount < 0:
+        return False, "❌ No se puede fijar un saldo negativo.", get_balance(uid)
+
+    with ECONOMY_LOCK:
+        user = ensure_user(uid)
+        if username:
+            user["username"] = str(username)
+
+        current_val = int(user.get(field, 0))
+        if act == "dar":
+            new_val = current_val + int(amount)
+            verb_desc = f"Se han añadido {PORRO_EMOJI} **+{amount:,}** Porros a **{field_label}**."
+        elif act == "quitar":
+            new_val = max(0, current_val - int(amount))
+            removed = current_val - new_val
+            verb_desc = f"Se han retirado {PORRO_EMOJI} **-{removed:,}** Porros de **{field_label}**."
+        else:  # fijar
+            new_val = int(amount)
+            verb_desc = f"Se ha fijado el saldo de **{field_label}** en {PORRO_EMOJI} **{new_val:,}** Porros."
+
+        user[field] = new_val
+        data = load_economy_data()
+        save_economy_data(data)
+        new_bal = get_balance(uid)
+
+    _bot_log(f"🛠️ [Admin Dinero] acción={act} usuario={uid} campo={field} cantidad={amount} -> nuevo={new_val}")
+    return True, verb_desc, new_bal
+
+
+def admin_airdrop_role(
+    targets: List[Tuple[Any, Optional[str]]],
+    amount: int,
+    target_field: str = "cash",
+    role_name: str = "Rol",
+) -> Tuple[bool, str, int]:
+    """
+    Reparte 'amount' Porros a todos los miembros humanos incluidos en 'targets' [(user_id, username), ...].
+    Devuelve (éxito, mensaje, número_de_beneficiarios).
+    """
+    if amount <= 0:
+        return False, "❌ La cantidad del airdrop debe ser mayor que 0 Porros.", 0
+
+    if not targets:
+        return False, f"❌ No se encontraron miembros humanos con el rol **{role_name}**.", 0
+
+    field = _normalize_target_field(target_field)
+    field_label = "Efectivo (Cash)" if field == "cash" else "Banco (Bank)"
+
+    with ECONOMY_LOCK:
+        count = 0
+        for uid_raw, uname in targets:
+            uid = str(uid_raw)
+            user = ensure_user(uid)
+            if uname:
+                user["username"] = str(uname)
+            user[field] = int(user.get(field, 0)) + int(amount)
+            count += 1
+
+        data = load_economy_data()
+        save_economy_data(data)
+
+    total_distributed = count * int(amount)
+    msg = (
+        f"🪂 **¡AIRDROP COMPLETADO!**\n"
+        f"Se han repartido {PORRO_EMOJI} **+{amount:,}** Porros en **{field_label}** a **{count} miembros** "
+        f"con el rol **{role_name}**.\n"
+        f"💰 **Masa monetaria inyectada:** {PORRO_EMOJI} **{total_distributed:,}** Porros."
+    )
+    _bot_log(f"🪂 [Admin Airdrop] +{amount:,} Porros ({field}) a {count} miembros del rol '{role_name}'.")
+    return True, msg, count
 
 
 # ==========================================

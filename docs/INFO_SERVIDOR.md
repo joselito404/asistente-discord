@@ -199,14 +199,19 @@
      - `/tribunal [accion] [juego]`: Consulta de base de datos oficial de El Tribunal Gaming.
      - `/xp`: Calculadora de experiencia y mensajes estimados hacia niveles meta.
 
-### 2. UnbelievaBoat (Economía Oficial de Porros, Casino y Tienda)
-- **ID de Aplicación**: `292953664492929025` | **Moneda Oficial**: `<:Porro:1535685303317172305>` **Porros** (Balance inicial: 1.000).
+### 2. Economia Asistente (Economía Oficial Nativa de Porros, Casino y Tienda — Sustitución de UnbelievaBoat)
+- **ID de Aplicación**: `1561751626681679966` (Bot `Economia Asistente`, 19 Comandos Slash) | **Moneda Oficial**: `<:Porro:1535685303317172305>` **Porros** (Balance inicial: 1.000). *(UnbelievaBoat `292953664492929025` en fase final de retirada tras migración 1:1 de saldos)*.
+- **Banca, Ranking y Administración**:
+  - `/balance [usuario]`: Consulta de efectivo, banco, patrimonio total y bote acumulado (`server_jackpot`).
+  - `/depositar <cantidad|all>` y `/retirar <cantidad|all>`: Gestión bancaria protegida contra robos.
+  - `/transferir <usuario> <cantidad>`: Pagos instantáneos P2P sin comisiones.
+  - `/ranking`: Tabla de clasificación pública interactiva con selector en vivo (`💎 Patrimonio Total`, `💵 Efectivo`, `🏦 Banco`).
+  - `/admin_dinero`: Panel exclusivo de Administradores (`dar`, `quitar`, `fijar` y `airdrop` masivo por rol).
 - **Generación Activa y Cooldowns**:
-  - `/work` (cada 4 horas): Trabajo honrado (1.000 a 2.500 porros).
-  - `/slut` (cada 4 horas): Dinero rápido callejero con riesgo de multa fija.
-  - `/crime` (cada 12 horas): Delito de alto riesgo (1.800 a 3.500 porros, 45-50% probabilidad de multa fija).
-  - `/rob <usuario>`: Atraco a carteras (bloqueado por banco y por el rol `🛡️ Cartera Blindada`).
-- **Salarios Diarios Acumulativos por Rol (`/collect-income` cada 24 horas)**:
+  - `/trabajar` (cada 4 horas): Trabajo honrado con historias del lore del servidor (`1.000 a 2.500` porros base + multiplicador por rol de nivel de `+10%` a `+40%`).
+  - `/crimen` (cada 12 horas): Delito de alto riesgo (50% éxito con `1.800 a 3.500` porros base + multiplicador de nivel; 50% fallo con multa del 10% del efectivo, mín. 500 porros, destinando el 3% al bote del servidor).
+  - `/robar <usuario>` (cada 2 horas): Atraco a carteras (50% éxito robando 20-50% del efectivo; bloqueado al 100% por banco y por `🛡️ Cartera Blindada` con multa del 15%).
+- **Salarios Diarios Acumulativos por Rol (`/salario` con decaimiento diario del 5%, asíntota $20\times$)**:
   - Nivel 10 (`🔷 Rango Medio`): +2.000 /día (Acumulado: 2.000)
   - Nivel 20 (`🔮 Veterano`): +2.000 /día (Acumulado: 4.000)
   - Nivel 30 (`🌸 Experimentado`): +3.000 /día (Acumulado: 7.000)
@@ -218,20 +223,19 @@
   - Nivel 90 (`🔱 Ancestral`): +28.000 /día (Acumulado: 90.000)
   - Nivel 100 (`💠 Supremo`): +40.000 /día (Acumulado: 130.000)
   - Podio de Actividad: `🥉Top 3🥉` (+3.000), `🥈Top 2🥈` (+5.000), `🥇Top 1🥇` (+8.000).
-- **Juegos de Casino Oficiales en `#🎰casino-y-apuestas🎰` y `#🎰casino-y-apuestas-2🎰`**:
-  - Cooldown: 4 partidas cada 5 minutos por usuario.
-  - Apuestas: Mínima 100 | Máxima: Sin límite (¡All-in permitido!).
-  - Catálogo: Blackjack interactivo con botones, Ruleta europea, Tragaperras personalizadas con iconos del servidor, Ruleta Rusa, Peleas de gallos (`/cockfight`) y Mayor o Menor.
-- **Catálogo Oficial de la Tienda en `#🏪tienda-y-mercado🏪` (9 Ítems Activos)**:
-  1. `🛡️ Cartera Blindada` (50.000 porros): Rol permanente que otorga inmunidad absoluta al comando `/rob`.
+- **Juegos de Casino Oficiales en `#🎰casino-y-apuestas🎰` y `#🎰casino-y-apuestas-2🎰` (`/casino`)**:
+  - Apuestas: Mínima 100 | Máxima: Sin límite (¡All-in permitido!). El 3% de pérdidas netas alimenta el `server_jackpot`.
+  - Catálogo Nativo: Tragaperras 5x3 (`/slots`, 7 líneas, RTP 110.03%, Free Spins y Jackpot), Blackjack 21 (`/blackjack`, `/bj`, 6 barajas, S17, pago 3:2), Ruleta Europea (`/ruleta`, 37 casillas, 13 suertes), Coinflip Dual (`/coinflip`, PvE y duelos PvP 1v1) y Centro de Control (`/casino`).
+- **Catálogo Oficial de la Tienda (`/tienda`), Inventario (`/inventario`) y Uso (`/usar`) (9 Ítems Activos)**:
+  1. `🛡️ Cartera Blindada` (50.000 porros): Rol permanente auto-asignado que otorga inmunidad absoluta al comando `/robar`.
   2. `🚬 Porro de Oro` (75.000 porros): Coleccionable de inventario de máximo flexeo.
-  3. `🚬 Camello del Barrio` (85.000 porros): Rol cosmético verde porro (`#2ECC71`).
-  4. `🎰 Ludópata Rehabilitado` (40.000 porros): Rol cosmético rojo casino (`#E74C3C`).
-  5. `🍗 Pollo de Pelea Dopado` (25.000 porros): Ítem de inventario para cockfights.
-  6. `⚡ Chute de XP (24h)` (15.000 porros): Pase temporal con boost de +5% de XP en Cakey Bot (1 día).
-  7. `🔥 Pase Semanal de XP` (75.000 porros): Pase temporal con boost de +10% de XP en Cakey Bot (7 días).
-  8. `💠 Pase Mensual de XP` (250.000 porros): Pase temporal con boost de +15% de XP en Cakey Bot (30 días).
-  9. `👑 Aura de XP Permanente` (1.000.000 porros): Pase permanente con boost de +10% de XP perpetuo.
+  3. `🚬 Camello del Barrio` (85.000 porros): Rol cosmético permanente verde porro (`#2ECC71`).
+  4. `🎰 Ludópata Rehabilitado` (40.000 porros): Rol cosmético permanente rojo casino (`#E74C3C`).
+  5. `🥤 Monster Blanco` (25.000 porros): Consumible acumulable que al activarse con `/usar` resetea al instante los cooldowns de `/trabajar`, `/crimen` y `/robar`.
+  6. `⚡ Chute de XP (24h)` (15.000 porros): Pase temporal almacenable en `/inventario` (activable con `/usar`) con boost de +5% de XP durante 24 horas y expiración automática por watcher.
+  7. `🔥 Pase Semanal de XP` (75.000 porros): Pase temporal almacenable en `/inventario` (activable con `/usar`) con boost de +10% de XP durante 7 días.
+  8. `💠 Pase Mensual de XP` (250.000 porros): Pase temporal almacenable en `/inventario` (activable con `/usar`) con boost de +15% de XP durante 30 días.
+  9. `👑 Aura de XP Permanente` (1.000.000 porros): Pase permanente auto-asignado con boost de +10% de XP perpetuo.
 
 ### 3. Cakey Bot (Niveles y Progresión)
 - **ID de Aplicación**: `288163958022471680`.

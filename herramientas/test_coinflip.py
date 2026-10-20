@@ -522,8 +522,8 @@ def run_tests():
         ]:
             assert hasattr(bot_service, attr), f"bot_service debe reexportar {attr}"
 
-        assert len(ECONOMY_SLASH_COMMANDS) == 14, f"Debe haber 14 comandos de economía, hay {len(ECONOMY_SLASH_COMMANDS)}"
-        assert len(ALL_SLASH_COMMANDS) == 36, f"Debe haber 36 comandos en total, hay {len(ALL_SLASH_COMMANDS)}"
+        assert len(ECONOMY_SLASH_COMMANDS) == 19, f"Debe haber 19 comandos de economía, hay {len(ECONOMY_SLASH_COMMANDS)}"
+        assert len(ALL_SLASH_COMMANDS) == 41, f"Debe haber 41 comandos en total, hay {len(ALL_SLASH_COMMANDS)}"
         print("  ✅ TEST 11 PASADO: Registro de /coinflip y reexportación en bot_service confirmada.")
 
         print("\n" + "=" * 70)

@@ -1,6 +1,6 @@
 """
 Módulo de Comandos Slash Nativos para los bots 'Asistente' y 'Economia Asistente' en Discord:
-Contiene los 35 comandos interactivos oficiales (@app_commands.command) divididos en Runner Dual:
+Contiene los 41 comandos interactivos oficiales (@app_commands.command) divididos en Runner Dual:
 - Comandos Generales del Asistente (22):
   * Multimedia y Arte: /dibuja, /musica
   * Gaming y Catálogo: /steam, /tribunal
@@ -8,8 +8,8 @@ Contiene los 35 comandos interactivos oficiales (@app_commands.command) dividido
   * Voz Neuronal y Gemini Live: /habla, /geminilive, /cambiar_voz, /unete, /desconecta, /para_audio
   * Minijuegos del Servidor: /trivial, /ranking_trivial, /tres_en_raya, /conecta4, /ajedrez
   * Moderación y Reemplazo de Carl-bot: /autoroles, /sugerencia
-- Comandos de Economía y Casino de Economia Asistente (13):
-  * Economía de Porros y Casino: /slots, /balance, /trabajar, /transferir, /depositar, /retirar, /robar, /tienda, /salario, /blackjack, /bj, /ruleta, /coinflip
+- Comandos de Economía y Casino de Economia Asistente (19):
+  * Economía de Porros y Casino: /slots, /balance, /trabajar, /transferir, /depositar, /retirar, /robar, /tienda, /salario, /blackjack, /bj, /ruleta, /coinflip, /casino, /crimen, /ranking, /inventario, /usar, /admin_dinero
 """
 
 import os
@@ -1243,11 +1243,12 @@ async def cmd_balance(interaction: discord.Interaction, usuario: Optional[discor
     await interaction.response.send_message(embed=embed, ephemeral=is_ephemeral)
 
 
-@app_commands.command(name="trabajar", description="Trabaja en el servidor para conseguir Porros (cooldown de 2 horas)")
+@app_commands.command(name="trabajar", description="Trabaja en el servidor para conseguir Porros con bono por rol de nivel (cooldown de 4 horas)")
 async def cmd_trabajar(interaction: discord.Interaction):
     from modulos.economia import execute_work, get_balance, PORRO_EMOJI
 
-    ok, job_story, reward = execute_work(interaction.user.id)
+    member = interaction.user if isinstance(interaction.user, discord.Member) else interaction.user
+    ok, job_story, reward = execute_work(interaction.user.id, member=member)
     if not ok:
         await interaction.response.send_message(job_story, ephemeral=True)
         return
@@ -1263,7 +1264,7 @@ async def cmd_trabajar(interaction: discord.Interaction):
         name=f"{interaction.user.display_name} (@{interaction.user.name})",
         icon_url=str(interaction.user.display_avatar.url) if hasattr(interaction.user, "display_avatar") else None,
     )
-    embed.set_footer(text="Vuelve en 2 horas para volver a trabajar • /trabajar")
+    embed.set_footer(text="Vuelve en 4 horas para volver a trabajar (o usa un 🥤 Monster Blanco) • /trabajar")
     await interaction.response.send_message(embed=embed)
 
 
@@ -1831,6 +1832,250 @@ async def cmd_casino(interaction: discord.Interaction):
         pass
 
 
+@app_commands.command(
+    name="crimen",
+    description="Comete un delito de alto riesgo en el servidor (50% éxito, cooldown de 12 horas)",
+)
+async def cmd_crimen(interaction: discord.Interaction):
+    from modulos.economia import execute_crime, get_balance, PORRO_EMOJI
+
+    member = interaction.user if isinstance(interaction.user, discord.Member) else interaction.user
+    ok, msg, delta = execute_crime(interaction.user.id, member=member)
+
+    if not ok and delta == 0 and msg.startswith("⏳"):
+        await interaction.response.send_message(msg, ephemeral=True)
+        return
+
+    bal = get_balance(interaction.user.id)
+    color = 0x2ECC71 if ok else 0xE74C3C
+    title = "🦹 Golpe Criminal Completado" if ok else "🚓 Redada Policial — Delito Frustrado"
+
+    embed = discord.Embed(
+        title=title,
+        description=(
+            f"{msg}\n\n"
+            f"**Saldo actual en efectivo:** {PORRO_EMOJI} **{bal['cash']:,}** Porros"
+        ),
+        color=color,
+        timestamp=datetime.now(timezone.utc),
+    )
+    embed.set_author(
+        name=f"{interaction.user.display_name} (@{interaction.user.name})",
+        icon_url=str(interaction.user.display_avatar.url) if hasattr(interaction.user, "display_avatar") and interaction.user.display_avatar else None,
+    )
+    embed.set_footer(text="Cooldown de 12 horas (o resetea al instante con /usar 🥤 Monster Blanco) • /crimen")
+    await interaction.response.send_message(embed=embed)
+
+
+@app_commands.command(
+    name="ranking",
+    description="Muestra el Top 10 de miembros más ricos del servidor (Patrimonio Total, Efectivo y Banco)",
+)
+async def cmd_ranking(interaction: discord.Interaction):
+    from modulos.economia import build_ranking_embed, RankingView
+
+    embed = build_ranking_embed(
+        sort_by="total",
+        requester_id=interaction.user.id,
+        guild=interaction.guild,
+    )
+    view = RankingView(author_id=interaction.user.id, sort_by="total")
+    await interaction.response.send_message(embed=embed, view=view, ephemeral=False)
+    try:
+        view.message = await interaction.original_response()
+    except Exception:
+        pass
+
+
+@app_commands.command(
+    name="inventario",
+    description="Consulta tus artículos, consumibles, roles permanentes y pases de XP activos",
+)
+@app_commands.describe(
+    usuario="Miembro cuyo inventario deseas consultar (opcional, por defecto tú)"
+)
+async def cmd_inventario(interaction: discord.Interaction, usuario: Optional[discord.Member] = None):
+    from modulos.economia import build_inventory_embed, InventoryView
+
+    target = usuario or interaction.user
+    avatar_url = (
+        str(target.display_avatar.url)
+        if hasattr(target, "display_avatar") and target.display_avatar
+        else None
+    )
+    embed = build_inventory_embed(target.id, target.display_name, avatar_url)
+    view = InventoryView(
+        author_id=interaction.user.id,
+        target_id=target.id,
+        target_display_name=target.display_name,
+        target_avatar_url=avatar_url,
+    )
+    await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+
+
+@app_commands.command(
+    name="usar",
+    description="Consume un artículo o activa un pase temporal de XP guardado en tu /inventario",
+)
+@app_commands.describe(
+    articulo="Elige el artículo o pase de tu inventario que quieres usar ahora mismo"
+)
+@app_commands.choices(
+    articulo=[
+        app_commands.Choice(name="🥤 Monster Blanco (Resetea /trabajar, /crimen y /robar)", value="monster_blanco"),
+        app_commands.Choice(name="⚡ Chute de XP (24h — Boost +5% XP)", value="chute_xp"),
+        app_commands.Choice(name="🔥 Pase Semanal de XP (7 días — Boost +10% XP)", value="pase_semanal_xp"),
+        app_commands.Choice(name="💠 Pase Mensual de XP (30 días — Boost +15% XP)", value="pase_mensual_xp"),
+    ]
+)
+async def cmd_usar(interaction: discord.Interaction, articulo: str):
+    from modulos.economia import use_inventory_item
+
+    ok, msg, item_data = use_inventory_item(interaction.user.id, articulo)
+    if not ok:
+        await interaction.response.send_message(msg, ephemeral=True)
+        return
+
+    role_assigned = False
+    if item_data and item_data.get("role_id") and interaction.guild and hasattr(interaction.user, "add_roles"):
+        role = interaction.guild.get_role(int(item_data["role_id"]))
+        if role:
+            try:
+                await interaction.user.add_roles(role, reason=f"Activación de {item_data['name']} con /usar")
+                role_assigned = True
+            except Exception as e:
+                _bot_log(f"Aviso asignando rol temporal en /usar: {e}")
+
+    embed = discord.Embed(
+        title=f"✨ Artículo Utilizado: {item_data['name']}",
+        description=msg,
+        color=0x2ECC71,
+        timestamp=datetime.now(timezone.utc),
+    )
+    if role_assigned:
+        embed.add_field(
+            name="🎭 Rol de Boost Activado",
+            value=f"Se te ha asignado el rol **{item_data['name']}** en el servidor durante el periodo activo.",
+            inline=False,
+        )
+    embed.set_footer(text="Consulta el tiempo restante de tus pases con /inventario")
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
+@app_commands.command(
+    name="admin_dinero",
+    description="[ADMIN] Panel financiero para dar, quitar, fijar Porros o lanzar un Airdrop por rol",
+)
+@app_commands.default_permissions(administrator=True)
+@app_commands.describe(
+    accion="Operación a realizar (dar, quitar, fijar o airdrop a un rol)",
+    cantidad="Cantidad de Porros (entero positivo, o >= 0 para fijar)",
+    destino="Dónde aplicar la operación: Efectivo (Cash) o Banco (Bank)",
+    usuario="Miembro objetivo (obligatorio para dar, quitar y fijar)",
+    rol="Rol objetivo (obligatorio para airdrop masivo)",
+)
+@app_commands.choices(
+    accion=[
+        app_commands.Choice(name="➕ Dar Porros a un miembro", value="dar"),
+        app_commands.Choice(name="➖ Quitar Porros a un miembro", value="quitar"),
+        app_commands.Choice(name="🎯 Fijar saldo exacto a un miembro", value="fijar"),
+        app_commands.Choice(name="🪂 Airdrop masivo a todos los miembros de un rol", value="airdrop"),
+    ],
+    destino=[
+        app_commands.Choice(name="💵 Efectivo (Cash)", value="cash"),
+        app_commands.Choice(name="🏦 Banco (Bank)", value="bank"),
+    ],
+)
+async def cmd_admin_dinero(
+    interaction: discord.Interaction,
+    accion: str,
+    cantidad: int,
+    destino: str = "cash",
+    usuario: Optional[discord.Member] = None,
+    rol: Optional[discord.Role] = None,
+):
+    from modulos.economia import admin_modify_money, admin_airdrop_role, PORRO_EMOJI
+
+    # Verificación estricta de permisos de Administrador
+    is_admin = bool(
+        getattr(interaction.user, "guild_permissions", None)
+        and interaction.user.guild_permissions.administrator
+    )
+    if not is_admin:
+        await interaction.response.send_message(
+            "⛔ No tienes permisos de **Administrador** para ejecutar este comando financiero.",
+            ephemeral=True,
+        )
+        return
+
+    act = accion.strip().lower()
+    if act == "airdrop":
+        if rol is None:
+            await interaction.response.send_message(
+                "❌ Para ejecutar un **Airdrop**, debes especificar el parámetro `rol`.",
+                ephemeral=True,
+            )
+            return
+
+        human_members = [
+            (m.id, getattr(m, "name", None))
+            for m in getattr(rol, "members", [])
+            if not getattr(m, "bot", False)
+        ]
+        ok, msg, count = admin_airdrop_role(
+            targets=human_members,
+            amount=cantidad,
+            target_field=destino,
+            role_name=rol.name,
+        )
+        if not ok:
+            await interaction.response.send_message(msg, ephemeral=True)
+            return
+
+        embed = discord.Embed(
+            title="🪂 Airdrop Administrativo Ejecutado",
+            description=msg,
+            color=0xF1C40F,
+            timestamp=datetime.now(timezone.utc),
+        )
+        embed.set_footer(text=f"Ejecutado por {interaction.user.display_name}")
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        return
+
+    # Operaciones individuales: dar, quitar, fijar
+    if usuario is None:
+        await interaction.response.send_message(
+            f"❌ Para la acción **{act}**, debes indicar el parámetro `usuario`.",
+            ephemeral=True,
+        )
+        return
+
+    ok, msg, new_bal = admin_modify_money(
+        target_user_id=usuario.id,
+        action=act,
+        amount=cantidad,
+        target_field=destino,
+        username=getattr(usuario, "name", None),
+    )
+    if not ok:
+        await interaction.response.send_message(msg, ephemeral=True)
+        return
+
+    embed = discord.Embed(
+        title=f"🛠️ Ajuste Financiero — {usuario.display_name}",
+        description=(
+            f"{msg}\n\n"
+            f"• 💵 **Nuevo Efectivo:** {PORRO_EMOJI} **{new_bal['cash']:,}** Porros\n"
+            f"• 🏦 **Nuevo Banco:** {PORRO_EMOJI} **{new_bal['bank']:,}** Porros\n"
+            f"• 💎 **Patrimonio Total:** {PORRO_EMOJI} **{new_bal['total']:,}** Porros"
+        ),
+        color=0x3498DB,
+        timestamp=datetime.now(timezone.utc),
+    )
+    embed.set_footer(text=f"Operación '{act}' ejecutada por {interaction.user.display_name}")
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
 # ==========================================
 # LISTAS DE COMANDOS SLASH (RUNNER DUAL)
 # ==========================================
@@ -1861,7 +2106,7 @@ GENERAL_SLASH_COMMANDS = [
     cmd_sugerencia,
 ]
 
-# 14 Comandos de Economía y Casino para el Bot 'Economia Asistente'
+# 19 Comandos de Economía y Casino para el Bot 'Economia Asistente'
 ECONOMY_SLASH_COMMANDS = [
     cmd_slots,
     cmd_balance,
@@ -1877,9 +2122,14 @@ ECONOMY_SLASH_COMMANDS = [
     cmd_ruleta,
     cmd_coinflip,
     cmd_casino,
+    cmd_crimen,
+    cmd_ranking,
+    cmd_inventario,
+    cmd_usar,
+    cmd_admin_dinero,
 ]
 
-# Total de 36 comandos para retrocompatibilidad total
+# Total de 41 comandos para retrocompatibilidad total
 ALL_SLASH_COMMANDS = GENERAL_SLASH_COMMANDS + ECONOMY_SLASH_COMMANDS
 
 
@@ -1895,7 +2145,7 @@ def register_general_commands(tree: app_commands.CommandTree):
 
 
 def register_economy_commands(tree: app_commands.CommandTree):
-    """Registra los 14 comandos slash de economía en el árbol del bot Economia Asistente."""
+    """Registra los 19 comandos slash de economía en el árbol del bot Economia Asistente."""
     for cmd in ECONOMY_SLASH_COMMANDS:
         try:
             tree.add_command(cmd)

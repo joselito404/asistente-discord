@@ -106,26 +106,26 @@ def run_tests():
             pass
         print("  ✅ TEST 2 PASADO: Inicialización y validación estricta de saldo.")
 
-        # TEST 3: Sistema de trabajo (/trabajar) y cooldown
-        print("\n[TEST 3] Sistema de trabajo (/trabajar) y cooldown...")
+        # TEST 3: Sistema de trabajo (/trabajar), multiplicadores y cooldown de 4h
+        print("\n[TEST 3] Sistema de trabajo (/trabajar) recalibrado (1.000-2.500, 4h cooldown)...")
         uid2 = "100000000000000002"
-        can_w, rem = eco.can_work(uid2, cooldown_seconds=7200)
+        can_w, rem = eco.can_work(uid2)
         assert can_w is True, "El usuario nuevo debe poder trabajar"
         assert rem == 0.0, "El tiempo restante debe ser 0"
 
-        ok_work, story, reward = eco.execute_work(uid2, cooldown_seconds=7200, min_reward=200, max_reward=800)
+        ok_work, story, reward = eco.execute_work(uid2)
         assert ok_work is True, "El trabajo debería haberse completado"
-        assert 200 <= reward <= 800, f"Recompensa fuera de rango: {reward}"
+        assert 1000 <= reward <= 2500, f"Recompensa fuera de rango oficial (1000-2500): {reward}"
         assert len(story) > 10, "La historia de trabajo es demasiado corta"
 
         bal2 = eco.get_balance(uid2)
         assert bal2["cash"] == 1000 + reward, f"Cash no coincide tras trabajar: {bal2['cash']}"
 
-        ok_work2, story2, reward2 = eco.execute_work(uid2, cooldown_seconds=7200)
+        ok_work2, story2, reward2 = eco.execute_work(uid2)
         assert ok_work2 is False, "El segundo trabajo inmediato debe ser rechazado"
         assert "esperar" in story2.lower(), f"Mensaje de cooldown inesperado: {story2}"
         assert reward2 == 0, "No debe haber recompensa durante cooldown"
-        print("  ✅ TEST 3 PASADO: Jornada laboral, historias cómicas y cooldown validados.")
+        print("  ✅ TEST 3 PASADO: Jornada laboral recalibrada (1.000-2.500 Porros, 4h cooldown) validada.")
 
         # TEST 4: Transferencias de fondos entre usuarios
         print("\n[TEST 4] Transferencias entre usuarios...")
@@ -215,18 +215,22 @@ def run_tests():
         print("  ✅ TEST 6 PASADO: Robo (/robar), blindaje absoluto y multas del 15% validados.")
 
         # TEST 7: Catálogo de Tienda V2 y compras de artículos
-        print("\n[TEST 7] Catálogo de Tienda V2 (9 artículos) y compras...")
+        print("\n[TEST 7] Catálogo de Tienda V2 (9 artículos con Monster Blanco) y compras...")
         catalog = eco.get_shop_catalog()
         assert len(catalog) == 9, f"Se esperaban 9 artículos en la tienda, encontrados: {len(catalog)}"
         assert "cartera_blindada" in catalog
         assert "porro_oro" in catalog
         assert "camello_barrio" in catalog
         assert "ludopata_rehabilitado" in catalog
-        assert "pollo_pelea" in catalog
+        assert "monster_blanco" in catalog
+        assert "pollo_pelea" not in catalog
         assert "chute_xp" in catalog
         assert "pase_semanal_xp" in catalog
         assert "pase_mensual_xp" in catalog
         assert "aura_xp" in catalog
+        assert catalog["chute_xp"]["unique"] is False
+        assert catalog["pase_semanal_xp"]["unique"] is False
+        assert catalog["pase_mensual_xp"]["unique"] is False
 
         uid_buyer = "100000000000000009"
         eco.ensure_user(uid_buyer, default_cash=100000)
@@ -517,12 +521,16 @@ def run_tests():
 
         # TEST 17: Comprobación de la arquitectura Dual Runner y Slash Commands
         print("\n[TEST 17] Comprobación de la arquitectura Dual Runner y Slash Commands...")
-        assert len(ALL_SLASH_COMMANDS) == 36, f"Se esperaban 36 comandos, encontrados: {len(ALL_SLASH_COMMANDS)}"
+        assert len(ALL_SLASH_COMMANDS) == 41, f"Se esperaban 41 comandos, encontrados: {len(ALL_SLASH_COMMANDS)}"
         assert len(GENERAL_SLASH_COMMANDS) == 22, f"Se esperaban 22 comandos generales, encontrados: {len(GENERAL_SLASH_COMMANDS)}"
-        assert len(ECONOMY_SLASH_COMMANDS) == 14, f"Se esperaban 14 comandos de economía, encontrados: {len(ECONOMY_SLASH_COMMANDS)}"
+        assert len(ECONOMY_SLASH_COMMANDS) == 19, f"Se esperaban 19 comandos de economía, encontrados: {len(ECONOMY_SLASH_COMMANDS)}"
 
         eco_cmd_names = [c.name for c in ECONOMY_SLASH_COMMANDS]
-        for expected in ["slots", "balance", "trabajar", "transferir", "depositar", "retirar", "robar", "tienda", "salario", "blackjack", "bj", "ruleta", "coinflip", "casino"]:
+        for expected in [
+            "slots", "balance", "trabajar", "transferir", "depositar", "retirar",
+            "robar", "tienda", "salario", "blackjack", "bj", "ruleta", "coinflip",
+            "casino", "crimen", "ranking", "inventario", "usar", "admin_dinero"
+        ]:
             assert expected in eco_cmd_names, f"Comando /{expected} no está en ECONOMY_SLASH_COMMANDS"
 
         import bot_service
@@ -532,19 +540,24 @@ def run_tests():
             "cmd_slots", "cmd_balance", "cmd_trabajar", "cmd_transferir",
             "cmd_depositar", "cmd_retirar", "cmd_robar", "cmd_tienda", "cmd_salario",
             "cmd_blackjack", "cmd_bj", "cmd_ruleta", "cmd_coinflip", "cmd_casino",
+            "cmd_crimen", "cmd_ranking", "cmd_inventario", "cmd_usar", "cmd_admin_dinero",
             "deposit_cash", "withdraw_cash", "execute_rob", "buy_shop_item", "claim_salary", "SlotEngine",
             "ShopInteractiveView", "build_shop_embed",
             "BlackjackHand", "BlackjackEngine", "BlackjackView",
             "RouletteEngine", "RouletteActionView",
             "CoinflipEngine", "CoinflipActionView", "CoinflipChallengeView",
-            "CasinoHubView", "build_casino_hub_embed"
+            "CasinoHubView", "build_casino_hub_embed",
+            "get_level_role_multiplier", "can_crime", "execute_crime",
+            "use_inventory_item", "check_and_expire_buffs", "build_inventory_embed", "InventoryView",
+            "get_economy_leaderboard", "build_ranking_embed", "RankingView",
+            "admin_modify_money", "admin_airdrop_role",
         ]:
             assert hasattr(bot_service, expected_attr), f"bot_service no tiene {expected_attr}"
 
         tree_cmds = [c.name for c in bot_service.tree.get_commands()]
         economy_tree_cmds = [c.name for c in bot_service.economy_tree.get_commands()]
         assert len(tree_cmds) == 22, f"Se esperaban 22 comandos en tree de Asistente, encontrados: {len(tree_cmds)}"
-        assert len(economy_tree_cmds) == 14, f"Se esperaban 14 comandos en economy_tree, encontrados: {len(economy_tree_cmds)}"
+        assert len(economy_tree_cmds) == 19, f"Se esperaban 19 comandos en economy_tree, encontrados: {len(economy_tree_cmds)}"
         assert "slots" not in tree_cmds, "slots no debería estar en el árbol general de Asistente"
         assert "blackjack" not in tree_cmds, "blackjack no debería estar en el árbol general de Asistente"
         assert "ruleta" not in tree_cmds, "ruleta no debería estar en el árbol general de Asistente"
@@ -556,7 +569,12 @@ def run_tests():
         assert "ruleta" in economy_tree_cmds, "ruleta debe estar en el árbol de economía"
         assert "coinflip" in economy_tree_cmds, "coinflip debe estar en el árbol de economía"
         assert "casino" in economy_tree_cmds, "casino debe estar en el árbol de economía"
-        print("  ✅ TEST 17 PASADO: Arquitectura Dual Runner validada (Asistente: 22 cmds | Economia Asistente: 14 cmds).")
+        assert "crimen" in economy_tree_cmds, "crimen debe estar en el árbol de economía"
+        assert "ranking" in economy_tree_cmds, "ranking debe estar en el árbol de economía"
+        assert "inventario" in economy_tree_cmds, "inventario debe estar en el árbol de economía"
+        assert "usar" in economy_tree_cmds, "usar debe estar en el árbol de economía"
+        assert "admin_dinero" in economy_tree_cmds, "admin_dinero debe estar en el árbol de economía"
+        print("  ✅ TEST 17 PASADO: Arquitectura Dual Runner validada (Asistente: 22 cmds | Economia Asistente: 19 cmds).")
 
         # TEST 18: Simulación Monte Carlo calibrada a RTP 110.0% (+/- 0.5%)
         print("\n[TEST 18] Simulación Monte Carlo (100.000 tiradas calibradas a RTP 110.0%)...")
@@ -574,8 +592,171 @@ def run_tests():
         assert sim_res["free_spins_played"] > 6000, "Free spins no se jugaron adecuadamente"
         print(f"  ✅ TEST 18 PASADO: Simulación Monte Carlo 5x3 validada con RTP={rtp}% (~110.0%) y HitRate={win_rate}%.")
 
+        # TEST 19: Multiplicadores por Rol de Nivel (get_level_role_multiplier)
+        print("\n[TEST 19] Multiplicadores por Rol de Nivel (get_level_role_multiplier)...")
+        assert eco.get_level_role_multiplier(user_roles=[])[0] == 1.0
+        assert eco.get_level_role_multiplier(user_roles=["Pendejo de Rango Medio"])[0] == 1.10
+        assert eco.get_level_role_multiplier(user_roles=["1543228972354109464"])[0] == 1.20
+        assert eco.get_level_role_multiplier(user_roles=["Pendejo de Élite", "Pendejo de Rango Medio"])[0] == 1.25
+        assert eco.get_level_role_multiplier(user_roles=["Pendejo Legendario"])[0] == 1.30
+        assert eco.get_level_role_multiplier(user_roles=["Pendejo Mítico", "Pendejo de Élite"])[0] == 1.40
+
+        uid_work_mult = "100000000000000119"
+        eco.ensure_user(uid_work_mult, default_cash=0)
+        ok_wm, story_wm, rew_wm = eco.execute_work(
+            uid_work_mult,
+            cooldown_seconds=0,
+            min_reward=1000,
+            max_reward=1000,
+            user_roles=["Pendejo Legendario"],
+        )
+        assert ok_wm is True
+        assert rew_wm == 1300, f"1000 * 1.30 debe ser 1300, obtenido {rew_wm}"
+        assert "+30%" in story_wm
+        print("  ✅ TEST 19 PASADO: Multiplicadores por Rol de Nivel (+10% a +40%) validados.")
+
+        # TEST 20: Sistema de Delitos (/crimen: can_crime y execute_crime)
+        print("\n[TEST 20] Sistema de Delitos (/crimen: éxito, fallo con multa 10% mín 500, cooldown 12h)...")
+        uid_crim = "100000000000000120"
+        eco.ensure_user(uid_crim, default_cash=10000)
+
+        # Forzar éxito con seed o probando ambos caminos
+        ok_c1, msg_c1, delta_c1 = eco.execute_crime(
+            uid_crim,
+            user_roles=["Pendejo Experimentado"],  # x1.20
+            cooldown_seconds=43200,
+            min_reward=2000,
+            max_reward=2000,
+        )
+        # Cooldown activo inmediato
+        can_c_after, rem_c = eco.can_crime(uid_crim, cooldown_seconds=43200)
+        assert can_c_after is False and rem_c > 43000
+        ok_c_cool, msg_c_cool, delta_c_cool = eco.execute_crime(uid_crim, cooldown_seconds=43200)
+        assert ok_c_cool is False and delta_c_cool == 0 and "⏳" in msg_c_cool
+
+        # Probar fallo con usuario con poco dinero (300 Porros -> pierde 300 y queda en 0, nunca negativo)
+        uid_crim_poor = "100000000000000121"
+        for _ in range(30):
+            eco.ensure_user(uid_crim_poor, default_cash=300)
+            data_tmp = eco.load_economy_data()
+            data_tmp["users"][uid_crim_poor]["cash"] = 300
+            data_tmp["users"][uid_crim_poor]["last_crime"] = None
+            eco.save_economy_data(data_tmp)
+            ok_cp, msg_cp, delta_cp = eco.execute_crime(uid_crim_poor, cooldown_seconds=0)
+            if not ok_cp:
+                assert delta_cp == -300, f"Con 300 Porros la multa debe ser 300 (sin negativo), obtenido {delta_cp}"
+                assert eco.get_balance(uid_crim_poor)["cash"] == 0
+                break
+        else:
+            assert False, "No se produjo ningún fallo en 30 intentos de /crimen"
+
+        # Probar fallo con usuario con 10.000 Porros -> multa 10% = 1.000 Porros y 3% (30) al jackpot
+        uid_crim_rich = "100000000000000122"
+        jp_before_crime = eco.get_server_jackpot()
+        for _ in range(30):
+            eco.ensure_user(uid_crim_rich, default_cash=10000)
+            data_tmp = eco.load_economy_data()
+            data_tmp["users"][uid_crim_rich]["cash"] = 10000
+            data_tmp["users"][uid_crim_rich]["last_crime"] = None
+            eco.save_economy_data(data_tmp)
+            ok_cr, msg_cr, delta_cr = eco.execute_crime(uid_crim_rich, cooldown_seconds=0)
+            if not ok_cr:
+                assert delta_cr == -1000, f"10% de 10.000 debe ser -1000, obtenido {delta_cr}"
+                assert eco.get_balance(uid_crim_rich)["cash"] == 9000
+                assert eco.get_server_jackpot() >= jp_before_crime + 30
+                break
+        print("  ✅ TEST 20 PASADO: /crimen (éxito, multa 10% mín 500 sin negativo, bote y cooldown 12h) validado.")
+
+        # TEST 21: /inventario, /usar (Monster Blanco + Pases XP) y Watcher de Expiración
+        print("\n[TEST 21] /inventario, /usar (Monster Blanco y Pases XP) y check_and_expire_buffs...")
+        uid_inv = "100000000000000123"
+        eco.ensure_user(uid_inv, default_cash=200000)
+
+        # Comprar Monster Blanco (25.000) y 2 Chutes de XP (2 x 15.000)
+        ok_mb, _, _, _ = eco.buy_shop_item(uid_inv, "monster_blanco")
+        assert ok_mb is True
+        ok_xp1, _, _, _ = eco.buy_shop_item(uid_inv, "chute_xp")
+        ok_xp2, _, _, _ = eco.buy_shop_item(uid_inv, "chute_xp")
+        assert ok_xp1 is True and ok_xp2 is True
+
+        # Poner al usuario en cooldown de trabajar, crimen y robar
+        data_cd = eco.load_economy_data()
+        now_iso = datetime.now(timezone.utc).isoformat()
+        data_cd["users"][uid_inv]["last_work"] = now_iso
+        data_cd["users"][uid_inv]["last_crime"] = now_iso
+        data_cd["users"][uid_inv]["last_rob"] = now_iso
+        eco.save_economy_data(data_cd)
+        assert eco.can_work(uid_inv)[0] is False
+        assert eco.can_crime(uid_inv)[0] is False
+        assert eco.can_rob(uid_inv)[0] is False
+
+        # Usar Monster Blanco -> resetea los 3 cooldowns al instante
+        ok_use_mb, msg_use_mb, it_mb = eco.use_inventory_item(uid_inv, "monster_blanco")
+        assert ok_use_mb is True and it_mb["id"] == "monster_blanco"
+        assert eco.can_work(uid_inv)[0] is True
+        assert eco.can_crime(uid_inv)[0] is True
+        assert eco.can_rob(uid_inv)[0] is True
+
+        # Usar primer Chute de XP (24h) y luego el segundo (extiende a ~48h)
+        ok_u1, msg_u1, it_u1 = eco.use_inventory_item(uid_inv, "chute_xp")
+        assert ok_u1 is True and it_u1["role_id"] == "1549880939205623972"
+        ok_u2, msg_u2, _ = eco.use_inventory_item(uid_inv, "chute_xp")
+        assert ok_u2 is True and "extendido" in msg_u2.lower()
+
+        inv_embed = eco.build_inventory_embed(uid_inv, "TesterInv")
+        assert "TesterInv" in inv_embed.title
+        assert len(inv_embed.fields) == 4
+
+        # Simular expiración pasando una fecha futura (+50 horas) a check_and_expire_buffs
+        from datetime import timedelta
+        future_dt = datetime.now(timezone.utc) + timedelta(hours=50)
+        expired = eco.check_and_expire_buffs(now_dt=future_dt)
+        assert any(e["user_id"] == uid_inv and e["item_id"] == "chute_xp" for e in expired)
+        assert len(eco.get_user_economy(uid_inv)["active_buffs"]) == 0
+        print("  ✅ TEST 21 PASADO: /inventario, /usar (Monster Blanco + Pases XP) y expiración automática validados.")
+
+        # TEST 22: Clasificación de Riqueza (/ranking)
+        print("\n[TEST 22] Clasificación de Riqueza (/ranking: total, cash, bank)...")
+        lb_total = eco.get_economy_leaderboard(sort_by="total", limit=5)
+        lb_cash = eco.get_economy_leaderboard(sort_by="cash", limit=5)
+        lb_bank = eco.get_economy_leaderboard(sort_by="bank", limit=5)
+        assert len(lb_total) > 0 and lb_total[0]["rank"] == 1
+        assert lb_total[0]["total"] >= lb_total[-1]["total"]
+        assert lb_cash[0]["cash"] >= lb_cash[-1]["cash"]
+        assert lb_bank[0]["bank"] >= lb_bank[-1]["bank"]
+
+        rk_embed = eco.build_ranking_embed(sort_by="total", requester_id=uid_inv)
+        assert "Clasificación de Riqueza" in rk_embed.title
+        rk_view = eco.RankingView(author_id=uid_inv, sort_by="total")
+        assert len(rk_view.children) == 1
+        print("  ✅ TEST 22 PASADO: /ranking (leaderboard y vista interactiva) validado.")
+
+        # TEST 23: Panel Financiero de Administración (/admin_dinero)
+        print("\n[TEST 23] Panel Financiero de Administración (dar, quitar, fijar, airdrop)...")
+        uid_adm = "100000000000000124"
+        eco.ensure_user(uid_adm, default_cash=1000)
+
+        ok_dar, _, b_dar = eco.admin_modify_money(uid_adm, "dar", 5000, target_field="cash", username="adm_test")
+        assert ok_dar is True and b_dar["cash"] == 6000
+
+        ok_quitar, _, b_quitar = eco.admin_modify_money(uid_adm, "quitar", 2000, target_field="cash")
+        assert ok_quitar is True and b_quitar["cash"] == 4000
+
+        ok_fijar, _, b_fijar = eco.admin_modify_money(uid_adm, "fijar", 25000, target_field="bank")
+        assert ok_fijar is True and b_fijar["bank"] == 25000 and b_fijar["total"] == 29000
+
+        ok_air, msg_air, cnt_air = eco.admin_airdrop_role(
+            targets=[(uid_adm, "adm_test"), (uid_inv, "inv_test")],
+            amount=3000,
+            target_field="cash",
+            role_name="Rol VIP",
+        )
+        assert ok_air is True and cnt_air == 2
+        assert eco.get_balance(uid_adm)["cash"] == 7000
+        print("  ✅ TEST 23 PASADO: /admin_dinero (dar, quitar, fijar y airdrop) validado.")
+
         print("\n" + "=" * 65)
-        print("🎉 TODOS LOS 18 TESTS DE ECONOMÍA Y TRAGAPERRAS 5X3 PASARON CON ÉXITO (100%)")
+        print("🎉 TODOS LOS 23 TESTS DE ECONOMÍA Y TRAGAPERRAS 5X3 PASARON CON ÉXITO (100%)")
         print("=" * 65)
 
     finally:

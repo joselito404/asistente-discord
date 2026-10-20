@@ -343,6 +343,18 @@ from modulos.economia import (
     build_coinflip_embed,
     CasinoHubView,
     build_casino_hub_embed,
+    get_level_role_multiplier,
+    can_crime,
+    execute_crime,
+    use_inventory_item,
+    check_and_expire_buffs,
+    build_inventory_embed,
+    InventoryView,
+    get_economy_leaderboard,
+    build_ranking_embed,
+    RankingView,
+    admin_modify_money,
+    admin_airdrop_role,
 )
 
 from modulos.comandos import (
@@ -388,6 +400,11 @@ from modulos.comandos import (
     cmd_ruleta,
     cmd_coinflip,
     cmd_casino,
+    cmd_crimen,
+    cmd_ranking,
+    cmd_inventario,
+    cmd_usar,
+    cmd_admin_dinero,
 )
 
 # Registrar comandos en sus árboles correspondientes (Dual Runner)
@@ -580,20 +597,69 @@ async def on_interaction(interaction: discord.Interaction):
 # EVENTOS DEL BOT DE ECONOMÍA (ECONOMIA ASISTENTE)
 # ==========================================
 
+_XP_WATCHER_STARTED = False
+
+
 @economy_bot.event
 async def on_ready():
+    global _XP_WATCHER_STARTED
     GUILD_ID = 1446143936891715616
     guild_obj = discord.Object(id=GUILD_ID)
     try:
         economy_tree.copy_global_to(guild=guild_obj)
         await economy_tree.sync(guild=guild_obj)
         bot_log(f"Bot de Economía '{economy_bot.user}' conectado y listo en Discord.")
-        bot_log(f"Comandos de Economía (14) sincronizados limpiamente en el servidor ID {GUILD_ID}.")
+        bot_log(f"Comandos de Economía (19) sincronizados limpiamente en el servidor ID {GUILD_ID}.")
     except Exception as e:
         bot_log(f"Aviso sincronización comandos de economía: {e}")
 
     activity = discord.Activity(type=discord.ActivityType.watching, name="Casino y Porros (/slots)")
     await economy_bot.change_presence(activity=activity)
+
+    async def _xp_passes_expiration_watcher():
+        await asyncio.sleep(10.0)
+        while not economy_bot.is_closed():
+            try:
+                expired_buffs = check_and_expire_buffs()
+                if expired_buffs:
+                    guild = economy_bot.get_guild(GUILD_ID) or bot.get_guild(GUILD_ID)
+                    for exp in expired_buffs:
+                        uid_str = exp.get("user_id")
+                        role_id_str = exp.get("role_id")
+                        b_name = exp.get("name", "Pase XP")
+                        if not uid_str or not role_id_str or not guild:
+                            continue
+                        # Comprobar si el usuario sigue teniendo otro buff activo con el mismo role_id
+                        udata = get_user_economy(uid_str)
+                        still_has_role_buff = any(
+                            str(b.get("role_id")) == str(role_id_str)
+                            for b in udata.get("active_buffs", [])
+                        )
+                        if still_has_role_buff:
+                            continue
+                        role = guild.get_role(int(role_id_str))
+                        member = guild.get_member(int(uid_str))
+                        if not member:
+                            try:
+                                member = await guild.fetch_member(int(uid_str))
+                            except Exception:
+                                member = None
+                        if role and member and role in getattr(member, "roles", []):
+                            try:
+                                await member.remove_roles(
+                                    role,
+                                    reason=f"Expiración automática del pase temporal '{b_name}'",
+                                )
+                                bot_log(f"⏳ [XP Watcher] Rol '{role.name}' retirado a {member.display_name} ({uid_str}) por vencimiento.")
+                            except Exception as ex_rm:
+                                bot_log(f"Aviso retirando rol expirado {role.name} a {uid_str}: {ex_rm}")
+            except Exception as e_watch:
+                bot_log(f"Aviso en _xp_passes_expiration_watcher: {e_watch}")
+            await asyncio.sleep(1800.0)
+
+    if not _XP_WATCHER_STARTED:
+        _XP_WATCHER_STARTED = True
+        economy_bot.loop.create_task(_xp_passes_expiration_watcher())
 
 
 @economy_bot.event
