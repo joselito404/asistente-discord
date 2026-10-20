@@ -18,11 +18,11 @@
 ├───────────────────────────────┼────────────┼───────────────────────────┤
 │ 🎙️ 1. Voz y Convivencia      │ 45%        │ 4.500 pts                 │
 │ 💬 2. Chat y Comunidad        │ 35%        │ 3.500 pts                 │
-│ 🌟 3. Momentos y Hazañas      │ 20%        │ 2.000 pts                 │
+│ 🏅 3. Veteranía y Prestigio   │ 20%        │ 2.000 pts                 │
 └───────────────────────────────┴────────────┴───────────────────────────┘
 ```
 
-$$\text{Aura Total} = \text{Voz (4.500)} + \text{Chat (3.500)} + \text{Momentos (2.000)} = 10.000 \text{ pts}$$
+$$\text{Aura Total} = \text{Voz (4.500)} + \text{Chat (3.500)} + \text{Veteranía (2.000)} = 10.000 \text{ pts}$$
 
 ---
 
@@ -66,7 +66,7 @@ $$M_e = 1 \text{ min} \times F_{\text{estado}} \times F_{\text{curva}} \times F_
 
 ## 💬 Pilar 2: Chat, Conversación y Comunidad (35% — 3.500 Puntos)
 
-> **Estado**: `[Aprobado · Jose · 20/10/2026]` (100% Cerrado)
+> **Estado**: `[Aprobado · Jose · 20/10/2026]` (100% Cerrado con topes realistas para grupo de amigos)
 
 Mide la interacción social que mantiene vivo el servidor durante el día cuando no se puede jugar en llamada (evaluado sobre una **ventana móvil de los últimos 30 días**, al igual que el Pilar 1).
 
@@ -83,58 +83,63 @@ No todas las salas tienen el mismo valor cultural:
 ### 2. Las 3 Métricas Oficiales de Chat (3.500 Puntos Totales) (`[Aprobado · Jose · 20/10/2026]`):
 
 1. **Constancia — Días Activos (`1.000 pts máx.`)**:
-   - **$50 \text{ pts}$ por día activo** (mínimo 1 mensaje válido en el día; escribir 30 mensajes seguidos en un mismo día cuenta como 1 único día activo).
-   - **Tope mensual (100%)**: **20 días activos de 30** ($20 \times 50 = 1.000 \text{ pts}$).
+   - **$83{,}33 \text{ pts}$ por día activo** (mínimo 1 mensaje válido en el día; escribir 30 mensajes seguidos en un mismo día cuenta como 1 único día activo).
+   - **Tope mensual (100%)**: **12 días activos de 30** ($\approx 3 \text{ días/semana} \rightarrow 1.000 \text{ pts}$).
 
 2. **Conversación — Respuestas y Menciones Recibidas (`1.250 pts máx.`)**:
-   - **$12{,}5 \text{ pts}$ por cada interacción recibida** cuando otro humano del servidor te responde (`reply`) o te menciona (`@usuario`).
-   - **Límite anti-farmeo por par**: **Hasta 4 interacciones por persona y día** (permite varias charlas reales al día entre amigos sin que un ping-pong de 100 mensajes rompa la métrica).
-   - **Tope mensual (100%)**: **100 respuestas/menciones válidas al mes** ($100 \times 12{,}5 = 1.250 \text{ pts}$).
+   - **$50 \text{ pts}$ por cada interacción recibida** cuando otro humano del servidor te responde (`reply`) o te menciona (`@usuario`).
+   - **Límite anti-farmeo por par**: **Hasta 4 interacciones por persona y día**.
+   - **Tope mensual (100%)**: **25 respuestas/menciones válidas al mes** ($\approx 1 \text{ al día} \rightarrow 25 \times 50 = 1.250 \text{ pts}$).
 
 3. **Aportación de Contenido y Vida al Chat (`1.250 pts máx.`)**:
    - Mide las aportaciones escritas y multimedia aplicando el **Multiplicador de Zona** ($\times 1{,}5$, $\times 1{,}0$ o $\times 0{,}3$):
-     - **Mensaje de conversación normal** ($\ge 15$ caracteres, sin flood): **$5 \text{ pts base}$** ($7{,}5 \text{ pts}$ en zona $\times 1{,}5$).
-     - **Aporte Multimedia / Debate** (subir meme/foto/clip de partida, compartir enlace/recomendación o escribir un post de debate en `#📖cultura` de $\ge 120$ caracteres): **$20 \text{ pts base}$** ($30 \text{ pts}$ en zona $\times 1{,}5$).
-   - **Límite diario anti-spam**: Máximo **$100 \text{ pts diarios}$** acumulables en este bloque (impide farmear los 1.250 puntos en una sola tarde).
-   - **Tope mensual (100%)**: **$1.250 \text{ pts}$**.
+     - **Mensaje de conversación normal** ($\ge 10$ caracteres, sin flood): **$25 \text{ pts base}$** ($37{,}5 \text{ pts}$ en zona $\times 1{,}5$).
+     - **Aporte Multimedia / Debate** (subir meme/foto/clip de partida, compartir enlace/recomendación o escribir un post de debate en `#📖cultura` de $\ge 120$ caracteres): **$75 \text{ pts base}$** ($112{,}5 \text{ pts}$ en zona $\times 1{,}5$).
+   - **Tope mensual (100%)**: **$1.250 \text{ pts}$** (se alcanza con ~1 mensaje al día o ~10 memes/debates en el mes).
 
 > ℹ️ *Exclusiones*: No computan mensajes de $<4$ caracteres, flood repetido, mensajes a bots, menciones a `@Asistente` o `@Economia Asistente`, comandos slash/prefijo, ni mensajes con solo un código de sala.
 
 ---
 
-## 🌟 Pilar 3: Momentos de Lore y Hazañas (20% — 2.000 Puntos)
+## 🏅 Pilar 3: Veteranía y Prestigio en el Servidor (20% — 2.000 Puntos)
 
-> **Estado**: `[Propuesta · Chat 1 · 19/10/2026]` · `[Pendiente de matizar: sistema de registro de momentos y caducidad]`
+> **Estado**: `[Aprobado · Jose · 20/10/2026]` (100% Cerrado)
 
-El carisma, los memes legendarios y el historial de comportamiento. Todos parten de **1.000 puntos base**. Cada momento suma o resta puntos con un mensaje citable real. (Rango final: 0 a 2.000 pts).
+Mientras que los Pilares 1 y 2 miden la actividad reciente (ventana móvil de 30 días), el **Pilar 3 mide la trayectoria histórica acumulada desde el día 1 (01/09/2026)**, otorgando un suelo permanente de prestigio a los veteranos del servidor aunque un mes tengan exámenes o menos tiempo.
 
+### 1. Rango de Nivel en el Servidor (`1.000 pts máx.`) `[Aprobado · Jose · 20/10/2026]`
+Calculado automáticamente leyendo el nivel/rol del miembro:
+- **Sin rango (`< Nivel 10`)**: `100 pts`
+- **`🔷 Pendejo de Rango Medio` (`Nivel 10+`)**: `350 pts`
+- **`⚔️ Veterano` (`Nivel 20+` / Acceso a Categoría Pro)**: `650 pts`
+- **`🔥 Experimentado` (`Nivel 30+`)**: `850 pts`
+- **`💎 Alto Rango / Élite / Maestro+` (`Nivel 40+`)**: **`1.000 pts` (Tope)**
 
-### Acciones que Suman (+ Puntos):
-- **Hazaña en un juego**: Clutch, pasarse un juego juntos, hito cooperativo difícil (+150 a +350 pts).
-- **Frase mítica del lore**: Hace reír y la celebran al menos 2 personas (+100 a +250 pts).
-- **Construir algo para el servidor**: Crear la web del Tribunal, familia de Steam, torneos (+150 a +350 pts).
-- **Aportar a la familia de Steam o regalar un juego** (+100 a +250 pts).
-- **Convocar un plan que sale adelante**: Organizar sesión de juego (+100 a +200 pts).
-- **Salvarle el día a un colega**: Avisos académicos, ayuda técnica o de hardware (+100 a +200 pts).
-- **Defender a un amigo que no está delante** (+100 a +200 pts).
-- **Redención**: Arreglar el micro tras meses, ponerse los roles (+50 a +150 pts).
+### 2. Trayectoria Histórica Acumulada — Voz y Mensajes desde el Día 1 (`1.000 pts máx.`) `[Aprobado · Jose · 20/10/2026]`
+Premia las horas de llamada y los mensajes con XP totales acumulados por el miembro en toda la historia del servidor:
+1. **Voz Histórica Total (`600 pts máx.`)** `[Aprobado · Jose · 20/10/2026]`:
+   - **Tasa**: **$10 \text{ pts por hora histórica}$** en llamadas ($\approx 0{,}1667 \text{ pts/min}$).
+   - **Tope (100%)**: **60 horas históricas acumuladas (`3.600 min`)** ($60 \times 10 = 600 \text{ pts}$).
+2. **Mensajes Históricos Totales (`400 pts máx.`)** `[Aprobado · Jose · 20/10/2026]`:
+   - **Tasa**: **$1 \text{ pt por mensaje con XP histórico}$**.
+   - **Tope (100%)**: **400 mensajes con XP históricos acumulados** ($400 \times 1 = 400 \text{ pts}$).
 
-### Acciones que Restan (- Puntos):
-- **Plantón**: Confirmar asistencia a una partida y no aparecer sin avisar (-150 a -300 pts).
-- **El "luego" eterno**: Aplazar sin fecha una y otra vez ("ya veré", "otro día") (-75 a -200 pts).
-- **Excusa de ganas recurrente**: Pereza constante para instalar 3 GB o unirse (-75 a -200 pts).
-- **Trampear un sistema**: Spamear letras para subir de nivel en Cakey Bot (-150 a -300 pts).
-- **Llorar una derrota o culpar a los randoms de forma tóxica** (-50 a -150 pts).
-- **Deber y no pagar**: Solo deudas de Porros en el casino, nunca dinero real (-75 a -150 pts).
-- **Dejar en visto**: Te preguntan o mencionan directamente para jugar y no contestas en 48h (-75 a -150 pts).
-- **Hablarle a las paredes**: Insistir 3 o más veces con un tema que nadie sigue (-50 a -100 pts).
+### 3. Semilla Histórica Oficial (Snapshot Cakey Bot 01/09/2026 – 20/10/2026) y Migración a Niveles Nativos `[Aprobado · Jose · 20/10/2026]`
+Aprobado en la hoja de ruta sustituir a Cakey Bot por un **Sistema de Niveles Nativo en `Asistente` (`datos/niveles.json`)**, importando 1:1 los datos históricos acumulados desde el 1 de septiembre de 2026 y conectándolo en tiempo real con el Aura, el Podio (`Top 1/2/3`), los Salarios (`/salario`) y los Pases de XP de `/tienda`:
 
-### Qué NO Resta Jamás:
-- Falta de medios (no tener PC, micro, gráfica o dinero).
-- Obligaciones reales (estudios, exámenes, trabajo, familia, médico).
-- Avisar con antelación de que no se puede jugar (eso es educación, no plantón).
-- Dropear un juego (jugar a lo que a uno le divierte es libre).
-- Proponer un plan que no sale por falta de quórum (la iniciativa suma, la falta de gente no castiga).
+| # | Usuario | XP Messages | XP Voice Minutes (Horas) | Nivel Actual | XP Total | Puntos Pilar 3 Actuales (Rango + Voz Hist + Msg Hist) |
+| :-: | :--- | :---: | :---: | :---: | :---: | :---: |
+| 1 | `joselito3499` | 658 | 3.950 min (65,8 h) | **Lvl 54** | 340.600 XP | $1.000 + 600 + 400 = \mathbf{2.000 \text{ pts}}$ |
+| 2 | `terreneiror` | 196 | 1.502 min (25,0 h) | **Lvl 37** | 122.900 XP | $850 + 250 + 196 = \mathbf{1.296 \text{ pts}}$ |
+| 3 | `omen2042_38051` | 148 | 1.787 min (29,8 h) | **Lvl 36** | 114.000 XP | $850 + 298 + 148 = \mathbf{1.296 \text{ pts}}$ |
+| 4 | `racerwasp` | 129 | 1.738 min (29,0 h) | **Lvl 33** | 88.200 XP | $850 + 290 + 129 = \mathbf{1.269 \text{ pts}}$ |
+| 5 | `mpx56.` | 42 | 0 min (0,0 h) | **Lvl 16** | 13.900 XP | $350 + 0 + 42 = \mathbf{392 \text{ pts}}$ |
+| 6 | `carlitosmf__` | 0 | 362 min (6,0 h) | **Lvl 15** | 12.500 XP | $350 + 60 + 0 = \mathbf{410 \text{ pts}}$ |
+| 7 | `vexus_1128` | 40 | 0 min (0,0 h) | **Lvl 14** | 10.900 XP | $350 + 0 + 40 = \mathbf{390 \text{ pts}}$ |
+| 8 | `ccmen1408` | 39 | 0 min (0,0 h) | **Lvl 14** | 10.100 XP | $350 + 0 + 39 = \mathbf{389 \text{ pts}}$ |
+| 9 | `zixxer_donnuts_05511` | 15 | 29 min (0,5 h) | **Lvl 12** | 7.200 XP | $350 + 5 + 15 = \mathbf{370 \text{ pts}}$ |
+| 10 | `alexpro0812` | 24 | 0 min (0,0 h) | **Lvl 10** | 5.700 XP | $350 + 0 + 24 = \mathbf{374 \text{ pts}}$ |
+| 11 | `motor123ewfvioq3590tj_68922` | 1 | 69 min (1,15 h) | **Lvl 6** | 2.000 XP | $100 + 12 + 1 = \mathbf{113 \text{ pts}}$ |
 
 ---
 

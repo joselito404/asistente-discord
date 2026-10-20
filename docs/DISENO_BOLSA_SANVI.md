@@ -50,23 +50,24 @@ Tras descartar los minijuegos artificiales del bot (`/trivial`, `/ajedrez`, `/tr
 
 | Pilar | % Oficial | Puntos Máximos | Qué Computa |
 | :--- | :---: | :---: | :--- |
-| **🎙️ Convivencia en Voz** | 45% | 4.500 pts | Minutos en llamada (mínimo 2 personas, mute 50%, deaf 0%, curva 0-3h 100%, 3-6h 75%, >6h 50%) y streaming. |
-| **💬 Chat y Comunidad** | 35% | 3.500 pts | Constancia por zonas ($\times 1{,}5$ Gaming/General, $\times 0{,}3$ Casino/Bots), respuestas recibidas, celebraciones ($\ge 2$ reactores) y alcance. |
-| **🌟 Momentos de Lore y Hazañas** | 20% | 2.000 pts | Base 1.000 pts $\pm$ momentos citables reales (hazañas, memes top, Steam vs plantones, "luego" eterno, dejar en visto). |
+| **🎙️ 1. Convivencia en Voz** | 45% | 4.500 pts | Ventana 30d: Minutos efectivos en llamada ($M_e$, mínimo 2 humanos, mute 50%, deaf 0%, curva 3h/6h, stream +20%) con techo de **40h/mes** ($112{,}5\text{ pts/h}$). |
+| **💬 2. Chat y Comunidad** | 35% | 3.500 pts | Ventana 30d: Constancia (`1.000 pts`, 12 días activos), Conversación (`1.250 pts`, 25 respuestas/menciones recibidas, máx 4/persona/día) y Aportación de Contenido (`1.250 pts`, $25\text{ pts}$ msg normal / $75\text{ pts}$ meme o debate $\times$ multiplicador de zona). |
+| **🏅 3. Veteranía y Prestigio** | 20% | 2.000 pts | Histórico acumulado desde el día 1: Rango de Nivel (`1.000 pts`, Lvl 10 a 40+) + Trayectoria Histórica (`600 pts` Voz Histórica tope 60h + `400 pts` Mensajes Históricos tope 400 msgs). |
 
-$$\text{Total Aura Fundamental} = \text{Voz (4.500)} + \text{Chat (3.500)} + \text{Momentos (2.000)} = 10.000 \text{ pts}$$
+$$\text{Total Aura Fundamental} = \text{Voz (4.500)} + \text{Chat (3.500)} + \text{Veteranía (2.000)} = 10.000 \text{ pts}$$
 
 ---
 
 ## 5. Decisiones Aprobadas y Pendientes
-- [x] **Pesos Definitivos del Índice de Aura**: 3 Pilares Reales (45% Voz / 35% Chat / 20% Momentos sobre 10.000 pts) `[Aprobado · Jose · 18/10/2026]`.
-- [x] **Pilar 1 (Voz y Convivencia — 4.500 pts)**: Cerrado al 100%. Ecuación $M_e = 1\text{ min} \times F_{\text{estado}} \times F_{\text{curva}} \times F_{\text{stream}}$ (mínimo 2 humanos, mute 50%, deaf 0%, curva 3h/6h, stream +20%, heartbeat 5 min) y **techo mensual de 40 horas efectivas** ($1\text{ min} = 1{,}875\text{ pts}$ / $1\text{ h} = 112{,}5\text{ pts}$) `[Aprobado · Jose · 20/10/2026]`.
-
+- [x] **Pesos Definitivos del Índice de Aura**: 3 Pilares Reales (45% Voz / 35% Chat / 20% Veteranía sobre 10.000 pts) `[Aprobado · Jose · 20/10/2026]`.
+- [x] **Pilar 1 (Voz y Convivencia — 4.500 pts)**: Cerrado al 100%. Ecuación $M_e = 1\text{ min} \times F_{\text{estado}} \times F_{\text{curva}} \times F_{\text{stream}}$ y **techo mensual de 40 horas efectivas** ($1\text{ min} = 1{,}875\text{ pts}$ / $1\text{ h} = 112{,}5\text{ pts}$) `[Aprobado · Jose · 20/10/2026]`.
+- [x] **Pilar 2 (Chat y Comunidad — 3.500 pts)**: Cerrado al 100%. Constancia (`1.000 pts` en 12 días activos), Conversación (`1.250 pts` en 25 respuestas/menciones, máx 4/persona/día) y Aportación (`1.250 pts`, $25\text{ pts}$ msg / $75\text{ pts}$ meme o debate $\times$ zona) `[Aprobado · Jose · 20/10/2026]`.
+- [x] **Pilar 3 (Veteranía y Prestigio — 2.000 pts)**: Cerrado al 100%. Rango de Nivel (`1.000 pts`) + Trayectoria Histórica Acumulada (`600 pts` Voz Histórica tope 60h + `400 pts` Mensajes Históricos tope 400 msgs) `[Aprobado · Jose · 20/10/2026]`.
+- [x] **Hoja de Ruta — Sistema de Niveles Nativo (Reemplazo Cakey Bot)**: Aprobado crear `datos/niveles.json` y motor nativo en `Asistente` importando 1:1 la tabla histórica de Cakey Bot desde el 01/09/2026 `[Aprobado · Jose · 20/10/2026]`.
 - [x] **Algoritmo de Mercado (50%)**: Opción A — Modelo AMM / Bonding Curve continua tipo Uniswap con liquidez infinita contra la banca y comisión fija del 1% (spread de quema de Porros) `[Aprobado · Jose · 19/10/2026]`.
 - [x] **Diseño de Interfaz Gráfica (Híbrido Dual)**: Render nativo en Discord (Pillow) + Web interactiva en Vercel (TradingView Lightweight Charts) con estética idéntica a Trading 212 `[Aprobado · Jose · 19/10/2026]`.
-- [ ] **Pilar 2 (Chat y Comunidad)**: `[Propuesta · Chat 1 · 19/10/2026]` · `[Pendiente de matizar: reparto de puntos, longitud mínima y ventana móvil]`.
-- [ ] **Pilar 3 (Momentos de Lore)**: `[Propuesta · Chat 1 · 19/10/2026]` · `[Pendiente de matizar: canal o comando de registro y jueces]`.
-- [ ] **Frecuencia de Formación de Velas Japonesas**: `[Propuesta · Chat 1 · 19/10/2026]` · `[Pendiente de matizar: temporalidad de cierre de velas (1 hora vs 1 día)]`.
+- [ ] **Conversión de Aura a Precio Base en Porros ($P_{\text{fundamental}}$)**: `[Pendiente de matizar: cuántos Porros vale una acción si el usuario tiene 10.000 de Aura vs 1.000 de Aura]`.
+- [ ] **Frecuencia de Formación de Velas Japonesas**: `[Pendiente de matizar: temporalidad de cierre de velas (1 hora vs 1 día)]`.
 
 
 ---
