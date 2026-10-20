@@ -1,9 +1,9 @@
 """
 Módulo de Tragaperras 5x3 (/slots) de Alta Tensión para 'Asistente':
-- Matriz 5x3 (15 casilleros) con 8 símbolos: 6 Brawl Stars Ranked, WILD y SCATTER.
-- 7 Líneas de pago limpias evaluadas en cualquier ventana (Opción B: 3, 4 y 5 aciertos).
-- Pantalla completa a x500.0, Free Spins escalonadas y Bote Progresivo (Grand y Mini).
-- Calibrado a RTP 110.0% (+/- 0.5%) y Hit Rate ~73.8%.
+- Matriz 5x3 (15 casilleros) con 7 símbolos: 6 Brawl Stars Ranked y WILD (sin Scatters).
+- 9 Líneas de pago limpias: 3 Horizontales completas (5 casillas con ventanas consecutivas) + 6 Diagonales rectas de 3 casillas.
+- Pantalla completa a x500.0 y Bote Progresivo (Grand y Mini).
+- Calibrado a RTP 110.0% (+/- 0.5%) y Hit Rate ~70.9%.
 - Componentes Discord V2 (LayoutView, Container, TextDisplay, ActionRow).
 """
 
@@ -37,77 +37,72 @@ MIN_BLACKJACK_BET = 100
 MIN_ROULETTE_BET = 100
 MIN_COINFLIP_BET = 100
 
-# Símbolos oficiales de Tragaperras 5x3: 6 Brawl Stars Ranked + WILD + SCATTER
-# Suma de pesos = 38 + 24 + 15 + 9 + 5 + 3 + 2 + 4 = 100
-# Calibrado a RTP 110.0% (+/- 0.5%) y Hit Rate ~43.8% con evaluacion clasica Left-to-Right
+# Símbolos oficiales de Tragaperras 5x3: 6 Brawl Stars Ranked + WILD
+# Suma de pesos = 40 + 25 + 15 + 10 + 5 + 3 + 2 = 100
+# Calibrado a RTP 110.0% (+/- 0.5%) y Hit Rate ~70.9% con 3 Horizontales y 6 Diagonales
 SLOT_SYMBOLS = {
     "Gold": {
         "id": "1550130006896812084",
         "emoji": "<:Ranked_Gold:1550130006896812084>",
         "name": "Ranked_Gold",
-        "mults": {3: 0.33, 4: 1.05, 5: 3.50},
-        "weight": 38,
+        "mults": {3: 0.32, 4: 1.20, 5: 4.00},
+        "weight": 40,
     },
     "Diamond": {
         "id": "1550130004074041434",
         "emoji": "<:Ranked_Diamond:1550130004074041434>",
         "name": "Ranked_Diamond",
-        "mults": {3: 0.67, 4: 2.15, 5: 6.90},
-        "weight": 24,
+        "mults": {3: 0.70, 4: 2.35, 5: 7.80},
+        "weight": 25,
     },
     "Mythic": {
         "id": "1550130000852820099",
         "emoji": "<:Ranked_Mythic:1550130000852820099>",
         "name": "Ranked_Mythic",
-        "mults": {3: 1.40, 4: 4.90, 5: 16.00},
+        "mults": {3: 1.50, 4: 5.20, 5: 17.50},
         "weight": 15,
     },
     "Legendary": {
         "id": "1550129997774323732",
         "emoji": "<:Ranked_Legendary:1550129997774323732>",
         "name": "Ranked_Legendary",
-        "mults": {3: 3.00, 4: 10.50, 5: 34.00},
-        "weight": 9,
+        "mults": {3: 3.50, 4: 12.00, 5: 38.00},
+        "weight": 10,
     },
     "Masters": {
         "id": "1550129992837496833",
         "emoji": "<:Ranked_Masters:1550129992837496833>",
         "name": "Ranked_Masters",
-        "mults": {3: 8.50, 4: 27.00, 5: 84.00},
+        "mults": {3: 9.00, 4: 30.00, 5: 92.00},
         "weight": 5,
     },
     "Pro": {
         "id": "1550129987972104252",
         "emoji": "<:Ranked_Pro:1550129987972104252>",
         "name": "Ranked_Pro",
-        "mults": {3: 21.00, 4: 68.00, 5: 220.00},
+        "mults": {3: 22.00, 4: 75.00, 5: 240.00},
         "weight": 3,
     },
     "Wild": {
         "id": "1478115607336714300",
         "emoji": "<:absolutecinema:1478115607336714300>",
         "name": "WILD",
-        "mults": {3: 27.00, 4: 88.00, 5: 275.00},
+        "mults": {3: 30.00, 4: 95.00, 5: 290.00},
         "weight": 2,
-    },
-    "Scatter": {
-        "id": "1535685303317172305",
-        "emoji": "<:Porro:1535685303317172305>",
-        "name": "SCATTER",
-        "mults": {3: 4.0, 4: 13.0, 5: 48.0},
-        "weight": 4,
     },
 }
 
-# Las 7 Líneas de pago definitivas aprobadas por Jose en matriz 5x3 (evaluadas de izquierda a derecha)
+# Las 9 Líneas de pago limpias aprobadas por Jose en matriz 5x3 (3 Horizontales + 6 Diagonales de 3 casillas)
 SLOT_PAYLINES = [
     ("L1: Centro", [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)]),
     ("L2: Arriba", [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)]),
     ("L3: Abajo", [(2, 0), (2, 1), (2, 2), (2, 3), (2, 4)]),
-    ("L4: V Suave", [(0, 0), (1, 1), (2, 2), (1, 3), (0, 4)]),
-    ("L5: V Invertida", [(2, 0), (1, 1), (0, 2), (1, 3), (2, 4)]),
-    ("L6: Zigzag Descendente", [(0, 0), (0, 1), (1, 2), (2, 3), (2, 4)]),
-    ("L7: Zigzag Ascendente", [(2, 0), (2, 1), (1, 2), (0, 3), (0, 4)]),
+    ("D1: Diagonal Descendente Izq", [(0, 0), (1, 1), (2, 2)]),
+    ("D2: Diagonal Descendente Centro", [(0, 1), (1, 2), (2, 3)]),
+    ("D3: Diagonal Descendente Der", [(0, 2), (1, 3), (2, 4)]),
+    ("D4: Diagonal Ascendente Izq", [(2, 0), (1, 1), (0, 2)]),
+    ("D5: Diagonal Ascendente Centro", [(2, 1), (1, 2), (0, 3)]),
+    ("D6: Diagonal Ascendente Der", [(2, 2), (1, 3), (0, 4)]),
 ]
 
 
@@ -134,31 +129,49 @@ class SlotEngine:
 
     def evaluate_line(self, line_syms: List[str]) -> Tuple[Optional[str], int, float]:
         """
-        Evalúa una línea de 5 casilleros de izquierda a derecha empezando estrictamente
-        en el primer rodillo (índice 0) para rachas consecutivas de tamaño k = 5, 4, 3
-        (estándar internacional de video tragaperras).
+        Evalúa una línea de pago en matriz 5x3:
+        - Si la línea tiene 3 casillas (diagonales D1-D6): evalúa si las 3 casillas coinciden (k=3).
+        - Si la línea tiene 5 casillas (horizontales L1-L3): evalúa ventanas consecutivas de tamaño
+          k = 5, 4, 3 en cualquier posición de la fila, priorizando mayor k y mayor multiplicador.
         Wild sustituye a cualquier regular; una racha de Wilds puros también premia.
         Devuelve (best_sym, best_count, best_mult).
         """
         regular_keys = ["Gold", "Diamond", "Mythic", "Legendary", "Masters", "Pro"]
 
-        for k in (5, 4, 3):
-            window = line_syms[:k]
-
-            if "Scatter" in window:
-                continue
-
-            if all(s == "Wild" for s in window):
-                w_mult = self.symbols["Wild"]["mults"].get(k, 0.0)
+        if len(line_syms) == 3:
+            if all(s == "Wild" for s in line_syms):
+                w_mult = self.symbols["Wild"]["mults"].get(3, 0.0)
                 if w_mult > 0:
-                    return "Wild", k, w_mult
-
-            nw = [s for s in window if s != "Wild"]
+                    return "Wild", 3, w_mult
+            nw = [s for s in line_syms if s != "Wild"]
             if len(nw) > 0 and all(s == nw[0] for s in nw) and nw[0] in regular_keys:
                 reg = nw[0]
-                reg_mult = self.symbols[reg]["mults"].get(k, 0.0)
+                reg_mult = self.symbols[reg]["mults"].get(3, 0.0)
                 if reg_mult > 0:
-                    return reg, k, reg_mult
+                    return reg, 3, reg_mult
+            return None, 0, 0.0
+
+        # Horizontales (5 casillas): evaluar k in (5, 4, 3) con ventanas consecutivas
+        for k in (5, 4, 3):
+            best_cand = None
+            best_mult = 0.0
+            for start in range(len(line_syms) - k + 1):
+                window = line_syms[start:start+k]
+                if all(s == "Wild" for s in window):
+                    w_mult = self.symbols["Wild"]["mults"].get(k, 0.0)
+                    if w_mult > best_mult:
+                        best_mult = w_mult
+                        best_cand = ("Wild", k, w_mult)
+                else:
+                    nw = [s for s in window if s != "Wild"]
+                    if len(nw) > 0 and all(s == nw[0] for s in nw) and nw[0] in regular_keys:
+                        reg = nw[0]
+                        reg_mult = self.symbols[reg]["mults"].get(k, 0.0)
+                        if reg_mult > best_mult:
+                            best_mult = reg_mult
+                            best_cand = (reg, k, reg_mult)
+            if best_cand is not None:
+                return best_cand
 
         return None, 0, 0.0
 
@@ -170,13 +183,13 @@ class SlotEngine:
         is_free_spin: bool = False,
     ) -> Dict[str, Any]:
         """
-        Evalúa las 7 líneas de pago clásicas aprobadas por Jose, Pantalla Completa,
-        comodines WILD, dispersores SCATTER, multiplicadores y Free Spins.
+        Evalúa las 9 líneas de pago limpias aprobadas por Jose, Pantalla Completa,
+        comodines WILD, multiplicadores y botes progresivos.
         """
         winning_lines = []
         total_mult = 0.0
 
-        # 1. Evaluación de las 7 Líneas de Pago Clásicas
+        # 1. Evaluación de las 9 Líneas de Pago Limpias (3 Horizontales + 6 Diagonales)
         for line_name, coords in SLOT_PAYLINES:
             line_syms = [grid[r][c] for r, c in coords]
             sym, count, mult = self.evaluate_line(line_syms)
@@ -194,55 +207,24 @@ class SlotEngine:
         # 2. Pantalla Completa (15 de 15)
         all_syms = [grid[r][c] for r in range(3) for c in range(5)]
         full_screen_hit = False
-        if "Scatter" not in all_syms:
-            nw = [s for s in all_syms if s != "Wild"]
-            if len(nw) == 0 or all(s == nw[0] for s in nw):
-                matched = "Wild" if len(nw) == 0 else nw[0]
-                full_mult = 500.0 * multiplier
-                total_mult += full_mult
-                full_screen_hit = True
-                winning_lines.append({
-                    "line": f"🌟 ¡¡PANTALLA COMPLETA 15/15 ({self.symbols[matched]['name']})!!",
-                    "symbol": matched,
-                    "count": 15,
-                    "emoji": self.symbols[matched]["emoji"],
-                    "mult": round(full_mult, 2),
-                })
-
-        # 3. Evaluación de Dispersores SCATTER (en cualquier posición de los 15 casilleros)
-        scatter_count = sum(row.count("Scatter") for row in grid)
-        free_spins_triggered = False
-        free_spins_count = 0
-        free_spins_multiplier = 1
-
-        if scatter_count >= 3:
-            if scatter_count == 3:
-                sc_mult = 4.0
-                fs_c = 5
-            elif scatter_count == 4:
-                sc_mult = 13.0
-                fs_c = 8
-            else:  # >= 5
-                sc_mult = 48.0
-                fs_c = 12
-
-            sc_final = sc_mult * multiplier
-            total_mult += sc_final
+        nw = [s for s in all_syms if s != "Wild"]
+        if len(nw) == 0 or all(s == nw[0] for s in nw):
+            matched = "Wild" if len(nw) == 0 else nw[0]
+            full_mult = 500.0 * multiplier
+            total_mult += full_mult
+            full_screen_hit = True
             winning_lines.append({
-                "line": f"Scatter ({scatter_count} Porros)",
-                "symbol": "Scatter",
-                "count": scatter_count,
-                "emoji": self.symbols["Scatter"]["emoji"],
-                "mult": round(sc_final, 2),
+                "line": f"🌟 ¡¡PANTALLA COMPLETA 15/15 ({self.symbols[matched]['name']})!!",
+                "symbol": matched,
+                "count": 15,
+                "emoji": self.symbols[matched]["emoji"],
+                "mult": round(full_mult, 2),
             })
-            free_spins_triggered = True
-            free_spins_count = 3 if is_free_spin else fs_c
-            free_spins_multiplier = 2
 
         payout = int(bet * total_mult)
         net = payout - (0 if is_free_spin else bet)
 
-        # 4. Detección de Botes Progresivos en la Línea Central (L1: 5 casillas)
+        # 3. Detección de Botes Progresivos en la Línea Central (L1: 5 casillas)
         l1_syms = [grid[1][c] for c in range(5)]
         grand_jackpot_hit = (
             all(s == "Pro" for s in l1_syms) or
@@ -250,7 +232,7 @@ class SlotEngine:
         )
         mini_jackpot_hit = all(s == "Masters" for s in l1_syms)
 
-        # 5. Título y color según el resultado
+        # 4. Título y color según el resultado
         if grand_jackpot_hit:
             title = "### 💥 ¡¡GRAND JACKPOT DEL SERVIDOR!! 💥"
             accent_color = 16766720  # Dorado intenso
@@ -260,9 +242,6 @@ class SlotEngine:
         elif full_screen_hit:
             title = "### 🌟 ¡¡PANTALLA COMPLETA 15/15!! 🌟"
             accent_color = 16766720
-        elif free_spins_triggered and not is_free_spin:
-            title = "### 🌀 ¡¡RONDA DE FREE SPINS DESBLOQUEADA!! 🌀"
-            accent_color = 10181046  # Violeta neón #9B59B6
         elif total_mult == 0:
             title = "### No Win"
             accent_color = 15684432  # Rojo #EF5350
@@ -285,13 +264,13 @@ class SlotEngine:
             "winning_lines": winning_lines,
             "title": title,
             "accent_color": accent_color,
-            "scatter_count": scatter_count,
-            "free_spins_triggered": free_spins_triggered,
-            "free_spins_count": free_spins_count,
-            "free_spins_multiplier": free_spins_multiplier,
             "grand_jackpot_hit": grand_jackpot_hit,
             "mini_jackpot_hit": mini_jackpot_hit,
             "full_screen_hit": full_screen_hit,
+            "scatter_count": 0,
+            "free_spins_triggered": False,
+            "free_spins_count": 0,
+            "free_spins_multiplier": 1,
             "is_free_spin": is_free_spin,
         }
 
@@ -301,27 +280,12 @@ class SlotEngine:
         total_payout = 0
         wins_count = 0
         multi_line_wins = 0
-        scatters_hit = 0
-        free_spins_played = 0
         symbol_hits = {k: 0 for k in self.symbol_keys}
 
         for _ in range(spins):
             grid = self.spin_grid()
             res = self.evaluate(grid, bet)
             spin_payout = res["payout"]
-
-            if res.get("free_spins_triggered"):
-                scatters_hit += 1
-                fs_rem = res.get("free_spins_count", 5)
-                while fs_rem > 0:
-                    free_spins_played += 1
-                    fs_rem -= 1
-                    fs_grid = self.spin_grid()
-                    fs_res = self.evaluate(fs_grid, bet, multiplier=2.0, is_free_spin=True)
-                    spin_payout += fs_res["payout"]
-                    if fs_res.get("free_spins_triggered"):
-                        fs_rem += 3
-
             total_payout += spin_payout
             if spin_payout > 0:
                 wins_count += 1
@@ -343,8 +307,6 @@ class SlotEngine:
             "house_edge_percent": round(100 - rtp, 2),
             "win_rate_percent": round(win_rate, 2),
             "multi_line_rate_percent": round((multi_line_wins / spins) * 100, 2),
-            "scatters_hit": scatters_hit,
-            "free_spins_played": free_spins_played,
             "symbol_hits": symbol_hits,
         }
 
@@ -374,85 +336,28 @@ class SlotEngine:
             jp_title = "¡GRAND JACKPOT RECLAMADO!" if result.get("jackpot_type") == "grand" else "¡MINI JACKPOT (25%) RECLAMADO!"
             content_parts.append(f"\n💥 **{jp_title}** {PORRO_EMOJI}{result['jackpot_won']:,}")
 
-        if result.get("free_spins_triggered") and not result.get("is_free_spin"):
-            sc_c = result.get("scatter_count", 3)
-            fs_c = result.get("free_spins_count", 5)
-            content_parts.append(
-                f"\n🎉 **¡BONUS DESBLOQUEADO!** {sc_c} Scatters <:Porro:1535685303317172305> en pantalla.\n"
-                f"¡Premio y **{fs_c} Tiradas Gratis (Free Spins)** con multiplicador **×2**!"
-            )
-        elif result.get("is_free_spin"):
-            if result.get("retrigger"):
-                content_parts.append("\n⚡ **¡RE-TRIGGER!** +3 Tiradas Gratis adicionales.")
-            if remaining_free_spins > 0:
-                content_parts.append(
-                    f"\n🌀 **Tiradas restantes:** **{remaining_free_spins}** (Multiplicador ×2)\n"
-                    f"💰 **Bonus acumulado:** {PORRO_EMOJI}**{total_bonus_won:,}**"
-                )
-            else:
-                content_parts.append(
-                    f"\n🌟 **¡RONDA DE BONUS COMPLETADA!**\n"
-                    f"💰 **Ganancia total acreditada:** {PORRO_EMOJI}**{total_bonus_won:,}** Porros"
-                )
-
         payout_str = f"{result['payout']:,}"
         content_parts.append(f"\n**Payout:** {PORRO_EMOJI}{payout_str}")
 
         body_text = "\n".join(content_parts)
 
         bet = result["bet"]
-        if result.get("free_spins_triggered") and not result.get("is_free_spin"):
-            fs_initial = result.get("free_spins_count", 5)
-            action_buttons = [
-                {
-                    "type": 2,
-                    "id": 7,
-                    "custom_id": f"slots:free-spin:{user_id}:{bet}:{fs_initial}:2:0",
-                    "style": 3,  # Success
-                    "label": f"🌀 Jugar Tiradas Gratis ({fs_initial} restantes)",
-                },
-                {
-                    "type": 2,
-                    "id": 8,
-                    "custom_id": "slots:payouts",
-                    "style": 2,
-                    "label": "Payouts",
-                },
-            ]
-        elif result.get("is_free_spin") and remaining_free_spins > 0:
-            action_buttons = [
-                {
-                    "type": 2,
-                    "id": 7,
-                    "custom_id": f"slots:free-spin:{user_id}:{bet}:{remaining_free_spins}:2:{total_bonus_won}",
-                    "style": 1,
-                    "label": f"🌀 Tirada Gratis ({remaining_free_spins} restantes)",
-                },
-                {
-                    "type": 2,
-                    "id": 8,
-                    "custom_id": "slots:payouts",
-                    "style": 2,
-                    "label": "Payouts",
-                },
-            ]
-        else:
-            action_buttons = [
-                {
-                    "type": 2,
-                    "id": 7,
-                    "custom_id": f"slots:play-again:{bet}:{user_id}",
-                    "style": 1,
-                    "label": "Play Again",
-                },
-                {
-                    "type": 2,
-                    "id": 8,
-                    "custom_id": "slots:payouts",
-                    "style": 2,
-                    "label": "Payouts",
-                },
-            ]
+        action_buttons = [
+            {
+                "type": 2,
+                "id": 7,
+                "custom_id": f"slots:play-again:{bet}:{user_id}",
+                "style": 1,
+                "label": "Play Again",
+            },
+            {
+                "type": 2,
+                "id": 8,
+                "custom_id": "slots:payouts",
+                "style": 2,
+                "label": "Payouts",
+            },
+        ]
 
         components = [
             {
@@ -507,26 +412,25 @@ def build_payouts_text() -> str:
     jackpot = get_server_jackpot()
     lines = [
         "🎰 **TABLA DE PAGOS Y REGLAS — TRAGAPERRAS 5×3 DE PORROS**",
-        "La máquina evalúa **7 líneas de pago clásicas reales** en cuadrícula de 5 rodillos × 3 filas:",
-        "• **L1**: Centro | **L2**: Arriba | **L3**: Abajo",
-        "• **L4**: V Suave | **L5**: V Invertida | **L6**: Zigzag Descendente | **L7**: Zigzag Ascendente",
+        "La máquina evalúa **9 líneas de pago limpias reales** en cuadrícula de 5 rodillos × 3 filas:",
+        "• **Horizontales (L1-L3)**: Centro, Arriba, Abajo (premia por 3, 4 o 5 seguidos en la fila).",
+        "• **Diagonales (D1-D6)**: 6 Diagonales rectas de 3 casillas reales (premia por 3 aciertos en línea).",
         "",
-        "**Multiplicadores por acierto (3 / 4 / 5 en línea de izquierda a derecha):**",
-        "• <:absolutecinema:1478115607336714300> **WILD (Comodín)**: **×27.0** / **×88.0** / **×275.0** — Sustituye a cualquier regular. 5 en L1 = ¡Grand Jackpot!",
-        "• <:Ranked_Pro:1550129987972104252> **Ranked Pro**: **×21.0** / **×68.0** / **×220.0** — 5 en L1 = **Grand Jackpot** (100% bote).",
-        "• <:Ranked_Masters:1550129992837496833> **Ranked Masters**: **×8.5** / **×27.0** / **×84.0** — 5 en L1 = **Mini Jackpot** (25% bote).",
-        "• <:Ranked_Legendary:1550129997774323732> **Ranked Legendary**: **×3.0** / **×10.5** / **×34.0**",
-        "• <:Ranked_Mythic:1550130000852820099> **Ranked Mythic**: **×1.4** / **×4.9** / **×16.0**",
-        "• <:Ranked_Diamond:1550130004074041434> **Ranked Diamond**: **×0.67** / **×2.15** / **×6.9**",
-        "• <:Ranked_Gold:1550130006896812084> **Ranked Gold**: **×0.34** / **×1.05** / **×3.5**",
+        "**Multiplicadores por acierto (3 / 4 / 5 aciertos):**",
+        "• <:absolutecinema:1478115607336714300> **WILD (Comodín)**: **×30.0** / **×95.0** / **×290.0** — Sustituye a cualquier regular. 5 en L1 = ¡Grand Jackpot!",
+        "• <:Ranked_Pro:1550129987972104252> **Ranked Pro**: **×22.0** / **×75.0** / **×240.0** — 5 en L1 = **Grand Jackpot** (100% bote).",
+        "• <:Ranked_Masters:1550129992837496833> **Ranked Masters**: **×9.0** / **×30.0** / **×92.0** — 5 en L1 = **Mini Jackpot** (25% bote).",
+        "• <:Ranked_Legendary:1550129997774323732> **Ranked Legendary**: **×3.5** / **×12.0** / **×38.0**",
+        "• <:Ranked_Mythic:1550130000852820099> **Ranked Mythic**: **×1.5** / **×5.2** / **×17.5**",
+        "• <:Ranked_Diamond:1550130004074041434> **Ranked Diamond**: **×0.70** / **×2.35** / **×7.8**",
+        "• <:Ranked_Gold:1550130006896812084> **Ranked Gold**: **×0.32** / **×1.20** / **×4.0**",
         "",
-        "**Patrones Especiales y Bonos:**",
+        "**Patrones Especiales y Bote:**",
         "• 🌟 **Pantalla Completa (15 casilleros)**: **×500.0** directo al llenar toda la cuadrícula del mismo símbolo o Wilds.",
-        "• <:Porro:1535685303317172305> **SCATTER (3 / 4 / 5 en pantalla)**: **×4.0** + 5 Spins / **×13.0** + 8 Spins / **×48.0** + 12 Spins (a ×2).",
-        "",
-        f"💰 **Bote Progresivo Acumulado:** {PORRO_EMOJI} **{jackpot:,}** Porros *(3% de pérdidas netas alimenta el bote)*",
+        f"• 💰 **Bote Progresivo Acumulado:** {PORRO_EMOJI} **{jackpot:,}** Porros *(3% de pérdidas netas alimenta el bote)*",
     ]
     return "\n".join(lines)
+
 
 
 def handle_slots_spin(user_id: Any, bet: int) -> Tuple[bool, str, Optional[Dict[str, Any]], Optional[Dict[str, int]]]:
@@ -665,51 +569,14 @@ class SlotsLayoutView(LayoutView):
             jp_title = "¡GRAND JACKPOT RECLAMADO!" if result.get("jackpot_type") == "grand" else "¡MINI JACKPOT (25%) RECLAMADO!"
             content_parts.append(f"\n💥 **{jp_title}** {PORRO_EMOJI}{result['jackpot_won']:,}")
 
-        if result.get("free_spins_triggered") and not result.get("is_free_spin"):
-            sc_c = result.get("scatter_count", 3)
-            fs_c = result.get("free_spins_count", 5)
-            content_parts.append(
-                f"\n🎉 **¡BONUS DESBLOQUEADO!** {sc_c} Scatters <:Porro:1535685303317172305> en pantalla.\n"
-                f"¡Premio y **{fs_c} Tiradas Gratis (Free Spins)** con multiplicador **×2**!"
-            )
-        elif result.get("is_free_spin"):
-            if result.get("retrigger"):
-                content_parts.append("\n⚡ **¡RE-TRIGGER!** +3 Tiradas Gratis adicionales.")
-            if remaining_free_spins > 0:
-                content_parts.append(
-                    f"\n🌀 **Tiradas restantes:** **{remaining_free_spins}** (Multiplicador ×2)\n"
-                    f"💰 **Bonus acumulado:** {PORRO_EMOJI}**{total_bonus_won:,}**"
-                )
-            else:
-                content_parts.append(
-                    f"\n🌟 **¡RONDA DE BONUS COMPLETADA!**\n"
-                    f"💰 **Ganancia total acreditada:** {PORRO_EMOJI}**{total_bonus_won:,}** Porros"
-                )
-
         payout_str = f"{result['payout']:,}"
         content_parts.append(f"\n**Payout:** {PORRO_EMOJI}{payout_str}")
 
         body_text = "\n".join(content_parts)
 
-        if result.get("free_spins_triggered") and not result.get("is_free_spin"):
-            fs_c = result.get("free_spins_count", 5)
-            fs_btn = SlotsFreeSpinButton(bet, self.user_id, remaining=fs_c, multiplier=2, total_won=0)
-            payouts_btn = SlotsPayoutsButton()
-            action_row = ActionRow(fs_btn, payouts_btn)
-        elif result.get("is_free_spin") and remaining_free_spins > 0:
-            fs_btn = SlotsFreeSpinButton(
-                bet,
-                self.user_id,
-                remaining=remaining_free_spins,
-                multiplier=2,
-                total_won=total_bonus_won,
-            )
-            payouts_btn = SlotsPayoutsButton()
-            action_row = ActionRow(fs_btn, payouts_btn)
-        else:
-            play_again_btn = SlotsPlayAgainButton(bet, self.user_id)
-            payouts_btn = SlotsPayoutsButton()
-            action_row = ActionRow(play_again_btn, payouts_btn)
+        play_again_btn = SlotsPlayAgainButton(bet, self.user_id)
+        payouts_btn = SlotsPayoutsButton()
+        action_row = ActionRow(play_again_btn, payouts_btn)
 
         container = Container(
             TextDisplay(result["title"]),

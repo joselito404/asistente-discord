@@ -8,11 +8,10 @@ Suite de Pruebas Unitarias y de Integración para el Sistema Completo de Econom�
 - Sistema de Robo (/robar): probabilidades 50%, 20-50% robo, chequeo de '🛡️ Cartera Blindada' y multas del 15%.
 - Catálogo de Tienda V2 (/tienda): los 9 artículos oficiales, compras, inventario y artículos únicos.
 - Salario acumulativo (/salario): cálculo por roles de nivel/podio y fórmula de decaimiento del 5% (asíntota 20*S).
-- Motor de la tragaperras 5x3 (Slots): matriz 5x3, 8 símbolos (Ranked + WILD + SCATTER), 10 líneas de pago reales.
-- Evaluación de 3, 4 y 5 aciertos de izquierda a derecha con sustitución de comodín WILD.
-- Patrón especial 'El Ojo' (marco exterior de 12 casillas a x50.0).
+- Motor de la tragaperras 5x3 (Slots): matriz 5x3, 7 símbolos (6 Ranked + WILD), 9 líneas de pago limpias (3 Horizontales + 6 Diagonales).
+- Evaluación de 3, 4 y 5 aciertos con ventanas consecutivas y sustitución de comodín WILD.
+- Retirada de figuras forzadas y patrones complejos ('El Ojo', Scatters y Free Spins eliminados).
 - Patrón 'Pantalla Completa' (15 casillas a x500.0).
-- Dispersor SCATTER escalonado (3/4/5 scatters -> 5/8/12 Free Spins a x2) y re-triggers (+3).
 - Bote progresivo escalonado: Grand Jackpot (100%) y Mini Jackpot (25%) en L1, y alimentación del 3%.
 - Discord Components V2 para matriz 5x3 (Container, Separator, TextDisplay, ActionRow, botones interactivos).
 - Concurrencia y thread-safety multihilo.
@@ -336,19 +335,19 @@ def run_tests():
         assert "Ya has cobrado" in msg_sal2
         print("  ✅ TEST 8 PASADO: Salario acumulativo con fórmula de decaimiento del 5% validado.")
 
-        # TEST 9: Motor de Tragaperras 5x3 y evaluación de las 7 líneas
-        print("\n[TEST 9] Motor de Tragaperras 5x3 (7 Líneas de Pago Limpias)...")
+        # TEST 9: Motor de Tragaperras 5x3 y evaluación de las 9 líneas limpias
+        print("\n[TEST 9] Motor de Tragaperras 5x3 (3 Horizontales + 6 Diagonales Limpias)...")
         engine = eco.SlotEngine()
-        assert len(eco.SLOT_PAYLINES) == 7, f"Se esperaban 7 líneas de pago, encontradas: {len(eco.SLOT_PAYLINES)}"
+        assert len(eco.SLOT_PAYLINES) == 9, f"Se esperaban 9 líneas de pago, encontradas: {len(eco.SLOT_PAYLINES)}"
 
-        # Probar cada una de las 7 líneas con 3, 4 y 5 aciertos
+        # Probar cada una de las 9 líneas
         for idx, (line_name, coords) in enumerate(eco.SLOT_PAYLINES):
             grid_5x3 = [
                 ["Mythic", "Legendary", "Masters", "Mythic", "Legendary"],
                 ["Masters", "Mythic", "Legendary", "Masters", "Mythic"],
                 ["Legendary", "Masters", "Mythic", "Legendary", "Masters"],
             ]
-            # Colocar 5 Diamond en la línea
+            # Colocar Diamond en la línea
             for r, c in coords:
                 grid_5x3[r][c] = "Diamond"
 
@@ -356,31 +355,37 @@ def run_tests():
             matching = [wl for wl in res_line["winning_lines"] if line_name in wl["line"]]
             assert len(matching) == 1, f"Fallo al detectar {line_name}"
             assert matching[0]["symbol"] == "Diamond"
-            assert matching[0]["count"] == 5
-            assert matching[0]["mult"] == 6.90  # 5 Diamond paga x6.90 en solucion clasica
+            expected_count = len(coords)
+            assert matching[0]["count"] == expected_count
+            expected_mult = 7.80 if expected_count == 5 else 0.70
+            assert matching[0]["mult"] == expected_mult, f"Mult inesperado para {line_name}: {matching[0]['mult']} != {expected_mult}"
 
-        # Verificación explícita de evaluación clásica estricta Left-to-Right (empezando en rodillo 0)
-        # a) 3 aciertos empezando en rodillo 0 -> PREMIA
+        # Verificación explícita de ventanas consecutivas en líneas horizontales (5 casillas)
+        # a) 3 aciertos en rodillos 0-2 -> PREMIA
         sym_a, count_a, mult_a = engine.evaluate_line(["Gold", "Gold", "Gold", "Diamond", "Mythic"])
-        assert sym_a == "Gold" and count_a == 3 and mult_a == 0.33, f"Fallo en rodillos 0-2: {(sym_a, count_a, mult_a)}"
+        assert sym_a == "Gold" and count_a == 3 and mult_a == 0.32, f"Fallo en rodillos 0-2: {(sym_a, count_a, mult_a)}"
 
-        # b) 3 aciertos en rodillos 1, 2, 3 (no empiezan en rodillo 0) -> NO PREMIA (0 fantasmas visuales)
+        # b) 3 aciertos en rodillos 1-3 -> PREMIA en ventana consecutiva
         sym_b, count_b, mult_b = engine.evaluate_line(["Diamond", "Gold", "Gold", "Gold", "Mythic"])
-        assert sym_b is None and count_b == 0 and mult_b == 0.0, f"Fallo: no debió premiar flotante 1-3: {(sym_b, count_b, mult_b)}"
+        assert sym_b == "Gold" and count_b == 3 and mult_b == 0.32, f"Fallo en ventana 1-3: {(sym_b, count_b, mult_b)}"
 
-        # c) 3 aciertos en rodillos 2, 3, 4 (no empiezan en rodillo 0) -> NO PREMIA
+        # c) 3 aciertos en rodillos 2-4 -> PREMIA en ventana consecutiva
         sym_c, count_c, mult_c = engine.evaluate_line(["Diamond", "Mythic", "Gold", "Gold", "Gold"])
-        assert sym_c is None and count_c == 0 and mult_c == 0.0, f"Fallo: no debió premiar flotante 2-4: {(sym_c, count_c, mult_c)}"
+        assert sym_c == "Gold" and count_c == 3 and mult_c == 0.32, f"Fallo en ventana 2-4: {(sym_c, count_c, mult_c)}"
 
-        # 4 aciertos empezando en rodillo 0 -> PREMIA
+        # d) 4 aciertos en rodillos 0-3 -> PREMIA
         sym_4a, count_4a, mult_4a = engine.evaluate_line(["Gold", "Gold", "Gold", "Gold", "Mythic"])
-        assert sym_4a == "Gold" and count_4a == 4 and mult_4a == 1.05, f"Fallo en 4 rodillos 0-3: {(sym_4a, count_4a, mult_4a)}"
+        assert sym_4a == "Gold" and count_4a == 4 and mult_4a == 1.20, f"Fallo en 4 rodillos 0-3: {(sym_4a, count_4a, mult_4a)}"
 
-        # 4 aciertos en rodillos 1-4 (no empiezan en rodillo 0) -> NO PREMIA
+        # e) 4 aciertos en rodillos 1-4 -> PREMIA en ventana consecutiva
         sym_4b, count_4b, mult_4b = engine.evaluate_line(["Diamond", "Gold", "Gold", "Gold", "Gold"])
-        assert sym_4b is None and count_4b == 0 and mult_4b == 0.0, f"Fallo: no debió premiar flotante 1-4: {(sym_4b, count_4b, mult_4b)}"
+        assert sym_4b == "Gold" and count_4b == 4 and mult_4b == 1.20, f"Fallo en ventana 1-4: {(sym_4b, count_4b, mult_4b)}"
 
-        print("  ✅ TEST 9 PASADO: Las 7 líneas de pago 5x3 y evaluación Left-to-Right clásica evaluadas con éxito.")
+        # f) 5 aciertos -> PREMIA
+        sym_5, count_5, mult_5 = engine.evaluate_line(["Gold", "Gold", "Gold", "Gold", "Gold"])
+        assert sym_5 == "Gold" and count_5 == 5 and mult_5 == 4.00, f"Fallo en 5 rodillos: {(sym_5, count_5, mult_5)}"
+
+        print("  ✅ TEST 9 PASADO: Las 9 líneas de pago 5x3 (3 Horizontales + 6 Diagonales) y ventanas consecutivas validadas.")
 
         # TEST 10: Comodín WILD (3, 4 y 5 aciertos, y sustitución en líneas regulares)
         print("\n[TEST 10] Comodín WILD (3, 4 y 5 aciertos y sustituciones)...")
@@ -394,9 +399,9 @@ def run_tests():
         wl_5w = [wl for wl in res_5w["winning_lines"] if "L1: Centro" in wl["line"]][0]
         assert wl_5w["symbol"] == "Wild"
         assert wl_5w["count"] == 5
-        assert wl_5w["mult"] == 275.0, f"5 Wilds deben pagar x275.0, obtenido: {wl_5w['mult']}"
+        assert wl_5w["mult"] == 290.0, f"5 Wilds deben pagar x290.0, obtenido: {wl_5w['mult']}"
 
-        # 10b: 1 Wild + 4 Pro en L1 -> paga 5 Pro (x122.0)
+        # 10b: 1 Wild + 4 Pro en L1 -> paga 5 Pro (x240.0)
         grid_1w_4pro = [
             ["Gold", "Diamond", "Gold", "Diamond", "Gold"],
             ["Wild", "Pro", "Pro", "Pro", "Pro"],
@@ -406,11 +411,11 @@ def run_tests():
         wl_1w = [wl for wl in res_1w["winning_lines"] if "L1: Centro" in wl["line"]][0]
         assert wl_1w["symbol"] == "Pro"
         assert wl_1w["count"] == 5
-        assert wl_1w["mult"] == 220.0, f"1 Wild + 4 Pro debe pagar x220.0, obtenido: {wl_1w['mult']}"
+        assert wl_1w["mult"] == 240.0, f"1 Wild + 4 Pro debe pagar x240.0, obtenido: {wl_1w['mult']}"
         print("  ✅ TEST 10 PASADO: Comodín WILD para 3, 4 y 5 aciertos validado.")
 
         # TEST 11: Retirada de 'El Ojo' y verificación de sólo líneas limpias
-        print("\n[TEST 11] Comprobación de eliminación de 'El Ojo' y sólo 7 líneas limpias...")
+        print("\n[TEST 11] Comprobación de eliminación de 'El Ojo' y sólo 9 líneas limpias...")
         grid_eye = [
             ["Gold", "Gold", "Gold", "Gold", "Gold"],
             ["Gold", "Pro", "Masters", "Mythic", "Gold"],
@@ -430,45 +435,41 @@ def run_tests():
         assert full_wl["mult"] == 500.0
         print("  ✅ TEST 12 PASADO: Pantalla Completa validada con x500.0 directo.")
 
-        # TEST 13: Dispersores SCATTER escalonados y Free Spins a x2
-        print("\n[TEST 13] Dispersores SCATTER escalonados y Free Spins...")
-        # 13a: 3 Scatters -> x4.0 + 5 spins
-        grid_sc3 = [
-            ["Scatter", "Gold", "Diamond", "Gold", "Diamond"],
-            ["Mythic", "Legendary", "Scatter", "Masters", "Mythic"],
-            ["Masters", "Scatter", "Gold", "Diamond", "Gold"],
-        ]
-        res_sc3 = engine.evaluate(grid_sc3, 1000)
-        assert res_sc3["scatter_count"] == 3
-        assert res_sc3["free_spins_triggered"] is True
-        assert res_sc3["free_spins_count"] == 5
-        wl_sc3 = [wl for wl in res_sc3["winning_lines"] if "Scatter" in wl["line"]][0]
-        assert wl_sc3["mult"] == 4.0
+        # TEST 13: 6 Diagonales rectas de 3 casillas y eliminación definitiva de SCATTER
+        print("\n[TEST 13] 6 Diagonales rectas reales de 3 casillas y eliminación de SCATTER...")
+        assert "Scatter" not in eco.SLOT_SYMBOLS, "El símbolo Scatter debe estar completamente eliminado"
+        assert len(eco.SLOT_SYMBOLS) == 7, f"Se esperaban 7 símbolos, encontrados: {len(eco.SLOT_SYMBOLS)}"
 
-        # 13b: 4 Scatters -> x13.0 + 8 spins
-        grid_sc4 = [
-            ["Scatter", "Scatter", "Diamond", "Gold", "Diamond"],
-            ["Mythic", "Legendary", "Scatter", "Masters", "Mythic"],
-            ["Masters", "Scatter", "Gold", "Diamond", "Gold"],
-        ]
-        res_sc4 = engine.evaluate(grid_sc4, 1000)
-        assert res_sc4["scatter_count"] == 4
-        assert res_sc4["free_spins_count"] == 8
-        wl_sc4 = [wl for wl in res_sc4["winning_lines"] if "Scatter" in wl["line"]][0]
-        assert wl_sc4["mult"] == 13.0
+        # Probar que las 6 diagonales premian por 3 aciertos (k=3)
+        diag_lines = [pl for pl in eco.SLOT_PAYLINES if pl[0].startswith("D")]
+        assert len(diag_lines) == 6, f"Se esperaban 6 diagonales, encontradas: {len(diag_lines)}"
 
-        # 13c: 5 Scatters -> x48.0 + 12 spins
-        grid_sc5 = [
-            ["Scatter", "Scatter", "Diamond", "Gold", "Diamond"],
-            ["Scatter", "Legendary", "Scatter", "Masters", "Mythic"],
-            ["Masters", "Scatter", "Gold", "Diamond", "Gold"],
-        ]
-        res_sc5 = engine.evaluate(grid_sc5, 1000)
-        assert res_sc5["scatter_count"] == 5
-        assert res_sc5["free_spins_count"] == 12
-        wl_sc5 = [wl for wl in res_sc5["winning_lines"] if "Scatter" in wl["line"]][0]
-        assert wl_sc5["mult"] == 48.0
-        print("  ✅ TEST 13 PASADO: Scatters escalonados (3/4/5 -> 5/8/12 giros con x4/x13/x48) validados.")
+        grid_d1 = None
+        for d_name, d_coords in diag_lines:
+            g_diag = [
+                ["Gold", "Gold", "Gold", "Gold", "Gold"],
+                ["Diamond", "Diamond", "Diamond", "Diamond", "Diamond"],
+                ["Gold", "Gold", "Gold", "Gold", "Gold"],
+            ]
+            for r, c in d_coords:
+                g_diag[r][c] = "Mythic"
+            res_d = engine.evaluate(g_diag, 1000)
+            wl_d = [wl for wl in res_d["winning_lines"] if d_name in wl["line"]]
+            assert len(wl_d) == 1, f"Fallo al detectar diagonal {d_name}"
+            assert wl_d[0]["symbol"] == "Mythic"
+            assert wl_d[0]["count"] == 3
+            assert wl_d[0]["mult"] == 1.50
+            if d_name == "D1: Diagonal Descendente Izq":
+                grid_d1 = g_diag
+
+        # Comprobar que 2 de 3 en diagonal NO premia
+        sym_d_fail, count_d_fail, mult_d_fail = engine.evaluate_line(["Mythic", "Mythic", "Gold"])
+        assert sym_d_fail is None and count_d_fail == 0 and mult_d_fail == 0.0, "2 de 3 en diagonal no debe premiar"
+
+        res_diag = engine.evaluate(grid_d1, 1000)
+        assert res_diag["scatter_count"] == 0
+        assert res_diag["free_spins_triggered"] is False
+        print("  ✅ TEST 13 PASADO: 6 Diagonales rectas de 3 casillas validadas y Scatter ausente al 100%.")
 
         # TEST 14: Botes Progresivos Escalonados (Grand y Mini en L1)
         print("\n[TEST 14] Bote Progresivo Escalonado (Grand y Mini en L1)...")
@@ -504,10 +505,10 @@ def run_tests():
 
         # TEST 15: Discord Components V2 para matriz 5x3
         print("\n[TEST 15] Discord Components V2 para matriz 5x3...")
-        layout_view = eco.SlotsLayoutView(res_sc3, uid1, 1000)
+        layout_view = eco.SlotsLayoutView(res_diag, uid1, 1000)
         comps = layout_view.to_components()
         assert comps[0]["type"] == 17  # Container
-        payload = engine.build_discord_v2_payload(res_sc3, uid1)
+        payload = engine.build_discord_v2_payload(res_diag, uid1)
         assert payload["flags"] == 32768
         print("  ✅ TEST 15 PASADO: Discord Components V2 para matriz 5x3 validados.")
 
@@ -603,13 +604,11 @@ def run_tests():
         sim_res = engine.simulate_monte_carlo(spins=100000, bet=1000)
         rtp = sim_res["rtp_percent"]
         win_rate = sim_res["win_rate_percent"]
-        print(f"  📊 Resultado Monte Carlo 5x3: Spins={sim_res['spins']:,} | RTP={rtp}% | HitRate={win_rate}% | Scatters={sim_res['scatters_hit']:,} | FreeSpinsJugadas={sim_res['free_spins_played']:,}")
+        print(f"  📊 Resultado Monte Carlo 5x3: Spins={sim_res['spins']:,} | RTP={rtp}% | HitRate={win_rate}% | MultiLine={sim_res['multi_line_rate_percent']}%")
 
         # Rango admisible para RTP de 110%: 109.0% - 111.0% (objetivo 110.0% +/- 0.5%)
-        assert 108.5 <= rtp <= 111.5, f"RTP fuera de rango esperado de 110%: {rtp}%"
-        assert 42.0 <= win_rate <= 46.0, f"Hit Rate fuera de rango esperado (~43.8% estándar clásico): {win_rate}%"
-        assert sim_res["scatters_hit"] > 1000, "Frecuencia de scatters insuficiente"
-        assert sim_res["free_spins_played"] > 6000, "Free spins no se jugaron adecuadamente"
+        assert 109.0 <= rtp <= 111.0, f"RTP fuera de rango esperado de 110%: {rtp}%"
+        assert 68.0 <= win_rate <= 73.0, f"Hit Rate fuera de rango esperado (~70.9%): {win_rate}%"
         print(f"  ✅ TEST 18 PASADO: Simulación Monte Carlo 5x3 validada con RTP={rtp}% (~110.0%) y HitRate={win_rate}%.")
 
         # TEST 19: Multiplicadores por Rol de Nivel (get_level_role_multiplier)
