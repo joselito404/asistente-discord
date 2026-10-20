@@ -66,13 +66,45 @@ $$\text{Total Aura Fundamental} = \text{Voz (4.500)} + \text{Chat (3.500)} + \te
 - [x] **Hoja de Ruta — Sistema de Niveles Nativo (Reemplazo Cakey Bot)**: Aprobado crear `datos/niveles.json` y motor nativo en `Asistente` importando 1:1 la tabla histórica de Cakey Bot desde el 01/09/2026 `[Aprobado · Jose · 20/10/2026]`.
 - [x] **Algoritmo de Mercado (50%)**: Opción A — Modelo AMM / Bonding Curve continua tipo Uniswap con liquidez infinita contra la banca y comisión fija del 1% (spread de quema de Porros) `[Aprobado · Jose · 19/10/2026]`.
 - [x] **Diseño de Interfaz Gráfica (Híbrido Dual)**: Render nativo en Discord (Pillow) + Web interactiva en Vercel (TradingView Lightweight Charts) con estética idéntica a Trading 212 `[Aprobado · Jose · 19/10/2026]`.
+- [x] **Catálogo de Tickers y Requisito de Salida a Bolsa (IPO Nivel 20+)**: Requisito de Nivel 20+ (desbloqueo de `CATEGORÍA PRO`) para cotizar en bolsa. Fundadores iniciales: `$JOSE`, `$TERRE`, `$OMEN`, `$RACER`. Tickers aprobados para futuros aspirantes cuando alcancen Nvl 20 `[Aprobado · Jose · 20/10/2026]`.
 - [ ] **Conversión de Aura a Precio Base en Porros ($P_{\text{fundamental}}$)**: `[Pendiente de matizar: cuántos Porros vale una acción si el usuario tiene 10.000 de Aura vs 1.000 de Aura]`.
 - [ ] **Frecuencia de Formación de Velas Japonesas**: `[Pendiente de matizar: temporalidad de cierre de velas (1 hora vs 1 día)]`.
 
+---
+
+## 6. Catálogo de Tickers y Requisitos de Salida a Bolsa (IPO)
+
+> **Estado:** `Aprobado por Jose` `[Aprobado · Jose · 20/10/2026]`
+
+Para otorgar verdadero prestigio a cotizar en los mercados y evitar saturar el sistema con miembros inactivos o fantasmas, la salida a bolsa (*Oferta Pública Inicial / IPO*) está vinculada al hito de **Nivel 20** (el mismo umbral que otorga acceso a la `CATEGORÍA PRO` del servidor):
+
+### 6.1. Requisito de Cotización (Nivel 20+)
+- **Condición de Salida a Bolsa**: Solo los miembros que alcancen o superen el **Nivel 20** en el servidor adquieren su propio *ticker* y comienzan a cotizar en la Bolsa Sanvi.
+- **Quiénes pueden operar**: Todos los miembros del servidor pueden **comprar y vender** acciones desde Nivel 0; el requisito de Nivel 20 aplica exclusivamente a **tener una acción propia cotizando**.
+
+### 6.2. Cuarteto Fundador Activo (Cotización Inmediata)
+Actualmente, 4 miembros cumplen el requisito de Nivel 20+ en el servidor y forman el mercado inicial:
+
+| Ticker | Miembro | Nivel Actual | XP Acumulada | Rol en el Mercado |
+| :---: | :--- | :---: | :---: | :--- |
+| **`$JOSE`** | `joselito3499` | Nivel 54 | 340.600 XP | *Mega Cap* / Fundador del Servidor |
+| **`$TERRE`** | `terreneiror` | Nivel 37 | 122.900 XP | *Large Cap* / Veterano Activo |
+| **`$OMEN`** | `omen2042_38051` | Nivel 36 | 114.000 XP | *Large Cap* / Veterano Activo |
+| **`$RACER`** | `racerwasp` | Nivel 33 | 88.200 XP | *Large Cap* / Veterano Activo |
+
+### 6.3. Tickers Reservados para Nuevas Salidas a Bolsa (IPO Pipeline)
+En cuanto un miembro alcance el Nivel 20, el sistema anunciará automáticamente su **Salida a Bolsa** con su ticker pre-aprobado:
+- `mpx56.` (Nivel 19 $\rightarrow$ a 1 nivel de cotizar): **`$MPX`**
+- `carlitosmf__` (Nivel 18 $\rightarrow$ a 2 niveles de cotizar): **`$CARL`**
+- `vexus_1128` (Nivel 17): **`$VEXUS`**
+- `ccmen1408` (Nivel 15): **`$CCMEN`**
+- `zixxer_donnuts_05511` (Nivel 15): **`$ZIXX`**
+- `alexpro0812` (Nivel 10): **`$ALEX`**
+- `motor123...` (Nivel 10): **`$MOTOR`**
 
 ---
 
-## 6. Arquitectura de Interfaz y Gráficas de Cotización (Estilo Trading 212)
+## 7. Arquitectura de Interfaz y Gráficas de Cotización (Estilo Trading 212)
 
 Aprobado el modelo híbrido dual para máxima comodidad y profundidad visual:
 
