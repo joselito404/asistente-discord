@@ -11,7 +11,7 @@ description: "Estructura física de carpetas del repositorio, blindaje de la ra�
 
 ## 1. Blindaje de la Raíz del Repositorio
 - En la raíz conviven únicamente los archivos estrictamente requeridos para el despliegue en Render, configuración de agentes y presentación del proyecto:
-  `README.md`, `bot_service.py`, `Dockerfile`, `Procfile`, `requirements.txt`, `AGENTS.md`, `CLAUDE.md`.
+  `README.md`, `bot_service.py`, `Dockerfile`, `Procfile`, `requirements.txt`, `CLAUDE.md`.
 - Queda terminantemente prohibido crear scripts o archivos sueltos en la raíz; cualquier archivo nuevo debe pertenecer a una de las subcarpetas designadas. `[Chat 2]`
 
 ---
@@ -24,4 +24,5 @@ description: "Estructura física de carpetas del repositorio, blindaje de la ra�
 - `herramientas/`: Scripts auxiliares locales de mantenimiento, sincronización y tests.
 - `datos_locales/`: Grabaciones de audio, logs, temporales e instaladores (todo gitignored).
 - `.agents/rules/`: Constitución modular nativa del proyecto en Antigravity y Claude Code.
+- `.agents/agents/`: Subagentes declarativos nativos del proyecto (`.agents/agents/<nombre>/agent.md` y su catálogo [`.agents/agents/README.md`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/.agents/agents/README.md)).
 - `.agents/chats/`: Memoria operativa de desarrollo (`resumen.md`, `raw/`, `archive/`).
