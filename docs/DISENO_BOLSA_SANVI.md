@@ -172,4 +172,27 @@ Aprobado el modelo híbrido dual para máxima comodidad y profundidad visual:
      - Tooltip en tiempo real al pasar el cursor (Apertura, Máximo, Mínimo, Cierre, Volumen).
      - Libro de compras y ventas recientes en vivo.
 
+---
+
+## 9. Próxima Sesión: Modelo de Valoración Dinámico (Patrimonio Histórico + Múltiplo PER de Rendimiento Mensual)
+
+> **Estado:** `Propuesta de Jose para debate en nueva sesión` `[Propuesta · Jose / Chat 1 · 20/10/2026]`
+
+Iniciativa conceptual de Jose para sustituir los techos fijos y dotar al mercado de realismo financiero puro (estilo Trading 212 / Wall Street):
+
+### 9.1. La Doble Capa Fundamental
+1. **Patrimonio Histórico Acumulado (*Book Value / Equity*)**:
+   - Acumulación permanente sin límite basada en la trayectoria total del miembro en el servidor (niveles, horas de voz de por vida, mensajes históricos).
+   - Crece de forma lenta, continua e indestructible: representa los "activos netos" de la empresa que aseguran que una acción nunca quiebre.
+2. **Rendimiento Mensual Temporal (*Trailing 30-Day Earnings*)**:
+   - Mide la actividad reciente (voz y chat de los últimos 30 días).
+   - **Naturaleza Temporal**: Caduca y se renueva en ventana móvil. Si el miembro para de hablar o jugar durante 30 días, su beneficio mensual se desvanece temporalmente hacia cero.
+
+### 9.2. El Múltiplo PER Real (*Price-to-Earnings*)
+- En lugar de un precio fijo, la cotización se descompone fiel a la contabilidad bursátil:
+  $$\text{Precio} = \text{Valor Patrimonial Histórico} + (\text{PER} \times \text{Rendimiento Mensual})$$
+- Si un miembro tiene un mes estelar de actividad (*earnings beat*), su beneficio mensual temporal se dispara, y al multiplicarse por el PER del mercado, la acción experimenta un *rally* alcista.
+- Si entra en sequía temporal, los beneficios caen, pero la acción encuentra soporte sólido en su Patrimonio Histórico.
+- Pendiente de debatir y modelar formalmente en la siguiente sesión dedicada.
+
 
