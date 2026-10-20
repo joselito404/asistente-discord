@@ -28,29 +28,33 @@ $$\text{Aura Total} = \text{Voz (4.500)} + \text{Chat (3.500)} + \text{Momentos 
 
 ## 🎙️ Pilar 1: Voz y Convivencia en Directo (45% — 4.500 Puntos)
 
-> **Estado**: `[Reabierto para revisión · Jose · 19/10/2026]`
-
+> **Estado**: `[Aprobado · Jose · 20/10/2026]` (Fórmula de Minuto Efectivo) · `[Pendiente de matizar: Tasa de conversión y techo mensual de horas]`
 
 Es el núcleo donde se forja el servidor: partidas cooperativas, competitivo de Brawl Stars, charlas nocturnas y streaming de partidas.
 
-### 1. Telemetría Automatizada (`on_voice_state_update`)
-Se mide en tiempo real mediante el evento nativo de Discord sin grabaciones invasivas:
+### 1. Telemetría y Ecuación del Minuto Efectivo (`on_voice_state_update`)
+Se mide en tiempo real mediante el evento nativo de Discord sin grabaciones invasivas. Cada minuto en llamada se convierte en **Minutos Efectivos ($M_e$)**:
 
-1. **Filtro Anti-Farmeo (Mínimo 2 personas)**:
-   - Los minutos en sala solo computan si hay **al menos 2 miembros humanos** en el canal.
-   - Estar solo en sala = **0 puntos** (bloqueo absoluto de farmeo AFK nocturno).
-2. **Tratamiento de Muteo vs Ensordecido**:
-   - `self_deaf == True` (Ensordecido): **0% de rendimiento**. Si no escuchas a tus colegas, no estás en la convivencia.
-   - `self_mute == True` (Muteado de micro pero escuchando): **50% de rendimiento**. Reconoce a quienes juegan y escuchan las partidas sin micro o de noche por ruido familiar.
-3. **Curva Suave de Rendimientos Decrecientes Diarios**:
-   - **0 a 3 horas (0 a 180 min)**: **100%** de puntos.
-   - **3 a 6 horas (180 a 360 min)**: **75%** de puntos.
-   - **Más de 6 horas (> 360 min)**: **50%** de puntos.
-   - *Finalidad*: No castiga las tardes sanas de vicio en grupo y mitiga anomalías desproporcionadas de 14 horas seguidas.
-4. **Bonus por Retransmisión (`self_stream`)**:
-   - Compartir pantalla de la partida o retransmitir contenido para los colegas otorga un multiplicador de bonificación sobre el tiempo en sala.
-5. **Heartbeat de Persistencia (Cada 5 minutos)**:
+$$M_e = 1 \text{ min} \times F_{\text{estado}} \times F_{\text{curva}} \times F_{\text{stream}}$$
+
+1. **Factor de Estado ($F_{\text{estado}}$)**:
+   - **Hablando / Escuchando normal**: **$\times 1{,}0$** (100%).
+   - **Muteado pero escuchando (`self_mute == True`)**: **$\times 0{,}5$** (50%). Reconoce a quienes juegan y escuchan las partidas de noche o sin micro.
+   - **Ensordecido (`self_deaf == True`)**: **$\times 0{,}0$** (0%, pausa inmediata). Si no escuchas a tus colegas, no estás en la convivencia.
+   - **Filtro Anti-Farmeo**: Estar solo en sala o acompañado únicamente por bots = **$\times 0{,}0$** (mínimo **2 humanos reales** para computar).
+2. **Factor de Curva Diaria Suave ($F_{\text{curva}}$)**:
+   - **0 a 3 horas en el día (0 a 180 min)**: **$\times 1{,}0$** (100% de puntos).
+   - **3 a 6 horas en el día (180 a 360 min)**: **$\times 0{,}75$** (75% de puntos).
+   - **Más de 6 horas en el día (> 360 min)**: **$\times 0{,}50$** (50% de puntos).
+   - *Finalidad*: No frena el vicio sano entre colegas en tardes largas y mitiga anomalías desproporcionadas de 14 horas seguidas.
+3. **Factor de Retransmisión ($F_{\text{stream}}$)**:
+   - **Sin retransmitir**: **$\times 1{,}0$**.
+   - **Compartiendo pantalla/partida (`self_stream == True`)**: **$\times 1{,}20$** (+20% de bonus por aportar contenido y streaming a la sala).
+4. **Heartbeat de Persistencia (Cada 5 minutos)**:
    - Chequeo periódico en segundo plano que consolida minutos en memoria/JSON, tolerando reinicios de Render sin perder más de 4 minutos de sesión.
+
+### 2. Conversión a Puntos de Aura y Techo de Horas
+*(En discusión activa con Jose: definición de la tasa de conversión por minuto y cuántas horas mensuales equivalen al 100% de los 4.500 puntos).*
 
 ---
 

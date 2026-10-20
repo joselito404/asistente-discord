@@ -60,7 +60,7 @@ $$\text{Total Aura Fundamental} = \text{Voz (4.500)} + \text{Chat (3.500)} + \te
 
 ## 5. Decisiones Aprobadas y Pendientes
 - [x] **Pesos Definitivos del Índice de Aura**: 3 Pilares Reales (45% Voz / 35% Chat / 20% Momentos sobre 10.000 pts) `[Aprobado · Jose · 18/10/2026]`.
-- [ ] **Pilar 1 (Voz y Convivencia)**: `[Reabierto para revisión · Jose · 19/10/2026]`.
+- [x] **Pilar 1 (Voz - Fórmula Minuto Efectivo)**: Ecuación $M_e = 1\text{ min} \times F_{\text{estado}} \times F_{\text{curva}} \times F_{\text{stream}}$ aprobada (mínimo 2 humanos, mute 50%, deaf 0%, curva 3h/6h, stream +20% y heartbeat 5 min) `[Aprobado · Jose · 20/10/2026]`. `[Pendiente de matizar: tasa de conversión a puntos y techo mensual de horas]`.
 
 - [x] **Algoritmo de Mercado (50%)**: Opción A — Modelo AMM / Bonding Curve continua tipo Uniswap con liquidez infinita contra la banca y comisión fija del 1% (spread de quema de Porros) `[Aprobado · Jose · 19/10/2026]`.
 - [x] **Diseño de Interfaz Gráfica (Híbrido Dual)**: Render nativo en Discord (Pillow) + Web interactiva en Vercel (TradingView Lightweight Charts) con estética idéntica a Trading 212 `[Aprobado · Jose · 19/10/2026]`.
