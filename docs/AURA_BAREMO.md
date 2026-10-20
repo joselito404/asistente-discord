@@ -28,7 +28,7 @@ $$\text{Aura Total} = \text{Voz (4.500)} + \text{Chat (3.500)} + \text{Momentos 
 
 ## 🎙️ Pilar 1: Voz y Convivencia en Directo (45% — 4.500 Puntos)
 
-> **Estado**: `[Aprobado · Jose · 20/10/2026]` (Fórmula de Minuto Efectivo) · `[Pendiente de matizar: Tasa de conversión y techo mensual de horas]`
+> **Estado**: `[Aprobado · Jose · 20/10/2026]` (Cerrado al 100%: Fórmula de Minuto Efectivo + Techo de 40h/mes)
 
 Es el núcleo donde se forja el servidor: partidas cooperativas, competitivo de Brawl Stars, charlas nocturnas y streaming de partidas.
 
@@ -41,7 +41,7 @@ $$M_e = 1 \text{ min} \times F_{\text{estado}} \times F_{\text{curva}} \times F_
    - **Hablando / Escuchando normal**: **$\times 1{,}0$** (100%).
    - **Muteado pero escuchando (`self_mute == True`)**: **$\times 0{,}5$** (50%). Reconoce a quienes juegan y escuchan las partidas de noche o sin micro.
    - **Ensordecido (`self_deaf == True`)**: **$\times 0{,}0$** (0%, pausa inmediata). Si no escuchas a tus colegas, no estás en la convivencia.
-   - **Filtro Anti-Farmeo**: Estar solo en sala o acompañado únicamente por bots = **$\times 0{,}0$** (mínimo **2 humanos reales** para computar).
+   - **Filtro Anti-Farmeo**: Estar solo en sala o acompañado únicamente por bots = **$\times 0{,}0$** (mínimo **2 humanos reales** para computar). Canal AFK oficial = **$\times 0{,}0$**.
 2. **Factor de Curva Diaria Suave ($F_{\text{curva}}$)**:
    - **0 a 3 horas en el día (0 a 180 min)**: **$\times 1{,}0$** (100% de puntos).
    - **3 a 6 horas en el día (180 a 360 min)**: **$\times 0{,}75$** (75% de puntos).
@@ -53,8 +53,14 @@ $$M_e = 1 \text{ min} \times F_{\text{estado}} \times F_{\text{curva}} \times F_
 4. **Heartbeat de Persistencia (Cada 5 minutos)**:
    - Chequeo periódico en segundo plano que consolida minutos en memoria/JSON, tolerando reinicios de Render sin perder más de 4 minutos de sesión.
 
-### 2. Conversión a Puntos de Aura y Techo de Horas
-*(En discusión activa con Jose: definición de la tasa de conversión por minuto y cuántas horas mensuales equivalen al 100% de los 4.500 puntos).*
+### 2. Tasa de Conversión y Techo Mensual (40 Horas) `[Aprobado · Jose · 20/10/2026]`
+- **Techo Mensual (100% del pilar)**: **40 horas efectivas al mes** ($2.400 \text{ minutos efectivos}$, equivalente a ~1h 20m al día o ~9-10h a la semana).
+- **Tasa Exacta de Conversión**:
+  $$\text{Puntos}_{\text{voz}} = \min\left(4.500,\; \sum M_e \times 1{,}875\right)$$
+  - **1 minuto efectivo ($M_e$)** = **$1{,}875 \text{ puntos de Aura}$**.
+  - **1 hora efectiva ($60 \text{ min}$)** = **$112{,}5 \text{ puntos de Aura}$**.
+  - **1 hora con streaming ($\times 1{,}20$)** = **$135{,}0 \text{ puntos de Aura}$**.
+  - **1 hora muteado escuchando ($\times 0{,}50$)** = **$56{,}25 \text{ puntos de Aura}$**.
 
 ---
 
