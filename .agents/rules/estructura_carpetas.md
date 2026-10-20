@@ -24,5 +24,5 @@ description: "Estructura física de carpetas del repositorio, blindaje de la ra�
 - `herramientas/`: Scripts auxiliares locales de mantenimiento, sincronización y tests.
 - `datos_locales/`: Grabaciones de audio, logs, temporales e instaladores (todo gitignored).
 - `.agents/rules/`: Constitución modular nativa del proyecto en Antigravity y Claude Code.
-- `.agents/agents/`: Subagentes declarativos nativos del proyecto (`.agents/agents/<nombre>/agent.md` y su catálogo [`.agents/agents/README.md`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/.agents/agents/README.md)).
+- `.agents/agents/`: Subagentes declarativos nativos del proyecto (`.agents/agents/<nombre>/agent.md` y su catálogo [`.agents/agents/README.md`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/.agents/agents/README.md)). `[Confirmada · Jose · 20/10/2026]` [Chat 1]
 - `.agents/chats/`: Memoria operativa de desarrollo (`resumen.md`, `raw/`, `archive/`).

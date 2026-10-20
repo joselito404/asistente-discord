@@ -1,15 +1,16 @@
 # Catálogo de Subagentes Nativos (`.agents/agents/`)
 
 > **Propósito:** Subagentes declarativos persistentes del proyecto `Antigravity-discord` (Regla Global §18 y §8).
+> **Estado actual:** Vigente (`[Aprobado · Jose · 20/10/2026]`).
 > **Quién puede escribir aquí:** El asistente orquestador principal, bajo supervisión de Jose.
 
 ---
 
-## Subagentes Disponibles
+## Subagentes Vigentes
 
-| Subagente (`TypeName`) | Modelo Recomendado | `inheritCustomizations` | `inheritMcp` | Herramientas | Propósito y Uso |
-| :--- | :--- | :---: | :---: | :--- | :--- |
-| [`especialista-codigo`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/.agents/agents/especialista-codigo/agent.md) | `flash` (*Gemini 3.8 Flash Medium*) | `false` (~600 tokens base) | `false` | Lectura, escritura (`write_file`, `edit_file`), ejecución (`run_command`), `send_message` | Implementación de módulos Python (`modulos/`), motores matemáticos, renderizado de gráficas (`Pillow`/`mplfinance`), persistencia JSON (`datos/`) y ejecución de suites de tests (`herramientas/`). Incluye protocolo *Fast-Escalation* (Regla Global §15). |
+| Subagente (`TypeName`) | Estado | Modelo Recomendado | `inheritCustomizations` | `inheritMcp` | Herramientas | Propósito y Restricciones |
+| :--- | :---: | :--- | :---: | :---: | :--- | :--- |
+| [`especialista-codigo`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/.agents/agents/especialista-codigo/agent.md) | `[Aprobado · Jose · 20/10/2026]` | `flash` (*Gemini 3.8 Flash Medium*) | `true` | `true` | Lectura, búsqueda web (`search_web`, `read_url_content`), MCPs (`gemini-api-docs`, `chrome-devtools`), escritura (`write_file`, `edit_file`), consola (`run_command`), `send_message` | Subagente puro de código, gráficas, web y tests unitarios. **Sin permisos de `git commit/push` ni deploy a Render**; el Orquestador verifica el trabajo antes de commitear. |
 
 ---
 
