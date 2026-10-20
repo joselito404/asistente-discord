@@ -18,6 +18,10 @@ El precio de cotización de la acción de un usuario ($P_{\text{acción}}$) se r
 $$P_{\text{acción}} = 0{,}50 \cdot P_{\text{fundamental}} + 0{,}50 \cdot P_{\text{mercado}}$$
 
 - **$P_{\text{fundamental}}$ (50%)**: Suelo de valor respaldado por su puntuación en el **Índice de Aura** (escala de 0 a 10.000 puntos). Garantiza que usuarios activos y queridos tengan un valor intrínseco sólido y que nadie pueda inflar una cuenta inactiva o fantasma.
+  $$\mathbf{P_{\text{fundamental}} = \max\left(200,\; \frac{\text{Aura}}{2}\right) \text{ Porros}} \quad \text{[Aprobado · Jose · 20/10/2026]}$$
+  - Un usuario con 10.000 puntos de Aura alcanza un valor fundamental máximo de **5.000 Porros / acción**.
+  - Los fundadores activos rondan entre **2.000 y 4.250 Porros / acción** de suelo fundamental.
+  - Se establece un suelo mínimo garantizado de **200 Porros / acción** para evitar valores cero en cuentas sin actividad reciente.
 - **$P_{\text{mercado}}$ (50%)**: Variación dinámica por **oferta y demanda real en la propia bolsa**. Las compras netas elevan el precio sobre su valor fundamental (creando *hype* o burbuja); las ventas masivas o *dumps* castigan la cotización hacia su suelo.
 
 ---
@@ -67,7 +71,8 @@ $$\text{Total Aura Fundamental} = \text{Voz (4.500)} + \text{Chat (3.500)} + \te
 - [x] **Algoritmo de Mercado (50%)**: Opción A — Modelo AMM / Bonding Curve continua tipo Uniswap con liquidez infinita contra la banca y comisión fija del 1% (spread de quema de Porros) `[Aprobado · Jose · 19/10/2026]`.
 - [x] **Diseño de Interfaz Gráfica (Híbrido Dual)**: Render nativo en Discord (Pillow) + Web interactiva en Vercel (TradingView Lightweight Charts) con estética idéntica a Trading 212 `[Aprobado · Jose · 19/10/2026]`.
 - [x] **Catálogo de Tickers y Requisito de Salida a Bolsa (IPO Nivel 20+)**: Requisito de Nivel 20+ (desbloqueo de `CATEGORÍA PRO`) para cotizar en bolsa. Fundadores iniciales: `$JOSE`, `$TERRE`, `$OMEN`, `$RACER`. Tickers aprobados para futuros aspirantes cuando alcancen Nvl 20 `[Aprobado · Jose · 20/10/2026]`.
-- [ ] **Conversión de Aura a Precio Base en Porros ($P_{\text{fundamental}}$)**: `[Pendiente de matizar: cuántos Porros vale una acción si el usuario tiene 10.000 de Aura vs 1.000 de Aura]`.
+- [x] **Conversión de Aura a Precio Fundamental ($P_{\text{fundamental}}$)**: Escala $\div 2$ con fórmula $P_{\text{fundamental}} = \max\left(200,\; \frac{\text{Aura}}{2}\right)$ (techo 5.000 Porros a 10.000 Aura, suelo mínimo 200 Porros) `[Aprobado · Jose · 20/10/2026]`.
+- [ ] **Curva de Mercado AMM ($P_{\text{mercado}}$) y Sensibilidad de Compra/Venta**: `[Pendiente de matizar: cómo mueven las compras y ventas netas el componente de mercado]`.
 - [ ] **Frecuencia de Formación de Velas Japonesas**: `[Pendiente de matizar: temporalidad de cierre de velas (1 hora vs 1 día)]`.
 
 ---
