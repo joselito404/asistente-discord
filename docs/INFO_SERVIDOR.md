@@ -413,4 +413,9 @@
 - **19/10/2026**: **Despliegue del Runner Dual ('Asistente' + 'Economia Asistente') y Lanzamiento de Blackjack 21 Nativo**:
   - Separación de funciones en dos bots concurrentes en Render Cloud: `Asistente` (22 comandos generales) y `Economia Asistente` (11 comandos de finanzas y casino).
   - Estreno del minijuego de Blackjack 21 interactivo (`/blackjack` y `/bj`) con zapato de 6 barajas, botones Discord (`[🃏 Pedir]`, `[🛑 Plantarse]`, `[⚡ Doblar]`), crupier plantado en 17, pago 3:2 en Blackjack natural y auto-stand en 60s.
+- **20/10/2026 (15:54)**: **Independencia Total de UnbelievaBoat y Estreno de Economía y Casino Nativo 24/7**:
+  - Comunicado oficial con `@everyone` en `#📣anuncios📣` (ID: `1562101802944430091`).
+  - Migración 1:1 intacta de todos los saldos de Porros (`<:Porro:1535685303317172305>`).
+  - Catálogo de **20 comandos en español** de `Economia Asistente`: salario diario por nivel exacto (`/salario`), `/trabajar` (1.000–2.500 con bonus de nivel `+10%` a `+40%`), delitos (`/crimen` y `/robar`), tienda V2 (`/tienda`) con `🥤 Monster Blanco`, `/inventario`, `/usar`, `/regalar`, panel admin (`/admin_dinero`) y los 4 juegos de casino (`/slots`, `/blackjack`, `/ruleta`, `/coinflip`) con apuesta mínima de 100 Porros y sin esperas.
+  - Actualización de tópicos en los canales de casino y tienda, y publicación de las nuevas guías maestras fijadas en `#⌨️comandos⌨️`.
 
