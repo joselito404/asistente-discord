@@ -66,31 +66,39 @@ $$M_e = 1 \text{ min} \times F_{\text{estado}} \times F_{\text{curva}} \times F_
 
 ## 💬 Pilar 2: Chat, Conversación y Comunidad (35% — 3.500 Puntos)
 
-> **Estado**: `[Propuesta · Chat 1 · 19/10/2026]` · `[Pendiente de matizar: reparto de puntos entre métricas, longitud mínima de mensaje y ventana móvil]`
+> **Estado**: `[Aprobado · Jose · 20/10/2026]` (100% Cerrado)
 
+Mide la interacción social que mantiene vivo el servidor durante el día cuando no se puede jugar en llamada (evaluado sobre una **ventana móvil de los últimos 30 días**, al igual que el Pilar 1).
 
-
-Mide la interacción social que mantiene vivo el servidor durante el día cuando no se puede jugar en llamada.
-
-### 1. Ponderación por Zonas del Servidor
+### 1. Ponderación por Zonas del Servidor (`[Aprobado · Jose · 20/10/2026]`)
 No todas las salas tienen el mismo valor cultural:
 
 | Zona / Canales | Multiplicador |
 | :--- | :---: |
-| **Zona Gaming** (`#🎮gaming-general🎮`, recomendaciones) | $\times 1{,}5$ |
-| **General & Comunidad** (`#🗨️la-shit-de-todos-los-dias🗨️`, `#📖cultura📖`) | $\times 1{,}5$ |
-| **Shitpost, Brawl Stars, Torneos, Categoría Pro, Extra** | $\times 1{,}0$ |
-| **Casino & Economía** | $\times 0{,}3$ |
-| **`#🤖bots🤖` y `#⌨️comandos⌨️`** | $\times 0{,}3$ |
-| **Administración** | $\times 0{,}0$ |
+| **Zona Gaming y Núcleo Social** (`#💬general`, `#🔥off-topic`, `#📖cultura`, `#💩shit-post`, `#🥊violencia`, canales de juegos) | $\times 1{,}5$ |
+| **Utilidad Comunitaria** (`#💡sugerencias`, `#🎭roles`, `#🎂cumpleaños`, `#🏆torneos`, Categoría Pro, Extra) | $\times 1{,}0$ |
+| **Zona de Farmeo / Bots** (`#🎰casino-y-apuestas`, `#🏪tienda-y-mercado`, `#🤖bots`, `#⌨️comandos`, `#🚀spam`) | $\times 0{,}3$ |
+| **Administración y Staff** (Canales privados de mods/logs) | $\times 0{,}0$ |
 
-### 2. Cuatro Métricas Base de Chat:
-1. **Constancia**: Días con al menos un mensaje válido, ponderado por la mejor zona del día. (Escribir 30 mensajes seguidos para farmear nivel cuenta como 1 día).
-2. **Conversación**: Respuestas y menciones recibidas de otros miembros (tope: 1 por persona y día para evitar spam).
-3. **Celebración**: Mensajes con reacciones de al menos 2 personas distintas (auto-reacciones excluidas).
-4. **Alcance**: Cuántos miembros distintos han respondido, mencionado o reaccionado al usuario en el periodo.
+### 2. Las 3 Métricas Oficiales de Chat (3.500 Puntos Totales) (`[Aprobado · Jose · 20/10/2026]`):
 
-> ℹ️ *Exclusiones*: No computan mensajes a bots, menciones a `@Asistente`, comandos, ni mensajes vacíos con solo un enlace o código de sala.
+1. **Constancia — Días Activos (`1.000 pts máx.`)**:
+   - **$50 \text{ pts}$ por día activo** (mínimo 1 mensaje válido en el día; escribir 30 mensajes seguidos en un mismo día cuenta como 1 único día activo).
+   - **Tope mensual (100%)**: **20 días activos de 30** ($20 \times 50 = 1.000 \text{ pts}$).
+
+2. **Conversación — Respuestas y Menciones Recibidas (`1.250 pts máx.`)**:
+   - **$12{,}5 \text{ pts}$ por cada interacción recibida** cuando otro humano del servidor te responde (`reply`) o te menciona (`@usuario`).
+   - **Límite anti-farmeo por par**: **Hasta 4 interacciones por persona y día** (permite varias charlas reales al día entre amigos sin que un ping-pong de 100 mensajes rompa la métrica).
+   - **Tope mensual (100%)**: **100 respuestas/menciones válidas al mes** ($100 \times 12{,}5 = 1.250 \text{ pts}$).
+
+3. **Aportación de Contenido y Vida al Chat (`1.250 pts máx.`)**:
+   - Mide las aportaciones escritas y multimedia aplicando el **Multiplicador de Zona** ($\times 1{,}5$, $\times 1{,}0$ o $\times 0{,}3$):
+     - **Mensaje de conversación normal** ($\ge 15$ caracteres, sin flood): **$5 \text{ pts base}$** ($7{,}5 \text{ pts}$ en zona $\times 1{,}5$).
+     - **Aporte Multimedia / Debate** (subir meme/foto/clip de partida, compartir enlace/recomendación o escribir un post de debate en `#📖cultura` de $\ge 120$ caracteres): **$20 \text{ pts base}$** ($30 \text{ pts}$ en zona $\times 1{,}5$).
+   - **Límite diario anti-spam**: Máximo **$100 \text{ pts diarios}$** acumulables en este bloque (impide farmear los 1.250 puntos en una sola tarde).
+   - **Tope mensual (100%)**: **$1.250 \text{ pts}$**.
+
+> ℹ️ *Exclusiones*: No computan mensajes de $<4$ caracteres, flood repetido, mensajes a bots, menciones a `@Asistente` o `@Economia Asistente`, comandos slash/prefijo, ni mensajes con solo un código de sala.
 
 ---
 
