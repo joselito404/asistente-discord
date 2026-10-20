@@ -141,20 +141,37 @@ Aprobado en la hoja de ruta sustituir a Cakey Bot por un **Sistema de Niveles Na
 | 10 | `alexpro0812` | 24 | 0 min (0,0 h) | **Lvl 10** | 5.700 XP | $350 + 0 + 24 = \mathbf{374 \text{ pts}}$ |
 | 11 | `motor123ewfvioq3590tj_68922` | 1 | 69 min (1,15 h) | **Lvl 6** | 2.000 XP | $100 + 12 + 1 = \mathbf{113 \text{ pts}}$ |
 
-#### 3.1. Revisión: Mantener Cakey Bot como Fuente de Niveles `[Propuesta · Jose / Chat 1 · 20/10/2026]`
-> Bloque paralelo: no anula el texto aprobado de §3 hasta que Jose lo ratifique.
-- Jose considera que la migración a niveles nativos no compensa el trabajo: Cakey Bot funciona bien y su web y límites gratuitos son suficientes.
-- **Alternativa simple:** Cakey sigue siendo la fuente de verdad de niveles, XP, mensajes y minutos de voz. Asistente deja de leer `#bots` con regex y lee el **leaderboard web público** (`https://cakey.bot/leaderboard/id/1446143936891715616?tab=leveling`), que se sirve como HTML con usuario, mensajes, minutos de voz, nivel y XP de cada miembro (comprobado el 20/10/2026).
-- Aura, IPO y Book Value de la Bolsa consumirían esos datos sin crear `datos/niveles.json`.
-- [Pendiente de matizar: frecuencia de lectura del leaderboard y cómo se obtiene la ventana de 30 días (snapshots diarios del acumulado y resta)].
+#### 3.1. Fuente de Verdad Oficial: Mantener Cakey Bot vía Leaderboard Web `[Aprobado · Jose · 20/10/2026]`
+- Ratificada la permanencia de Cakey Bot como fuente de verdad canónica de niveles, XP acumulada, mensajes históricos y minutos de voz. Se desestima la creación de un sistema de niveles propio en `Asistente` para evitar duplicidad y sobrecarga.
+- **Mecanismo de Ingesta Directa**: `Asistente` abandona la lectura de `#bots` con regex y pasa a consultar directamente el **leaderboard web público** oficial de Cakey Bot (`https://cakey.bot/leaderboard/id/1446143936891715616?tab=leveling`), el cual entrega datos limpios de cada miembro:
+  - `username` / ID
+  - `messages` (mensajes históricos con XP)
+  - `voice_minutes` (minutos de llamada históricos acumulados)
+  - `level` (nivel exacto)
+  - `xp` (XP total acumulada)
+- Una caché en memoria de 5 a 15 minutos en `Asistente` previene consultas repetitivas.
+- Salarios (`/salario`), rangos, bonos, perfil (`/perfil`), cálculo de XP (`/xp`), Aura (Pilares 1, 2 y 3) y la Bolsa Sanvi consumen exclusivamente esta fuente unificada.
 
 ---
 
 ## 📈 Integración con la Bolsa Sanvi (`Sanvi Exchange`)
 
-El Aura Total opera como el **Valor Fundamental (50%)** de la cotización de cada miembro en la Bolsa:
+El Aura Total alimenta la valoración bursátil de cada miembro cotizado según la arquitectura de dos horizontes ratificada en [`docs/DISENO_BOLSA_SANVI.md`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/DISENO_BOLSA_SANVI.md):
 
-$$P_{\text{acción}} = 0{,}50 \cdot P_{\text{fundamental}} (\text{Aura / 10.000}) + 0{,}50 \cdot P_{\text{mercado}} (\text{Oferta y Demanda})$$
+$$\text{Precio Acción} = \text{Book Value (Patrimonio Histórico)} + (\text{PER} \times \text{Rendimiento Mensual})$$
 
-- **Suelo Fundamental (50%)**: Usuarios con alto Aura tienen un suelo de cotización elevado e inmune a especulaciones destructivas. Cuentas inactivas o fantasma tienen un suelo cercano a 0.
-- **Presión de Mercado (50%)**: Las compras y ventas reales con Porros hacen oscilar el precio en el corto plazo, generando volatilidad y especulación divertida.
+- **Patrimonio Histórico (*Book Value / Equity*)**: El Pilar 3 del Aura (trayectoria histórica, nivel y horas de por vida desde Cakey Bot) establece el suelo patrimonial inmutable que impide la quiebra.
+- **Rendimiento Mensual (*Earnings*)**: Los Pilares 1 y 2 (actividad móvil de 30 días) alimentan los beneficios recientes que, al multiplicarse por el PER de mercado, generan las subidas y bajadas de cotización.
+
+---
+
+## 📋 Registro de Decisiones y Estado Canónico (Compuerta 5 — Regla Global §13)
+
+- [x] Baremo v4 de 10.000 puntos en 3 pilares (`[Aprobado · Jose · 20/10/2026]`).
+- [x] Pilar 1: Presencia y Actividad en Canales de Voz (40% — 4.000 pts) (`[Aprobado · Jose · 20/10/2026]`).
+- [x] Pilar 2: Comunicación y Vínculo Social en Canales de Texto (40% — 4.000 pts) (`[Aprobado · Jose · 20/10/2026]`).
+- [x] Pilar 3: Veteranía y Prestigio en el Servidor (20% — 2.000 pts) (`[Aprobado · Jose · 20/10/2026]`).
+- [x] Mantenimiento de Cakey Bot como fuente canónica de niveles y XP vía Leaderboard Web (`[Aprobado · Jose · 20/10/2026]`).
+- [x] Desestimación de niveles nativos propios (`datos/niveles.json`) (`[Aprobado · Jose · 20/10/2026]`).
+- [ ] [Pendiente de matizar: frecuencia de guardado de snapshots diarios del leaderboard para la ventana rodante de 30 días].
+
