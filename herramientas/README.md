@@ -15,6 +15,7 @@
 | `sync_voice_recordings.py` | `python herramientas/sync_voice_recordings.py` | Descarga y sincroniza las grabaciones de voz temporales desde Render Cloud hacia `datos_locales/recordings_backup/`. |
 | `sync_info_servidor.py` | `python herramientas/sync_info_servidor.py` | Audita y sincroniza en segundos los canales, roles y censos reales de Discord contra `docs/INFO_SERVIDOR.md`. |
 | `audit_emojis_telemetry.py` | `python herramientas/audit_emojis_telemetry.py` | Descarga respaldo local de los 124 emojis en `datos_locales/emojis_backup/`, genera `manifest.json` y escanea mensajes y reacciones en los 33 canales de texto para telemetría real de uso. |
+| `update_discord_channels.py` | `python herramientas/update_discord_channels.py` | Actualiza los tópicos de canales de economía y casino en Discord y gestiona la publicación y fijado de guías maestras en `#⌨️comandos⌨️`. |
 
 ---
 
