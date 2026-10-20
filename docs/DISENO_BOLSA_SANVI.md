@@ -102,13 +102,14 @@ Actualmente, 4 miembros cumplen el requisito de Nivel 20+ en el servidor y forma
 
 ### 6.3. Tickers Reservados para Nuevas Salidas a Bolsa (IPO Pipeline)
 En cuanto un miembro alcance el Nivel 20, el sistema anunciará automáticamente su **Salida a Bolsa** con su ticker pre-aprobado:
-- `mpx56.` (Nivel 19 $\rightarrow$ a 1 nivel de cotizar): **`$MPX`**
-- `carlitosmf__` (Nivel 18 $\rightarrow$ a 2 niveles de cotizar): **`$CARL`**
-- `vexus_1128` (Nivel 17): **`$VEXUS`**
-- `ccmen1408` (Nivel 15): **`$CCMEN`**
-- `zixxer_donnuts_05511` (Nivel 15): **`$ZIXX`**
+> *Niveles corregidos el 20/10/2026 19:47 con el leaderboard web oficial de Cakey Bot (los valores previos 19/18/17/15/15 eran erróneos). Tickers sin cambios.*
+- `mpx56.` (Nivel 16 $\rightarrow$ a 4 niveles de cotizar): **`$MPX`**
+- `carlitosmf__` (Nivel 15 $\rightarrow$ a 5 niveles de cotizar): **`$CARL`**
+- `vexus_1128` (Nivel 14): **`$VEXUS`**
+- `ccmen1408` (Nivel 14): **`$CCMEN`**
+- `zixxer_donnuts_05511` (Nivel 12): **`$ZIXX`**
 - `alexpro0812` (Nivel 10): **`$ALEX`**
-- `motor123...` (Nivel 10): **`$MOTOR`**
+- `motor123...` (Nivel 6): **`$MOTOR`**
 
 ---
 

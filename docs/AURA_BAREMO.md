@@ -141,6 +141,13 @@ Aprobado en la hoja de ruta sustituir a Cakey Bot por un **Sistema de Niveles Na
 | 10 | `alexpro0812` | 24 | 0 min (0,0 h) | **Lvl 10** | 5.700 XP | $350 + 0 + 24 = \mathbf{374 \text{ pts}}$ |
 | 11 | `motor123ewfvioq3590tj_68922` | 1 | 69 min (1,15 h) | **Lvl 6** | 2.000 XP | $100 + 12 + 1 = \mathbf{113 \text{ pts}}$ |
 
+#### 3.1. Revisión: Mantener Cakey Bot como Fuente de Niveles `[Propuesta · Jose / Chat 1 · 20/10/2026]`
+> Bloque paralelo: no anula el texto aprobado de §3 hasta que Jose lo ratifique.
+- Jose considera que la migración a niveles nativos no compensa el trabajo: Cakey Bot funciona bien y su web y límites gratuitos son suficientes.
+- **Alternativa simple:** Cakey sigue siendo la fuente de verdad de niveles, XP, mensajes y minutos de voz. Asistente deja de leer `#bots` con regex y lee el **leaderboard web público** (`https://cakey.bot/leaderboard/id/1446143936891715616?tab=leveling`), que se sirve como HTML con usuario, mensajes, minutos de voz, nivel y XP de cada miembro (comprobado el 20/10/2026).
+- Aura, IPO y Book Value de la Bolsa consumirían esos datos sin crear `datos/niveles.json`.
+- [Pendiente de matizar: frecuencia de lectura del leaderboard y cómo se obtiene la ventana de 30 días (snapshots diarios del acumulado y resta)].
+
 ---
 
 ## 📈 Integración con la Bolsa Sanvi (`Sanvi Exchange`)
