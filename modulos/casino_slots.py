@@ -39,55 +39,55 @@ MIN_COINFLIP_BET = 100
 
 # Símbolos oficiales de Tragaperras 5x3: 6 Brawl Stars Ranked + WILD + SCATTER
 # Suma de pesos = 38 + 24 + 15 + 9 + 5 + 3 + 2 + 4 = 100
-# Calibrado a RTP 110.0% (+/- 0.5%) y Hit Rate ~73.8% con Opción B (3 y 4 consecutivos en cualquier posición)
+# Calibrado a RTP 110.0% (+/- 0.5%) y Hit Rate ~43.8% con evaluacion clasica Left-to-Right
 SLOT_SYMBOLS = {
     "Gold": {
         "id": "1550130006896812084",
         "emoji": "<:Ranked_Gold:1550130006896812084>",
         "name": "Ranked_Gold",
-        "mults": {3: 0.19, 4: 0.58, 5: 1.95},
+        "mults": {3: 0.33, 4: 1.05, 5: 3.50},
         "weight": 38,
     },
     "Diamond": {
         "id": "1550130004074041434",
         "emoji": "<:Ranked_Diamond:1550130004074041434>",
         "name": "Ranked_Diamond",
-        "mults": {3: 0.37, 4: 1.20, 5: 3.80},
+        "mults": {3: 0.67, 4: 2.15, 5: 6.90},
         "weight": 24,
     },
     "Mythic": {
         "id": "1550130000852820099",
         "emoji": "<:Ranked_Mythic:1550130000852820099>",
         "name": "Ranked_Mythic",
-        "mults": {3: 0.78, 4: 2.70, 5: 8.90},
+        "mults": {3: 1.40, 4: 4.90, 5: 16.00},
         "weight": 15,
     },
     "Legendary": {
         "id": "1550129997774323732",
         "emoji": "<:Ranked_Legendary:1550129997774323732>",
         "name": "Ranked_Legendary",
-        "mults": {3: 1.65, 4: 5.80, 5: 18.80},
+        "mults": {3: 3.00, 4: 10.50, 5: 34.00},
         "weight": 9,
     },
     "Masters": {
         "id": "1550129992837496833",
         "emoji": "<:Ranked_Masters:1550129992837496833>",
         "name": "Ranked_Masters",
-        "mults": {3: 4.70, 4: 15.0, 5: 46.50},
+        "mults": {3: 8.50, 4: 27.00, 5: 84.00},
         "weight": 5,
     },
     "Pro": {
         "id": "1550129987972104252",
         "emoji": "<:Ranked_Pro:1550129987972104252>",
         "name": "Ranked_Pro",
-        "mults": {3: 11.60, 4: 37.5, 5: 122.0},
+        "mults": {3: 21.00, 4: 68.00, 5: 220.00},
         "weight": 3,
     },
     "Wild": {
         "id": "1478115607336714300",
         "emoji": "<:absolutecinema:1478115607336714300>",
         "name": "WILD",
-        "mults": {3: 15.0, 4: 49.0, 5: 152.0},
+        "mults": {3: 27.00, 4: 88.00, 5: 275.00},
         "weight": 2,
     },
     "Scatter": {
@@ -106,8 +106,8 @@ SLOT_PAYLINES = [
     ("L3: Abajo", [(2, 0), (2, 1), (2, 2), (2, 3), (2, 4)]),
     ("L4: V Suave", [(0, 0), (1, 1), (2, 2), (1, 3), (0, 4)]),
     ("L5: V Invertida", [(2, 0), (1, 1), (0, 2), (1, 3), (2, 4)]),
-    ("L6: Diagonal Descendente", [(0, 0), (0, 1), (1, 2), (2, 3), (2, 4)]),
-    ("L7: Diagonal Ascendente", [(2, 0), (2, 1), (1, 2), (0, 3), (0, 4)]),
+    ("L6: Zigzag Descendente", [(0, 0), (0, 1), (1, 2), (2, 3), (2, 4)]),
+    ("L7: Zigzag Ascendente", [(2, 0), (2, 1), (1, 2), (0, 3), (0, 4)]),
 ]
 
 
@@ -134,41 +134,31 @@ class SlotEngine:
 
     def evaluate_line(self, line_syms: List[str]) -> Tuple[Optional[str], int, float]:
         """
-        Evalúa una línea de 5 casilleros buscando ventanas consecutivas de tamaño k = 5, 4, 3
-        en cualquier posición de la línea (Opción B: [0..4], [0..3]/[1..4], [0..2]/[1..3]/[2..4]).
-        Wild sustituye a cualquier regular; una ventana de Wilds puros también premia.
-        Se prioriza la longitud más larga (k=5 > k=4 > k=3) y el multiplicador más alto.
+        Evalúa una línea de 5 casilleros de izquierda a derecha empezando estrictamente
+        en el primer rodillo (índice 0) para rachas consecutivas de tamaño k = 5, 4, 3
+        (estándar internacional de video tragaperras).
+        Wild sustituye a cualquier regular; una racha de Wilds puros también premia.
         Devuelve (best_sym, best_count, best_mult).
         """
         regular_keys = ["Gold", "Diamond", "Mythic", "Legendary", "Masters", "Pro"]
 
         for k in (5, 4, 3):
-            best_sym_k = None
-            best_mult_k = 0.0
+            window = line_syms[:k]
 
-            for start in range(len(line_syms) - k + 1):
-                window = line_syms[start : start + k]
+            if "Scatter" in window:
+                continue
 
-                if "Scatter" in window:
-                    continue
+            if all(s == "Wild" for s in window):
+                w_mult = self.symbols["Wild"]["mults"].get(k, 0.0)
+                if w_mult > 0:
+                    return "Wild", k, w_mult
 
-                if all(s == "Wild" for s in window):
-                    w_mult = self.symbols["Wild"]["mults"].get(k, 0.0)
-                    if w_mult > best_mult_k:
-                        best_mult_k = w_mult
-                        best_sym_k = "Wild"
-                    continue
-
-                nw = [s for s in window if s != "Wild"]
-                if len(nw) > 0 and all(s == nw[0] for s in nw) and nw[0] in regular_keys:
-                    reg = nw[0]
-                    reg_mult = self.symbols[reg]["mults"].get(k, 0.0)
-                    if reg_mult > best_mult_k:
-                        best_mult_k = reg_mult
-                        best_sym_k = reg
-
-            if best_mult_k > 0:
-                return best_sym_k, k, best_mult_k
+            nw = [s for s in window if s != "Wild"]
+            if len(nw) > 0 and all(s == nw[0] for s in nw) and nw[0] in regular_keys:
+                reg = nw[0]
+                reg_mult = self.symbols[reg]["mults"].get(k, 0.0)
+                if reg_mult > 0:
+                    return reg, k, reg_mult
 
         return None, 0, 0.0
 
@@ -519,7 +509,7 @@ def build_payouts_text() -> str:
         "🎰 **TABLA DE PAGOS Y REGLAS — TRAGAPERRAS 5×3 DE PORROS**",
         "La máquina evalúa **7 líneas de pago clásicas reales** en cuadrícula de 5 rodillos × 3 filas:",
         "• **L1**: Centro | **L2**: Arriba | **L3**: Abajo",
-        "• **L4**: V Suave | **L5**: V Invertida | **L6**: Diagonal Descendente | **L7**: Diagonal Ascendente",
+        "• **L4**: V Suave | **L5**: V Invertida | **L6**: Zigzag Descendente | **L7**: Zigzag Ascendente",
         "",
         "**Multiplicadores por acierto (3 / 4 / 5 en línea de izquierda a derecha):**",
         "• <:absolutecinema:1478115607336714300> **WILD (Comodín)**: **×27.0** / **×88.0** / **×275.0** — Sustituye a cualquier regular. 5 en L1 = ¡Grand Jackpot!",
