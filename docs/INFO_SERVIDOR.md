@@ -344,6 +344,8 @@
   - *Topic*: `📝 Borradores Oficiales: Maquetación, pruebas de formato nativo y revisión de comunicados | 🤖 Pruebas de Asistente: Entorno de testeo para anuncios automáticos del bot antes de lanzarlos | 🔒 Solo Administración: Área interna de redacción y notas de parche de Joselito`.
 - `#🛠️apps-solo-mods🛠️` (`1535676349451341885` | Texto): Banco de pruebas técnicas, almacén de emojis y credenciales del staff.
   - *Topic*: `🛠️ Utilidades de Staff: Comandos técnicos, configuración de integraciones y bots del servidor | 📦 Almacén de Recursos: Registro de emojis, assets visuales, identificadores y credenciales | 🛡️ Gestión & Moderación: Espacio de trabajo técnico reservado para el equipo de control`.
+- `#🔒backup-datos` (`1562178146596290591` | Texto): Canal privado de respaldo persistente 24/7 de economía (`economia.json`) y memoria (`user_memory.json`).
+  - *Topic*: `Canal privado de respaldo persistente 24/7 de economía y memoria de Antigravity Asistente.`.
 
 ---
 
