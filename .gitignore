@@ -10,6 +10,7 @@ config_discord.json
 !trivia_data.json
 !economia.json
 !.agents/skills.json
+!.agents/hooks.json
 /CHAT_RAW.md
 /HISTORIAL_CONVERSACION.md
 chat *.md
@@ -33,6 +34,7 @@ herramientas/*
 !herramientas/test_roulette.py
 !herramientas/test_coinflip.py
 !herramientas/test_casino_hub.py
+!herramientas/update_discord_channels.py
 documentos_pdf/
 *.zip
 *.txt
