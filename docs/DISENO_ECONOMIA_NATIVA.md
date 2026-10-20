@@ -111,7 +111,7 @@ En lugar de cobrar únicamente por saltos de rol cada 10 niveles, `/salario` int
 - `modulos/economia.py`: **4.787 líneas (187,9 KB)** — Demasiado grande; ralentiza la lectura y edición de los agentes (límite de 800 líneas por lectura).
 - `modulos/comandos.py`: **2.317 líneas (96,4 KB)** — Agrupa los 22 comandos generales y los 20 de economía en un solo fichero.
 
-### 3.2. Arquitectura de División Propuesta para la Sesión de Orden (`[Propuesta · Chat 3 · 20/10/2026]`)
+### 3.2. Arquitectura de División Aprobada para la Sesión de Orden (`[Aprobado · Jose · 20/10/2026]`)
 1. **Desglosar `modulos/economia.py` (4.787 líneas $\to$ submódulos de ~600–900 líneas)** manteniendo `modulos/economia.py` como fachada de reexportación 100% retrocompatible:
    - `modulos/economia_core.py`: Persistencia atómica (`economia.json`), saldos, banca (`/depositar`, `/retirar`, `/transferir`), `/trabajar`, `/crimen`, `/robar`, `/salario`, `/ranking` y `/admin_dinero`.
    - `modulos/economia_tienda.py`: Catálogo `SHOP_ITEMS`, `ShopInteractiveView`, `/inventario`, `/usar`, `/regalar` y watcher de expiración de pases XP (`check_and_expire_buffs`).

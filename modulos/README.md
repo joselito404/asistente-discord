@@ -37,74 +37,21 @@ Cualquier agente o desarrollador autorizado que trabaje en nuevas funcionalidade
    - Monitor de niveles reales de Cakey Bot (`get_live_levels_dict`), cálculo cuadrático de XP (`calculate_xp_gap`), memoria de usuarios (`user_memory`).
    - Catálogo canónico de 124 emojis del servidor (`SERVER_EMOJIS_DATA`), auto-conversor pre-envío regex (`format_server_emojis`) y arquitectura resiliente ante expiración de Server Boost con fallbacks limpios (`DISABLED_EMOJI_FALLBACK`).
    - Búsqueda web contextual en vivo (`search_web_lite`), radar de voz, censos y enrutador principal de mensajes (`_handle_message_safe`).
-8. **`comandos.py`**: Registro unificado de Comandos Slash nativos en Arquitectura Dual Runner:
-   - Declaración de los 42 comandos interactivos (`@app_commands.command`) organizados por dominios de bots:
-     * `GENERAL_SLASH_COMMANDS` (22 comandos para el bot `Asistente`): `/dibuja`, `/musica`, `/steam`, `/tribunal`, `/perfil`, `/pregunta`, `/voz`, `/recuerda`, `/xp`, `/habla`, `/geminilive`, `/cambiar_voz`, `/unete`, `/desconecta`, `/para_audio`, `/trivial`, `/ranking_trivial`, `/tres_en_raya`, `/conecta4`, `/ajedrez`, `/autoroles`, `/sugerencia`.
-     * `ECONOMY_SLASH_COMMANDS` (20 comandos para el bot `Economia Asistente`): `/slots`, `/balance`, `/trabajar`, `/transferir`, `/depositar`, `/retirar`, `/robar`, `/tienda`, `/salario`, `/blackjack`, `/bj`, `/ruleta`, `/coinflip`, `/casino`, `/crimen`, `/ranking`, `/inventario`, `/usar`, `/regalar`, `/admin_dinero`.
-     * `ALL_SLASH_COMMANDS`: unión de las dos listas (42 comandos) garantizando retrocompatibilidad total.
-   - Restricción de canales y categoría (`ensure_economy_channel`): todos los comandos de economía (salvo `/admin_dinero`) quedan limitados a `🎲・CASINO & ECONOMÍA・🎲` y sus canales autorizados (`#🎰casino-y-apuestas🎰`, `#🎰casino-y-apuestas-2🎰`, `#🏪tienda-y-mercado🏪`, `#🛠️apps-solo-mods🛠️`).
-   - Funciones modulares de registro:
-     * `register_general_commands(tree)`: vincula los 22 comandos generales al árbol de `Asistente`.
-     * `register_economy_commands(tree)`: vincula los 20 comandos de economía al árbol de `Economia Asistente`.
-     * `register_slash_commands(tree)`: registra ambos árboles si se invoca para compatibilidad retrospectiva.
-9. **`economia.py`**: Motor nativo de economía comunitaria, banca, robos, regalos, delitos, tienda, inventario, salarios, rankings, administración y casino:
-   - Moneda oficial: Porros (`PORRO_EMOJI` `<:Porro:1535685303317172305>`).
-   - Apuesta mínima unificada en 100 Porros en todos los juegos de azar (`/slots`, `/blackjack`, `/ruleta`, `/coinflip`).
-   - Persistencia segura y atómica en `datos/economia.json` con bloqueo `ECONOMY_LOCK` (`RLock`) y escritura temporal `safe_write_json`.
-   - Gestión de saldos: `get_balance`, `modify_balance`, `transfer_funds`.
-   - Módulo de Banca (`/depositar`, `/retirar`): gestión segura de efectivo y banco con soporte de montos numéricos y opción `'all'`/`'todo'`.
-   - Multiplicadores por Rol de Nivel (`get_level_role_multiplier`): evalúa roles del servidor (Nivel 10 `+10%`, Nivel 30 `+20%`, Nivel 50 `+25%`, Nivel 70 `+30%`, Nivel 80+ `+40%`) aplicables a `/trabajar` y `/crimen`.
-   - Jornada laboral (`/trabajar`): historias cómicas del lore del servidor (`WORK_MESSAGES`), retribución base de 1.000 a 2.500 Porros ($\times$ bono de rol de nivel) y cooldown de 4 horas.
-   - Delitos de Alto Riesgo (`/crimen`): 50% de éxito (1.800 a 3.500 Porros base $\times$ bono de rol de nivel) y 50% de fallo con multa del 10% del efectivo (mínimo 500 Porros, sin saldo negativo y aportando el 3% al `server_jackpot`), con cooldown de 12 horas.
-   - Sistema de Robo (`/robar`): probabilidad de éxito 50% (roba 20-33% del efectivo), 24h de cooldown, chequeo estricto de inmunidad contra `🛡️ Cartera Blindada` (falla 100%), y reparto de multa en fallo (15% del efectivo del ladrón: 10% a víctima + 5% a `server_jackpot`).
-   - Sistema de Regalos (`/regalar` / `gift_inventory_item`): transferencia directa entre inventarios de artículos transferibles (`porro_oro`, `monster_blanco`, `chute_xp`, `pase_semanal_xp`, `pase_mensual_xp`).
-   - Catálogo Oficial de Tienda V2 (`/tienda`), Inventario (`/inventario`) y Uso de Consumibles (`/usar`):
-     * 9 artículos oficiales: roles permanentes auto-asignables al comprar (`🛡️ Cartera Blindada`, `🚬 Camello del Barrio`, `🎰 Ludópata Rehabilitado`, `👑 Aura de XP Permanente`), coleccionable (`🚬 Porro de Oro`), consumible (`🥤 Monster Blanco`, 25.000 Porros, resetea cooldowns de `/trabajar`, `/crimen` y `/robar`) y pases temporales de XP (`⚡ Chute de XP (24h)`, `🔥 Pase Semanal de XP`, `💠 Pase Mensual de XP`) que se almacenan en el inventario al comprarse y se activan/extienden bajo demanda con `/usar`.
-     * Consulta de inventario (`/inventario`): vista efímera con desglose de artículos, roles y tiempo restante de `active_buffs`, e incluye botón `[📢 Mostrar en público]` (`InventoryView`).
-     * Expiración automática (`check_and_expire_buffs`): auditado periódicamente por `_xp_passes_expiration_watcher()` en `bot_service.py` para retirar automáticamente de Discord los roles temporales vencidos.
-   - Clasificación de Riqueza (`/ranking`): tabla de líderes pública (`RankingView` y `RankingCategorySelect`) para alternar en vivo entre `💎 Patrimonio Total`, `💵 Efectivo (Cash)` y `🏦 Banco (Bank)`, mostrando el Top 10 y la posición del solicitante.
-   - Panel de Administración Financiera (`/admin_dinero`): exclusivo para Administradores (`admin_modify_money`, `admin_airdrop_role`) con acciones `dar`, `quitar`, `fijar` y `airdrop` masivo por rol.
-   - Salario Acumulativo Progresivo (`/salario`): interpolación lineal continua por nivel exacto $L$ (Opción A, Nivel 10 a 100+, requiriendo $L \ge 10$) más plus de podio (Top 1: +8.000, Top 2: +5.000, Top 3: +3.000), con fórmula de decaimiento del 5% diario ($P = S \times \frac{1 - (1 - d)^n}{d}$, tope asintótico $20 \times S$).
-   - Centro de Control del Casino (`/casino`):
-     * Hub Central interactivo (`CasinoHubView`) con timeout de 90s y control estricto de autoría (bloqueo efímero a terceros).
-     * Embed Principal con Bote Acumulado del servidor (`server_jackpot`) visible en grande, resumen de cartera del usuario (`cash`, `bank`, `total`) y catálogo rápido de juegos.
-     * Menú desplegable interactivo (`CasinoHubSelect`) con los 4 juegos oficiales (`🎰 Tragaperras 5x3`, `🃏 Blackjack 21`, `🎡 Ruleta Europea`, `🪙 Coinflip Dual`) que actualiza la vista con el desglose de reglas, pagos, comandos de ejemplo y RTP calibrado.
-     * Botón `[ 🏠 Menú Principal ]` (`ButtonStyle.secondary`) para regresar instantáneamente a la vista general.
-   - Máquina tragaperras 5x3 de Alta Tensión (`/slots`):
-     * Matriz 5 rodillos $\times$ 3 filas (15 casilleros) y 8 símbolos: 6 Brawl Stars Ranked, Comodín WILD (`<:absolutecinema:...>`) y Dispersor SCATTER (`<:Porro:...>`).
-     * 7 Líneas de Pago Limpias evaluadas de izquierda a derecha para 3, 4 y 5 aciertos (`SLOT_PAYLINES`).
-     * Patrón Especial "Pantalla Completa" (15 casillas a $\times 500.0$).
-     * Ronda de Free Spins escalonada (3/4/5 Scatters $\to$ 5/8/12 giros a $\times 2$ con re-triggers $+3$).
-     * Bote Progresivo Escalonado: Grand Jackpot (100% bote con 5 Pro o 5 Wild en L1 central) y Mini Jackpot (25% bote con 5 Masters en L1).
-     * Calibración Monte Carlo a RTP 110.0% ($\pm 0.5\%$, Hit Rate ~73.83%, modo High Payouts EV+ ordenado por Jose).
-     * Interfaz nativa con **Discord Components V2** (`SlotsLayoutView`): contenedores tipo 17 con `accent_color`, separadores tipo 14, textos tipo 10 y botones `[Play Again]`, `[🌀 Jugar Tiradas Gratis]` y `[Payouts]` en fila de acciones tipo 1.
-   - Minijuego de Casino: **Blackjack 21 Nativo** (`/blackjack`, `/bj`):
-     * Zapato estándar de casino de 6 barajas (312 cartas) con palos (♠️, ♥️, ♦️, ♣️) y rangos (A, 2-10, J, Q, K), con rebarajado automático al bajar de 52 cartas (`BlackjackEngine`).
-     * Evaluación dinámica de Ases flexibles (11 o 1) para manos blandas y duras (`is_soft`, `is_bust`) y detección de Blackjack natural inicial de 2 cartas (`is_blackjack`).
-     * Reglas del Crupier: S17 (*Dealer stands on all 17s*, pide carta obligatoriamente con $\le 16$).
-     * Interfaz nativa interactiva (`BlackjackView` con timeout de 60s y auto-stand):
-       - `[ 🃏 Pedir ]` (`ButtonStyle.primary`): roba carta con chequeo de bust y auto-stand en 21.
-       - `[ 🛑 Plantarse ]` (`ButtonStyle.danger`): pasa turno al crupier y resuelve resultado.
-       - `[ ⚡ Doblar ]` (`ButtonStyle.success`): duplica la apuesta (con 2 cartas y fondos suficientes), da exactamente 1 carta más y resuelve inmediatamente al crupier.
-       - Control de concurrencia: 1 partida simultánea por usuario (`ACTIVE_BLACKJACK_GAMES`).
-       - Control de permisos: interacción efímera de bloqueo para terceros.
-     * Liquidación financiera: Blackjack natural paga 3:2 (ganancia neta 1.5x, retorno 2.5x), victoria regular paga 1:1 (ganancia neta 1.0x, retorno 2.0x), empate push (devolución 100% de la apuesta), y pérdidas netas aportan el 3% al `server_jackpot` del servidor.
-   - Minijuego de Casino: **Ruleta Europea 37 Casillas** (`/ruleta`):
-     * Cilindro europeo de 37 casillas (0 a 36) con secuencia circular oficial: `[0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26]` (`RouletteEngine`).
-     * Distribución matemática oficial: 18 rojos (`ROULETTE_RED`), 18 negros (`ROULETTE_BLACK`) y 1 verde (`0`).
-     * Catálogo completo de 13 opciones de apuesta (suertes sencillas 1:1, docenas 2:1, columnas 2:1 y pleno 35:1).
-     * Regla canónica del 0 verde con RTP teórico del 97.30%.
-     * Interfaz interactiva (`RouletteActionView` con timeout 60s): botones `[ 🔄 Repetir Apuesta ]` y `[ 🪙 Duplicar Apuesta ]`.
-     * Alimentación del 3% de pérdidas netas al bote progresivo `server_jackpot`.
-   - Minijuego de Casino y Duelos: **Coinflip Dual (PvP y PvE)** (`/coinflip`):
-     * **Modo PvE (Contra la Casa)**: lanzamiento individual 50/50 justo (`random.choice(["cara", "cruz"])`) con cobro 1:1 en caso de acierto (retorno 2x la apuesta) y alimentación del 3% de la pérdida neta al `server_jackpot` en caso de fallo. Re-apuesta instantánea con `CoinflipActionView` (`[ 🔄 Tirar Otra Vez ]`) con timeout de 60s y verificación de saldo.
-     * **Modo PvP (Duelo entre Miembros)**:
-       - Retención atómica de la fianza del retador bajo `ECONOMY_LOCK` y registro en `ACTIVE_COINFLIP_DUELS` para prevenir dobles desafíos y exploits concurrentes.
-       - Despliegue interactivo con `CoinflipChallengeView`:
-         * `[ ⚔️ Aceptar Desafío ]` (`ButtonStyle.success`): exclusivo para el rival desafiado. Comprueba atómicamente saldo suficiente; si no dispone de fondos, cancela el duelo y reembolsa la fianza al retador.
-         * `[ 🏳️ Rechazar ]` (`ButtonStyle.danger`): accionable por el rival o por el retador para cancelar.
-         * Timeout de seguridad a 60 segundos con cancelación automática y reembolso del 100% al retador.
-       - Reparto determinista de fondos al resolver: 2% del bote total ($2 \times \text{apuesta}$) destinado al `server_jackpot` de la comunidad, y el 98% restante abonado al vencedor de forma instantánea.
+8. **`comandos.py` (Fachada)** y sus submódulos especializados:
+   - **`comandos_generales.py`**: Comandos Slash del bot `Asistente` (22 comandos generales: `/dibuja`, `/musica`, `/steam`, `/tribunal`, `/perfil`, `/pregunta`, `/voz`, `/recuerda`, `/xp`, `/habla`, `/geminilive`, `/cambiar_voz`, `/unete`, `/desconecta`, `/para_audio`, `/trivial`, `/ranking_trivial`, `/tres_en_raya`, `/conecta4`, `/ajedrez`, `/autoroles`, `/sugerencia`), lista `GENERAL_SLASH_COMMANDS` y registro modular `register_general_commands(tree)`.
+   - **`comandos_economia.py`**: Comandos Slash del bot `Economia Asistente` (20 comandos de economía y casino: `/slots`, `/balance`, `/trabajar`, `/transferir`, `/depositar`, `/retirar`, `/robar`, `/tienda`, `/salario`, `/blackjack`, `/bj`, `/ruleta`, `/coinflip`, `/casino`, `/crimen`, `/ranking`, `/inventario`, `/usar`, `/regalar`, `/admin_dinero`), restricción estricta de canales (`ensure_economy_channel`), lista `ECONOMY_SLASH_COMMANDS` y registro modular `register_economy_commands(tree)`.
+   - **`comandos.py`**: Fachada ligera de reexportación 100% retrocompatible que agrupa `ALL_SLASH_COMMANDS`, expone `register_slash_commands(tree)` y propaga mutaciones dinámicas a través de `_FachadaComandos`.
+
+9. **`economia.py` (Fachada)** y sus 4 submódulos atómicos:
+   - **`economia_core.py`**: Motor central de persistencia atómica (`datos/economia.json`) bajo `ECONOMY_LOCK` (`RLock`), gestión de saldos (`get_balance`, `modify_balance`), bote global del servidor (`get_server_jackpot`, `modify_server_jackpot`), banca (`deposit_cash`, `withdraw_cash`), transferencias (`transfer_funds`), multiplicadores por rol de nivel (`LEVEL_ROLE_MULTIPLIERS`, `get_level_role_multiplier`), trabajo (`can_work`, `execute_work`), delitos (`can_crime`, `execute_crime`), robos e inmunidad (`user_has_shield`, `can_rob`, `execute_rob`), salario progresivo con decaimiento del 5% (`calculate_daily_salary`, `claim_salary`), tabla de líderes (`get_economy_leaderboard`, `build_ranking_embed`, `RankingView`) y panel financiero de administración (`admin_modify_money`, `admin_airdrop_role`).
+   - **`economia_tienda.py`**: Catálogo oficial de artículos `SHOP_ITEMS` (roles permanentes, pases temporales XP y consumibles como `🥤 Monster Blanco`), compra interactiva (`build_shop_embed`, `ShopInteractiveView`), inventario (`build_inventory_embed`, `InventoryView`), consumo y extensión de pases (`use_inventory_item`), transferencias entre miembros (`gift_inventory_item`) y watcher de expiración de buffs temporales (`check_and_expire_buffs`).
+   - **`casino_slots.py`**: Motor de la tragaperras 5x3 (`SlotEngine`, `slot_engine`), símbolos de Brawl Stars Ranked, comodín WILD, dispersores SCATTER, 7 líneas de pago limpias evaluadas en cualquier ventana (Opción B), pantalla completa $\times 500$, free spins $\times 2$, bote progresivo (Grand y Mini), calibración Monte Carlo a RTP 110.0%, componentes interactivos Discord V2 (`SlotsLayoutView`, `SlotsPlayAgainButton`, `SlotsPayoutsButton`, `SlotsFreeSpinButton`) y manejador `handle_slots_spin`.
+   - **`casino_juegos.py`**: Motores y vistas interactivas del resto del casino nativo:
+     * **Blackjack 21 Nativo** (`BlackjackEngine`, `blackjack_engine`, `BlackjackHand`, `BlackjackView`): zapato de 6 barajas con rebarajado automático, ases flexibles, reglas S17 del crupier, detección de Blackjack natural 3:2, opción de doblar (`Double Down`), control de concurrencia y timeout de 60s con auto-stand.
+     * **Ruleta Europea 37 Casillas** (`RouletteEngine`, `roulette_engine`, `RouletteActionView`): cilindro de 37 casillas con orden oficial de vecinos circulares, clasificación matemática de suertes sencillas/múltiples, regla del 0 verde, RTP calibrado al 97.30% y botones para repetir o duplicar tirada.
+     * **Coinflip Dual** (`CoinflipEngine`, `coinflip_engine`, `CoinflipActionView`, `CoinflipChallengeView`): modo individual PvE 50/50 contra la casa y duelos 1v1 PvP con fianza atómica retenida, aceptación de reto, protección contra rival tieso y reparto determinista de fondos.
+     * **Centro de Control del Casino (/casino)** (`CASINO_GAMES_INFO`, `build_casino_hub_embed`, `CasinoHubSelect`, `CasinoHubView`): hub interactivo con el bote acumulado visible, saldo del usuario, menú desplegable para consultar reglas y RTP de los 4 juegos, y botón de navegación de vuelta al menú principal.
+   - **`economia.py`**: Fachada ligera de reexportación que unifica los 4 submódulos para `bot_service.py` y las suites de pruebas, implementando sincronización dinámica de variables (`_FachadaEconomia`) para propagar mutaciones en tiempo de ejecución (como `ECONOMY_DATA_PATH` en tests unitarios).
 
 ## Cómo se usa e integra con `bot_service.py`
 - `bot_service.py` actúa como punto de entrada único (`python bot_service.py`) y orquestador central bajo una **Arquitectura de Runner Dual**:
