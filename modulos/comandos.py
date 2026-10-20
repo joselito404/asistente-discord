@@ -1172,16 +1172,65 @@ async def cmd_sugerencia(interaction: discord.Interaction, idea: str):
 # 7. ECONOMÍA DE PORROS Y CASINO
 # ==========================================
 
+async def ensure_economy_channel(interaction: discord.Interaction) -> bool:
+    """
+    Verifica si la interacción proviene de los canales autorizados para Economía y Casino:
+    - Si no hay contexto de canal (mocks unitarios), permite la ejecución (True).
+    - Si interaction.channel_id pertenece a ALLOWED_ECONOMY_CHANNELS o la categoría es ECONOMY_CATEGORY_ID, permite (True).
+    - En caso contrario, responde con mensaje efímero de restricción y devuelve False.
+    """
+    from modulos.economia import ALLOWED_ECONOMY_CHANNELS, ECONOMY_CATEGORY_ID
+
+    ch_id = getattr(interaction, "channel_id", None)
+    channel = getattr(interaction, "channel", None)
+
+    if ch_id is None and channel is not None:
+        ch_id = getattr(channel, "id", None)
+
+    cat_id = getattr(channel, "category_id", None) if channel is not None else None
+
+    # Detectar si hay identificadores reales de canal o categoría
+    real_ch_id = None
+    if isinstance(ch_id, int):
+        real_ch_id = ch_id
+    elif isinstance(ch_id, str) and ch_id.isdigit():
+        real_ch_id = int(ch_id)
+
+    real_cat_id = None
+    if isinstance(cat_id, int):
+        real_cat_id = cat_id
+    elif isinstance(cat_id, str) and cat_id.isdigit():
+        real_cat_id = int(cat_id)
+
+    # Si no hay contexto de canal real (p.ej. tests con MagicMock/AsyncMock sin configurar), permitir
+    if real_ch_id is None and real_cat_id is None:
+        return True
+
+    if (real_ch_id is not None and real_ch_id in ALLOWED_ECONOMY_CHANNELS) or (
+        real_cat_id is not None and real_cat_id == ECONOMY_CATEGORY_ID
+    ):
+        return True
+
+    await interaction.response.send_message(
+        "❌ Los comandos de economía y casino solo están permitidos en los canales de **🎲・CASINO & ECONOMÍA・🎲** (<#1549458785485987890>, <#1550894047382610081> y <#1549512919694442547>).",
+        ephemeral=True,
+    )
+    return False
+
+
 @app_commands.command(name="slots", description="Juega a la máquina tragaperras del servidor apostando Porros")
 @app_commands.describe(
-    apuesta="Cantidad de Porros a apostar (mínimo 50, por defecto 100)"
+    apuesta="Cantidad de Porros a apostar (mínimo 100, por defecto 100)"
 )
 async def cmd_slots(interaction: discord.Interaction, apuesta: int = 100):
-    from modulos.economia import handle_slots_spin, SlotsLayoutView, PORRO_EMOJI
+    if not await ensure_economy_channel(interaction):
+        return
 
-    if apuesta < 50:
+    from modulos.economia import handle_slots_spin, SlotsLayoutView, PORRO_EMOJI, MIN_SLOTS_BET
+
+    if apuesta < MIN_SLOTS_BET:
         await interaction.response.send_message(
-            f"❌ La apuesta mínima en la tragaperras es de 50 Porros ({PORRO_EMOJI}).",
+            f"❌ La apuesta mínima en la tragaperras es de {MIN_SLOTS_BET} Porros ({PORRO_EMOJI}).",
             ephemeral=True,
         )
         return
@@ -1203,6 +1252,9 @@ async def cmd_slots(interaction: discord.Interaction, apuesta: int = 100):
     usuario="Miembro cuyo saldo quieres consultar (opcional, por defecto tú)"
 )
 async def cmd_balance(interaction: discord.Interaction, usuario: Optional[discord.Member] = None):
+    if not await ensure_economy_channel(interaction):
+        return
+
     from modulos.economia import get_balance, get_server_jackpot, PORRO_EMOJI
 
     target = usuario or interaction.user
@@ -1245,6 +1297,9 @@ async def cmd_balance(interaction: discord.Interaction, usuario: Optional[discor
 
 @app_commands.command(name="trabajar", description="Trabaja en el servidor para conseguir Porros con bono por rol de nivel (cooldown de 4 horas)")
 async def cmd_trabajar(interaction: discord.Interaction):
+    if not await ensure_economy_channel(interaction):
+        return
+
     from modulos.economia import execute_work, get_balance, PORRO_EMOJI
 
     member = interaction.user if isinstance(interaction.user, discord.Member) else interaction.user
@@ -1274,6 +1329,9 @@ async def cmd_trabajar(interaction: discord.Interaction):
     cantidad="Cantidad exacta de Porros a transferir (número entero positivo)",
 )
 async def cmd_transferir(interaction: discord.Interaction, usuario: discord.Member, cantidad: int):
+    if not await ensure_economy_channel(interaction):
+        return
+
     from modulos.economia import transfer_funds, PORRO_EMOJI
 
     if usuario.id == interaction.user.id:
@@ -1316,6 +1374,9 @@ async def cmd_transferir(interaction: discord.Interaction, usuario: discord.Memb
 @app_commands.command(name="depositar", description="Deposita Porros de tu efectivo en tu cuenta bancaria protegida")
 @app_commands.describe(cantidad="Cantidad de Porros a ingresar en el banco o 'all'/'todo'")
 async def cmd_depositar(interaction: discord.Interaction, cantidad: str):
+    if not await ensure_economy_channel(interaction):
+        return
+
     from modulos.economia import deposit_cash, PORRO_EMOJI
 
     ok, msg, bal = deposit_cash(interaction.user.id, cantidad)
@@ -1337,6 +1398,9 @@ async def cmd_depositar(interaction: discord.Interaction, cantidad: str):
 @app_commands.command(name="retirar", description="Retira Porros de tu cuenta bancaria a tu efectivo")
 @app_commands.describe(cantidad="Cantidad de Porros a retirar del banco o 'all'/'todo'")
 async def cmd_retirar(interaction: discord.Interaction, cantidad: str):
+    if not await ensure_economy_channel(interaction):
+        return
+
     from modulos.economia import withdraw_cash, PORRO_EMOJI
 
     ok, msg, bal = withdraw_cash(interaction.user.id, cantidad)
@@ -1358,6 +1422,9 @@ async def cmd_retirar(interaction: discord.Interaction, cantidad: str):
 @app_commands.command(name="robar", description="Intenta robar Porros en efectivo a otro miembro del servidor (50% éxito)")
 @app_commands.describe(usuario="Miembro al que intentas atracar")
 async def cmd_robar(interaction: discord.Interaction, usuario: discord.Member):
+    if not await ensure_economy_channel(interaction):
+        return
+
     from modulos.economia import execute_rob, PORRO_EMOJI
 
     if usuario.id == interaction.user.id:
@@ -1384,6 +1451,9 @@ async def cmd_robar(interaction: discord.Interaction, usuario: discord.Member):
 
 @app_commands.command(name="tienda", description="Consulta el catálogo interactivo de la tienda oficial y adquiere artículos con confirmación")
 async def cmd_tienda(interaction: discord.Interaction):
+    if not await ensure_economy_channel(interaction):
+        return
+
     from modulos.economia import build_shop_embed, ShopInteractiveView
 
     embed = build_shop_embed(interaction.user.id)
@@ -1397,10 +1467,21 @@ async def cmd_tienda(interaction: discord.Interaction):
 
 @app_commands.command(name="salario", description="Cobra tu salario diario acumulado según tus roles de nivel y podio (con decaimiento del 5%)")
 async def cmd_salario(interaction: discord.Interaction):
+    if not await ensure_economy_channel(interaction):
+        return
+
     from modulos.economia import claim_salary, get_balance, PORRO_EMOJI
+    from modulos.chat_ia import get_live_levels_dict
+
+    levels_dict = await get_live_levels_dict(interaction.guild) if interaction.guild else {}
+    user_level = levels_dict.get(str(interaction.user.id))
 
     member = interaction.user if isinstance(interaction.user, discord.Member) else None
-    ok, msg, payout, daily_salary = claim_salary(interaction.user.id, member=member)
+    ok, msg, payout, daily_salary = claim_salary(
+        interaction.user.id,
+        member=member,
+        user_level=user_level,
+    )
 
     if not ok:
         await interaction.response.send_message(msg, ephemeral=True)
@@ -1428,6 +1509,9 @@ async def cmd_salario(interaction: discord.Interaction):
 
 
 async def _handle_blackjack_command(interaction: discord.Interaction, apuesta: str = "100"):
+    if not await ensure_economy_channel(interaction):
+        return
+
     from modulos.economia import (
         parse_blackjack_bet,
         modify_balance,
@@ -1545,13 +1629,13 @@ async def _handle_blackjack_command(interaction: discord.Interaction, apuesta: s
 
 
 @app_commands.command(name="blackjack", description="Juega al Blackjack 21 nativo contra el crupier apostando Porros")
-@app_commands.describe(apuesta="Cantidad de Porros a apostar (mínimo 50) o 'all'/'todo'")
+@app_commands.describe(apuesta="Cantidad de Porros a apostar (mínimo 100) o 'all'/'todo'")
 async def cmd_blackjack(interaction: discord.Interaction, apuesta: str = "100"):
     await _handle_blackjack_command(interaction, apuesta)
 
 
 @app_commands.command(name="bj", description="Alias rápido ergonómico para jugar al Blackjack 21")
-@app_commands.describe(apuesta="Cantidad de Porros a apostar (mínimo 50) o 'all'/'todo'")
+@app_commands.describe(apuesta="Cantidad de Porros a apostar (mínimo 100) o 'all'/'todo'")
 async def cmd_bj(interaction: discord.Interaction, apuesta: str = "100"):
     await _handle_blackjack_command(interaction, apuesta)
 
@@ -1562,6 +1646,9 @@ async def _handle_roulette_command(
     tipo: str = "rojo",
     numero: Optional[int] = None,
 ):
+    if not await ensure_economy_channel(interaction):
+        return
+
     from modulos.economia import (
         parse_roulette_bet,
         normalize_roulette_bet_type,
@@ -1625,7 +1712,7 @@ async def _handle_roulette_command(
 
 @app_commands.command(name="ruleta", description="Juega a la Ruleta Europea de 37 casillas (RTP 97.30%)")
 @app_commands.describe(
-    apuesta="Cantidad de Porros a apostar (mínimo 50) o 'all'/'todo'",
+    apuesta="Cantidad de Porros a apostar (mínimo 100) o 'all'/'todo'",
     tipo="Tipo de apuesta (Rojo, Negro, Par, Impar, Docenas, Columnas, Pleno...)",
     numero="Número exacto (0-36). Requerido si eliges 'Pleno'",
 )
@@ -1661,6 +1748,9 @@ async def _handle_coinflip_command(
     lado: Optional[str] = "cara",
     rival: Optional[discord.Member] = None,
 ):
+    if not await ensure_economy_channel(interaction):
+        return
+
     from modulos.economia import (
         parse_coinflip_bet,
         normalize_coinflip_side,
@@ -1796,7 +1886,7 @@ async def _handle_coinflip_command(
     description="Lanza una moneda 50/50 contra la casa (PvE) o desafía a un miembro en duelo (PvP)",
 )
 @app_commands.describe(
-    apuesta="Cantidad de Porros a apostar (mínimo 50) o 'all'/'todo'",
+    apuesta="Cantidad de Porros a apostar (mínimo 100) o 'all'/'todo'",
     lado="Lado de la moneda que eliges (por defecto Cara)",
     rival="Miembro al que desafiar en duelo PvP (opcional: si no se indica juegas contra la casa)",
 )
@@ -1820,6 +1910,9 @@ async def cmd_coinflip(
     description="Centro de Control del Casino Central: catálogo interactivo de juegos, reglas y bote",
 )
 async def cmd_casino(interaction: discord.Interaction):
+    if not await ensure_economy_channel(interaction):
+        return
+
     from modulos.economia import CasinoHubView, build_casino_hub_embed
 
     view = CasinoHubView(author_id=interaction.user.id)
@@ -1837,6 +1930,9 @@ async def cmd_casino(interaction: discord.Interaction):
     description="Comete un delito de alto riesgo en el servidor (50% éxito, cooldown de 12 horas)",
 )
 async def cmd_crimen(interaction: discord.Interaction):
+    if not await ensure_economy_channel(interaction):
+        return
+
     from modulos.economia import execute_crime, get_balance, PORRO_EMOJI
 
     member = interaction.user if isinstance(interaction.user, discord.Member) else interaction.user
@@ -1872,6 +1968,9 @@ async def cmd_crimen(interaction: discord.Interaction):
     description="Muestra el Top 10 de miembros más ricos del servidor (Patrimonio Total, Efectivo y Banco)",
 )
 async def cmd_ranking(interaction: discord.Interaction):
+    if not await ensure_economy_channel(interaction):
+        return
+
     from modulos.economia import build_ranking_embed, RankingView
 
     embed = build_ranking_embed(
@@ -1895,6 +1994,9 @@ async def cmd_ranking(interaction: discord.Interaction):
     usuario="Miembro cuyo inventario deseas consultar (opcional, por defecto tú)"
 )
 async def cmd_inventario(interaction: discord.Interaction, usuario: Optional[discord.Member] = None):
+    if not await ensure_economy_channel(interaction):
+        return
+
     from modulos.economia import build_inventory_embed, InventoryView
 
     target = usuario or interaction.user
@@ -1929,6 +2031,9 @@ async def cmd_inventario(interaction: discord.Interaction, usuario: Optional[dis
     ]
 )
 async def cmd_usar(interaction: discord.Interaction, articulo: str):
+    if not await ensure_economy_channel(interaction):
+        return
+
     from modulos.economia import use_inventory_item
 
     ok, msg, item_data = use_inventory_item(interaction.user.id, articulo)
@@ -1960,6 +2065,70 @@ async def cmd_usar(interaction: discord.Interaction, articulo: str):
         )
     embed.set_footer(text="Consulta el tiempo restante de tus pases con /inventario")
     await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
+@app_commands.command(
+    name="regalar",
+    description="Regala artículos o consumibles de tu inventario a otro miembro del servidor",
+)
+@app_commands.describe(
+    usuario="Miembro al que deseas regalar el artículo",
+    articulo="Artículo o consumible transferible de tu inventario",
+    cantidad="Cantidad de unidades a regalar (por defecto 1)",
+)
+@app_commands.choices(
+    articulo=[
+        app_commands.Choice(name="🚬 Porro de Oro (Coleccionable)", value="porro_oro"),
+        app_commands.Choice(name="🥤 Monster Blanco (Resetea cooldowns)", value="monster_blanco"),
+        app_commands.Choice(name="⚡ Chute de XP (24h — Boost +5% XP)", value="chute_xp"),
+        app_commands.Choice(name="🔥 Pase Semanal de XP (7 días — Boost +10% XP)", value="pase_semanal_xp"),
+        app_commands.Choice(name="💠 Pase Mensual de XP (30 días — Boost +15% XP)", value="pase_mensual_xp"),
+    ]
+)
+async def cmd_regalar(
+    interaction: discord.Interaction,
+    usuario: discord.Member,
+    articulo: str,
+    cantidad: int = 1,
+):
+    if not await ensure_economy_channel(interaction):
+        return
+
+    from modulos.economia import gift_inventory_item
+
+    if usuario.id == interaction.user.id:
+        await interaction.response.send_message("❌ No puedes regalarte artículos a ti mismo.", ephemeral=True)
+        return
+
+    if getattr(usuario, "bot", False):
+        await interaction.response.send_message("❌ No puedes regalar artículos a un bot. Los bots no tienen inventario.", ephemeral=True)
+        return
+
+    if cantidad < 1:
+        await interaction.response.send_message("❌ La cantidad debe ser al menos 1 unidad.", ephemeral=True)
+        return
+
+    ok, msg, item_data = gift_inventory_item(interaction.user.id, usuario.id, articulo, cantidad)
+    if not ok:
+        await interaction.response.send_message(msg, ephemeral=True)
+        return
+
+    item_name = item_data["name"] if item_data else articulo
+    embed = discord.Embed(
+        title="🎁 Regalo Enviado con Éxito",
+        description=(
+            f"**{interaction.user.display_name}** le ha regalado **{cantidad}x {item_name}** a **{usuario.display_name}**.\n\n"
+            f"📦 Los artículos se han transferido directamente a su `/inventario`."
+        ),
+        color=0xE91E63,  # Rosa/Fucsia festivo
+        timestamp=datetime.now(timezone.utc),
+    )
+    embed.set_author(
+        name=f"{interaction.user.display_name} ➡️ {usuario.display_name}",
+        icon_url=str(interaction.user.display_avatar.url) if hasattr(interaction.user, "display_avatar") else None,
+    )
+    embed.set_footer(text="Economía Oficial de Porros • Asistente")
+    await interaction.response.send_message(embed=embed)
 
 
 @app_commands.command(
@@ -2106,7 +2275,7 @@ GENERAL_SLASH_COMMANDS = [
     cmd_sugerencia,
 ]
 
-# 19 Comandos de Economía y Casino para el Bot 'Economia Asistente'
+# 20 Comandos de Economía y Casino para el Bot 'Economia Asistente'
 ECONOMY_SLASH_COMMANDS = [
     cmd_slots,
     cmd_balance,
@@ -2126,10 +2295,11 @@ ECONOMY_SLASH_COMMANDS = [
     cmd_ranking,
     cmd_inventario,
     cmd_usar,
+    cmd_regalar,
     cmd_admin_dinero,
 ]
 
-# Total de 41 comandos para retrocompatibilidad total
+# Total de 42 comandos para retrocompatibilidad total
 ALL_SLASH_COMMANDS = GENERAL_SLASH_COMMANDS + ECONOMY_SLASH_COMMANDS
 
 
@@ -2145,7 +2315,7 @@ def register_general_commands(tree: app_commands.CommandTree):
 
 
 def register_economy_commands(tree: app_commands.CommandTree):
-    """Registra los 19 comandos slash de economía en el árbol del bot Economia Asistente."""
+    """Registra los 20 comandos slash de economía en el árbol del bot Economia Asistente."""
     for cmd in ECONOMY_SLASH_COMMANDS:
         try:
             tree.add_command(cmd)

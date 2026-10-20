@@ -27,6 +27,8 @@ import time
 import shutil
 import tempfile
 import threading
+import asyncio
+from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime, timezone
 
 if sys.platform == "win32":
@@ -58,6 +60,8 @@ from modulos.comandos import (
     cmd_robar,
     cmd_tienda,
     cmd_salario,
+    cmd_regalar,
+    ensure_economy_channel,
 )
 
 
@@ -199,10 +203,10 @@ def run_tests():
         assert ok_rob_shield is False, "El robo contra Cartera Blindada nunca debe tener éxito"
         assert "Cartera Blindada" in msg_rob_shield
         assert delta_shield < 0, f"Debe cobrar multa al ladrón: {delta_shield}"
-        # Multa del 15% de 5000 = 750
+        # Multa del 15% de 5000 = 750 (500 a la víctima, 250 al jackpot)
         assert delta_shield == -750
         assert eco.get_balance(uid_robber)["cash"] == 4250
-        assert eco.get_balance(uid_victim_shield)["cash"] == 10750
+        assert eco.get_balance(uid_victim_shield)["cash"] == 10500
 
         # Intento de robo contra víctima común sin escudo
         ok_rob_plain, msg_rob_plain, delta_plain = eco.execute_rob(uid_robber, uid_victim_plain, cooldown_seconds=0)
@@ -276,15 +280,28 @@ def run_tests():
 
         print("  ✅ TEST 7 PASADO: Tienda V2 interactiva (embed categorizado, View con Select + Botón verde y 0 parámetros en /tienda) validada.")
 
-        # TEST 8: Salario Acumulativo con Decaimiento del 5%
+        # TEST 8: Salario Acumulativo con Decaimiento del 5% y Nivel Exacto (Opción A)
         print("\n[TEST 8] Salario Acumulativo con decaimiento del 5%...")
-        # 8a: Novato sin roles -> salario base 1.000/día
+        # 8a: Novato sin roles ni nivel -> salario base 0/día y claim_salary rechazado
         s_novato = eco.calculate_daily_salary(user_roles=[])
-        assert s_novato == 1000, f"Salario base de novato esperado 1000, obtenido {s_novato}"
+        assert s_novato == 0, f"Salario base de novato esperado 0, obtenido {s_novato}"
 
-        # 8b: Miembro de Élite (Nivel 50) + Top 1
-        # Suma: Nivel 10 (2000) + Nivel 20 (2000) + Nivel 30 (3000) + Nivel 40 (4500) + Nivel 50 (6500) + Top 1 (8000) = 26000
-        roles_elite = ["Pendejo de Rango Medio", "Pendejo Veterano", "Pendejo Experimentado", "Pendejo de Alto Rango", "Pendejo de Élite", "Top 1"]
+        uid_sal = "100000000000000010"
+        eco.ensure_user(uid_sal, default_cash=0)
+        ok_sal_nov, msg_sal_nov, _, _ = eco.claim_salary(uid_sal)
+        assert ok_sal_nov is False
+        assert "Nivel 10" in msg_sal_nov
+
+        # 8b: Pruebas exactas de fórmula Opción A por nivel L
+        # Nivel 18: 2000 + 8 * 200 = 3600
+        assert eco.calculate_daily_salary(user_level=18) == 3600
+        # Nivel 37: 7000 + 7 * 450 = 10150
+        assert eco.calculate_daily_salary(user_level=37) == 10150
+        # Nivel 54: 18000 + 4 * 1000 = 22000
+        assert eco.calculate_daily_salary(user_level=54) == 22000
+
+        # Miembro de Élite (Nivel 50 inferido = 18000) + Top 1 (+8000) = 26000
+        roles_elite = ["Pendejo de Élite", "Top 1"]
         s_elite = eco.calculate_daily_salary(user_roles=roles_elite)
         assert s_elite == 26000, f"Salario de Élite esperado 26000, obtenido {s_elite}"
 
@@ -305,16 +322,15 @@ def run_tests():
         p_300days = eco.calculate_accumulated_salary(10000, 86400 * 300, decay_rate=0.05)
         assert p_300days == 200000, f"Asíntota esperada 200000, obtenido {p_300days}"
 
-        # Cobro real mediante claim_salary
-        uid_sal = "100000000000000010"
-        eco.ensure_user(uid_sal, default_cash=0)
-        ok_sal1, msg_sal1, p1, s1 = eco.claim_salary(uid_sal)
+        # Cobro real mediante claim_salary con user_level=18
+        ok_sal1, msg_sal1, p1, s1 = eco.claim_salary(uid_sal, user_level=18)
         assert ok_sal1 is True
-        assert p1 == 1000
-        assert eco.get_balance(uid_sal)["cash"] == 1000
+        assert p1 == 3600
+        assert s1 == 3600
+        assert eco.get_balance(uid_sal)["cash"] == 3600
 
         # Cobro inmediato -> rechazado por cooldown de 24h
-        ok_sal2, msg_sal2, p2, _ = eco.claim_salary(uid_sal)
+        ok_sal2, msg_sal2, p2, _ = eco.claim_salary(uid_sal, user_level=18)
         assert ok_sal2 is False
         assert p2 == 0
         assert "Ya has cobrado" in msg_sal2
@@ -521,15 +537,15 @@ def run_tests():
 
         # TEST 17: Comprobación de la arquitectura Dual Runner y Slash Commands
         print("\n[TEST 17] Comprobación de la arquitectura Dual Runner y Slash Commands...")
-        assert len(ALL_SLASH_COMMANDS) == 41, f"Se esperaban 41 comandos, encontrados: {len(ALL_SLASH_COMMANDS)}"
+        assert len(ALL_SLASH_COMMANDS) == 42, f"Se esperaban 42 comandos, encontrados: {len(ALL_SLASH_COMMANDS)}"
         assert len(GENERAL_SLASH_COMMANDS) == 22, f"Se esperaban 22 comandos generales, encontrados: {len(GENERAL_SLASH_COMMANDS)}"
-        assert len(ECONOMY_SLASH_COMMANDS) == 19, f"Se esperaban 19 comandos de economía, encontrados: {len(ECONOMY_SLASH_COMMANDS)}"
+        assert len(ECONOMY_SLASH_COMMANDS) == 20, f"Se esperaban 20 comandos de economía, encontrados: {len(ECONOMY_SLASH_COMMANDS)}"
 
         eco_cmd_names = [c.name for c in ECONOMY_SLASH_COMMANDS]
         for expected in [
             "slots", "balance", "trabajar", "transferir", "depositar", "retirar",
             "robar", "tienda", "salario", "blackjack", "bj", "ruleta", "coinflip",
-            "casino", "crimen", "ranking", "inventario", "usar", "admin_dinero"
+            "casino", "crimen", "ranking", "inventario", "usar", "regalar", "admin_dinero"
         ]:
             assert expected in eco_cmd_names, f"Comando /{expected} no está en ECONOMY_SLASH_COMMANDS"
 
@@ -540,7 +556,7 @@ def run_tests():
             "cmd_slots", "cmd_balance", "cmd_trabajar", "cmd_transferir",
             "cmd_depositar", "cmd_retirar", "cmd_robar", "cmd_tienda", "cmd_salario",
             "cmd_blackjack", "cmd_bj", "cmd_ruleta", "cmd_coinflip", "cmd_casino",
-            "cmd_crimen", "cmd_ranking", "cmd_inventario", "cmd_usar", "cmd_admin_dinero",
+            "cmd_crimen", "cmd_ranking", "cmd_inventario", "cmd_usar", "cmd_regalar", "cmd_admin_dinero",
             "deposit_cash", "withdraw_cash", "execute_rob", "buy_shop_item", "claim_salary", "SlotEngine",
             "ShopInteractiveView", "build_shop_embed",
             "BlackjackHand", "BlackjackEngine", "BlackjackView",
@@ -550,20 +566,23 @@ def run_tests():
             "get_level_role_multiplier", "can_crime", "execute_crime",
             "use_inventory_item", "check_and_expire_buffs", "build_inventory_embed", "InventoryView",
             "get_economy_leaderboard", "build_ranking_embed", "RankingView",
-            "admin_modify_money", "admin_airdrop_role",
+            "admin_modify_money", "admin_airdrop_role", "gift_inventory_item",
+            "ensure_economy_channel", "MIN_SLOTS_BET", "MIN_BLACKJACK_BET",
+            "MIN_ROULETTE_BET", "MIN_COINFLIP_BET", "ECONOMY_CATEGORY_ID", "ALLOWED_ECONOMY_CHANNELS",
         ]:
             assert hasattr(bot_service, expected_attr), f"bot_service no tiene {expected_attr}"
 
         tree_cmds = [c.name for c in bot_service.tree.get_commands()]
         economy_tree_cmds = [c.name for c in bot_service.economy_tree.get_commands()]
         assert len(tree_cmds) == 22, f"Se esperaban 22 comandos en tree de Asistente, encontrados: {len(tree_cmds)}"
-        assert len(economy_tree_cmds) == 19, f"Se esperaban 19 comandos en economy_tree, encontrados: {len(economy_tree_cmds)}"
+        assert len(economy_tree_cmds) == 20, f"Se esperaban 20 comandos en economy_tree, encontrados: {len(economy_tree_cmds)}"
         assert "slots" not in tree_cmds, "slots no debería estar en el árbol general de Asistente"
         assert "blackjack" not in tree_cmds, "blackjack no debería estar en el árbol general de Asistente"
         assert "ruleta" not in tree_cmds, "ruleta no debería estar en el árbol general de Asistente"
         assert "coinflip" not in tree_cmds, "coinflip no debería estar en el árbol general de Asistente"
         assert "casino" not in tree_cmds, "casino no debería estar en el árbol general de Asistente"
         assert "slots" in economy_tree_cmds, "slots debe estar en el árbol de economía"
+        assert "regalar" in economy_tree_cmds, "regalar debe estar en el árbol de economía"
         assert "blackjack" in economy_tree_cmds, "blackjack debe estar en el árbol de economía"
         assert "bj" in economy_tree_cmds, "bj debe estar en el árbol de economía"
         assert "ruleta" in economy_tree_cmds, "ruleta debe estar en el árbol de economía"
@@ -574,7 +593,7 @@ def run_tests():
         assert "inventario" in economy_tree_cmds, "inventario debe estar en el árbol de economía"
         assert "usar" in economy_tree_cmds, "usar debe estar en el árbol de economía"
         assert "admin_dinero" in economy_tree_cmds, "admin_dinero debe estar en el árbol de economía"
-        print("  ✅ TEST 17 PASADO: Arquitectura Dual Runner validada (Asistente: 22 cmds | Economia Asistente: 19 cmds).")
+        print("  ✅ TEST 17 PASADO: Arquitectura Dual Runner validada (Asistente: 22 cmds | Economia Asistente: 20 cmds).")
 
         # TEST 18: Simulación Monte Carlo calibrada a RTP 110.0% (+/- 0.5%)
         print("\n[TEST 18] Simulación Monte Carlo (100.000 tiradas calibradas a RTP 110.0%)...")
@@ -755,8 +774,85 @@ def run_tests():
         assert eco.get_balance(uid_adm)["cash"] == 7000
         print("  ✅ TEST 23 PASADO: /admin_dinero (dar, quitar, fijar y airdrop) validado.")
 
+        # TEST 24: Transferencia de ítems (/regalar) y Restricción de canales (ensure_economy_channel)
+        print("\n[TEST 24] Transferencia de ítems (/regalar) y Restricción de canales (ensure_economy_channel)...")
+        # 1. Asignar inventario previo a uid_adm
+        data = eco.load_economy_data()
+        data["users"][uid_adm].setdefault("inventory", []).extend([
+            eco.SHOP_ITEMS["porro_oro"]["name"],
+            eco.SHOP_ITEMS["porro_oro"]["name"],
+            eco.SHOP_ITEMS["monster_blanco"]["name"],
+        ])
+        eco.save_economy_data(data)
+
+        # Regalo exitoso: uid_adm regala 1 porro_oro a uid_inv
+        ok_g1, msg_g1, item_g1 = eco.gift_inventory_item(uid_adm, uid_inv, "porro_oro", quantity=1)
+        assert ok_g1 is True, f"Error al regalar porro_oro: {msg_g1}"
+        assert item_g1["id"] == "porro_oro"
+        data_after = eco.load_economy_data()
+        assert data_after["users"][uid_adm]["inventory"].count(eco.SHOP_ITEMS["porro_oro"]["name"]) == 1
+        assert data_after["users"][uid_inv]["inventory"].count(eco.SHOP_ITEMS["porro_oro"]["name"]) == 1
+
+        # Auto-regalo prohibido
+        ok_g_self, msg_g_self, _ = eco.gift_inventory_item(uid_adm, uid_adm, "porro_oro", quantity=1)
+        assert ok_g_self is False and "ti mismo" in msg_g_self.lower()
+
+        # Cantidad inválida (<= 0)
+        ok_g_zero, msg_g_zero, _ = eco.gift_inventory_item(uid_adm, uid_inv, "porro_oro", quantity=0)
+        assert ok_g_zero is False and "al menos 1" in msg_g_zero.lower()
+
+        # Cantidad insuficiente
+        ok_g_insuf, msg_g_insuf, _ = eco.gift_inventory_item(uid_adm, uid_inv, "porro_oro", quantity=10)
+        assert ok_g_insuf is False and "no tienes suficientes" in msg_g_insuf.lower()
+
+        # Ítem no transferible (ej. cartera_blindada o rol permanente)
+        data = eco.load_economy_data()
+        data["users"][uid_adm]["inventory"].append(eco.SHOP_ITEMS["cartera_blindada"]["name"])
+        eco.save_economy_data(data)
+        ok_g_perm, msg_g_perm, _ = eco.gift_inventory_item(uid_adm, uid_inv, "cartera_blindada", quantity=1)
+        assert ok_g_perm is False and "no es transferible" in msg_g_perm.lower()
+
+        # Ítem inexistente
+        ok_g_none, msg_g_none, _ = eco.gift_inventory_item(uid_adm, uid_inv, "fantasma_xyz", quantity=1)
+        assert ok_g_none is False and "no existe" in msg_g_none.lower()
+
+        # 2. Restricción de canales (ensure_economy_channel)
+        # Mock sin contexto de canal -> permite (True)
+        mock_inter_none = MagicMock()
+        mock_inter_none.channel_id = None
+        mock_inter_none.channel = None
+        assert asyncio.run(ensure_economy_channel(mock_inter_none)) is True
+
+        # Mock en canal explícitamente permitido (ej: 1549458785485987890) -> permite (True)
+        mock_inter_ch = MagicMock()
+        mock_inter_ch.channel_id = 1549458785485987890
+        mock_inter_ch.channel = MagicMock()
+        mock_inter_ch.channel.category_id = None
+        assert asyncio.run(ensure_economy_channel(mock_inter_ch)) is True
+
+        # Mock en canal dentro de la categoría oficial de casino (1549512417610956871) -> permite (True)
+        mock_inter_cat = MagicMock()
+        mock_inter_cat.channel_id = 999999999999999991
+        mock_inter_cat.channel = MagicMock()
+        mock_inter_cat.channel.category_id = 1549512417610956871
+        assert asyncio.run(ensure_economy_channel(mock_inter_cat)) is True
+
+        # Mock en canal ajeno / no permitido -> bloquea (False) y envía mensaje efímero
+        mock_inter_denied = MagicMock()
+        mock_inter_denied.channel_id = 123456789012345678
+        mock_inter_denied.channel = MagicMock()
+        mock_inter_denied.channel.category_id = 888888888888888888
+        mock_inter_denied.response = AsyncMock()
+        res_denied = asyncio.run(ensure_economy_channel(mock_inter_denied))
+        assert res_denied is False
+        mock_inter_denied.response.send_message.assert_called_once()
+        s_args, s_kwargs = mock_inter_denied.response.send_message.call_args
+        assert s_kwargs.get("ephemeral") is True
+        assert "solo están permitidos" in s_args[0]
+        print("  ✅ TEST 24 PASADO: /regalar (transferencias y validaciones) y ensure_economy_channel validados.")
+
         print("\n" + "=" * 65)
-        print("🎉 TODOS LOS 23 TESTS DE ECONOMÍA Y TRAGAPERRAS 5X3 PASARON CON ÉXITO (100%)")
+        print("🎉 TODOS LOS 24 TESTS DE ECONOMÍA Y TRAGAPERRAS 5X3 PASARON CON ÉXITO (100%)")
         print("=" * 65)
 
     finally:

@@ -230,17 +230,17 @@ def run_tests():
         assert cmd_casino.name == "casino"
         assert len(cmd_casino.parameters) == 0, f"/casino no debe requerir parámetros obligatorios, tiene {len(cmd_casino.parameters)}"
 
-        assert len(ECONOMY_SLASH_COMMANDS) == 19, f"Se esperaban 19 comandos de economía, encontrados: {len(ECONOMY_SLASH_COMMANDS)}"
-        assert len(ALL_SLASH_COMMANDS) == 41, f"Se esperaban 41 comandos en total, encontrados: {len(ALL_SLASH_COMMANDS)}"
+        assert len(ECONOMY_SLASH_COMMANDS) == 20, f"Se esperaban 20 comandos de economía, encontrados: {len(ECONOMY_SLASH_COMMANDS)}"
+        assert len(ALL_SLASH_COMMANDS) == 42, f"Se esperaban 42 comandos en total, encontrados: {len(ALL_SLASH_COMMANDS)}"
 
         eco_cmd_names = [c.name for c in ECONOMY_SLASH_COMMANDS]
         expected_eco = [
             "slots", "balance", "trabajar", "transferir", "depositar", "retirar",
             "robar", "tienda", "salario", "blackjack", "bj", "ruleta", "coinflip",
-            "casino", "crimen", "ranking", "inventario", "usar", "admin_dinero"
+            "casino", "crimen", "ranking", "inventario", "usar", "regalar", "admin_dinero"
         ]
         assert eco_cmd_names == expected_eco, f"Lista de comandos de economía discrepante: {eco_cmd_names}"
-        print("  ✅ TEST 7 PASADO: /casino registrado en catálogo (19 comandos economía / 41 totales).")
+        print("  ✅ TEST 7 PASADO: /casino registrado en catálogo (20 comandos economía / 42 totales).")
 
         # TEST 8: Reexportación en bot_service
         print("\n[TEST 8] Reexportación pública en bot_service.py...")
@@ -253,7 +253,7 @@ def run_tests():
         economy_tree_cmds = [c.name for c in bot_service.economy_tree.get_commands()]
         assert "casino" not in tree_cmds, "casino no debe estar en el árbol general de Asistente"
         assert "casino" in economy_tree_cmds, "casino debe estar en el árbol de economía"
-        assert len(economy_tree_cmds) == 19, f"economy_tree debe tener 19 comandos, tiene {len(economy_tree_cmds)}"
+        assert len(economy_tree_cmds) == 20, f"economy_tree debe tener 20 comandos, tiene {len(economy_tree_cmds)}"
         print("  ✅ TEST 8 PASADO: Reexportación y asignación al CommandTree de Economía verificada.")
 
         print("\n" + "=" * 70)

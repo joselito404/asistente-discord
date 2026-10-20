@@ -38,30 +38,33 @@ Cualquier agente o desarrollador autorizado que trabaje en nuevas funcionalidade
    - Catálogo canónico de 124 emojis del servidor (`SERVER_EMOJIS_DATA`), auto-conversor pre-envío regex (`format_server_emojis`) y arquitectura resiliente ante expiración de Server Boost con fallbacks limpios (`DISABLED_EMOJI_FALLBACK`).
    - Búsqueda web contextual en vivo (`search_web_lite`), radar de voz, censos y enrutador principal de mensajes (`_handle_message_safe`).
 8. **`comandos.py`**: Registro unificado de Comandos Slash nativos en Arquitectura Dual Runner:
-   - Declaración de los 41 comandos interactivos (`@app_commands.command`) organizados por dominios de bots:
+   - Declaración de los 42 comandos interactivos (`@app_commands.command`) organizados por dominios de bots:
      * `GENERAL_SLASH_COMMANDS` (22 comandos para el bot `Asistente`): `/dibuja`, `/musica`, `/steam`, `/tribunal`, `/perfil`, `/pregunta`, `/voz`, `/recuerda`, `/xp`, `/habla`, `/geminilive`, `/cambiar_voz`, `/unete`, `/desconecta`, `/para_audio`, `/trivial`, `/ranking_trivial`, `/tres_en_raya`, `/conecta4`, `/ajedrez`, `/autoroles`, `/sugerencia`.
-     * `ECONOMY_SLASH_COMMANDS` (19 comandos para el bot `Economia Asistente`): `/slots`, `/balance`, `/trabajar`, `/transferir`, `/depositar`, `/retirar`, `/robar`, `/tienda`, `/salario`, `/blackjack`, `/bj`, `/ruleta`, `/coinflip`, `/casino`, `/crimen`, `/ranking`, `/inventario`, `/usar`, `/admin_dinero`.
-     * `ALL_SLASH_COMMANDS`: unión de las dos listas (41 comandos) garantizando retrocompatibilidad total.
+     * `ECONOMY_SLASH_COMMANDS` (20 comandos para el bot `Economia Asistente`): `/slots`, `/balance`, `/trabajar`, `/transferir`, `/depositar`, `/retirar`, `/robar`, `/tienda`, `/salario`, `/blackjack`, `/bj`, `/ruleta`, `/coinflip`, `/casino`, `/crimen`, `/ranking`, `/inventario`, `/usar`, `/regalar`, `/admin_dinero`.
+     * `ALL_SLASH_COMMANDS`: unión de las dos listas (42 comandos) garantizando retrocompatibilidad total.
+   - Restricción de canales y categoría (`ensure_economy_channel`): todos los comandos de economía (salvo `/admin_dinero`) quedan limitados a `🎲・CASINO & ECONOMÍA・🎲` y sus canales autorizados (`#🎰casino-y-apuestas🎰`, `#🎰casino-y-apuestas-2🎰`, `#🏪tienda-y-mercado🏪`, `#🛠️apps-solo-mods🛠️`).
    - Funciones modulares de registro:
      * `register_general_commands(tree)`: vincula los 22 comandos generales al árbol de `Asistente`.
-     * `register_economy_commands(tree)`: vincula los 19 comandos de economía al árbol de `Economia Asistente`.
+     * `register_economy_commands(tree)`: vincula los 20 comandos de economía al árbol de `Economia Asistente`.
      * `register_slash_commands(tree)`: registra ambos árboles si se invoca para compatibilidad retrospectiva.
-9. **`economia.py`**: Motor nativo de economía comunitaria, banca, robos, delitos, tienda, inventario, salarios, rankings, administración y casino:
+9. **`economia.py`**: Motor nativo de economía comunitaria, banca, robos, regalos, delitos, tienda, inventario, salarios, rankings, administración y casino:
    - Moneda oficial: Porros (`PORRO_EMOJI` `<:Porro:1535685303317172305>`).
+   - Apuesta mínima unificada en 100 Porros en todos los juegos de azar (`/slots`, `/blackjack`, `/ruleta`, `/coinflip`).
    - Persistencia segura y atómica en `datos/economia.json` con bloqueo `ECONOMY_LOCK` (`RLock`) y escritura temporal `safe_write_json`.
    - Gestión de saldos: `get_balance`, `modify_balance`, `transfer_funds`.
    - Módulo de Banca (`/depositar`, `/retirar`): gestión segura de efectivo y banco con soporte de montos numéricos y opción `'all'`/`'todo'`.
    - Multiplicadores por Rol de Nivel (`get_level_role_multiplier`): evalúa roles del servidor (Nivel 10 `+10%`, Nivel 30 `+20%`, Nivel 50 `+25%`, Nivel 70 `+30%`, Nivel 80+ `+40%`) aplicables a `/trabajar` y `/crimen`.
    - Jornada laboral (`/trabajar`): historias cómicas del lore del servidor (`WORK_MESSAGES`), retribución base de 1.000 a 2.500 Porros ($\times$ bono de rol de nivel) y cooldown de 4 horas.
    - Delitos de Alto Riesgo (`/crimen`): 50% de éxito (1.800 a 3.500 Porros base $\times$ bono de rol de nivel) y 50% de fallo con multa del 10% del efectivo (mínimo 500 Porros, sin saldo negativo y aportando el 3% al `server_jackpot`), con cooldown de 12 horas.
-   - Sistema de Robo (`/robar`): probabilidad de éxito 50%, hurto de 20-50% de efectivo, chequeo estricto de inmunidad contra `🛡️ Cartera Blindada` (falla 100% y multa 15%) y cooldown anti-spam.
+   - Sistema de Robo (`/robar`): probabilidad de éxito 50% (roba 20-33% del efectivo), 24h de cooldown, chequeo estricto de inmunidad contra `🛡️ Cartera Blindada` (falla 100%), y reparto de multa en fallo (15% del efectivo del ladrón: 10% a víctima + 5% a `server_jackpot`).
+   - Sistema de Regalos (`/regalar` / `gift_inventory_item`): transferencia directa entre inventarios de artículos transferibles (`porro_oro`, `monster_blanco`, `chute_xp`, `pase_semanal_xp`, `pase_mensual_xp`).
    - Catálogo Oficial de Tienda V2 (`/tienda`), Inventario (`/inventario`) y Uso de Consumibles (`/usar`):
      * 9 artículos oficiales: roles permanentes auto-asignables al comprar (`🛡️ Cartera Blindada`, `🚬 Camello del Barrio`, `🎰 Ludópata Rehabilitado`, `👑 Aura de XP Permanente`), coleccionable (`🚬 Porro de Oro`), consumible (`🥤 Monster Blanco`, 25.000 Porros, resetea cooldowns de `/trabajar`, `/crimen` y `/robar`) y pases temporales de XP (`⚡ Chute de XP (24h)`, `🔥 Pase Semanal de XP`, `💠 Pase Mensual de XP`) que se almacenan en el inventario al comprarse y se activan/extienden bajo demanda con `/usar`.
      * Consulta de inventario (`/inventario`): vista efímera con desglose de artículos, roles y tiempo restante de `active_buffs`, e incluye botón `[📢 Mostrar en público]` (`InventoryView`).
      * Expiración automática (`check_and_expire_buffs`): auditado periódicamente por `_xp_passes_expiration_watcher()` en `bot_service.py` para retirar automáticamente de Discord los roles temporales vencidos.
    - Clasificación de Riqueza (`/ranking`): tabla de líderes pública (`RankingView` y `RankingCategorySelect`) para alternar en vivo entre `💎 Patrimonio Total`, `💵 Efectivo (Cash)` y `🏦 Banco (Bank)`, mostrando el Top 10 y la posición del solicitante.
    - Panel de Administración Financiera (`/admin_dinero`): exclusivo para Administradores (`admin_modify_money`, `admin_airdrop_role`) con acciones `dar`, `quitar`, `fijar` y `airdrop` masivo por rol.
-   - Salario Acumulativo (`/salario` / `/cobrar`): cálculo continuo por roles de nivel (Nivel 10 a 100) y podio (Top 1, 2, 3) con fórmula de decaimiento del 5% diario ($P = S \times \frac{1 - (1 - d)^n}{d}$, tope asintótico $20 \times S$).
+   - Salario Acumulativo Progresivo (`/salario`): interpolación lineal continua por nivel exacto $L$ (Opción A, Nivel 10 a 100+, requiriendo $L \ge 10$) más plus de podio (Top 1: +8.000, Top 2: +5.000, Top 3: +3.000), con fórmula de decaimiento del 5% diario ($P = S \times \frac{1 - (1 - d)^n}{d}$, tope asintótico $20 \times S$).
    - Centro de Control del Casino (`/casino`):
      * Hub Central interactivo (`CasinoHubView`) con timeout de 90s y control estricto de autoría (bloqueo efímero a terceros).
      * Embed Principal con Bote Acumulado del servidor (`server_jackpot`) visible en grande, resumen de cartera del usuario (`cash`, `bank`, `total`) y catálogo rápido de juegos.

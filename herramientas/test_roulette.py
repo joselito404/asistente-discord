@@ -264,7 +264,7 @@ def run_tests():
         except ValueError as e:
             assert "insuficientes" in str(e).lower()
 
-        # Parseo de apuestas (mínimo 50, all-in)
+        # Parseo de apuestas (mínimo 100, all-in)
         ok, b_val, _ = parse_roulette_bet(uid_jackpot, "500")
         assert ok is True and b_val == 500
 
@@ -272,6 +272,9 @@ def run_tests():
         assert ok is True and b_val == 9000
 
         ok, b_val, err = parse_roulette_bet(uid_jackpot, "20")
+        assert ok is False and "mínima" in err.lower()
+
+        ok, b_val, err = parse_roulette_bet(uid_jackpot, "99")
         assert ok is False and "mínima" in err.lower()
 
         ok, b_val, err = parse_roulette_bet(uid_jackpot, "100000")
@@ -397,8 +400,8 @@ def run_tests():
         ]:
             assert hasattr(bot_service, attr), f"bot_service debe reexportar {attr}"
 
-        assert len(ECONOMY_SLASH_COMMANDS) == 19, f"Debe haber 19 comandos de economía, hay {len(ECONOMY_SLASH_COMMANDS)}"
-        assert len(ALL_SLASH_COMMANDS) == 41, f"Debe haber 41 comandos en total, hay {len(ALL_SLASH_COMMANDS)}"
+        assert len(ECONOMY_SLASH_COMMANDS) == 20, f"Debe haber 20 comandos de economía, hay {len(ECONOMY_SLASH_COMMANDS)}"
+        assert len(ALL_SLASH_COMMANDS) == 42, f"Debe haber 42 comandos en total, hay {len(ALL_SLASH_COMMANDS)}"
         print("  ✅ TEST 8 PASADO: Presencia en ECONOMY_SLASH_COMMANDS y reexportación pública en bot_service confirmada.")
 
         print("\n" + "=" * 70)

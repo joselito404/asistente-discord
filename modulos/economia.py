@@ -58,6 +58,21 @@ JACKPOT_FEED_PERCENT = 0.03  # 3% de pérdidas netas alimenta el bote del servid
 
 ECONOMY_LOCK = threading.RLock()
 
+# Canales y categoría oficiales de Economía y Casino (🎲・CASINO & ECONOMÍA・🎲)
+ECONOMY_CATEGORY_ID = 1549512417610956871
+ALLOWED_ECONOMY_CHANNELS = {
+    1549458785485987890,  # #🎰casino-y-apuestas🎰
+    1550894047382610081,  # #🎰casino-y-apuestas-2🎰
+    1549512919694442547,  # #🏪tienda-y-mercado🏪
+    1537574896605265970,  # #🛠️apps-solo-mods🛠️
+}
+
+# Apuestas mínimas oficiales unificadas en 100 Porros
+MIN_SLOTS_BET = 100
+MIN_BLACKJACK_BET = 100
+MIN_ROULETTE_BET = 100
+MIN_COINFLIP_BET = 100
+
 # Símbolos oficiales de Tragaperras 5x3: 6 Brawl Stars Ranked + WILD + SCATTER
 # Suma de pesos = 38 + 24 + 15 + 9 + 5 + 3 + 2 + 4 = 100
 # Calibrado a RTP 110.0% (+/- 0.5%) y Hit Rate ~73.8% con Opción B (3 y 4 consecutivos en cualquier posición)
@@ -878,8 +893,8 @@ def user_has_shield(user_id: Any, member: Optional[Any] = None) -> bool:
     return False
 
 
-def can_rob(user_id: Any, cooldown_seconds: int = 7200) -> Tuple[bool, float]:
-    """Comprueba si un usuario puede robar según su cooldown (por defecto 2 horas)."""
+def can_rob(user_id: Any, cooldown_seconds: int = 86400) -> Tuple[bool, float]:
+    """Comprueba si un usuario puede robar según su cooldown (por defecto 24 horas)."""
     user = ensure_user(user_id)
     last_rob_str = user.get("last_rob")
     if not last_rob_str:
@@ -900,14 +915,17 @@ def execute_rob(
     robber_id: Any,
     victim_id: Any,
     victim_member: Optional[Any] = None,
-    cooldown_seconds: int = 7200,
+    cooldown_seconds: int = 86400,
 ) -> Tuple[bool, str, int]:
     """
     Ejecuta un intento de robo (/robar):
-    - 50% probabilidad de éxito.
-    - Roba entre el 20% y el 50% del efectivo (cash) de la víctima (el banco es 100% inmune).
-    - Chequeo de '🛡️ Cartera Blindada': inmunidad absoluta; el atraco falla al 100% y el ladrón paga el 15% de su cash a la víctima.
-    - Si falla normalmente: el ladrón es interceptado y paga el 15% de su cash a la víctima o policía.
+    - Cooldown: 24 horas (86.400 segundos).
+    - 50% probabilidad de éxito: roba entre el 20% y el 33% del efectivo (cash) de la víctima.
+    - Chequeo de '🛡️ Cartera Blindada': inmunidad absoluta; el atraco falla al 100%.
+    - En cualquier fallo (normal o por Cartera Blindada):
+      * Multa total: 15% del efectivo del ladrón.
+      * 10% del efectivo se abona a la víctima como compensación.
+      * 5% del efectivo se ingresa en el server_jackpot.
     """
     r_uid = str(robber_id)
     v_uid = str(victim_id)
@@ -918,9 +936,15 @@ def execute_rob(
     with ECONOMY_LOCK:
         allowed, remaining = can_rob(r_uid, cooldown_seconds)
         if not allowed:
-            mins = int(remaining // 60)
+            hours = int(remaining // 3600)
+            mins = int((remaining % 3600) // 60)
             secs = int(remaining % 60)
-            time_str = f"**{mins}m {secs}s**" if mins > 0 else f"**{secs}s**"
+            if hours > 0:
+                time_str = f"**{hours}h {mins}m**"
+            elif mins > 0:
+                time_str = f"**{mins}m {secs}s**"
+            else:
+                time_str = f"**{secs}s**"
             return False, f"⏳ Tienes a la policía buscándote. Espera {time_str} para volver a atracar.", 0
 
         robber_bal = get_balance(r_uid)
@@ -931,11 +955,17 @@ def execute_rob(
 
         # Check Cartera Blindada
         if user_has_shield(v_uid, victim_member):
-            # 100% fallo y multa del 15% del efectivo del ladrón pagado a la víctima
-            fine = max(100, int(robber_bal["cash"] * 0.15)) if robber_bal["cash"] > 0 else 0
-            if fine > 0 and robber_bal["cash"] >= fine:
-                modify_balance(r_uid, cash_delta=-fine)
-                modify_balance(v_uid, cash_delta=+fine)
+            total_fine = min(robber_bal["cash"], max(100, int(round(robber_bal["cash"] * 0.15)))) if robber_bal["cash"] > 0 else 0
+            victim_share = int(round(total_fine * (10.0 / 15.0)))
+            jackpot_share = total_fine - victim_share
+
+            if total_fine > 0:
+                modify_balance(r_uid, cash_delta=-total_fine)
+            if victim_share > 0:
+                modify_balance(v_uid, cash_delta=+victim_share)
+            if jackpot_share > 0:
+                modify_server_jackpot(jackpot_share)
+
             data = load_economy_data()
             data["users"][r_uid]["last_rob"] = datetime.now(timezone.utc).isoformat()
             save_economy_data(data)
@@ -943,10 +973,13 @@ def execute_rob(
             msg = (
                 f"🛡️ **¡ATRACO FRUSTRADO POR CARTERA BLINDADA!**\n"
                 f"La víctima posee la **`🛡️ Cartera Blindada`** activa. El sistema de electrochoque y blindaje "
-                f"te ha neutralizado en el acto. Has tenido que pagar una fianza indemnizatoria de {PORRO_EMOJI} **{fine:,}** Porros a la víctima."
+                f"te ha neutralizado en el acto.\n\n"
+                f"🚨 **Multa total aplicada (15%):** {PORRO_EMOJI} **{total_fine:,}** Porros\n"
+                f"• 💰 Indemnización a la víctima (10%): {PORRO_EMOJI} **+{victim_share:,}** Porros\n"
+                f"• 🎰 Bote acumulado del servidor (5%): {PORRO_EMOJI} **+{jackpot_share:,}** Porros"
             )
-            _bot_log(f"🛡️ [Robo Bloqueado] {r_uid} intentó robar a {v_uid} (Cartera Blindada). Multa: {fine} Porros.")
-            return False, msg, -fine
+            _bot_log(f"🛡️ [Robo Bloqueado] {r_uid} intentó robar a {v_uid} (Cartera Blindada). Multa: {total_fine} Porros (Víctima: {victim_share}, Jackpot: {jackpot_share}).")
+            return False, msg, -total_fine
 
         # Intento de robo estándar (50% éxito)
         success = random.random() < 0.50
@@ -955,7 +988,7 @@ def execute_rob(
         save_economy_data(data)
 
         if success:
-            steal_pct = random.uniform(0.20, 0.50)
+            steal_pct = random.uniform(0.20, 0.33)
             stolen = max(1, int(victim_bal["cash"] * steal_pct))
             modify_balance(v_uid, cash_delta=-stolen)
             modify_balance(r_uid, cash_delta=+stolen)
@@ -968,18 +1001,26 @@ def execute_rob(
             _bot_log(f"🥷 [Robo Exitoso] {r_uid} robó {stolen:,} Porros a {v_uid}.")
             return True, msg, stolen
         else:
-            fine = max(100, int(robber_bal["cash"] * 0.15)) if robber_bal["cash"] > 0 else 0
-            if fine > 0 and robber_bal["cash"] >= fine:
-                modify_balance(r_uid, cash_delta=-fine)
-                modify_balance(v_uid, cash_delta=+fine)
+            total_fine = min(robber_bal["cash"], max(100, int(round(robber_bal["cash"] * 0.15)))) if robber_bal["cash"] > 0 else 0
+            victim_share = int(round(total_fine * (10.0 / 15.0)))
+            jackpot_share = total_fine - victim_share
+
+            if total_fine > 0:
+                modify_balance(r_uid, cash_delta=-total_fine)
+            if victim_share > 0:
+                modify_balance(v_uid, cash_delta=+victim_share)
+            if jackpot_share > 0:
+                modify_server_jackpot(jackpot_share)
 
             msg = (
                 f"🚨 **¡ATRACO FALLIDO!**\n"
-                f"Te tropezaste con una lata haciendo un ruido tremendo y fuiste pillado in fraganti. "
-                f"Tuviste que soltar {PORRO_EMOJI} **{fine:,}** Porros en compensación a la víctima para que no te llevaran detenido."
+                f"Te tropezaste con una lata haciendo un ruido tremendo y fuiste pillado in fraganti.\n\n"
+                f"🚨 **Multa total aplicada (15%):** {PORRO_EMOJI} **{total_fine:,}** Porros\n"
+                f"• 💰 Indemnización a la víctima (10%): {PORRO_EMOJI} **+{victim_share:,}** Porros\n"
+                f"• 🎰 Bote acumulado del servidor (5%): {PORRO_EMOJI} **+{jackpot_share:,}** Porros"
             )
-            _bot_log(f"🚨 [Robo Fallido] {r_uid} falló contra {v_uid}. Multa: {fine} Porros.")
-            return False, msg, -fine
+            _bot_log(f"🚨 [Robo Fallido] {r_uid} falló contra {v_uid}. Multa: {total_fine} Porros (Víctima: {victim_share}, Jackpot: {jackpot_share}).")
+            return False, msg, -total_fine
 
 
 # ==========================================
@@ -1493,6 +1534,83 @@ def check_and_expire_buffs(now_dt: Optional[datetime] = None) -> List[Dict[str, 
     return expired_list
 
 
+# Artículos transferibles mediante /regalar
+TRANSFERABLE_ITEM_KEYS = {"porro_oro", "monster_blanco", "chute_xp", "pase_semanal_xp", "pase_mensual_xp"}
+
+
+def gift_inventory_item(
+    from_user_id: Any,
+    to_user_id: Any,
+    item_key: str,
+    quantity: int = 1,
+) -> Tuple[bool, str, Optional[Dict[str, Any]]]:
+    """
+    Transfiere una o varias unidades de un artículo de inventario a otro usuario (/regalar):
+    - Bloquea auto-regalos (from_user_id == to_user_id).
+    - Valida quantity >= 1.
+    - Rechaza roles permanentes y artículos no transferibles.
+    - Artículos transferibles: porro_oro, monster_blanco, chute_xp, pase_semanal_xp, pase_mensual_xp.
+    - Verifica que from_user disponga de suficientes unidades en inventory.
+    - Transfiere quantity unidades atómicamente bajo ECONOMY_LOCK.
+    """
+    f_uid = str(from_user_id)
+    t_uid = str(to_user_id)
+
+    if f_uid == t_uid:
+        return False, "❌ No puedes regalarte artículos a ti mismo.", None
+
+    if quantity < 1:
+        return False, "❌ La cantidad a regalar debe ser de al menos 1 unidad.", None
+
+    key_clean = str(item_key).strip().lower()
+    matched_item = None
+    for k, it in SHOP_ITEMS.items():
+        if k == key_clean or it["name"].lower() == key_clean or k in key_clean:
+            matched_item = it
+            break
+
+    if not matched_item:
+        return False, f"❌ El artículo '{item_key}' no existe en el catálogo de la tienda.", None
+
+    item_id = matched_item["id"]
+    item_name = matched_item["name"]
+
+    # Rechazar roles permanentes únicos
+    if matched_item.get("type") == "role" and not matched_item.get("duration_hours"):
+        return False, f"❌ El artículo **{item_name}** es un rol permanente personal y no es transferible.", matched_item
+
+    if item_id not in TRANSFERABLE_ITEM_KEYS:
+        return False, f"❌ El artículo **{item_name}** no es transferible mediante regalo.", matched_item
+
+    with ECONOMY_LOCK:
+        from_user = ensure_user(f_uid)
+        to_user = ensure_user(t_uid)
+
+        from_inv = from_user.setdefault("inventory", [])
+        to_inv = to_user.setdefault("inventory", [])
+
+        current_count = from_inv.count(item_name)
+        if current_count < quantity:
+            return (
+                False,
+                f"❌ No tienes suficientes unidades de **{item_name}** en tu inventario (tienes {current_count}, intentas regalar {quantity}).",
+                matched_item,
+            )
+
+        for _ in range(quantity):
+            from_inv.remove(item_name)
+
+        for _ in range(quantity):
+            to_inv.append(item_name)
+
+        data = load_economy_data()
+        save_economy_data(data)
+
+        _bot_log(f"🎁 [Regalo] {f_uid} regaló {quantity}x '{item_name}' a {t_uid}.")
+        msg = f"🎁 ¡Has regalado con éxito **{quantity}x {item_name}**!"
+        return True, msg, matched_item
+
+
 def _format_remaining_time(expires_at_str: str, now: Optional[datetime] = None) -> str:
     now_dt = now or datetime.now(timezone.utc)
     try:
@@ -1947,32 +2065,83 @@ def admin_airdrop_role(
 # SALARIO ACUMULATIVO CON DECAIMIENTO DEL 5%
 # ==========================================
 
-def calculate_daily_salary(member: Optional[Any] = None, user_roles: Optional[List[str]] = None) -> int:
-    """Calcula el salario diario base (S) según los roles de nivel y podio del usuario."""
+LEVEL_ROLE_MIN_LEVELS = [
+    ("supremo", 100),
+    ("ancestral", 90),
+    ("mítico", 80),
+    ("mitico", 80),
+    ("legendario", 70),
+    ("maestro", 60),
+    ("élite", 50),
+    ("elite", 50),
+    ("alto rango", 40),
+    ("experimentado", 30),
+    ("veterano", 20),
+    ("rango medio", 10),
+]
+
+
+def calculate_daily_salary(
+    member: Optional[Any] = None,
+    user_roles: Optional[List[str]] = None,
+    user_level: Optional[int] = None,
+) -> int:
+    """
+    Calcula el salario diario base (S) según el nivel exacto del usuario (Opción A progresiva)
+    más el plus de podio si posee los roles correspondientes.
+    """
     role_names_lower = []
     if member is not None and hasattr(member, "roles"):
         role_names_lower = [r.name.lower() for r in member.roles]
     elif user_roles:
         role_names_lower = [str(r).lower() for r in user_roles]
 
-    if not role_names_lower:
-        return DEFAULT_BASE_SALARY
-
-    total_daily = 0
-    matched = False
-
-    for key, info in ROLE_SALARIES.items():
-        kws = info["kw"]
+    inferred_role_level = 0
+    for kw, min_lvl in LEVEL_ROLE_MIN_LEVELS:
         for r_name in role_names_lower:
-            if any(kw in r_name for kw in kws):
-                total_daily += info["daily"]
-                matched = True
+            if kw in r_name:
+                if min_lvl > inferred_role_level:
+                    inferred_role_level = min_lvl
                 break
 
-    if not matched or total_daily == 0:
-        return DEFAULT_BASE_SALARY
+    explicit_lvl = int(user_level) if user_level is not None else 0
+    L = max(explicit_lvl, inferred_role_level)
 
-    return total_daily
+    # Fórmula progresiva por nivel L (Opción A):
+    if L < 10:
+        base_salary = 0
+    elif L < 20:
+        base_salary = 2000 + (L - 10) * 200
+    elif L < 30:
+        base_salary = 4000 + (L - 20) * 300
+    elif L < 40:
+        base_salary = 7000 + (L - 30) * 450
+    elif L < 50:
+        base_salary = 11500 + (L - 40) * 650
+    elif L < 60:
+        base_salary = 18000 + (L - 50) * 1000
+    elif L < 70:
+        base_salary = 28000 + (L - 60) * 1400
+    elif L < 80:
+        base_salary = 42000 + (L - 70) * 2000
+    elif L < 90:
+        base_salary = 62000 + (L - 80) * 2800
+    elif L < 100:
+        base_salary = 90000 + (L - 90) * 4000
+    else:
+        base_salary = 130000 + (L - 100) * 5000
+
+    # Plus de Podio
+    podium_bonus = 0
+    for r_name in role_names_lower:
+        if any(kw in r_name for kw in ("top 1", "top1")):
+            podium_bonus = max(podium_bonus, 8000)
+        elif any(kw in r_name for kw in ("top 2", "top2")):
+            podium_bonus = max(podium_bonus, 5000)
+        elif any(kw in r_name for kw in ("top 3", "top3")):
+            podium_bonus = max(podium_bonus, 3000)
+
+    return base_salary + podium_bonus
 
 
 def calculate_accumulated_salary(
@@ -2018,7 +2187,13 @@ def can_claim_salary(user_id: Any, cooldown_seconds: int = 86400) -> Tuple[bool,
         return True, 0.0
 
 
-def claim_salary(user_id: Any, member: Optional[Any] = None) -> Tuple[bool, str, int, int]:
+def claim_salary(
+    user_id: Any,
+    member: Optional[Any] = None,
+    user_roles: Optional[List[str]] = None,
+    now_dt: Optional[datetime] = None,
+    user_level: Optional[int] = None,
+) -> Tuple[bool, str, int, int]:
     """
     Reclama el salario acumulado aplicando la fórmula de decaimiento del 5%:
     Devuelve (éxito, mensaje, salario_cobrado, salario_diario_base).
@@ -2027,9 +2202,17 @@ def claim_salary(user_id: Any, member: Optional[Any] = None) -> Tuple[bool, str,
     with ECONOMY_LOCK:
         user = ensure_user(uid)
         last_sal_str = user.get("last_salary")
-        daily_salary = calculate_daily_salary(member)
+        daily_salary = calculate_daily_salary(member=member, user_roles=user_roles, user_level=user_level)
 
-        now = datetime.now(timezone.utc)
+        if daily_salary <= 0:
+            return (
+                False,
+                "❌ Necesitas alcanzar al menos el **Nivel 10 (`🔷 Pendejo de Rango Medio`)** para cobrar salario diario.",
+                0,
+                0,
+            )
+
+        now = now_dt or datetime.now(timezone.utc)
 
         if not last_sal_str:
             # Primer cobro: abona 1 día completo de salario base
@@ -2512,8 +2695,8 @@ def build_payouts_text() -> str:
 def handle_slots_spin(user_id: Any, bet: int) -> Tuple[bool, str, Optional[Dict[str, Any]], Optional[Dict[str, int]]]:
     """Ejecuta el ciclo de una tirada de slots 5x3 de forma segura."""
     uid = str(user_id)
-    if bet < 50:
-        return False, "La apuesta mínima en la tragaperras es de 50 Porros.", None, None
+    if bet < MIN_SLOTS_BET:
+        return False, f"La apuesta mínima en la tragaperras es de {MIN_SLOTS_BET} Porros.", None, None
 
     with ECONOMY_LOCK:
         bal = get_balance(uid)
@@ -2948,7 +3131,7 @@ ACTIVE_BLACKJACK_GAMES: Dict[int, Any] = {}
 
 
 def parse_blackjack_bet(user_id: Any, apuesta_str: str) -> Tuple[bool, int, str]:
-    """Valida y calcula el monto de la apuesta en Porros (mínimo 50 o 'all'/'todo'/'max')."""
+    """Valida y calcula el monto de la apuesta en Porros (mínimo 100 o 'all'/'todo'/'max')."""
     bal = get_balance(user_id)
     cash = bal["cash"]
     clean_str = str(apuesta_str).strip().lower()
@@ -2959,10 +3142,10 @@ def parse_blackjack_bet(user_id: Any, apuesta_str: str) -> Tuple[bool, int, str]
         try:
             bet = int(clean_str)
         except ValueError:
-            return False, 0, "Cantidad de apuesta inválida. Debe ser un número entero mayor o igual a 50 o 'all'/'todo'."
+            return False, 0, f"Cantidad de apuesta inválida. Debe ser un número entero mayor o igual a {MIN_BLACKJACK_BET} o 'all'/'todo'."
 
-    if bet < 50:
-        return False, 0, f"La apuesta mínima en Blackjack es de 50 Porros ({PORRO_EMOJI})."
+    if bet < MIN_BLACKJACK_BET:
+        return False, 0, f"La apuesta mínima en Blackjack es de {MIN_BLACKJACK_BET} Porros ({PORRO_EMOJI})."
 
     if cash < bet:
         return False, 0, f"No tienes suficientes Porros en efectivo ({cash:,} disponibles). Usa `/trabajar` o retira de tu `/banco`."
@@ -3400,7 +3583,7 @@ def is_roulette_winner(winning_num: int, norm_type: str, bet_number: Optional[in
 
 
 def parse_roulette_bet(user_id: Any, apuesta_str: str) -> Tuple[bool, int, str]:
-    """Valida y calcula el monto de la apuesta en Porros para la ruleta (mínimo 50 o 'all'/'todo'/'max')."""
+    """Valida y calcula el monto de la apuesta en Porros para la ruleta (mínimo 100 o 'all'/'todo'/'max')."""
     bal = get_balance(user_id)
     cash = bal["cash"]
     clean_str = str(apuesta_str).strip().lower()
@@ -3411,10 +3594,10 @@ def parse_roulette_bet(user_id: Any, apuesta_str: str) -> Tuple[bool, int, str]:
         try:
             bet = int(clean_str)
         except ValueError:
-            return False, 0, "Cantidad de apuesta inválida. Debe ser un número entero mayor o igual a 50 o 'all'/'todo'."
+            return False, 0, f"Cantidad de apuesta inválida. Debe ser un número entero mayor o igual a {MIN_ROULETTE_BET} o 'all'/'todo'."
 
-    if bet < 50:
-        return False, 0, f"La apuesta mínima en la Ruleta es de 50 Porros ({PORRO_EMOJI})."
+    if bet < MIN_ROULETTE_BET:
+        return False, 0, f"La apuesta mínima en la Ruleta es de {MIN_ROULETTE_BET} Porros ({PORRO_EMOJI})."
 
     if cash < bet:
         return False, 0, f"No tienes suficientes Porros en efectivo ({cash:,} disponibles). Usa `/trabajar` o retira de tu `/banco`."
@@ -3462,8 +3645,8 @@ class RouletteEngine:
         rng_number: Optional[int] = None,
     ) -> Dict[str, Any]:
         """Valida apuesta y saldo con modify_balance, ejecuta el giro y retorna el resultado."""
-        if bet_amount < 50:
-            raise ValueError(f"La apuesta mínima en la Ruleta es de 50 Porros ({PORRO_EMOJI}).")
+        if bet_amount < MIN_ROULETTE_BET:
+            raise ValueError(f"La apuesta mínima en la Ruleta es de {MIN_ROULETTE_BET} Porros ({PORRO_EMOJI}).")
 
         norm_type = normalize_roulette_bet_type(bet_type)
         if norm_type not in ROULETTE_BET_INFO:
@@ -3727,7 +3910,7 @@ def normalize_coinflip_side(side: Any) -> str:
 
 
 def parse_coinflip_bet(user_id: Any, apuesta_str: str) -> Tuple[bool, int, str]:
-    """Valida y calcula el monto de la apuesta en Porros para Coinflip (mínimo 50 o 'all'/'todo'/'max')."""
+    """Valida y calcula el monto de la apuesta en Porros para Coinflip (mínimo 100 o 'all'/'todo'/'max')."""
     bal = get_balance(user_id)
     cash = bal["cash"]
     clean_str = str(apuesta_str).strip().lower()
@@ -3738,10 +3921,10 @@ def parse_coinflip_bet(user_id: Any, apuesta_str: str) -> Tuple[bool, int, str]:
         try:
             bet = int(clean_str)
         except ValueError:
-            return False, 0, "Cantidad de apuesta inválida. Debe ser un número entero mayor o igual a 50 o 'all'/'todo'."
+            return False, 0, f"Cantidad de apuesta inválida. Debe ser un número entero mayor o igual a {MIN_COINFLIP_BET} o 'all'/'todo'."
 
-    if bet < 50:
-        return False, 0, f"La apuesta mínima en Coinflip es de 50 Porros ({PORRO_EMOJI})."
+    if bet < MIN_COINFLIP_BET:
+        return False, 0, f"La apuesta mínima en Coinflip es de {MIN_COINFLIP_BET} Porros ({PORRO_EMOJI})."
 
     if cash < bet:
         return False, 0, f"No tienes suficientes Porros en efectivo ({cash:,} disponibles). Usa `/trabajar` o retira de tu `/banco`."
@@ -3774,8 +3957,8 @@ class CoinflipEngine:
         - Descuento atómico inicial.
         - Si pierde, el 3% de la pérdida neta alimenta el server_jackpot.
         """
-        if bet_amount < 50:
-            raise ValueError(f"La apuesta mínima en Coinflip es de 50 Porros ({PORRO_EMOJI}).")
+        if bet_amount < MIN_COINFLIP_BET:
+            raise ValueError(f"La apuesta mínima en Coinflip es de {MIN_COINFLIP_BET} Porros ({PORRO_EMOJI}).")
 
         player_choice = normalize_coinflip_side(choice)
         uid = str(user_id)
@@ -4384,7 +4567,7 @@ CASINO_GAMES_INFO = {
     },
     "ruleta": {
         "title": "🎡 Ruleta Europea — Cilindro de Montecarlo",
-        "command": "`/ruleta [apuesta] [tipo]` (ej: `/ruleta 100 rojo`, `/ruleta 500 par`, `/ruleta 50 pleno 0`)",
+        "command": "`/ruleta [apuesta] [tipo]` (ej: `/ruleta 100 rojo`, `/ruleta 500 par`, `/ruleta 100 pleno 0`)",
         "description": "Ruleta europea oficial con cilindro de 37 casillas (números del 0 al 36) y regla del 0 verde.",
         "rtp": "**97.30% RTP** (Ventaja de la casa fija del 2.70% por el 0 verde)",
         "paytable": (

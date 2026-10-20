@@ -221,9 +221,11 @@ def run_tests():
         ok, bet, err = parse_blackjack_bet(uid_bet, "150")
         assert ok is True and bet == 150, f"Debe aceptar 150, err: {err}"
 
-        # Apuesta menor al mínimo (< 50)
+        # Apuesta menor al mínimo (< 100)
         ok, bet, err = parse_blackjack_bet(uid_bet, "49")
-        assert ok is False and "mínima en Blackjack es de 50" in err
+        assert ok is False and "mínima en Blackjack es de 100" in err
+        ok, bet, err = parse_blackjack_bet(uid_bet, "99")
+        assert ok is False and "mínima en Blackjack es de 100" in err
 
         # Apuestas de all-in: 'all', 'todo', 'max'
         ok, bet, err = parse_blackjack_bet(uid_bet, "all")
@@ -242,7 +244,7 @@ def run_tests():
         # Formato inválido
         ok, bet, err = parse_blackjack_bet(uid_bet, "invalid_amount")
         assert ok is False and "inválida" in err
-        print("  ✅ TEST 5 PASADO: Parseo y validación de apuestas (min 50, all-in, límites) verificado.")
+        print("  ✅ TEST 5 PASADO: Parseo y validación de apuestas (min 100, all-in, límites) verificado.")
 
         # TEST 6: Mecánica financiera (Descuento, Pago 3:2, Pago 1:1, Push y Pérdida)
         print("\n[TEST 6] Impacto financiero en balance (Descuento, 3:2, 1:1, Empate y Jackpot)...")
@@ -439,8 +441,8 @@ def run_tests():
 
         assert cmd_blackjack.name == "blackjack"
         assert cmd_bj.name == "bj"
-        assert len(ECONOMY_SLASH_COMMANDS) == 19, f"Debe haber 19 comandos de economía, hay {len(ECONOMY_SLASH_COMMANDS)}"
-        assert len(ALL_SLASH_COMMANDS) == 41, f"Debe haber 41 comandos en total, hay {len(ALL_SLASH_COMMANDS)}"
+        assert len(ECONOMY_SLASH_COMMANDS) == 20, f"Debe haber 20 comandos de economía, hay {len(ECONOMY_SLASH_COMMANDS)}"
+        assert len(ALL_SLASH_COMMANDS) == 42, f"Debe haber 42 comandos en total, hay {len(ALL_SLASH_COMMANDS)}"
         print("  ✅ TEST 11 PASADO: Presencia e integridad de /blackjack y /bj en ECONOMY_SLASH_COMMANDS.")
 
         print("\n" + "=" * 70)

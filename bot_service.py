@@ -355,6 +355,13 @@ from modulos.economia import (
     RankingView,
     admin_modify_money,
     admin_airdrop_role,
+    gift_inventory_item,
+    MIN_SLOTS_BET,
+    MIN_BLACKJACK_BET,
+    MIN_ROULETTE_BET,
+    MIN_COINFLIP_BET,
+    ECONOMY_CATEGORY_ID,
+    ALLOWED_ECONOMY_CHANNELS,
 )
 
 from modulos.comandos import (
@@ -364,6 +371,7 @@ from modulos.comandos import (
     register_general_commands,
     register_economy_commands,
     register_slash_commands,
+    ensure_economy_channel,
     cmd_dibuja,
     cmd_steam,
     cmd_tribunal,
@@ -404,6 +412,7 @@ from modulos.comandos import (
     cmd_ranking,
     cmd_inventario,
     cmd_usar,
+    cmd_regalar,
     cmd_admin_dinero,
 )
 
@@ -609,7 +618,7 @@ async def on_ready():
         economy_tree.copy_global_to(guild=guild_obj)
         await economy_tree.sync(guild=guild_obj)
         bot_log(f"Bot de Economía '{economy_bot.user}' conectado y listo en Discord.")
-        bot_log(f"Comandos de Economía (19) sincronizados limpiamente en el servidor ID {GUILD_ID}.")
+        bot_log(f"Comandos de Economía (20) sincronizados limpiamente en el servidor ID {GUILD_ID}.")
     except Exception as e:
         bot_log(f"Aviso sincronización comandos de economía: {e}")
 

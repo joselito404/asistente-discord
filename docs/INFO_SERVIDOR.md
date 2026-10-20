@@ -200,7 +200,8 @@
      - `/xp`: Calculadora de experiencia y mensajes estimados hacia niveles meta.
 
 ### 2. Economia Asistente (Economía Oficial Nativa de Porros, Casino y Tienda — Sustitución de UnbelievaBoat)
-- **ID de Aplicación**: `1561751626681679966` (Bot `Economia Asistente`, 19 Comandos Slash) | **Moneda Oficial**: `<:Porro:1535685303317172305>` **Porros** (Balance inicial: 1.000). *(UnbelievaBoat `292953664492929025` en fase final de retirada tras migración 1:1 de saldos)*.
+- **ID de Aplicación**: `1561751626681679966` (Bot `Economia Asistente`, 20 Comandos Slash) | **Moneda Oficial**: `<:Porro:1535685303317172305>` **Porros** (Balance inicial: 1.000). *(UnbelievaBoat `292953664492929025` en fase final de retirada tras migración 1:1 de saldos)*.
+- **Restricción de Canales**: Todos los comandos públicos están restringidos a los canales de `🎲・CASINO & ECONOMÍA・🎲` (`#🎰casino-y-apuestas🎰`, `#🎰casino-y-apuestas-2🎰`, `#🏪tienda-y-mercado🏪`) y `#🛠️apps-solo-mods🛠️`.
 - **Banca, Ranking y Administración**:
   - `/balance [usuario]`: Consulta de efectivo, banco, patrimonio total y bote acumulado (`server_jackpot`).
   - `/depositar <cantidad|all>` y `/retirar <cantidad|all>`: Gestión bancaria protegida contra robos.
@@ -210,23 +211,24 @@
 - **Generación Activa y Cooldowns**:
   - `/trabajar` (cada 4 horas): Trabajo honrado con historias del lore del servidor (`1.000 a 2.500` porros base + multiplicador por rol de nivel de `+10%` a `+40%`).
   - `/crimen` (cada 12 horas): Delito de alto riesgo (50% éxito con `1.800 a 3.500` porros base + multiplicador de nivel; 50% fallo con multa del 10% del efectivo, mín. 500 porros, destinando el 3% al bote del servidor).
-  - `/robar <usuario>` (cada 2 horas): Atraco a carteras (50% éxito robando 20-50% del efectivo; bloqueado al 100% por banco y por `🛡️ Cartera Blindada` con multa del 15%).
-- **Salarios Diarios Acumulativos por Rol (`/salario` con decaimiento diario del 5%, asíntota $20\times$)**:
-  - Nivel 10 (`🔷 Rango Medio`): +2.000 /día (Acumulado: 2.000)
-  - Nivel 20 (`🔮 Veterano`): +2.000 /día (Acumulado: 4.000)
-  - Nivel 30 (`🌸 Experimentado`): +3.000 /día (Acumulado: 7.000)
-  - Nivel 40 (`🔥 Alto Rango`): +4.500 /día (Acumulado: 11.500)
-  - Nivel 50 (`⚔️ Élite`): +6.500 /día (Acumulado: 18.000)
-  - Nivel 60 (`⚡ Maestro`): +10.000 /día (Acumulado: 28.000)
-  - Nivel 70 (`🌟 Legendario`): +14.000 /día (Acumulado: 42.000)
-  - Nivel 80 (`👑 Mítico`): +20.000 /día (Acumulado: 62.000)
-  - Nivel 90 (`🔱 Ancestral`): +28.000 /día (Acumulado: 90.000)
-  - Nivel 100 (`💠 Supremo`): +40.000 /día (Acumulado: 130.000)
+  - `/robar <usuario>` (cada 24 horas): Atraco a carteras (50% éxito robando del 20% al 33% del efectivo; en fallo o contra `🛡️ Cartera Blindada` aplica multa del 15% del efectivo del ladrón repartida en 10% a la víctima y 5% al bote del servidor).
+- **Salarios Diarios Progresivos por Nivel Exacto (`/salario` con decaimiento diario del 5%, asíntota $20\times$)**:
+  - Se interpola linealmente cada nivel exacto $L \ge 10$ entre los tramos oficiales:
+  - Nivel 10–19 (`🔷 Rango Medio`): `2.000` + `+200`/nvl
+  - Nivel 20–29 (`🔮 Veterano`): `4.000` + `+300`/nvl
+  - Nivel 30–39 (`🌸 Experimentado`): `7.000` + `+450`/nvl
+  - Nivel 40–49 (`🔥 Alto Rango`): `11.500` + `+650`/nvl
+  - Nivel 50–59 (`⚔️ Élite`): `18.000` + `+1.000`/nvl
+  - Nivel 60–69 (`⚡ Maestro`): `28.000` + `+1.400`/nvl
+  - Nivel 70–79 (`🌟 Legendario`): `42.000` + `+2.000`/nvl
+  - Nivel 80–89 (`👑 Mítico`): `62.000` + `+2.800`/nvl
+  - Nivel 90–99 (`🔱 Ancestral`): `90.000` + `+4.000`/nvl
+  - Nivel 100+ (`💠 Supremo`): `130.000` + `+5.000`/nvl
   - Podio de Actividad: `🥉Top 3🥉` (+3.000), `🥈Top 2🥈` (+5.000), `🥇Top 1🥇` (+8.000).
 - **Juegos de Casino Oficiales en `#🎰casino-y-apuestas🎰` y `#🎰casino-y-apuestas-2🎰` (`/casino`)**:
-  - Apuestas: Mínima 100 | Máxima: Sin límite (¡All-in permitido!). El 3% de pérdidas netas alimenta el `server_jackpot`.
-  - Catálogo Nativo: Tragaperras 5x3 (`/slots`, 7 líneas, RTP 110.03%, Free Spins y Jackpot), Blackjack 21 (`/blackjack`, `/bj`, 6 barajas, S17, pago 3:2), Ruleta Europea (`/ruleta`, 37 casillas, 13 suertes), Coinflip Dual (`/coinflip`, PvE y duelos PvP 1v1) y Centro de Control (`/casino`).
-- **Catálogo Oficial de la Tienda (`/tienda`), Inventario (`/inventario`) y Uso (`/usar`) (9 Ítems Activos)**:
+  - Apuestas: Mínima 100 | Máxima: Sin límite (¡All-in permitido!). Sin cooldown de 4 partidas cada 5 min. El 3% de pérdidas netas alimenta el `server_jackpot`.
+  - Catálogo Nativo (4 juegos estrella): Tragaperras 5x3 (`/slots`, 7 líneas, RTP 110.03%, Free Spins y Jackpot), Blackjack 21 (`/blackjack`, `/bj`, 6 barajas, S17, pago 3:2), Ruleta Europea (`/ruleta`, 37 casillas, 13 suertes), Coinflip Dual (`/coinflip`, PvE y duelos PvP 1v1) y Centro de Control (`/casino`).
+- **Catálogo Oficial de la Tienda (`/tienda`), Inventario (`/inventario`), Uso (`/usar`) y Regalos (`/regalar`) (9 Ítems Activos)**:
   1. `🛡️ Cartera Blindada` (50.000 porros): Rol permanente auto-asignado que otorga inmunidad absoluta al comando `/robar`.
   2. `🚬 Porro de Oro` (75.000 porros): Coleccionable de inventario de máximo flexeo.
   3. `🚬 Camello del Barrio` (85.000 porros): Rol cosmético permanente verde porro (`#2ECC71`).
