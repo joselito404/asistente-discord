@@ -72,10 +72,10 @@ $$\text{Total Aura Fundamental} = \text{Voz (4.500)} + \text{Chat (3.500)} + \te
 - [x] **Diseño de Interfaz Gráfica (Híbrido Dual)**: Render nativo en Discord (Pillow) + Web interactiva en Vercel (TradingView Lightweight Charts) con estética idéntica a Trading 212 `[Aprobado · Jose · 19/10/2026]`.
 - [x] **Catálogo de Tickers y Requisito de Salida a Bolsa (IPO Nivel 20+)**: Requisito de Nivel 20+ (desbloqueo de `CATEGORÍA PRO`) para cotizar en bolsa. Fundadores iniciales: `$JOSE`, `$TERRE`, `$OMEN`, `$RACER`. Tickers aprobados para futuros aspirantes cuando alcancen Nvl 20 `[Aprobado · Jose · 20/10/2026]`.
 - [x] **Conversión de Aura a Precio Fundamental ($P_{\text{fundamental}}$)**: Escala $\div 2$ con fórmula $P_{\text{fundamental}} = \max\left(200,\; \frac{\text{Aura}}{2}\right)$ (techo 5.000 Porros a 10.000 Aura, suelo mínimo 200 Porros) `[Aprobado · Jose · 20/10/2026]`.
-- [x] **Arquitectura de Suministro Fijo e Insider Holding**: Aprobado emitir un suministro fijo grande por ticker con asignación inicial simbólica al fundador del 2% al 5% para evitar inyecciones masivas de liquidez regalada `[Aprobado · Jose · 20/10/2026]`.
-- [x] **Mecánica de Dividendos Pasivos (Incentivo al Hold)**: Aprobado reparto periódico de dividendos en Porros a los accionistas derivado de la actividad/salario del miembro para fomentar el *holding* real frente a la pura especulación `[Aprobado · Jose · 20/10/2026]`.
-- [x] **Market Maker con Spread (Contrapartida Inmediata 24/7)**: Aprobado modelo de creador de mercado del bot que absorbe compras y ventas al instante con spread de quema del 1% `[Aprobado · Jose · 20/10/2026]`.
-- [ ] **Parámetros Exactos de Suministro y Dividendos**: `[Pendiente de matizar: número total de acciones fijas (ej. 10.000 vs 50.000) y tasa exacta de dividendo sobre el salario/actividad]`.
+- [x] **Arquitectura de Suministro Fijo e Insider Holding**: 10.000 acciones fijas por ticker. Asignación inicial al fundador fijada exactamente en el **1% (100 acciones)** y **99% (9.900 acciones)** en el Free Float del Market Maker `[Aprobado · Jose · 20/10/2026]`.
+- [x] **Mecánica de Dividendos Pasivos (Incentivo al Hold)**: Retención del **5% del `/salario` diario** del miembro en [`modulos/economia_core.py`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/economia_core.py), repartido proporcionalmente entre sus accionistas como dividendos en Porros limpios sin inflación `[Aprobado · Jose · 20/10/2026]`.
+- [x] **Market Maker con Spread (Contrapartida Inmediata 24/7)**: Horquilla fija del 1% (Ask $+0{,}5\%$, Bid $-0{,}5\%$) con quema deflacionaria automática del spread `[Aprobado · Jose · 20/10/2026]`.
+- [ ] **Curva de Mercado AMM ($P_{\text{mercado}}$)**: `[Pendiente de matizar: cómo mueven las compras y ventas netas el componente de mercado]`.
 - [ ] **Frecuencia de Formación de Velas Japonesas**: `[Pendiente de matizar: temporalidad de cierre de velas (1 hora vs 1 día)]`.
 
 ---
@@ -114,28 +114,38 @@ En cuanto un miembro alcance el Nivel 20, el sistema anunciará automáticamente
 
 ## 7. Estructura Accionarial, Suministro Fijo, Dividendos y Market Maker
 
-> **Estado:** `Aprobado en concepto por Jose` `[Aprobado · Jose · 20/10/2026]` (Detalles en refinamiento).
+> **Estado:** `Aprobado por Jose` `[Aprobado · Jose · 20/10/2026]`
 
 Para replicar con realismo la dinámica bursátil de Trading 212 y resolver la falta de liquidez en un grupo de amigos:
 
 ### 7.1. Suministro Fijo de Acciones y Asignación Inicial
 1. **Suministro Fijo (*Total Shares Outstanding*)**:
-   - Cada miembro que sale a bolsa tiene un número total y finito de acciones emitidas (suministro grande, ej. **10.000** o **50.000 acciones**).
-   - No se imprimen acciones infinitas de la nada, garantizando escasez y valor matemático a la capitalización bursátil (*Market Cap*).
-2. **Asignación Simbólica al Fundador (*Insider Holding* - 2% a 5%)**:
-   - Para no regalar una fortuna de liquidez instantánea al titular del ticker que rompa la economía, el miembro recibe únicamente entre el **2% y el 5%** de sus propias acciones en su cartera inicial (ej. 200 a 500 acciones sobre un total de 10.000).
-   - El resto (**95% a 98%**) constituye el **Free Float** en custodia del Market Maker del servidor para que la comunidad pueda comprarlas.
+   - Cada miembro que sale a bolsa tiene exactamente **10.000 acciones emitidas**.
+   - No se imprimen acciones infinitas de la nada, garantizando escasez estricta y valor matemático a la capitalización bursátil (*Market Cap*).
+2. **Asignación al Fundador (*Insider Holding* - 1%)**:
+   - El titular del ticker recibe exactamente el **1% (100 acciones)** en su cartera inicial (`portfolio`).
+   - Evita regalos desproporcionados de liquidez líquida y alinea sus intereses con el crecimiento del valor de su acción a largo plazo.
+3. **Free Float en Custodia del Market Maker (99%)**:
+   - Las **9.900 acciones restantes (99%)** constituyen el mercado abierto administrado por el bot para que los miembros las adquieran con sus Porros.
 
-### 7.2. Sistema de Dividendos Pasivos (Incentivo al *Hold*)
-- **El Problema del Especulador Puro**: Si las acciones solo sirven para comprar y vender más caro, el mercado colapsa en cuanto alguien vende todas sus posiciones.
-- **La Solución Real (Rendimiento por Dividendo)**:
-  - Mantener acciones de un colega activo genera **Porros pasivos**.
-  - Cada vez que el miembro genera actividad económica (ej. al cobrar su `/salario` diario en [`modulos/economia_core.py`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/economia_core.py)), se genera un bote de dividendos proporcional que se ingresa automáticamente en las carteras de sus accionistas según el número de acciones que posean.
+### 7.2. Sistema de Dividendos Pasivos (Incentivo Real al *Hold*)
+- **Mecánica de Financiación (Impuesto de Sociedades / 5% del Salario)**:
+  - Cada vez que el miembro cotizado reclama su `/salario` diario en [`modulos/economia_core.py`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/economia_core.py), se deduce automáticamente un **5%** para alimentar el bote de dividendos de su acción.
+  - El 95% restante del salario entra directo a su efectivo limpio.
+  - **Cero Inflación**: Los dividendos proceden de riqueza real generada por el usuario, sin imprimir moneda de la nada.
+- **Distribución Proporcional**:
+  - El bote del 5% se reparte automáticamente entre todas las acciones en manos de usuarios (incluyendo el 1% del propio fundador).
+  - *Ejemplo práctico:* Si Terre (Nvl 37) cobra su salario base de **5.700 Porros**:
+    - Terre recibe **5.415 Porros** (95%).
+    - Se genera un bote de dividendos de **285 Porros** (5%).
+    - Si Jose posee el 40% de las acciones de Terre en circulación, Jose recibe **114 Porros pasivos** en su cuenta de inmediato.
 
-### 7.3. Creador de Mercado del Bot (*Automated Market Maker*)
-- Para evitar que las órdenes de compra o venta queden bloqueadas esperando a que otro humano las acepte, el bot actúa como **Market Maker central**.
-- Liquidez 100% garantizada 24/7 para cualquier orden.
-- Aplica una horquilla (*spread*) del **1%** en cada operación que se destruye/quema directamente de la economía, actuando como sumidero deflacionario de Porros.
+### 7.3. Creador de Mercado del Bot (*Automated Market Maker*) y Spread
+- Para evitar que las órdenes de compra o venta queden bloqueadas esperando a que otro humano las acepte, el bot actúa como **Market Maker central** garantizando ejecución 24/7.
+- **Horquilla Bid/Ask (Spread del 1%)**:
+  - **Precio Ask (Compra):** $\text{Precio de Cotización} \times 1{,}005$ ($+0{,}5\%$).
+  - **Precio Bid (Venta):** $\text{Precio de Cotización} \times 0{,}995$ ($-0{,}5\%$).
+  - La horquilla neta del **1%** se destruye/quema directamente de la base monetaria en [`datos/economia.json`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/datos/economia.json), actuando como freno deflacionario al arbitraje de alta frecuencia.
 
 ---
 
