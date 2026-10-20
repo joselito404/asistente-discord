@@ -175,18 +175,14 @@ En lugar de cobrar únicamente por saltos de rol cada 10 niveles, `/salario` int
 
 2. **Líneas y Diagonales Reales en Matriz 5x3**:
    - **3 Líneas Horizontales Completas**:
-     * `Horizontal Centro`: `[(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)]` (premia por 3, 4 o 5 seguidos).
-     * `Horizontal Arriba`: `[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)]` (premia por 3, 4 o 5 seguidos).
-     * `Horizontal Abajo`: `[(2, 0), (2, 1), (2, 2), (2, 3), (2, 4)]` (premia por 3, 4 o 5 seguidos).
-   - **Diagonales Rectas de 3 Casillas Reales**:
-     * `Diagonal Descendente Izq \`: `[(0, 0), (1, 1), (2, 2)]`
-     * `Diagonal Descendente Centro \`: `[(0, 1), (1, 2), (2, 3)]`
-     * `Diagonal Descendente Der \`: `[(0, 2), (1, 3), (2, 4)]`
-     * `Diagonal Ascendente Izq /`: `[(2, 0), (1, 1), (0, 2)]`
-     * `Diagonal Ascendente Centro /`: `[(2, 1), (1, 2), (0, 3)]`
-     * `Diagonal Ascendente Der /`: `[(2, 2), (1, 3), (0, 4)]`
-   - Toda línea premiada se corresponde exactamente con una recta o diagonal real visible sin engaños visuales.
-   - Calibración matemática de multiplicadores en simulación Monte Carlo para mantener **RTP 110.0%**.
+     * `Línea Arriba`: `[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)]` (premia por 3, 4 o 5 seguidos).
+     * `Línea Centro`: `[(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)]` (premia por 3, 4 o 5 seguidos; Grand y Mini Jackpot).
+     * `Línea Abajo`: `[(2, 0), (2, 1), (2, 2), (2, 3), (2, 4)]` (premia por 3, 4 o 5 seguidos).
+   - **Diagonales Rectas de 3 Casillas Reales (sin prefijos técnicos ni jerga DER/IZQ)**:
+     * `Diagonal Descendente`: 3 diagonales rectas de 3 casillas (`[(0, 0), (1, 1), (2, 2)]`, `[(0, 1), (1, 2), (2, 3)]`, `[(0, 2), (1, 3), (2, 4)]`).
+     * `Diagonal Ascendente`: 3 diagonales rectas de 3 casillas (`[(2, 0), (1, 1), (0, 2)]`, `[(2, 1), (1, 2), (0, 3)]`, `[(2, 2), (1, 3), (0, 4)]`).
+   - Toda línea premiada se corresponde exactamente con una recta o diagonal real visible sin engaños visuales ni códigos crudos (`D1`, `D6`, `Der`).
+   - Calibración matemática de multiplicadores en simulación Monte Carlo para mantener **RTP 110.02%** y **Hit Rate 70.93%**.
 - **`/ruleta <apuesta | all> <suerte>`** — Ruleta europea de 37 casillas (rojo/negro, par/impar, docenas, columnas y pleno 35:1) con botones de re-apuesta.
 - **`/coinflip <apuesta | all> <cara | cruz> [@rival]`** — Cara o cruz al instante contra la casa (PvE) o duelo directo 1v1 por Porros contra otro miembro (PvP).
 ```

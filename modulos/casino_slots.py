@@ -94,15 +94,15 @@ SLOT_SYMBOLS = {
 
 # Las 9 Líneas de pago limpias aprobadas por Jose en matriz 5x3 (3 Horizontales + 6 Diagonales de 3 casillas)
 SLOT_PAYLINES = [
-    ("L1: Centro", [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)]),
-    ("L2: Arriba", [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)]),
-    ("L3: Abajo", [(2, 0), (2, 1), (2, 2), (2, 3), (2, 4)]),
-    ("D1: Diagonal Descendente Izq", [(0, 0), (1, 1), (2, 2)]),
-    ("D2: Diagonal Descendente Centro", [(0, 1), (1, 2), (2, 3)]),
-    ("D3: Diagonal Descendente Der", [(0, 2), (1, 3), (2, 4)]),
-    ("D4: Diagonal Ascendente Izq", [(2, 0), (1, 1), (0, 2)]),
-    ("D5: Diagonal Ascendente Centro", [(2, 1), (1, 2), (0, 3)]),
-    ("D6: Diagonal Ascendente Der", [(2, 2), (1, 3), (0, 4)]),
+    ("Línea Arriba", [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)]),
+    ("Línea Centro", [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)]),
+    ("Línea Abajo", [(2, 0), (2, 1), (2, 2), (2, 3), (2, 4)]),
+    ("Diagonal Descendente", [(0, 0), (1, 1), (2, 2)]),
+    ("Diagonal Descendente", [(0, 1), (1, 2), (2, 3)]),
+    ("Diagonal Descendente", [(0, 2), (1, 3), (2, 4)]),
+    ("Diagonal Ascendente", [(2, 0), (1, 1), (0, 2)]),
+    ("Diagonal Ascendente", [(2, 1), (1, 2), (0, 3)]),
+    ("Diagonal Ascendente", [(2, 2), (1, 3), (0, 4)]),
 ]
 
 
@@ -413,13 +413,13 @@ def build_payouts_text() -> str:
     lines = [
         "🎰 **TABLA DE PAGOS Y REGLAS — TRAGAPERRAS 5×3 DE PORROS**",
         "La máquina evalúa **9 líneas de pago limpias reales** en cuadrícula de 5 rodillos × 3 filas:",
-        "• **Horizontales (L1-L3)**: Centro, Arriba, Abajo (premia por 3, 4 o 5 seguidos en la fila).",
-        "• **Diagonales (D1-D6)**: 6 Diagonales rectas de 3 casillas reales (premia por 3 aciertos en línea).",
+        "• **Horizontales**: Línea Arriba, Línea Centro, Línea Abajo (premia por 3, 4 o 5 seguidos en la fila).",
+        "• **Diagonales**: Diagonales Descendentes y Ascendentes (premia por 3 aciertos en línea recta).",
         "",
         "**Multiplicadores por acierto (3 / 4 / 5 aciertos):**",
-        "• <:absolutecinema:1478115607336714300> **WILD (Comodín)**: **×30.0** / **×95.0** / **×290.0** — Sustituye a cualquier regular. 5 en L1 = ¡Grand Jackpot!",
-        "• <:Ranked_Pro:1550129987972104252> **Ranked Pro**: **×22.0** / **×75.0** / **×240.0** — 5 en L1 = **Grand Jackpot** (100% bote).",
-        "• <:Ranked_Masters:1550129992837496833> **Ranked Masters**: **×9.0** / **×30.0** / **×92.0** — 5 en L1 = **Mini Jackpot** (25% bote).",
+        "• <:absolutecinema:1478115607336714300> **WILD (Comodín)**: **×30.0** / **×95.0** / **×290.0** — Sustituye a cualquier regular. 5 en Línea Centro = ¡Grand Jackpot!",
+        "• <:Ranked_Pro:1550129987972104252> **Ranked Pro**: **×22.0** / **×75.0** / **×240.0** — 5 en Línea Centro = **Grand Jackpot** (100% bote).",
+        "• <:Ranked_Masters:1550129992837496833> **Ranked Masters**: **×9.0** / **×30.0** / **×92.0** — 5 en Línea Centro = **Mini Jackpot** (25% bote).",
         "• <:Ranked_Legendary:1550129997774323732> **Ranked Legendary**: **×3.5** / **×12.0** / **×38.0**",
         "• <:Ranked_Mythic:1550130000852820099> **Ranked Mythic**: **×1.5** / **×5.2** / **×17.5**",
         "• <:Ranked_Diamond:1550130004074041434> **Ranked Diamond**: **×0.70** / **×2.35** / **×7.8**",
