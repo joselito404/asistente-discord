@@ -4,8 +4,18 @@
     "display_name": "Joselito",
     "username": "joselito3499",
     "role_in_server": "Fundador y Administrador",
-    "fav_genres": ["Manhwas", "Anime de acción", "Soulslike", "Cooperativos"],
-    "fav_works": ["Solo Leveling", "The Greatest Estate Developer", "Tower of God", "Demon Slayer"],
+    "fav_genres": [
+      "Manhwas",
+      "Anime de acción",
+      "Soulslike",
+      "Cooperativos"
+    ],
+    "fav_works": [
+      "Solo Leveling",
+      "The Greatest Estate Developer",
+      "Tower of God",
+      "Demon Slayer"
+    ],
     "notes": [
       "Tiene el Top 69 de manhwas fijado en #cultura",
       "Le gusta debatir en #cultura y jugar en #games",
@@ -19,8 +29,16 @@
     "username": "racerwasp",
     "alias": "RobaAbuelas",
     "role_in_server": "Co-Administrador y Magistrado de El Tribunal Gaming",
-    "fav_genres": ["Brawl Stars", "Soulslike", "Cine", "Manhwas"],
-    "fav_works": ["Jujutsu Kaisen", "Vinland Saga"],
+    "fav_genres": [
+      "Brawl Stars",
+      "Soulslike",
+      "Cine",
+      "Manhwas"
+    ],
+    "fav_works": [
+      "Jujutsu Kaisen",
+      "Vinland Saga"
+    ],
     "notes": [
       "Co-Administrador legítimo veterano desde el día 1",
       "Magistrado oficial de El Tribunal Gaming",
@@ -33,7 +51,11 @@
     "display_name": "Terreneiror",
     "username": "terreneiror",
     "role_in_server": "Miembro Veterano y Colega de la Vieja Guardia",
-    "fav_genres": ["RPGs", "Anime", "Videojuegos clásicos"],
+    "fav_genres": [
+      "RPGs",
+      "Anime",
+      "Videojuegos clásicos"
+    ],
     "notes": [
       "El legendario jugador de tragaperras del casino",
       "Colega de confianza de Joselito e Iván"
@@ -45,7 +67,11 @@
     "display_name": "Omen2042",
     "username": "omen2042_38051",
     "role_in_server": "Organizador de Torneos",
-    "fav_genres": ["Competitivo", "Brawl Stars", "Torneos"],
+    "fav_genres": [
+      "Competitivo",
+      "Brawl Stars",
+      "Torneos"
+    ],
     "notes": [
       "Encargado oficial de la categoría de Torneos y eventos del servidor"
     ],

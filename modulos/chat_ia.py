@@ -582,7 +582,7 @@ _LIVE_LEVELS_LOCK = asyncio.Lock()
 
 
 async def get_live_levels_dict(guild: discord.Guild) -> dict:
-    """Lee el canal #bots para extraer los niveles reales de Cakey Bot de cada usuario (con caché en memoria de 300s y protección de concurrencia)."""
+    """Obtiene los niveles reales de Cakey Bot de cada usuario, consumiendo prioritariamente el Leaderboard Web oficial y manteniendo fallback a regex en #bots."""
     bs = _bs()
     cache_dict = getattr(bs, "_LIVE_LEVELS_CACHE", _LIVE_LEVELS_CACHE)
     cache_time = getattr(bs, "_LIVE_LEVELS_CACHE_TIME", _LIVE_LEVELS_CACHE_TIME)
@@ -593,15 +593,33 @@ async def get_live_levels_dict(guild: discord.Guild) -> dict:
         return {}
     now = time.time()
     # Fast-path sin lock si la caché está vigente
-    if cache_time > 0 and (now - cache_time < ttl):
+    if cache_time > 0 and (now - cache_time < ttl) and cache_dict:
         return dict(cache_dict)
 
     async with lock:
         now = time.time()
         cache_time = getattr(bs, "_LIVE_LEVELS_CACHE_TIME", _LIVE_LEVELS_CACHE_TIME)
-        if cache_time > 0 and (now - cache_time < ttl):
+        if cache_time > 0 and (now - cache_time < ttl) and cache_dict:
             return dict(cache_dict)
 
+        # 1. Consumo prioritario: Leaderboard Web de Cakey Bot
+        try:
+            from modulos.cakey_client import get_cakey_leaderboard
+            cakey_data = await get_cakey_leaderboard()
+            if cakey_data:
+                for uid, info in cakey_data.items():
+                    lvl = info.get("level", 0)
+                    if uid > 0 and lvl > 0:
+                        cache_dict[uid] = lvl
+                if hasattr(bs, "_LIVE_LEVELS_CACHE_TIME"):
+                    bs._LIVE_LEVELS_CACHE_TIME = now
+                else:
+                    globals()["_LIVE_LEVELS_CACHE_TIME"] = now
+                return dict(cache_dict)
+        except Exception as e_cakey:
+            _bot_log(f"Aviso lectura Cakey Web Leaderboard: {e_cakey}")
+
+        # 2. Fallback: Escaneo del historial de #bots con regex
         bots_channel = discord.utils.find(lambda c: "bots" in c.name.lower(), guild.text_channels)
         if not bots_channel:
             return dict(cache_dict)

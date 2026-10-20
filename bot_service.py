@@ -416,6 +416,17 @@ from modulos.comandos import (
     cmd_admin_dinero,
 )
 
+from modulos.persistencia_discord import (
+    restore_from_discord,
+    backup_to_discord,
+    setup_persistence,
+)
+
+from modulos.cakey_client import (
+    get_cakey_leaderboard,
+    get_user_cakey_data,
+)
+
 # Registrar comandos en sus árboles correspondientes (Dual Runner)
 register_general_commands(tree)
 register_economy_commands(economy_tree)
@@ -430,6 +441,18 @@ async def on_ready():
     bot_log(f"Motores de IA con respaldo: {MODELS_PRIORITY}")
     bot_log(f"Ajedrez: python-chess {'OK' if chess else 'NO disponible'} | Stockfish {'OK' if os.path.exists(STOCKFISH_PATH) else 'NO encontrado'} ({STOCKFISH_PATH})")
     bot_log("Capacidades activas: Gemini Live en Voz (/geminilive), Auto-Roles 24/7 (/autoroles), Sugerencias (/sugerencia), Memoria Persistente, Trivial, Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y 22 Slash Commands Generales.")
+
+    # 1. Hidratación inicial desde Discord (Render Cloud 24/7 - docs/PERSISTENCIA_DATOS.md)
+    try:
+        restore_res = await restore_from_discord(bot)
+        if restore_res.get("restored"):
+            bot_log(f"💾 [Persistencia] Hidratación inicial completada desde Discord: {restore_res.get('files')}")
+        else:
+            bot_log("💾 [Persistencia] Hidratación completada: iniciando con versión local.")
+        # Configurar tareas periódicas de respaldo (5 min) e interceptores SIGTERM/SIGINT
+        setup_persistence(bot)
+    except Exception as e_pers:
+        bot_log(f"Aviso en inicialización de persistencia Discord: {e_pers}")
 
     # Registrar vistas interactivas persistentes 24/7 (sobreviven a reinicios de Render sin expirar jamás)
     try:
