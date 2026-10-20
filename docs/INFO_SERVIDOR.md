@@ -8,7 +8,7 @@
 ## 🏛️ Datos Generales del Servidor
 - **Nombre**: LOS MONGOLOS DEL SANVI Y SUS AMIGOS
 - **Server ID**: `1446143936891715616`
-- **Total Miembros**: **24 miembros** (17 usuarios humanos + 7 bots integrados)
+- **Total Miembros**: **23 miembros** (17 usuarios humanos + 6 bots integrados)
 - **Total Canales**: **49 canales** (9 categorías, 31 canales de texto/anuncios, 9 canales de voz)
 - **Total Roles**: **74 roles configurados**
 - **Administración Principal**:

@@ -160,8 +160,33 @@ En lugar de cobrar únicamente por saltos de rol cada 10 niveles, `/salario` int
 
 ### 🎰 Casino Oficial (Apuesta mín: 100 Porros | Máx: All-in)
 - **`/casino`** — Centro de control interactivo con el bote acumulado, reglas y RTP de cada juego.
-- **`/slots <apuesta | all>`** — Tragaperras 5x3 de 7 líneas con iconos de Brawl Stars Ranked, Comodín WILD, Free Spins a $\times 2$ y Bote Progresivo (**RTP 110%**).
+- **`/slots <apuesta | all>`** — Tragaperras 5x3 limpia: 3 líneas horizontales y diagonales de 3 casillas reales (sin figuras raras ni Scatters), Comodín WILD, Pantalla Completa a $\times 500$ y Bote Progresivo (**RTP 110%**).
 - **`/blackjack <apuesta | all>`** *(o `/bj`)* — Blackjack 21 interactivo contra el crupier (6 barajas, pago 3:2 en Blackjack natural, pedir, plantarse y doblar).
+
+---
+
+## 5. Rediseño Geométrico de Tragaperras 5x3 Limpia (`[Aprobado · Jose · 20/10/2026]`)
+
+1. **Erradicación de Figuras Forzadas y Scatters**:
+   - Eliminadas definitivamente las líneas en "V Suave", "V Invertida", "Zigzag" o "Escalones".
+   - Eliminado el símbolo SCATTER y la mecánica de Free Spins (partidas instantáneas sin pantallas extra ni frenazos).
+   - Conservado el comodín **WILD** (`:absolutecinema:`) que sustituye a cualquier regular y premia por sí mismo.
+   - Conservados el **Grand Jackpot** (100% bote), **Mini Jackpot** (25% bote) y la **Pantalla Completa 15/15** ($\times 500.0$).
+
+2. **Líneas y Diagonales Reales en Matriz 5x3**:
+   - **3 Líneas Horizontales Completas**:
+     * `Horizontal Centro`: `[(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)]` (premia por 3, 4 o 5 seguidos).
+     * `Horizontal Arriba`: `[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)]` (premia por 3, 4 o 5 seguidos).
+     * `Horizontal Abajo`: `[(2, 0), (2, 1), (2, 2), (2, 3), (2, 4)]` (premia por 3, 4 o 5 seguidos).
+   - **Diagonales Rectas de 3 Casillas Reales**:
+     * `Diagonal Descendente Izq \`: `[(0, 0), (1, 1), (2, 2)]`
+     * `Diagonal Descendente Centro \`: `[(0, 1), (1, 2), (2, 3)]`
+     * `Diagonal Descendente Der \`: `[(0, 2), (1, 3), (2, 4)]`
+     * `Diagonal Ascendente Izq /`: `[(2, 0), (1, 1), (0, 2)]`
+     * `Diagonal Ascendente Centro /`: `[(2, 1), (1, 2), (0, 3)]`
+     * `Diagonal Ascendente Der /`: `[(2, 2), (1, 3), (0, 4)]`
+   - Toda línea premiada se corresponde exactamente con una recta o diagonal real visible sin engaños visuales.
+   - Calibración matemática de multiplicadores en simulación Monte Carlo para mantener **RTP 110.0%**.
 - **`/ruleta <apuesta | all> <suerte>`** — Ruleta europea de 37 casillas (rojo/negro, par/impar, docenas, columnas y pleno 35:1) con botones de re-apuesta.
 - **`/coinflip <apuesta | all> <cara | cruz> [@rival]`** — Cara o cruz al instante contra la casa (PvE) o duelo directo 1v1 por Porros contra otro miembro (PvP).
 ```
