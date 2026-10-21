@@ -86,7 +86,7 @@ def post_guide_messages():
         "🏆 **Niveles y Progresión de Cakey Bot:**\n"
         "• `/rank [@usuario]` ➔ Consulta tu nivel, progreso de XP y tarjeta de rango actual.\n"
         "• `/leaderboard` ➔ Accede a la clasificación y ranking web del servidor.\n"
-        "• *Detalles de XP:* Ganas experiencia escribiendo en el chat (+10% en <#1537575402518482954> y <#1537575463776550974>, +15% en <#1537575510651961448>), en llamadas de voz y compartiendo clips/memes. ¡Atentos a las cajas sorpresa de XP que caen en <#1543002685492568185>!\n\n"
+        "• *Detalles de XP:* Ganas experiencia escribiendo en el chat (+10% en <#1446143938044887052> y <#1455700883378536559>, +15% en <#1465060820814921950>), en llamadas de voz y compartiendo clips/memes. ¡Atentos a las cajas sorpresa de XP que caen en <#1543002685492568185>!\n\n"
         "🎨 **Asistente IA, Audio y Vanguardia (`@Asistente`):**\n"
         "• `/dibuja <prompt>` ➔ Genera arte e imágenes ilimitadas en alta definición con FLUX.1 (con botón Re-roll).\n"
         "• `/habla <texto>` ➔ Sintetiza voz ultrarrealista en el canal de voz activo.\n"
