@@ -16,4 +16,5 @@
 | [`despliegue_render.md`](./despliegue_render.md) | `always_on` | Local Proyecto | Supervisor 24/7 en Render Cloud, keep-alive cada 5 min y despliegue manual obligatorio con script. |
 | [`modelos_ia.md`](./modelos_ia.md) | `always_on` | Local Proyecto | Síntesis FLUX.1 libre con Re-roll, cascada lite, Circuit Breaker 60s y veto a modelos lite en juicios. |
 | [`estructura_carpetas.md`](./estructura_carpetas.md) | `always_on` | Local Proyecto | Blindaje estricto de la raíz del repo y catálogo de carpetas autorizadas. |
+| [`harness_antigravity.md`](./harness_antigravity.md) | `always_on` | Local Proyecto | Configuración exclusiva de Antigravity: subagentes declarativos, skills.json y hooks de máquina. |
 | [`documentacion_proyecto.md`](./documentacion_proyecto.md) | `always_on` | Local Proyecto | Relevos y raw por interacción, fuentes de verdad vivas y sincronización determinista vía script. |
