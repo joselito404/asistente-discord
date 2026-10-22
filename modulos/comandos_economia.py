@@ -1123,6 +1123,84 @@ async def cmd_admin_dinero(
 # 20 COMANDOS DE ECONOMÍA (BOT 'ECONOMIA ASISTENTE')
 # ==========================================
 from modulos.comandos_bolsa import cmd_bolsa, cmd_cartera, cmd_aura
+from modulos.bolsa_sanvi import set_market_halt, is_market_halted, get_market_halt_reason
+
+
+@app_commands.command(
+    name="admin_bolsa",
+    description="Control administrativo de emergencia para pausar o reanudar el Sanvi Exchange (24/7)",
+)
+@app_commands.describe(
+    accion="Acción administrativa: 'pausar', 'reanudar' o 'estado'",
+    motivo="Motivo opcional de la suspensión de emergencia o mantenimiento",
+)
+@app_commands.choices(
+    accion=[
+        app_commands.Choice(name="pausar", value="pausar"),
+        app_commands.Choice(name="reanudar", value="reanudar"),
+        app_commands.Choice(name="estado", value="estado"),
+    ]
+)
+async def cmd_admin_bolsa(
+    interaction: discord.Interaction,
+    accion: str,
+    motivo: Optional[str] = None,
+):
+    """Permite al staff/administrador pausar o reactivar compras y ventas en la Bolsa Sanvi."""
+    is_admin = getattr(interaction.user.guild_permissions, "administrator", False) or (
+        interaction.user.id in {857923274771136522, 1170704124631846993}
+    )
+    if not is_admin:
+        await interaction.response.send_message(
+            "❌ Comando exclusivo para Administradores del Servidor.", ephemeral=True
+        )
+        return
+
+    act = accion.strip().lower()
+    if act == "pausar":
+        reason = motivo or "Mantenimiento técnico o ajuste de parámetros"
+        set_market_halt(True, reason)
+        embed = discord.Embed(
+            title="🚨 Bolsa Sanvi: PARO DE EMERGENCIA ACTIVADO",
+            description=(
+                f"• **Estado:** ⛔ **PAUSADO**\n"
+                f"• **Motivo:** {reason}\n"
+                f"• **Efecto:** Todas las compras y ventas quedan bloqueadas de inmediato.\n"
+                f"• **Consultas:** `/bolsa`, `/cartera` y `/aura` se mantienen en modo sólo lectura."
+            ),
+            color=0xE74C3C,
+            timestamp=datetime.now(timezone.utc),
+        )
+        embed.set_footer(text=f"Activado por {interaction.user.display_name}")
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+    elif act == "reanudar":
+        set_market_halt(False)
+        embed = discord.Embed(
+            title="🟢 Bolsa Sanvi: MERCADO 24/7 REANUDADO",
+            description=(
+                f"• **Estado:** ✅ **ABIERTO (24/7)**\n"
+                f"• **Efecto:** Negociación y órdenes bursátiles operativas con normalidad."
+            ),
+            color=0x2ECC71,
+            timestamp=datetime.now(timezone.utc),
+        )
+        embed.set_footer(text=f"Reanudado por {interaction.user.display_name}")
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+    else:
+        halted = is_market_halted()
+        r = get_market_halt_reason()
+        status_txt = "⛔ **PAUSADO POR EMERGENCIA**" if halted else "🟢 **OPERATIVO 24/7**"
+        embed = discord.Embed(
+            title="📊 Estado del Sanvi Exchange",
+            description=(
+                f"• **Régimen:** Continuo 24/7\n"
+                f"• **Estado Actual:** {status_txt}\n"
+                f"• **Motivo activo:** {r or 'Ninguno (Operación normal)'}"
+            ),
+            color=0xF1C40F if halted else 0x2ECC71,
+            timestamp=datetime.now(timezone.utc),
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
 ECONOMY_SLASH_COMMANDS = [
     cmd_slots,
@@ -1145,6 +1223,7 @@ ECONOMY_SLASH_COMMANDS = [
     cmd_usar,
     cmd_regalar,
     cmd_admin_dinero,
+    cmd_admin_bolsa,
     cmd_bolsa,
     cmd_cartera,
     cmd_aura,

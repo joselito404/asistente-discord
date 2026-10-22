@@ -283,6 +283,8 @@ Los indicadores cuantitativos se computan sobre la serie temporal de snapshots d
 - [x] Tríada Financiera de Incentivos ratificada: Plusvalía de Mercado (AMM), Sinergia de Cartera por Aura (+5% a +25% en /trabajar) y Fondo Real de Dividendos semanal (50% spread Bolsa + 1% rake slots) (`[Aprobado · Jose · 22/10/2026]`).
 - [x] Indicadores técnicos institucionales ratificados: Medias móviles (SMA/EMA 14, 50, 100 y 200 días), RSI a 14 días (100% informativos) e informes narrativos de Asistente IA (`[Aprobado · Jose · 22/10/2026]`).
 - [x] Ponderación de Earnings 30d ratificada al 50/50: 1h voz = +0,50 Porros, 10 msgs = +0,50 Porros (`[Aprobado · Jose · 22/10/2026]`).
+- [x] Régimen Operativo Continuo 24/7 ratificado: negociación ininterrumpida los 7 días de la semana (`[Confirmada · Jose · 22/10/2026]`).
+- [x] Paro de Emergencia y Mantenimiento Técnico: el mercado solo se suspende manualmente ante contingencias o ajustes críticos mediante el interruptor administrativo `emergency_halt` (`[Confirmada · Jose · 22/10/2026]`).
 
 
 

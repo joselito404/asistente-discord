@@ -202,5 +202,30 @@ class TestBolsaSanvi(unittest.TestCase):
         self.assertTrue(content.startswith(b"\x89PNG\r\n\x1a\n"), "El archivo generado no tiene cabecera PNG válida")
 
 
+    def test_10_emergency_halt(self):
+        """Valida que el interruptor de paro de emergencia bloquee compras y ventas en 24/7."""
+        user_id = self.test_user_id
+        # 1. Activar paro de emergencia
+        res_halt = bolsa_sanvi.set_market_halt(True, reason="Mantenimiento preventivo de prueba")
+        self.assertTrue(res_halt["success"])
+        self.assertTrue(bolsa_sanvi.is_market_halted())
+        self.assertEqual(bolsa_sanvi.get_market_halt_reason(), "Mantenimiento preventivo de prueba")
+
+        # 2. Intentar compra mientras está pausado (debe fallar)
+        buy_res = bolsa_sanvi.execute_buy_order(user_id=user_id, ticker="JOSE", shares=10)
+        self.assertFalse(buy_res["success"])
+        self.assertIn("suspendida por mantenimiento o emergencia", buy_res["error"])
+
+        # 3. Intentar venta mientras está pausado (debe fallar)
+        sell_res = bolsa_sanvi.execute_sell_order(user_id=user_id, ticker="JOSE", shares=10)
+        self.assertFalse(sell_res["success"])
+        self.assertIn("suspendida por mantenimiento o emergencia", sell_res["error"])
+
+        # 4. Reanudar mercado 24/7
+        res_resume = bolsa_sanvi.set_market_halt(False)
+        self.assertTrue(res_resume["success"])
+        self.assertFalse(bolsa_sanvi.is_market_halted())
+
+
 if __name__ == "__main__":
     unittest.main()
