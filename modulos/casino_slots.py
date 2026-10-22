@@ -481,6 +481,11 @@ def handle_slots_spin(user_id: Any, bet: int) -> Tuple[bool, str, Optional[Dict[
             loss = abs(res["net"])
             feed = max(1, int(loss * JACKPOT_FEED_PERCENT))
             modify_server_jackpot(feed)
+            try:
+                from modulos.bolsa_sanvi import add_to_dividend_pool
+                add_to_dividend_pool(int(loss * 0.01))
+            except Exception:
+                pass
 
         updated_bal = get_balance(uid)
         return True, "OK", res, updated_bal

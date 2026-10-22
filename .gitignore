@@ -11,6 +11,11 @@ config_discord.json
 !economia.json
 !sugerencias.json
 !datos/sugerencias.json
+!starboard.json
+!datos/starboard.json
+!datos/bolsa_mercado.json
+!datos/bolsa_pool.json
+!datos/cakey_history.json
 !.agents/skills.json
 /CHAT_RAW.md
 /HISTORIAL_CONVERSACION.md
@@ -36,6 +41,8 @@ herramientas/*
 !herramientas/test_coinflip.py
 !herramientas/test_casino_hub.py
 !herramientas/test_sugerencias.py
+!herramientas/test_starboard.py
+!herramientas/test_bolsa.py
 !herramientas/update_discord_channels.py
 documentos_pdf/
 *.zip

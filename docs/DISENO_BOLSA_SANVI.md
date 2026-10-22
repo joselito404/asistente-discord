@@ -129,17 +129,35 @@ Para replicar con realismo la dinámica bursátil de Trading 212 y resolver la f
 3. **Free Float en Custodia del Market Maker (99%)**:
    - Las **9.900 acciones restantes (99%)** constituyen el mercado abierto administrado por el bot para que los miembros las adquieran con sus Porros.
 
-### 7.2. Sistema de Dividendos Pasivos (Incentivo Real al *Hold*)
-- **Mecánica de Financiación (Impuesto de Sociedades / 5% del Salario)**:
-  - Cada vez que el miembro cotizado reclama su `/salario` diario en [`modulos/economia_core.py`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/economia_core.py), se deduce automáticamente un **5%** para alimentar el bote de dividendos de su acción.
-  - El 95% restante del salario entra directo a su efectivo limpio.
-  - **Cero Inflación**: Los dividendos proceden de riqueza real generada por el usuario, sin imprimir moneda de la nada.
-- **Distribución Proporcional**:
-  - El bote del 5% se reparte automáticamente entre todas las acciones en manos de usuarios (incluyendo el 1% del propio fundador).
-  - *Ejemplo práctico:* Si Terre (Nvl 37) cobra su salario base de **5.700 Porros**:
-    - Terre recibe **5.415 Porros** (95%).
-    - Se genera un bote de dividendos de **285 Porros** (5%).
-    - Si Jose posee el 40% de las acciones de Terre en circulación, Jose recibe **114 Porros pasivos** en su cuenta de inmediato.
+### 7.2. Tríada Financiera de Incentivos y Dividendos (Hold, Utilidad y Rendimiento)
+> **Estado:** `Ratificado por Jose` `[Aprobado · Jose · 22/10/2026]`
+
+Queda erradicado cualquier impuesto o deducción forzada sobre los salarios personales de los miembros. El sistema se asienta sobre tres pilares independientes y complementarios:
+
+1. **Pilar 1: Plusvalía de Capital (*Trading y Crecimiento 24/7*)**:
+   - Orientado al *trader* activo.
+   - Rendimiento directo por la apreciación del precio fundamental ($P_{\text{base}}$ por subidas de nivel y actividad en Cakey Bot) y la presión compradora de la comunidad en el creador de mercado ($P_{\text{mercado}}$ vía AMM).
+   - Beneficio limpio al vender contra el bot en momentos alcistas.
+
+2. **Pilar 2: Sinergia de Cartera por Aura (*Incentivo Activo al Hold y Utilidad Real*)**:
+   - Orientado al inversor que mantiene acciones a medio y largo plazo.
+   - Poseer acciones de miembros con alto Aura transfiere pasivamente su influencia a la cuenta del accionista:
+     $$\text{Aura Total Cartera} = \sum (\text{Acciones poseídas de } i \times \text{Aura fundamental de } i)$$
+   - Otorga un bono multiplicador permanente sobre la recompensa del comando [`/trabajar`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/economia.py):
+     - *Inversor Junior (1.000 a 5.000 Porros en Aura):* **$+5\%$** en `/trabajar`.
+     - *Inversor Senior (5.001 a 20.000 Porros en Aura):* **$+10\%$** en `/trabajar`.
+     - *Fondo de Inversión (20.001 a 50.000 Porros en Aura):* **$+15\%$** en `/trabajar`.
+     - *Ballena de Sanvi (>50.000 Porros en Aura):* **$+25\%$** en `/trabajar` (Tope máximo).
+   - Vender acciones para especular reduce de inmediato el Aura en cartera y el multiplicador, desincentivando las ventas masivas de pánico.
+
+3. **Pilar 3: Fondo Real de Dividendos (*Yield Pool Semanal en Efectivo*)**:
+   - Orientado al inversor pasivo.
+   - Cero dinero inventado de la nada: el bote se financia exclusivamente de la actividad económica real del servidor:
+     - El **50% del spread bursátil** (0,5% compra / 0,5% venta) recaudado por el AMM (el otro 50% se quema como freno deflacionario).
+     - El **1% de las apuestas netas** recaudadas en la tragaperras [`/slots`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/economia.py).
+   - **Reparto Automatizado:**
+     - Cada **domingo a las 23:59 UTC**, el bote acumulado en `datos/bolsa_pool.json` se acredita automáticamente en el banco de cada accionista de forma proporcional al valor de su cartera:
+       $$\text{Dividendo del Usuario} = \text{Bote Semanal} \times \frac{\text{Valor de tu Cartera en Circulación}}{\text{Capital Total Invertido por Usuarios}}$$
 
 ### 7.3. Creador de Mercado del Bot (*Automated Market Maker*) y Spread
 - Para evitar que las órdenes de compra o venta queden bloqueadas esperando a que otro humano las acepte, el bot actúa como **Market Maker central** garantizando ejecución 24/7.
@@ -198,15 +216,20 @@ En sustitución de oyentes complejos en vivo de audio y texto en Discord:
    - El Aura se define como el valor fundamental intrínseco de cada acción individual en Porros:
      $$P_{\text{base}} = \text{Book Value (Suelo Indestructible)} + \text{Earnings Mensuales (30 días)}$$
    - **Book Value ($BV$)**: Premia el nivel y la veteranía de por vida extraída de Cakey Bot:
-     $$BV = 10 + (0{,}8 \times \text{Nivel}) + (0{,}2 \times \text{Horas Históricas Voz}) + (0{,}01 \times \text{Mensajes Históricos})$$
-     - *Joselito (Lvl 54, 65.8h voz, 658 msgs)*: **72,94 Porros**
-     - *Terre (Lvl 37, 25.0h voz, 196 msgs)*: **46,56 Porros**
-     - *Omen (Lvl 36, 29.8h voz, 148 msgs)*: **46,24 Porros**
-     - *Racer (Lvl 33, 29.0h voz, 129 msgs)*: **43,49 Porros**
-     - *Aspirante Nivel 20 (IPO mínima)*: **~28 - 30 Porros**
-   - **Rendimiento Mensual Temporal ($\text{Earnings}_{30d}$)**:
-     $$E_{30d} = (0{,}4 \times \Delta\text{Horas Voz}_{30d}) + (0{,}05 \times \Delta\text{Mensajes}_{30d})$$
-     - La actividad reciente en la ventana móvil de 30 días añade valor a la acción; si el miembro reduce su actividad o está de exámenes, decae temporalmente a 0 sin tocar el suelo $BV$.
+     $$BV = 10 + (0{,}8 \times \text{Nivel}) + (0{,}2 \times \text{Horas Históricas Voz}) + (0{,}02 \times \text{Mensajes Históricos})$$
+     - *Joselito (Lvl 54, 65.8h voz, 658 msgs)*: **79,52 Porros**
+     - *Terre (Lvl 37, 25.0h voz, 196 msgs)*: **48,52 Porros**
+     - *Omen (Lvl 36, 29.8h voz, 148 msgs)*: **47,72 Porros**
+     - *Racer (Lvl 33, 29.0h voz, 129 msgs)*: **44,78 Porros**
+     - *Aspirante Nivel 20 (IPO mínima)*: **~30,00 Porros**
+   - **Rendimiento Mensual Temporal ($\text{Earnings}_{30d}$ — Ponderación 50/50)**:
+     > **Estado:** `[Aprobado · Jose · 22/10/2026]`
+     $$E_{30d} = (0{,}50 \times \Delta\text{Horas Voz}_{30d}) + (0{,}05 \times \Delta\text{Mensajes}_{30d})$$
+     - **Equilibrio 50% Voz / 50% Chat**:
+       - **1 hora de llamada** en los últimos 30 días = **$+0{,}50 \text{ Porros}$**.
+       - **10 mensajes con XP** en los últimos 30 días = **$+0{,}50 \text{ Porros}$** ($0{,}05 \text{ Porros/msg}$).
+       - Para un miembro activo medio con **20 horas de voz** y **200 mensajes** en el mes: la voz aporta **$+10 \text{ Porros}$ (50%)** y el chat aporta **$+10 \text{ Porros}$ (50%)**.
+     - La actividad reciente en la ventana móvil de 30 días añade valor a la acción; si el miembro reduce su actividad o está de exámenes, decae suavemente a 0 sin tocar el suelo $BV$.
 
 2. **Curva de Elasticidad del Market Maker ($P_{\text{mercado}}$)**:
    > **Estado:** `[Aprobado · Jose · 22/10/2026]`
@@ -222,6 +245,29 @@ En sustitución de oyentes complejos en vivo de audio y texto en Discord:
 
 ---
 
+### 9.3. Indicadores Técnicos Institucionales y Análisis de Asistente IA
+> **Estado:** `Ratificado por Jose` `[Aprobado · Jose · 22/10/2026]`
+
+Los indicadores cuantitativos se computan sobre la serie temporal de snapshots diarios en [`datos/cakey_history.json`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/datos/cakey_history.json). Son **estrictamente informativos** (análisis técnico para los inversores; no alteran artificialmente el precio del AMM):
+
+1. **Oscilador de Momentum (RSI a 14 Días)**:
+   - Mide la aceleración y desaceleración de actividad diaria en una escala de 0 a 100:
+     - `RSI > 70` (*Sobrecomprado*): Racha intensa de actividad reciente; máxima atención comunitaria.
+     - `30 <= RSI <= 70` (*Consolidación*): Ritmo regular y saludable de actividad.
+     - `RSI < 30` (*Sobrevendido / Oportunidad de Valor*): Actividad reciente baja (ej. exámenes o trabajo temporal); suelo $BV$ intacto, representando un descuento atractivo ("*Buy the dip*").
+
+2. **Batería Institucional de Medias Móviles (SMA y EMA de 14, 50, 100 y 200 Días)**:
+   - **14 Días:** Pulso a corto plazo y aceleración semanal.
+   - **50 Días:** Tendencia intermedia mensual.
+   - **100 Días:** Media de medio plazo (trimestral).
+   - **200 Días:** Media móvil institucional de largo plazo (soporte macro histórico del miembro).
+   - **Señales de Cruce:** Detección automática de *Golden Cross* (cruce alcista de corto sobre largo plazo) y *Death Cross* (cruce bajista).
+
+3. **Asistente IA como Analista Financiero Jefe de Sanvi Capital**:
+   - Mediante el comando `/bolsa informe [ticker]` o dentro del embed de `/aura [usuario]`, el bot `Asistente` procesa estos indicadores numéricos y genera con IA (Gemini) un informe financiero con tono analítico y de colega, sintetizando fundamentales, momentum técnico y un dictamen claro (*Comprar / Mantener / Tomar Beneficios*).
+
+---
+
 ## 10. Registro de Decisiones y Estado Canónico (Compuerta 5 — Regla Global §13)
 
 - [x] Ticker bursátil propio por miembro cotizado (ej. `$JOSE`, `$TERRE`) (`[Aprobado · Jose · 20/10/2026]`).
@@ -234,7 +280,9 @@ En sustitución de oyentes complejos en vivo de audio y texto en Discord:
 - [x] Fórmulas matemáticas ratificadas de Book Value y Earnings 30d (`[Aprobado · Jose · 22/10/2026]`).
 - [x] Curva de elasticidad del Market Maker con factor $K=2.000$ (+5% por 100 acciones, suelo en $P_{\text{base}}$) (`[Aprobado · Jose · 22/10/2026]`).
 - [x] Blindaje anti-ballenas: tope de 500 acciones/orden y cooldown de 30s (`[Aprobado · Jose · 22/10/2026]`).
-- [ ] [Pendiente de matizar: revisión y enriquecimiento del sistema de Dividendos Pasivos / Inyecciones Externas por Aura].
+- [x] Tríada Financiera de Incentivos ratificada: Plusvalía de Mercado (AMM), Sinergia de Cartera por Aura (+5% a +25% en /trabajar) y Fondo Real de Dividendos semanal (50% spread Bolsa + 1% rake slots) (`[Aprobado · Jose · 22/10/2026]`).
+- [x] Indicadores técnicos institucionales ratificados: Medias móviles (SMA/EMA 14, 50, 100 y 200 días), RSI a 14 días (100% informativos) e informes narrativos de Asistente IA (`[Aprobado · Jose · 22/10/2026]`).
+- [x] Ponderación de Earnings 30d ratificada al 50/50: 1h voz = +0,50 Porros, 10 msgs = +0,50 Porros (`[Aprobado · Jose · 22/10/2026]`).
 
 
 

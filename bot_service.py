@@ -251,6 +251,11 @@ from modulos.sugerencias import (
     _get_next_suggestion_number,
 )
 
+from modulos.starboard import (
+    handle_starboard_reaction_add,
+    handle_starboard_reaction_remove,
+)
+
 
 from modulos.chat_ia import (
     SERVER_EMOJIS_DATA,
@@ -643,6 +648,22 @@ async def on_interaction(interaction: discord.Interaction):
             await handle_slots_interaction(interaction)
 
 
+@bot.event
+async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
+    try:
+        await handle_starboard_reaction_add(payload, bot)
+    except Exception as e:
+        bot_log(f"Error procesando reaction_add en starboard: {e}")
+
+
+@bot.event
+async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent):
+    try:
+        await handle_starboard_reaction_remove(payload, bot)
+    except Exception as e:
+        bot_log(f"Error procesando reaction_remove en starboard: {e}")
+
+
 # ==========================================
 # EVENTOS DEL BOT DE ECONOMÍA (ECONOMIA ASISTENTE)
 # ==========================================
@@ -659,7 +680,7 @@ async def on_ready():
         economy_tree.copy_global_to(guild=guild_obj)
         await economy_tree.sync(guild=guild_obj)
         bot_log(f"Bot de Economía '{economy_bot.user}' conectado y listo en Discord.")
-        bot_log(f"Comandos de Economía (20) sincronizados limpiamente en el servidor ID {GUILD_ID}.")
+        bot_log(f"Comandos de Economía (23) sincronizados limpiamente en el servidor ID {GUILD_ID}.")
     except Exception as e:
         bot_log(f"Aviso sincronización comandos de economía: {e}")
 
@@ -710,6 +731,40 @@ async def on_ready():
     if not _XP_WATCHER_STARTED:
         _XP_WATCHER_STARTED = True
         economy_bot.loop.create_task(_xp_passes_expiration_watcher())
+
+    async def _bolsa_lifecycle_watcher():
+        await asyncio.sleep(15.0)
+        while not economy_bot.is_closed():
+            try:
+                now_utc = datetime.now(timezone.utc)
+                today_str = now_utc.strftime("%Y-%m-%d")
+                
+                # 1. Snapshot diario de Cakey Bot
+                from modulos.bolsa_sanvi import load_cakey_history, save_cakey_history
+                from modulos.cakey_client import get_cakey_leaderboard
+                history = load_cakey_history()
+                if today_str not in history.get("snapshots", {}):
+                    lb = await get_cakey_leaderboard()
+                    if lb and "members" in lb:
+                        history["snapshots"][today_str] = lb["members"]
+                        save_cakey_history(history)
+                        bot_log(f"📈 [Bolsa Sanvi] Snapshot diario de Cakey Bot registrado para {today_str}.")
+
+                # 2. Reparto de dividendos semanales los domingos a las 23:50+ UTC
+                if now_utc.weekday() == 6 and now_utc.hour == 23 and now_utc.minute >= 50:
+                    from modulos.bolsa_sanvi import distribute_weekly_dividends, load_pool_data, save_pool_data
+                    p_data = load_pool_data()
+                    last_dist = p_data.get("last_distribution_date")
+                    if last_dist != today_str and p_data.get("accumulated_pool", 0) > 0:
+                        dist_res = distribute_weekly_dividends()
+                        p_data["last_distribution_date"] = today_str
+                        save_pool_data(p_data)
+                        bot_log(f"🏆 [Bolsa Sanvi] Dividendos semanales repartidos: {dist_res.get('total_distributed', 0):,.2f} Porros.")
+            except Exception as e_bolsa_loop:
+                bot_log(f"Aviso en _bolsa_lifecycle_watcher: {e_bolsa_loop}")
+            await asyncio.sleep(600.0)
+
+    economy_bot.loop.create_task(_bolsa_lifecycle_watcher())
 
 
 @economy_bot.event

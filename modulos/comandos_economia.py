@@ -1122,6 +1122,8 @@ async def cmd_admin_dinero(
 # ==========================================
 # 20 COMANDOS DE ECONOMÍA (BOT 'ECONOMIA ASISTENTE')
 # ==========================================
+from modulos.comandos_bolsa import cmd_bolsa, cmd_cartera, cmd_aura
+
 ECONOMY_SLASH_COMMANDS = [
     cmd_slots,
     cmd_balance,
@@ -1143,6 +1145,9 @@ ECONOMY_SLASH_COMMANDS = [
     cmd_usar,
     cmd_regalar,
     cmd_admin_dinero,
+    cmd_bolsa,
+    cmd_cartera,
+    cmd_aura,
 ]
 
 

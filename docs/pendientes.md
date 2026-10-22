@@ -5,45 +5,25 @@
 
 ---
 
-## 🏛️ Área 1: Servidor & Operativa en Discord
+## 📰 Área 1: Servidor & Dinámicas Comunitarias
 
-### 1.1. Retirada Manual de UnbelievaBoat
-- **Qué falta:** Expulsar o retirar al bot `UnbelievaBoat` del servidor de Discord `LOS MONGOLOS DEL SANVI Y SUS AMIGOS`.
-- **Por qué importa:** La economía nativa y casino propio de `@Economia Asistente` (42 comandos en total) ya está desplegada al 100% en producción y sustituye todas sus funciones. La retirada de UnbelievaBoat evita duplicidad de comandos y confusión en los canales.
-- **Siguiente paso:** Jose ejecuta la expulsión manual desde los ajustes de miembros de Discord (por directriz de seguridad en `.agents/rules/seguridad_credenciales.md` §2, los bots tienen estrictamente prohibido ejecutar `kick` o `ban`).
-- **Responsable:** Jose.
-- **Estado:** `en espera de Jose`.
-- **Detalle:** [docs/DISENO_ECONOMIA_NATIVA.md](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/DISENO_ECONOMIA_NATIVA.md#L1).
-
-### 1.2. Sugerencias 2.0 (Reemplazo Integral de Carl-bot en `#💡sugerencias💡`)
-- **Qué falta:** Despliegue en Render Cloud 24/7 y publicación del panel interactivo permanente en `#💡sugerencias💡` con `/panel_sugerencias`.
-- **Por qué importa:** El código (`modulos/sugerencias.py`), la persistencia en `datos/sugerencias.json`, los hilos automáticos de debate, la barra dinámica de 10 bloques `🟩`/`🟥`, el veredicto satírico con IA y las 8 suites de tests unitarios (86/86 en verde) ya están terminados y validados localmente.
-- **Siguiente paso:** Aprobación de Jose para ejecutar `git commit`, `git push` y `python herramientas/deploy_render.py`.
-- **Responsable:** Jose / Chat.
-- **Estado:** `en espera de Jose`.
-- **Detalle:** [docs/DISENO_SUGERENCIAS_2.md](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/DISENO_SUGERENCIAS_2.md#L1) y [modulos/sugerencias.py](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/sugerencias.py).
-
----
-
-## 🎰 Área 2: Casino & Economía Nativa
-
-### 2.1. Validación Empírica en Vivo de la Tragaperras 5x3 Limpia
-- **Qué falta:** Probar tiradas reales en Discord de la nueva geometría (3 Horizontales: Línea Arriba, Línea Centro, Línea Abajo; 6 Diagonales rectas de 3 casillas; sin Scatters y nombres limpios sin prefijos de código).
-- **Por qué importa:** Verificar que la experiencia visual de los miembros sea intuitiva y sin ambigüedades tras el despliegue del commit `d8d69aa`.
-- **Siguiente paso:** Feedback de Jose tras interactuar con `/slots` en `#🎰casino-y-apuestas🎰` o `#🎰casino-y-apuestas-2🎰`.
-- **Responsable:** Jose / Chat.
-- **Estado:** `en espera de Jose`.
-- **Detalle:** [docs/DISENO_ECONOMIA_NATIVA.md](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/DISENO_ECONOMIA_NATIVA.md#L168-L192) y [modulos/casino_slots.py](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/casino_slots.py).
-
----
-
-## 📈 Área 3: Bolsa Sanvi & Aura
-
-### 3.1. Enriquecimiento del Sistema de Dividendos Pasivos e Inyecciones de Aura
-- **Qué falta:** Definir cómo potenciar los dividendos pasivos (que a Jose le parecieron flojos) mediante inyecciones externas vinculadas a la actividad real, hitos de Aura, bote del servidor o premios periódicos.
-- **Por qué importa:** Concluir el modelo de dividendos antes de delegar la codificación completa a `especialista-codigo`.
-- **Siguiente paso:** Jose evalúa la propuesta de dividendos enriquecidos con Aura.
-- **Responsable:** Jose / Chat.
+### 1.1. The Sanvi Daily / Starboard Gráfico (Reemplazo Integral de Carl-bot)
+- **Qué falta:** Diseñar e implementar el nuevo Starboard nativo que reemplaza a Carl-bot en `#⭐muro-de-la-fama⭐` (`1548043919827271740`). Al alcanzar 2 reacciones de estrella (⭐), el bot genera con Pillow una portada vintage de periódico (*The Sanvi Daily* / *Gaceta de los Mongolos*) con el mensaje inmortalizado, autor, avatar, titulares cómicos y fecha, con embed estilizado y enlace al mensaje original.
+- **Por qué importa:** Erradica la última gran dependencia de Carl-bot en el servidor y eleva radicalmente el nivel estético y el humor comunitario frente a los mensajes planos de Carl-bot.
+- **Siguiente paso:** Consolidar la especificación canónica en `docs/DISENO_SANVI_DAILY.md` y consensuar parámetros de diseño con Jose antes de delegar código a `especialista-codigo`.
+- **Responsable:** Chat / Jose.
 - **Estado:** `en curso`.
-- **Detalle:** [docs/DISENO_BOLSA_SANVI.md](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/DISENO_BOLSA_SANVI.md#L132-L143) y [docs/AURA_BAREMO.md](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/AURA_BAREMO.md#L157-L177).
+- **Detalle:** [docs/DISENO_SANVI_DAILY.md](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/DISENO_SANVI_DAILY.md).
+
+---
+
+## 📈 Área 2: Bolsa Sanvi & Aura
+
+### 2.1. Validación Empírica en Vivo de la Bolsa Sanvi y Aura
+- **Qué falta:** Probar en canales reales de Discord los nuevos comandos `/bolsa [ticker]`, `/cartera` y `/aura`, verificando el renderizado de gráficas Pillow, modales interactivos de compra/venta y bonificación pasiva en `/trabajar`.
+- **Por qué importa:** Confirmar la experiencia de usuario y verificar la paridad con Trading 212 en vivo.
+- **Siguiente paso:** Feedback de Jose tras interactuar con la terminal en Discord.
+- **Responsable:** Jose / Chat 1.
+- **Estado:** `en espera de Jose`.
+- **Detalle:** [docs/DISENO_BOLSA_SANVI.md](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/DISENO_BOLSA_SANVI.md) y [modulos/bolsa_sanvi.py](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/bolsa_sanvi.py).
 

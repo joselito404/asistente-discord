@@ -68,6 +68,25 @@ Cualquier agente o desarrollador autorizado que trabaje en nuevas funcionalidade
     - Gestión de concurrencia y caché en memoria (`_LOCK = asyncio.Lock()`, `TTL = 300.0s`, `_CACHE`) con fast-path y fallback tolerante a fallos de red (`get_cakey_leaderboard`).
     - Búsqueda polimórfica de miembros (`get_user_cakey_data`): resolución por ID (int/str) y coincidencia insensible a mayúsculas por `username`, `global_name` o `display_name`.
     - Integrado prioritariamente en `get_live_levels_dict()` de `modulos/chat_ia.py` con preservación de fallback a regex en `#bots`.
+13. **`starboard.py`**: The Sanvi Daily / Starboard Gráfico 2.0 (Reemplazo Integral de Carl-bot en `#⭐muro-de-la-fama⭐`, especificación [`docs/DISENO_SANVI_DAILY.md`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/DISENO_SANVI_DAILY.md)):
+    - Renderizador visual con Pillow a coste 0€ (`render_sanvi_daily_cover`): portadas de periódico vintage (800x1000 px), fondo pergamino, cabecera de rotativo *The Sanvi Daily*, avatar del autor con marco circular, cita tipográfica con comillas y ajuste automático, fotos adjuntas en filtro sepia y sello de autenticidad aprobado por el pueblo.
+    - Cómputo estricto anti-autobombo: exclusión algorítmica de reacciones ⭐ del propio autor del mensaje.
+    - Umbral canónico de activación de $\ge 2$ estrellas válidas con botón interactivo de salto al mensaje original.
+    - Idempotencia y permanencia irrevocable: si un mensaje recibe más estrellas, se edita el mensaje existente en Discord actualizando el contador sin reimprimir portadas ni duplicar ediciones; si caen las reacciones, la portada jamás se elimina.
+    - Persistencia atómica en `datos/starboard.json` y respaldos automáticos en `#🔒backup-datos` vía `persistencia_discord.py`.
+14. **`bolsa_sanvi.py`**: Motor Bursátil Central de Sanvi Exchange & Aura Market ([`docs/DISENO_BOLSA_SANVI.md`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/DISENO_BOLSA_SANVI.md) y [`docs/AURA_BAREMO.md`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/AURA_BAREMO.md)):
+    - Valuación contable (Book Value de por vida `calculate_book_value`) y rendimiento temporal (Earnings 30d 50/50 `calculate_earnings_30d`).
+    - Curva AMM con factor $K=2000$ (`calculate_market_price`) y suelo indestructible en $P_{\text{base}}$ (`calculate_base_price`).
+    - Horquilla Bid/Ask fija del 1.0% (`get_bid_ask_prices`), retención del 50% al Yield Pool semanal y 50% quemado.
+    - Órdenes bursátiles con blindaje anti-ballenas (`execute_buy_order`, `execute_sell_order`): tope de 500 acciones por orden y cooldown de 30s.
+    - Sinergia de Cartera y Utilidad Real (`get_user_portfolio_aura`, `get_user_portfolio_buff`): bono pasivo en `/trabajar` de +5% a +25%.
+    - Bote de dividendos semanal (`distribute_weekly_dividends`): reparto ponderado en cuenta `bank` de los accionistas.
+    - Indicadores técnicos institucionales (`calculate_rsi`, `calculate_moving_averages`, `detect_crosses`) y analista financiero IA (`generate_market_report`).
+15. **`bolsa_graficas.py`**: Renderizado Gráfico de Velas Japonesas con Pillow (PIL):
+    - Gráficos institucionales estilo Trading 212 a 800x450 px (`generate_candlestick_chart`).
+    - Paleta de alto contraste: fondo negro puro (`#000000`), velas alcistas verde neón (`#00E676`), bajistas rojo vivo (`#FF5252`).
+    - Subgráfico inferior de volumen, línea horizontal de cotización cian (`#00A3FF`) con badge flotante en el eje de precios y grid tenue (`#1E1E1E`).
+    - Retorno de buffer `io.BytesIO` en formato PNG nativo para `discord.File`.
 
 ## Cómo se usa e integra con `bot_service.py`
 - `bot_service.py` actúa como punto de entrada único (`python bot_service.py`) y orquestador central bajo una **Arquitectura de Runner Dual**:

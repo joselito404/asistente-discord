@@ -441,8 +441,8 @@ def run_tests():
 
         assert cmd_blackjack.name == "blackjack"
         assert cmd_bj.name == "bj"
-        assert len(ECONOMY_SLASH_COMMANDS) == 20, f"Debe haber 20 comandos de economía, hay {len(ECONOMY_SLASH_COMMANDS)}"
-        assert len(ALL_SLASH_COMMANDS) == 43, f"Debe haber 43 comandos en total, hay {len(ALL_SLASH_COMMANDS)}"
+        assert len(ECONOMY_SLASH_COMMANDS) == 23, f"Debe haber 20 comandos de economía, hay {len(ECONOMY_SLASH_COMMANDS)}"
+        assert len(ALL_SLASH_COMMANDS) == 46, f"Debe haber 43 comandos en total, hay {len(ALL_SLASH_COMMANDS)}"
         print("  ✅ TEST 11 PASADO: Presencia e integridad de /blackjack y /bj en ECONOMY_SLASH_COMMANDS.")
 
         print("\n" + "=" * 70)

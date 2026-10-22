@@ -91,6 +91,17 @@
       "last_salary": null,
       "inventory": [],
       "portfolio": {}
+    },
+    "999888777666": {
+      "cash": 1400256,
+      "bank": 0,
+      "last_work": null,
+      "last_crime": null,
+      "last_rob": null,
+      "last_salary": null,
+      "inventory": [],
+      "active_buffs": [],
+      "portfolio": {}
     }
   },
   "server_jackpot": 25000,

@@ -1,0 +1,60 @@
+{
+  "snapshots": {
+    "2026-09-22": {
+      "joselito3499": {
+        "level": 54,
+        "xp": 340600.0,
+        "messages": 658,
+        "voice_minutes": 3950
+      },
+      "terreneiror": {
+        "level": 37,
+        "xp": 122900.0,
+        "messages": 196,
+        "voice_minutes": 1502
+      },
+      "omen2042_38051": {
+        "level": 36,
+        "xp": 114000.0,
+        "messages": 148,
+        "voice_minutes": 1787
+      },
+      "racerwasp": {
+        "level": 33,
+        "xp": 88200.0,
+        "messages": 129,
+        "voice_minutes": 1738
+      }
+    },
+    "2026-10-22": {
+      "joselito3499": {
+        "level": 54,
+        "xp": 340600.0,
+        "messages": 658,
+        "voice_minutes": 3950
+      },
+      "terreneiror": {
+        "level": 37,
+        "xp": 122900.0,
+        "messages": 196,
+        "voice_minutes": 1502
+      },
+      "omen2042_38051": {
+        "level": 36,
+        "xp": 114000.0,
+        "messages": 148,
+        "voice_minutes": 1787
+      },
+      "racerwasp": {
+        "level": 33,
+        "xp": 88200.0,
+        "messages": 129,
+        "voice_minutes": 1738
+      }
+    }
+  },
+  "meta": {
+    "source": "Cakey Bot Web Leaderboard Snapshot",
+    "updated_at": "2026-10-22T00:00:00Z"
+  }
+}

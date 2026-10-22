@@ -539,15 +539,16 @@ def run_tests():
 
         # TEST 17: Comprobación de la arquitectura Dual Runner y Slash Commands
         print("\n[TEST 17] Comprobación de la arquitectura Dual Runner y Slash Commands...")
-        assert len(ALL_SLASH_COMMANDS) == 43, f"Se esperaban 43 comandos, encontrados: {len(ALL_SLASH_COMMANDS)}"
+        assert len(ALL_SLASH_COMMANDS) == 46, f"Se esperaban 46 comandos, encontrados: {len(ALL_SLASH_COMMANDS)}"
         assert len(GENERAL_SLASH_COMMANDS) == 23, f"Se esperaban 23 comandos generales, encontrados: {len(GENERAL_SLASH_COMMANDS)}"
-        assert len(ECONOMY_SLASH_COMMANDS) == 20, f"Se esperaban 20 comandos de economía, encontrados: {len(ECONOMY_SLASH_COMMANDS)}"
+        assert len(ECONOMY_SLASH_COMMANDS) == 23, f"Se esperaban 23 comandos de economía, encontrados: {len(ECONOMY_SLASH_COMMANDS)}"
 
         eco_cmd_names = [c.name for c in ECONOMY_SLASH_COMMANDS]
         for expected in [
             "slots", "balance", "trabajar", "transferir", "depositar", "retirar",
             "robar", "tienda", "salario", "blackjack", "bj", "ruleta", "coinflip",
-            "casino", "crimen", "ranking", "inventario", "usar", "regalar", "admin_dinero"
+            "casino", "crimen", "ranking", "inventario", "usar", "regalar", "admin_dinero",
+            "bolsa", "cartera", "aura"
         ]:
             assert expected in eco_cmd_names, f"Comando /{expected} no está en ECONOMY_SLASH_COMMANDS"
 
@@ -577,7 +578,7 @@ def run_tests():
         tree_cmds = [c.name for c in bot_service.tree.get_commands()]
         economy_tree_cmds = [c.name for c in bot_service.economy_tree.get_commands()]
         assert len(tree_cmds) == 23, f"Se esperaban 23 comandos en tree de Asistente, encontrados: {len(tree_cmds)}"
-        assert len(economy_tree_cmds) == 20, f"Se esperaban 20 comandos en economy_tree, encontrados: {len(economy_tree_cmds)}"
+        assert len(economy_tree_cmds) == 23, f"Se esperaban 23 comandos en economy_tree, encontrados: {len(economy_tree_cmds)}"
         assert "slots" not in tree_cmds, "slots no debería estar en el árbol general de Asistente"
         assert "blackjack" not in tree_cmds, "blackjack no debería estar en el árbol general de Asistente"
         assert "ruleta" not in tree_cmds, "ruleta no debería estar en el árbol general de Asistente"

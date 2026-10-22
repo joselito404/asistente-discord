@@ -163,11 +163,19 @@ El Aura se define formalmente como el **Precio Fundamental Base ($P_{\text{base}
 $$P_{\text{base}} = \text{Aura} = \text{Book Value (Patrimonio Histórico)} + \text{Rendimiento Mensual (Earnings}_{30d})$$
 
 - **Patrimonio Histórico (*Book Value / Equity*)**: La trayectoria acumulada de por vida extraída de Cakey Bot establece el suelo patrimonial inmutable que impide la quiebra:
-  $$BV = 10 + (0{,}8 \times \text{Nivel}) + (0{,}2 \times \text{Horas Históricas Voz}) + (0{,}01 \times \text{Mensajes Históricos})$$
-- **Rendimiento Mensual (*Trailing 30-Day Earnings*)**: Mide la actividad reciente (voz y chat de los últimos 30 días) calculada limpiamente mediante la **diferencia entre snapshots diarios de Cakey Bot** (`datos/cakey_history.json`):
-  $$E_{30d} = (0{,}4 \times \Delta\text{Horas Voz}_{30d}) + (0{,}05 \times \Delta\text{Mensajes}_{30d})$$
+  $$BV = 10 + (0{,}8 \times \text{Nivel}) + (0{,}2 \times \text{Horas Históricas Voz}) + (0{,}02 \times \text{Mensajes Históricos})$$
+- **Rendimiento Mensual (*Trailing 30-Day Earnings* — Ponderación 50/50)**: Mide la actividad reciente (voz y chat de los últimos 30 días) calculada limpiamente mediante la **diferencia entre snapshots diarios de Cakey Bot** (`datos/cakey_history.json`):
+  $$E_{30d} = (0{,}50 \times \Delta\text{Horas Voz}_{30d}) + (0{,}05 \times \Delta\text{Mensajes}_{30d})$$
+  - **1 hora de voz** en 30 días = **$+0{,}50 \text{ Porros}$**.
+  - **10 mensajes con XP** en 30 días = **$+0{,}50 \text{ Porros}$** ($0{,}05 \text{ Porros/msg}$).
 - **Precio Final de Mercado ($P_{\text{mercado}}$)**: La presión compradora y vendedora de los miembros en el Market Maker ajusta la cotización:
   $$P_{\text{mercado}} = P_{\text{base}} \times \left(1 + \frac{\text{Acciones en Cartera de Usuarios} - 100}{2.000}\right)$$
+
+- **Sinergia de Cartera (Utilidad y Multiplicador)**: Poseer acciones de miembros con alto Aura otorga un bono activo de $+5\%$ a $+25\%$ en la retribución de [`/trabajar`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/economia.py).
+- **Indicadores Técnicos Cuantitativos (100% Informativos)**:
+  - **RSI a 14 Días**: Mide la aceleración del momentum diario de actividad.
+  - **Medias Móviles SMA / EMA**: 14, 50, 100 y 200 días para detección de tendencias y cruces (*Golden Cross / Death Cross*).
+  - **Análisis Narrativo de Asistente IA**: El bot genera dictámenes financieros contextualizados (*Comprar / Mantener / Tomar Beneficios*) en `/bolsa informe` y `/aura`.
 
 ---
 
@@ -179,7 +187,9 @@ $$P_{\text{base}} = \text{Aura} = \text{Book Value (Patrimonio Histórico)} + \t
 - [x] Ventana móvil de 30 días calculada mediante snapshots diarios de Cakey Bot a las 00:00 UTC en `datos/cakey_history.json` (`[Aprobado · Jose · 22/10/2026]`).
 - [x] Fórmulas matemáticas ratificadas de Book Value y Earnings 30d (`[Aprobado · Jose · 22/10/2026]`).
 - [x] Curva de elasticidad del Market Maker con factor $K=2.000$ (+5% por 100 acciones, suelo en $P_{\text{base}}$) (`[Aprobado · Jose · 22/10/2026]`).
-- [ ] [Pendiente de matizar: revisión y enriquecimiento del sistema de Dividendos Pasivos / Inyecciones Externas por Aura].
+- [x] Tríada Financiera de Incentivos ratificada: Plusvalía de Mercado (AMM), Sinergia de Cartera por Aura (+5% a +25% en /trabajar) y Fondo Real de Dividendos semanal (50% spread Bolsa + 1% rake slots) (`[Aprobado · Jose · 22/10/2026]`).
+- [x] Indicadores técnicos institucionales ratificados: Medias móviles (SMA/EMA 14, 50, 100 y 200 días), RSI a 14 días (100% informativos) e informes narrativos de Asistente IA (`[Aprobado · Jose · 22/10/2026]`).
+- [x] Ponderación de Earnings 30d ratificada al 50/50: 1h voz = +0,50 Porros, 10 msgs = +0,50 Porros (`[Aprobado · Jose · 22/10/2026]`).
 
 
 
