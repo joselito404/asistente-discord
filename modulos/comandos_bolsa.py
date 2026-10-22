@@ -414,161 +414,80 @@ class BolsaOrderModal(Modal):
 
 
 class BolsaTerminalView(View):
-
-
-
     def __init__(self, ticker: str, current_tf: str = "1D"):
-
-
-
         super().__init__(timeout=180)
-
-
-
         self.ticker = ticker.upper()
-
-
-
         self.current_tf = current_tf
-
-
-
-
-
-
-
-    @discord.ui.button(label="1D", style=discord.ButtonStyle.secondary, custom_id="bolsa:tf:1D")
-
-
-
-    async def btn_1d(self, interaction: discord.Interaction, button: Button):
-
-
-
-        await self._switch_timeframe(interaction, "1D")
-
-
-
-
-
-
-
-    @discord.ui.button(label="1S", style=discord.ButtonStyle.secondary, custom_id="bolsa:tf:1S")
-
-
-
-    async def btn_1s(self, interaction: discord.Interaction, button: Button):
-
-
-
-        await self._switch_timeframe(interaction, "1S")
-
-
-
-
-
-
-
-    @discord.ui.button(label="1M", style=discord.ButtonStyle.secondary, custom_id="bolsa:tf:1M")
-
-
-
-    async def btn_1m(self, interaction: discord.Interaction, button: Button):
-
-
-
-        await self._switch_timeframe(interaction, "1M")
-
-
-
-
-
-
-
-    @discord.ui.button(label="MAX", style=discord.ButtonStyle.secondary, custom_id="bolsa:tf:MAX")
-
-
-
-    async def btn_max(self, interaction: discord.Interaction, button: Button):
-
-
-
-        await self._switch_timeframe(interaction, "MAX")
-
-
-
-
-
-
-
-    @discord.ui.button(label="🛒 Comprar", style=discord.ButtonStyle.success, custom_id="bolsa:buy")
-
-
-
-    async def btn_buy(self, interaction: discord.Interaction, button: Button):
-
-
-
+        self._setup_buttons()
+
+    def _setup_buttons(self):
+        self.clear_items()
+        # Fila 0: 5 botones de timeframe
+        timeframes = [
+            ("Trades", "Trades"),
+            ("15m", "15m"),
+            ("1h", "1h"),
+            ("4h", "4h"),
+            ("1D", "1D"),
+        ]
+        for label, tf in timeframes:
+            style = discord.ButtonStyle.primary if tf == self.current_tf else discord.ButtonStyle.secondary
+            btn = Button(
+                label=label,
+                style=style,
+                custom_id=f"bolsa:tf:{tf}:{self.ticker}",
+                row=0,
+            )
+            btn.callback = self._create_tf_callback(tf)
+            self.add_item(btn)
+
+        # Fila 1: Operativa e información
+        btn_buy = Button(label="🛒 Comprar", style=discord.ButtonStyle.success, custom_id=f"bolsa:buy:{self.ticker}", row=1)
+        btn_buy.callback = self._btn_buy_callback
+        self.add_item(btn_buy)
+
+        btn_sell = Button(label="💰 Vender", style=discord.ButtonStyle.danger, custom_id=f"bolsa:sell:{self.ticker}", row=1)
+        btn_sell.callback = self._btn_sell_callback
+        self.add_item(btn_sell)
+
+        btn_report = Button(label="📊 Informe IA", style=discord.ButtonStyle.primary, custom_id=f"bolsa:report:{self.ticker}", row=1)
+        btn_report.callback = self._btn_report_callback
+        self.add_item(btn_report)
+
+        btn_web = Button(
+            label="🌐 Web Terminal",
+            style=discord.ButtonStyle.link,
+            url="https://asistente-discord-sj3k.onrender.com/bolsa",
+            row=1,
+        )
+        self.add_item(btn_web)
+
+    def _create_tf_callback(self, tf: str):
+        async def callback(interaction: discord.Interaction):
+            await self._switch_timeframe(interaction, tf)
+        return callback
+
+    async def _btn_buy_callback(self, interaction: discord.Interaction):
         modal = BolsaOrderModal(self.ticker, "buy")
-
-
-
         await interaction.response.send_modal(modal)
 
-
-
-
-
-
-
-    @discord.ui.button(label="💰 Vender", style=discord.ButtonStyle.danger, custom_id="bolsa:sell")
-
-
-
-    async def btn_sell(self, interaction: discord.Interaction, button: Button):
-
-
-
+    async def _btn_sell_callback(self, interaction: discord.Interaction):
         modal = BolsaOrderModal(self.ticker, "sell")
-
-
-
         await interaction.response.send_modal(modal)
 
-
-
-
-
-
-
-    @discord.ui.button(label="📊 Informe IA", style=discord.ButtonStyle.primary, custom_id="bolsa:report")
-
-
-
-    async def btn_report(self, interaction: discord.Interaction, button: Button):
-
-
-
+    async def _btn_report_callback(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
-
-
-
         report_text = await generate_market_report(self.ticker)
-
-
-
         await interaction.followup.send(report_text, ephemeral=True)
-
-
-
-
-
-
 
     async def _switch_timeframe(self, interaction: discord.Interaction, tf: str):
         await interaction.response.defer()
         try:
-            self.current_tf = tf
+            from modulos.bolsa_graficas import TIMEFRAME_CONFIG, normalize_timeframe
+            canon_tf = normalize_timeframe(tf)
+            self.current_tf = canon_tf
+            self._setup_buttons()
+
             mercado = load_market_data()
             ticker_data = mercado.get("tickers", {}).get(self.ticker, {})
             history = ticker_data.get("order_history", [])
@@ -577,16 +496,19 @@ class BolsaTerminalView(View):
             img_bytes = generate_candlestick_chart(
                 ticker=self.ticker,
                 history_candles=history,
-                timeframe=tf,
+                timeframe=canon_tf,
                 current_price=prices["market"],
                 company_name=info.get("name", self.ticker),
             )
             file = discord.File(img_bytes, filename=f"bolsa_{self.ticker}.png")
 
-            # Actualizar mensaje con la nueva gráfica
+            tf_cfg = TIMEFRAME_CONFIG.get(canon_tf, {})
+            badge_label = tf_cfg.get("label", canon_tf)
+            res_label = tf_cfg.get("resolution_label", "")
+
             embed = interaction.message.embeds[0] if interaction.message.embeds else discord.Embed(title=f"${self.ticker}")
             embed.set_image(url=f"attachment://bolsa_{self.ticker}.png")
-            embed.set_footer(text=f"Temporalidad: {tf} • Trading 212 Style • Sanvi Exchange")
+            embed.set_footer(text=f"Temporalidad: {badge_label} ({res_label}) • Sanvi Exchange 24/7 • Trading 212 Style")
 
             await interaction.edit_original_response(embed=embed, attachments=[file], view=self)
         except Exception as e:
@@ -634,7 +556,9 @@ async def handle_bolsa_interaction(interaction: discord.Interaction) -> bool:
         await interaction.followup.send(report_text, ephemeral=True)
         return True
     elif action == "tf":
-        tf = parts[2] if len(parts) >= 3 and parts[2] in ("1D", "1S", "1M", "MAX") else "1D"
+        from modulos.bolsa_graficas import normalize_timeframe, TIMEFRAME_CONFIG
+        tf_raw = parts[2] if len(parts) >= 3 else "1D"
+        tf = normalize_timeframe(tf_raw)
         await interaction.response.defer()
         try:
             mercado = load_market_data()
@@ -652,7 +576,12 @@ async def handle_bolsa_interaction(interaction: discord.Interaction) -> bool:
             file = discord.File(img_bytes, filename=f"bolsa_{ticker}.png")
             embed = interaction.message.embeds[0] if interaction.message.embeds else discord.Embed(title=f"${ticker}")
             embed.set_image(url=f"attachment://bolsa_{ticker}.png")
-            embed.set_footer(text=f"Temporalidad: {tf} • Trading 212 Style • Sanvi Exchange")
+
+            tf_cfg = TIMEFRAME_CONFIG.get(tf, {})
+            badge_label = tf_cfg.get("label", tf)
+            res_label = tf_cfg.get("resolution_label", "")
+            embed.set_footer(text=f"Temporalidad: {badge_label} ({res_label}) • Sanvi Exchange 24/7 • Trading 212 Style")
+
             view = BolsaTerminalView(ticker, tf)
             await interaction.edit_original_response(embed=embed, attachments=[file], view=view)
             return True
@@ -868,7 +797,7 @@ async def build_bolsa_terminal(ticker: str) -> tuple[discord.Embed, discord.File
 
 
 
-    embed.set_footer(text="Temporalidad: 1D • Usa los botones para operar o cambiar de gráfico")
+    embed.set_footer(text="Temporalidad: 1D · velas 30m • Sanvi Exchange 24/7 • Trading 212 Style")
 
 
 

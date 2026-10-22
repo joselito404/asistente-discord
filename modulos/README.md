@@ -85,8 +85,16 @@ Cualquier agente o desarrollador autorizado que trabaje en nuevas funcionalidade
 15. **`bolsa_graficas.py`**: Renderizado Gráfico de Velas Japonesas con Pillow (PIL):
     - Gráficos institucionales estilo Trading 212 a 800x450 px (`generate_candlestick_chart`).
     - Paleta de alto contraste: fondo negro puro (`#000000`), velas alcistas verde neón (`#00E676`), bajistas rojo vivo (`#FF5252`).
+    - Nuevas temporalidades intradía reales (`TIMEFRAME_CONFIG`): `Trades` (1 vela por orden ejecutada), `15m` (velas de 1m), `1h` (velas de 2m), `4h` (velas de 10m) y `1D` (velas de 30m).
+    - Cubetas vacías con precio plano de cierre previo (`open=close=prev_close`, `volume=0.0`) y relleno suave hacia atrás sin patrones artificiales ni oscilaciones inventadas.
+    - Badges explícitos en cabecera con resolución (ej: `[ TRADES · 1x orden ]`, `[ 15m · velas 1m ]`).
     - Subgráfico inferior de volumen, línea horizontal de cotización cian (`#00A3FF`) con badge flotante en el eje de precios y grid tenue (`#1E1E1E`).
     - Retorno de buffer `io.BytesIO` en formato PNG nativo para `discord.File`.
+16. **`web_server.py`**: Servidor HTTP en puerto 10000 para Render:
+    - Endpoints de salud y logs: `GET /status`, `GET /logs`.
+    - Streaming de audios: `GET /audios`, `GET /audios/zip`, `GET /api/audios`.
+    - **Terminal Web Bursátil**: `GET /bolsa` con interfaz oscura interactiva basada en **TradingView Lightweight Charts v4.2.0** (velas, volumen, zoom, selector de 4 tickers y 5 temporalidades, métricas en directo, libro de órdenes y dividendos).
+    - **API Bursátil en Tiempo Real**: `GET /api/bolsa/data` con cotizaciones, estadísticas, pool y series OHLCV monótonas en tiempo.
 
 ## Cómo se usa e integra con `bot_service.py`
 - `bot_service.py` actúa como punto de entrada único (`python bot_service.py`) y orquestador central bajo una **Arquitectura de Runner Dual**:

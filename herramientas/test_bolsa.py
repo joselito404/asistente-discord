@@ -23,6 +23,7 @@ if BASE_DIR not in sys.path:
 from modulos import bolsa_sanvi
 from modulos import bolsa_graficas
 from modulos import economia_core
+from modulos import web_server
 
 
 class TestBolsaSanvi(unittest.TestCase):
@@ -225,6 +226,115 @@ class TestBolsaSanvi(unittest.TestCase):
         res_resume = bolsa_sanvi.set_market_halt(False)
         self.assertTrue(res_resume["success"])
         self.assertFalse(bolsa_sanvi.is_market_halted())
+
+    def test_11_new_intraday_timeframes(self):
+        """Valida las 5 temporalidades reales intradía (Trades, 15m, 1h, 4h, 1D)."""
+        # 1. Validar diccionarios y resoluciones
+        self.assertIn("Trades", bolsa_graficas.TIMEFRAME_CONFIG)
+        self.assertIn("15m", bolsa_graficas.TIMEFRAME_CONFIG)
+        self.assertIn("1h", bolsa_graficas.TIMEFRAME_CONFIG)
+        self.assertIn("4h", bolsa_graficas.TIMEFRAME_CONFIG)
+        self.assertIn("1D", bolsa_graficas.TIMEFRAME_CONFIG)
+
+        # 2. Generar series OHLCV para cada timeframe sin órdenes previas (serie plana suave)
+        for tf in ["Trades", "15m", "1h", "4h", "1D"]:
+            candles = bolsa_graficas._normalize_or_generate_candles(
+                history_candles=[],
+                current_price=79.52,
+                timeframe=tf,
+            )
+            cfg = bolsa_graficas.TIMEFRAME_CONFIG[tf]
+            expected_count = cfg["default_count"]
+            self.assertEqual(len(candles), expected_count, f"Fallo en count de {tf}: {len(candles)} != {expected_count}")
+            # Validar que los campos clave existan y sean consistentes
+            for c in candles:
+                self.assertIn("open", c)
+                self.assertIn("high", c)
+                self.assertIn("low", c)
+                self.assertIn("close", c)
+                self.assertIn("volume", c)
+                self.assertIn("time", c)
+
+            # Validar renderizado gráfico en Pillow para cada timeframe
+            chart_buf = bolsa_graficas.generate_candlestick_chart(
+                ticker="JOSE",
+                timeframe=tf,
+                current_price=79.52,
+                company_name="Joselito",
+            )
+            self.assertIsInstance(chart_buf, io.BytesIO)
+            data = chart_buf.getvalue()
+            self.assertTrue(data.startswith(b"\x89PNG\r\n\x1a\n"))
+
+        # 3. Validar Trades con historial real (proyección 1 vela por orden)
+        mock_trades = [
+            {"price": 79.50, "shares": 10.0, "timestamp": "2026-10-22T20:00:00Z"},
+            {"price": 80.20, "shares": 25.0, "timestamp": "2026-10-22T20:05:00Z"},
+            {"price": 80.50, "shares": 15.0, "timestamp": "2026-10-22T20:10:00Z"},
+        ]
+        trade_candles = bolsa_graficas._normalize_or_generate_candles(
+            history_candles=mock_trades,
+            current_price=80.50,
+            timeframe="Trades",
+            target_count=30,
+        )
+        self.assertEqual(len(trade_candles), 30)
+        # Las últimas 3 velas deben corresponder a los mock trades
+        self.assertEqual(trade_candles[-1]["close"], 80.50)
+        self.assertEqual(trade_candles[-2]["close"], 80.20)
+        self.assertEqual(trade_candles[-3]["close"], 79.50)
+        # Las velas de relleno previo deben ser planas (sin dientes de sierra ni volumen falso)
+        self.assertEqual(trade_candles[0]["volume"], 0.0)
+        self.assertEqual(trade_candles[0]["close"], 79.50)
+
+    def test_12_web_terminal_endpoints(self):
+        """Valida la generación del HTML de /bolsa y el payload JSON de /api/bolsa/data."""
+        # 1. Validar render_bolsa_html
+        html_page = web_server.render_bolsa_html()
+        self.assertIsInstance(html_page, str)
+        self.assertIn("<!DOCTYPE html>", html_page)
+        self.assertIn("lightweight-charts", html_page)
+        self.assertIn("tv-chart", html_page)
+        self.assertIn("$JOSE", html_page)
+        self.assertIn("$TERRE", html_page)
+        self.assertIn("$OMEN", html_page)
+        self.assertIn("$RACER", html_page)
+        self.assertIn("Trades", html_page)
+        self.assertIn("15m", html_page)
+        self.assertIn("1h", html_page)
+        self.assertIn("4h", html_page)
+        self.assertIn("1D", html_page)
+
+        # 2. Validar get_bolsa_api_payload
+        payload = web_server.get_bolsa_api_payload()
+        self.assertIsInstance(payload, dict)
+        self.assertIn("timestamp", payload)
+        self.assertIn("is_halted", payload)
+        self.assertIn("pool", payload)
+        self.assertIn("tickers", payload)
+
+        tickers = payload["tickers"]
+        for sym in ["JOSE", "TERRE", "OMEN", "RACER"]:
+            self.assertIn(sym, tickers)
+            t_info = tickers[sym]
+            self.assertIn("current_price", t_info)
+            self.assertIn("base_price", t_info)
+            self.assertIn("bid", t_info)
+            self.assertIn("ask", t_info)
+            self.assertIn("float_pct", t_info)
+            self.assertIn("rsi_14", t_info)
+            self.assertIn("series", t_info)
+
+            # Validar que cada ticker tenga las 5 series completas
+            series = t_info["series"]
+            for tf in ["Trades", "15m", "1h", "4h", "1D"]:
+                self.assertIn(tf, series)
+                self.assertIn("candles", series[tf])
+                self.assertIn("volume", series[tf])
+                self.assertGreater(len(series[tf]["candles"]), 0)
+                # Validar monotonía en tiempo
+                times = [c["time"] for c in series[tf]["candles"]]
+                self.assertEqual(times, sorted(times))
 
 
 if __name__ == "__main__":
