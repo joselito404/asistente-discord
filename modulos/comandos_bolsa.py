@@ -842,7 +842,6 @@ async def build_bolsa_terminal(ticker: str) -> tuple[discord.Embed, discord.File
 
 
 
-    embed.add_field(
 
 
 
@@ -850,6 +849,8 @@ async def build_bolsa_terminal(ticker: str) -> tuple[discord.Embed, discord.File
         r = get_market_halt_reason()
         halt_desc = f"⛔ **SUSPENDIDO POR EMERGENCIA**\n*{r}*" if r else "⛔ **SUSPENDIDO POR MANTENIMIENTO TÉCNICO**"
         embed.add_field(name="🚨 ESTADO DEL MERCADO", value=halt_desc, inline=False)
+
+    embed.add_field(
         name="📜 Circulación / Float",
 
 
