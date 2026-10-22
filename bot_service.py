@@ -438,6 +438,7 @@ from modulos.comandos import (
     cmd_admin_dinero,
 )
 
+from modulos.comandos_bolsa import handle_bolsa_interaction
 from modulos.persistencia_discord import (
     restore_from_discord,
     backup_to_discord,
@@ -646,6 +647,8 @@ async def on_interaction(interaction: discord.Interaction):
         cid = interaction.data.get("custom_id", "")
         if cid.startswith("slots:"):
             await handle_slots_interaction(interaction)
+        elif cid.startswith("bolsa:"):
+            await handle_bolsa_interaction(interaction)
 
 
 @bot.event
@@ -773,6 +776,8 @@ async def on_interaction(interaction: discord.Interaction):
         cid = interaction.data.get("custom_id", "")
         if cid.startswith("slots:"):
             await handle_slots_interaction(interaction)
+        elif cid.startswith("bolsa:"):
+            await handle_bolsa_interaction(interaction)
 
 
 

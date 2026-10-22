@@ -1,3 +1,4 @@
+import re
 """
 
 
@@ -565,101 +566,101 @@ class BolsaTerminalView(View):
 
 
     async def _switch_timeframe(self, interaction: discord.Interaction, tf: str):
-
-
-
         await interaction.response.defer()
-
-
-
         try:
-
-
-
             self.current_tf = tf
-
-
-
             mercado = load_market_data()
-
-
-
             ticker_data = mercado.get("tickers", {}).get(self.ticker, {})
-
-
-
             history = ticker_data.get("order_history", [])
-
-
-
             info = TICKERS.get(self.ticker, {"name": self.ticker})
-
+            prices = get_bid_ask_prices(self.ticker)
             img_bytes = generate_candlestick_chart(
-
                 ticker=self.ticker,
-
                 history_candles=history,
-
                 timeframe=tf,
-
                 current_price=prices["market"],
-
                 company_name=info.get("name", self.ticker),
-
             )
-
-
-
             file = discord.File(img_bytes, filename=f"bolsa_{self.ticker}.png")
 
-
-
-
-
-
-
             # Actualizar mensaje con la nueva gráfica
-
-
-
-            prices = get_bid_ask_prices(self.ticker)
-
-
-
             embed = interaction.message.embeds[0] if interaction.message.embeds else discord.Embed(title=f"${self.ticker}")
-
-
-
             embed.set_image(url=f"attachment://bolsa_{self.ticker}.png")
-
-
-
             embed.set_footer(text=f"Temporalidad: {tf} • Trading 212 Style • Sanvi Exchange")
 
-
-
-
-
-
-
             await interaction.edit_original_response(embed=embed, attachments=[file], view=self)
-
-
-
         except Exception as e:
+            await interaction.followup.send(f"❌ Error al cambiar temporalidad a {tf}: {e}")
 
 
+async def handle_bolsa_interaction(interaction: discord.Interaction) -> bool:
+    """Intermediario global para capturar y procesar cualquier botón de la Bolsa Sanvi."""
+    if interaction.type != discord.InteractionType.component:
+        return False
 
-            await interaction.followup.send(f"❌ Error al cambiar temporalidad a {tf}: {e}", ephemeral=True)
+    custom_id = interaction.data.get("custom_id", "")
+    if not custom_id.startswith("bolsa:"):
+        return False
 
+    parts = custom_id.split(":")
+    ticker = None
+    if len(parts) >= 3 and parts[2].upper() in TICKERS:
+        ticker = parts[2].upper()
+    elif len(parts) >= 4 and parts[3].upper() in TICKERS:
+        ticker = parts[3].upper()
+    else:
+        if interaction.message and interaction.message.embeds:
+            title = interaction.message.embeds[0].title or ""
+            m = re.search(r"\$([A-Z0-9]+)", title)
+            if m and m.group(1).upper() in TICKERS:
+                ticker = m.group(1).upper()
 
+    if not ticker:
+        ticker = "JOSE"
 
+    action = parts[1] if len(parts) >= 2 else ""
 
+    if action == "buy":
+        modal = BolsaOrderModal(ticker, "buy")
+        await interaction.response.send_modal(modal)
+        return True
+    elif action == "sell":
+        modal = BolsaOrderModal(ticker, "sell")
+        await interaction.response.send_modal(modal)
+        return True
+    elif action == "report":
+        await interaction.response.defer(ephemeral=True)
+        report_text = await generate_market_report(ticker)
+        await interaction.followup.send(report_text, ephemeral=True)
+        return True
+    elif action == "tf":
+        tf = parts[2] if len(parts) >= 3 and parts[2] in ("1D", "1S", "1M", "MAX") else "1D"
+        await interaction.response.defer()
+        try:
+            mercado = load_market_data()
+            ticker_data = mercado.get("tickers", {}).get(ticker, {})
+            history = ticker_data.get("order_history", [])
+            info = TICKERS.get(ticker, {"name": ticker})
+            prices = get_bid_ask_prices(ticker)
+            img_bytes = generate_candlestick_chart(
+                ticker=ticker,
+                history_candles=history,
+                timeframe=tf,
+                current_price=prices["market"],
+                company_name=info.get("name", ticker),
+            )
+            file = discord.File(img_bytes, filename=f"bolsa_{ticker}.png")
+            embed = interaction.message.embeds[0] if interaction.message.embeds else discord.Embed(title=f"${ticker}")
+            embed.set_image(url=f"attachment://bolsa_{ticker}.png")
+            embed.set_footer(text=f"Temporalidad: {tf} • Trading 212 Style • Sanvi Exchange")
+            view = BolsaTerminalView(ticker, tf)
+            await interaction.edit_original_response(embed=embed, attachments=[file], view=view)
+            return True
+        except Exception as e:
+            await interaction.followup.send(f"❌ Error al cambiar temporalidad a {tf}: {e}")
+            return True
 
-
-
-
-
+    return False
 
 
 async def build_bolsa_terminal(ticker: str) -> tuple[discord.Embed, discord.File, BolsaTerminalView]:
