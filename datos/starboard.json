@@ -1,0 +1,89 @@
+{
+  "next_edition_number": 8,
+  "entries": {
+    "1455700883378536559_1547697788379341051": {
+      "edition_number": 1,
+      "orig_channel_id": 1455700883378536559,
+      "orig_message_id": 1547697788379341051,
+      "starboard_message_id": 1562919196525072571,
+      "author_id": 999304511464149104,
+      "author_name": "mpx56.",
+      "stars_count": 3,
+      "stargazers": [],
+      "created_at": "2026-10-22T20:02:55.933103+00:00",
+      "has_image": false
+    },
+    "1455700883378536559_1547697699695108140": {
+      "edition_number": 2,
+      "orig_channel_id": 1455700883378536559,
+      "orig_message_id": 1547697699695108140,
+      "starboard_message_id": 1562919208843739199,
+      "author_id": 999304511464149104,
+      "author_name": "mpx56.",
+      "stars_count": 2,
+      "stargazers": [],
+      "created_at": "2026-10-22T20:02:58.235325+00:00",
+      "has_image": false
+    },
+    "1455700883378536559_1547697853671931944": {
+      "edition_number": 3,
+      "orig_channel_id": 1455700883378536559,
+      "orig_message_id": 1547697853671931944,
+      "starboard_message_id": 1562919218628927581,
+      "author_id": 999304511464149104,
+      "author_name": "mpx56.",
+      "stars_count": 2,
+      "stargazers": [],
+      "created_at": "2026-10-22T20:03:00.569719+00:00",
+      "has_image": false
+    },
+    "1532002622461050931_1549086901338767584": {
+      "edition_number": 4,
+      "orig_channel_id": 1532002622461050931,
+      "orig_message_id": 1549086901338767584,
+      "starboard_message_id": 1562919227407466639,
+      "author_id": 794223776215990332,
+      "author_name": "BLD| 4quesos",
+      "stars_count": 3,
+      "stargazers": [],
+      "created_at": "2026-10-22T20:03:02.886492+00:00",
+      "has_image": false
+    },
+    "1549458785485987890_1550087354079903857": {
+      "edition_number": 5,
+      "orig_channel_id": 1549458785485987890,
+      "orig_message_id": 1550087354079903857,
+      "starboard_message_id": 1562919236513562646,
+      "author_id": 857923274771136522,
+      "author_name": "Joselito",
+      "stars_count": 2,
+      "stargazers": [],
+      "created_at": "2026-10-22T20:03:04.847640+00:00",
+      "has_image": false
+    },
+    "1446143938044887052_1557054822543532185": {
+      "edition_number": 6,
+      "orig_channel_id": 1446143938044887052,
+      "orig_message_id": 1557054822543532185,
+      "starboard_message_id": 1562919245485179014,
+      "author_id": 794223776215990332,
+      "author_name": "terreneiror",
+      "stars_count": 2,
+      "stargazers": [],
+      "created_at": "2026-10-22T20:03:06.751364+00:00",
+      "has_image": false
+    },
+    "1549458785485987890_1557883502630805600": {
+      "edition_number": 7,
+      "orig_channel_id": 1549458785485987890,
+      "orig_message_id": 1557883502630805600,
+      "starboard_message_id": 1562919253097709674,
+      "author_id": 794223776215990332,
+      "author_name": "terreneiror",
+      "stars_count": 2,
+      "stargazers": [],
+      "created_at": "2026-10-22T20:03:09.268278+00:00",
+      "has_image": false
+    }
+  }
+}

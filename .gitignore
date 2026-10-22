@@ -42,6 +42,7 @@ herramientas/*
 !herramientas/test_casino_hub.py
 !herramientas/test_sugerencias.py
 !herramientas/test_starboard.py
+!herramientas/migrar_starboard_historico.py
 !herramientas/test_bolsa.py
 !herramientas/update_discord_channels.py
 documentos_pdf/
