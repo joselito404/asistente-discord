@@ -539,15 +539,16 @@ def run_tests():
 
         # TEST 17: Comprobación de la arquitectura Dual Runner y Slash Commands
         print("\n[TEST 17] Comprobación de la arquitectura Dual Runner y Slash Commands...")
-        assert len(ALL_SLASH_COMMANDS) == 46, f"Se esperaban 46 comandos, encontrados: {len(ALL_SLASH_COMMANDS)}"
+        assert len(ALL_SLASH_COMMANDS) == 48, f"Se esperaban 48 comandos, encontrados: {len(ALL_SLASH_COMMANDS)}"
         assert len(GENERAL_SLASH_COMMANDS) == 23, f"Se esperaban 23 comandos generales, encontrados: {len(GENERAL_SLASH_COMMANDS)}"
-        assert len(ECONOMY_SLASH_COMMANDS) == 23, f"Se esperaban 23 comandos de economía, encontrados: {len(ECONOMY_SLASH_COMMANDS)}"
+        assert len(ECONOMY_SLASH_COMMANDS) == 25, f"Se esperaban 25 comandos de economía, encontrados: {len(ECONOMY_SLASH_COMMANDS)}"
 
         eco_cmd_names = [c.name for c in ECONOMY_SLASH_COMMANDS]
         for expected in [
             "slots", "balance", "trabajar", "transferir", "depositar", "retirar",
             "robar", "tienda", "salario", "blackjack", "bj", "ruleta", "coinflip",
             "casino", "crimen", "ranking", "inventario", "usar", "regalar", "admin_dinero",
+            "admin_bolsa", "admin_economia",
             "bolsa", "cartera", "aura"
         ]:
             assert expected in eco_cmd_names, f"Comando /{expected} no está en ECONOMY_SLASH_COMMANDS"
@@ -578,7 +579,7 @@ def run_tests():
         tree_cmds = [c.name for c in bot_service.tree.get_commands()]
         economy_tree_cmds = [c.name for c in bot_service.economy_tree.get_commands()]
         assert len(tree_cmds) == 23, f"Se esperaban 23 comandos en tree de Asistente, encontrados: {len(tree_cmds)}"
-        assert len(economy_tree_cmds) == 23, f"Se esperaban 23 comandos en economy_tree, encontrados: {len(economy_tree_cmds)}"
+        assert len(economy_tree_cmds) == 25, f"Se esperaban 25 comandos en economy_tree, encontrados: {len(economy_tree_cmds)}"
         assert "slots" not in tree_cmds, "slots no debería estar en el árbol general de Asistente"
         assert "blackjack" not in tree_cmds, "blackjack no debería estar en el árbol general de Asistente"
         assert "ruleta" not in tree_cmds, "ruleta no debería estar en el árbol general de Asistente"
@@ -852,8 +853,84 @@ def run_tests():
         assert "solo están permitidos" in s_args[0]
         print("  ✅ TEST 24 PASADO: /regalar (transferencias y validaciones) y ensure_economy_channel validados.")
 
+        # ========================================================
+        # TEST 25: PARO DE EMERGENCIA DE ECONOMÍA (EMERGENCY_HALT)
+        # ========================================================
+        uid_halt = "999999999999999999"
+        uid_halt_dest = "888888888888888888"
+        eco.ensure_user(uid_halt, default_cash=10000)
+        eco.ensure_user(uid_halt_dest, default_cash=5000)
+
+        # Estado inicial: economía activa
+        assert eco.is_economy_halted() is False
+        assert eco.get_economy_halt_reason() == ""
+
+        # Activación del paro de emergencia
+        motivo_test = "Auditoría de seguridad y mantenimiento preventivo"
+        eco.set_economy_halt(True, motivo_test)
+        assert eco.is_economy_halted() is True
+        assert eco.get_economy_halt_reason() == motivo_test
+
+        # Validar bloqueo en can_work y execute_work
+        ok_cw, msg_cw = eco.can_work(uid_halt)
+        assert ok_cw is False and "pausada por administración" in msg_cw
+        ok_w, msg_w, rew_w = eco.execute_work(uid_halt)
+        assert ok_w is False and rew_w == 0 and motivo_test in msg_w
+
+        # Validar bloqueo en can_crime y execute_crime
+        ok_cc, msg_cc = eco.can_crime(uid_halt)
+        assert ok_cc is False and "pausada por administración" in msg_cc
+        ok_cr, msg_cr, rew_cr = eco.execute_crime(uid_halt)
+        assert ok_cr is False and rew_cr == 0 and motivo_test in msg_cr
+
+        # Validar bloqueo en can_rob y execute_rob
+        ok_crob, msg_crob = eco.can_rob(uid_halt)
+        assert ok_crob is False and "pausada por administración" in msg_crob
+        ok_r, msg_r, rew_r = eco.execute_rob(uid_halt, uid_halt_dest)
+        assert ok_r is False and rew_r == 0 and motivo_test in msg_r
+
+        # Validar bloqueo en can_claim_salary y claim_salary
+        ok_csal, msg_csal = eco.can_claim_salary(uid_halt)
+        assert ok_csal is False and "suspendido por administración" in msg_csal
+        ok_sal, msg_sal, pay_sal, base_sal = eco.claim_salary(uid_halt)
+        assert ok_sal is False and pay_sal == 0
+
+        # Validar bloqueo en banca: deposit_cash y withdraw_cash
+        ok_dep, msg_dep, _ = eco.deposit_cash(uid_halt, 500)
+        assert ok_dep is False and "pausadas por administración" in msg_dep
+        ok_wit, msg_wit, _ = eco.withdraw_cash(uid_halt, 500)
+        assert ok_wit is False and "pausadas por administración" in msg_wit
+
+        # Validar bloqueo en transfer_funds
+        ok_tr, msg_tr, _, _ = eco.transfer_funds(uid_halt, uid_halt_dest, 500)
+        assert ok_tr is False and "pausadas por administración" in msg_tr
+
+        # Validar bloqueo en tienda y regalos
+        ok_buy, msg_buy, _, _ = eco.buy_shop_item(uid_halt, "monster_blanco")
+        assert ok_buy is False and "pausada por administración" in msg_buy
+        ok_gift, msg_gift, _ = eco.gift_inventory_item(uid_halt, uid_halt_dest, "monster_blanco", 1)
+        assert ok_gift is False and "pausados por administración" in msg_gift
+
+        # Validar bloqueo en tragaperras / casino
+        ok_slots, msg_slots, _, _ = eco.handle_slots_spin(uid_halt, 100)
+        assert ok_slots is False and "pausados por administración" in msg_slots
+
+        # Validar que balance/consultas siguen operativas al 100%
+        bal_check = eco.get_balance(uid_halt)
+        assert bal_check["cash"] == 10000
+
+        # Reanudación de la economía
+        eco.set_economy_halt(False)
+        assert eco.is_economy_halted() is False
+        assert eco.get_economy_halt_reason() == ""
+
+        # Comprobar que tras reanudar, las operaciones vuelven a ejecutarse
+        ok_dep2, msg_dep2, bal2 = eco.deposit_cash(uid_halt, 1000)
+        assert ok_dep2 is True and bal2["bank"] == 1000
+        print("  ✅ TEST 25 PASADO: Paro de emergencia (emergency_halt), bloqueo transaccional completo y reanudación validados al 100%.")
+
         print("\n" + "=" * 65)
-        print("🎉 TODOS LOS 24 TESTS DE ECONOMÍA Y TRAGAPERRAS 5X3 PASARON CON ÉXITO (100%)")
+        print("🎉 TODOS LOS 25 TESTS DE ECONOMÍA Y TRAGAPERRAS 5X3 PASARON CON ÉXITO (100%)")
         print("=" * 65)
 
     finally:

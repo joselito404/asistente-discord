@@ -98,7 +98,13 @@ async def cmd_slots(interaction: discord.Interaction, apuesta: int = 100):
     if not await ensure_economy_channel(interaction):
         return
 
-    from modulos.economia import handle_slots_spin, SlotsLayoutView, PORRO_EMOJI, MIN_SLOTS_BET
+    from modulos.economia import handle_slots_spin, SlotsLayoutView, PORRO_EMOJI, MIN_SLOTS_BET, is_economy_halted, get_economy_halt_reason
+
+    if is_economy_halted():
+        r = get_economy_halt_reason()
+        msg = "⛔ **El sistema de Economía y Casino está temporalmente suspendido por administración.**\n" + (f"• **Motivo:** {r}" if r else "")
+        await interaction.response.send_message(msg, ephemeral=True)
+        return
 
     if apuesta < MIN_SLOTS_BET:
         await interaction.response.send_message(
@@ -397,7 +403,15 @@ async def _handle_blackjack_command(interaction: discord.Interaction, apuesta: s
         PORRO_EMOJI,
         JACKPOT_FEED_PERCENT,
         format_bj_card,
+        is_economy_halted,
+        get_economy_halt_reason,
     )
+
+    if is_economy_halted():
+        r = get_economy_halt_reason()
+        msg = "⛔ **El sistema de Economía y Casino está temporalmente suspendido por administración.**\n" + (f"• **Motivo:** {r}" if r else "")
+        await interaction.response.send_message(msg, ephemeral=True)
+        return
 
     ok, bet, err = parse_blackjack_bet(interaction.user.id, apuesta)
     if not ok:
@@ -528,7 +542,15 @@ async def _handle_roulette_command(
         build_roulette_embed,
         RouletteActionView,
         ROULETTE_BET_INFO,
+        is_economy_halted,
+        get_economy_halt_reason,
     )
+
+    if is_economy_halted():
+        r = get_economy_halt_reason()
+        msg = "⛔ **El sistema de Economía y Casino está temporalmente suspendido por administración.**\n" + (f"• **Motivo:** {r}" if r else "")
+        await interaction.response.send_message(msg, ephemeral=True)
+        return
 
     norm_type = normalize_roulette_bet_type(tipo)
     if norm_type not in ROULETTE_BET_INFO:
@@ -634,7 +656,15 @@ async def _handle_coinflip_command(
         ECONOMY_LOCK,
         modify_balance,
         PORRO_EMOJI,
+        is_economy_halted,
+        get_economy_halt_reason,
     )
+
+    if is_economy_halted():
+        r = get_economy_halt_reason()
+        msg = "⛔ **El sistema de Economía y Casino está temporalmente suspendido por administración.**\n" + (f"• **Motivo:** {r}" if r else "")
+        await interaction.response.send_message(msg, ephemeral=True)
+        return
 
     norm_lado = normalize_coinflip_side(lado)
 
@@ -1202,6 +1232,223 @@ async def cmd_admin_bolsa(
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
+
+def build_admin_economia_embed() -> discord.Embed:
+    """Construye el embed informativo del panel interactivo de administración financiera."""
+    from modulos.economia_core import (
+        is_economy_halted,
+        get_economy_halt_reason,
+        get_server_jackpot,
+        PORRO_EMOJI,
+    )
+    from modulos.bolsa_sanvi import is_market_halted, get_market_halt_reason, load_pool_data
+
+    eco_halted = is_economy_halted()
+    eco_reason = get_economy_halt_reason()
+    bolsa_halted = is_market_halted()
+    bolsa_reason = get_market_halt_reason()
+    jackpot = get_server_jackpot()
+
+    try:
+        pool_data = load_pool_data()
+        yield_pool = float(pool_data.get("accumulated_pool", 0.0))
+    except Exception:
+        yield_pool = 0.0
+
+    eco_status = f"⛔ **PAUSADA** (Motivo: {eco_reason})" if (eco_halted and eco_reason) else ("⛔ **PAUSADA**" if eco_halted else "🟢 **OPERATIVA**")
+    bolsa_status = f"⛔ **PAUSADA** (Motivo: {bolsa_reason})" if (bolsa_halted and bolsa_reason) else ("⛔ **PAUSADA**" if bolsa_halted else "🟢 **OPERATIVA**")
+
+    embed = discord.Embed(
+        title="🎛️ Panel de Control Administrativo — Economía y Bolsa",
+        description="Supervisión global y paros de emergencia para el ecosistema financiero del servidor.",
+        color=0xE74C3C if (eco_halted or bolsa_halted) else 0x2ECC71,
+        timestamp=datetime.now(timezone.utc),
+    )
+    embed.add_field(
+        name="🪙 Economía General",
+        value=eco_status,
+        inline=True,
+    )
+    embed.add_field(
+        name="📈 Bolsa Sanvi (24/7)",
+        value=bolsa_status,
+        inline=True,
+    )
+    embed.add_field(
+        name="🏦 Jackpot Servidor",
+        value=f"{PORRO_EMOJI} **{jackpot:,}** Porros",
+        inline=False,
+    )
+    embed.add_field(
+        name="🏆 Yield Pool Semanal",
+        value=f"{PORRO_EMOJI} **{yield_pool:,.2f}** Porros",
+        inline=False,
+    )
+    embed.set_footer(text="Acceso restringido a Administradores • Paro de emergencia en tiempo real")
+    return embed
+
+
+class AdminHaltModal(discord.ui.Modal):
+    """Modal para ingresar el motivo de la pausa administrativa de Economía o Bolsa."""
+
+    def __init__(self, target: str):
+        target_name = "Economía" if target == "eco" else "Bolsa Sanvi"
+        super().__init__(title=f"⛔ Pausar {target_name}")
+        self.target = target
+        self.motivo_input = discord.ui.TextInput(
+            label="Motivo de la pausa",
+            placeholder="Ej: Mantenimiento técnico, auditoría o ajuste de parámetros...",
+            required=False,
+            max_length=200,
+            style=discord.TextStyle.short,
+        )
+        self.add_item(self.motivo_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        from modulos.economia_core import set_economy_halt
+        from modulos.bolsa_sanvi import set_market_halt
+
+        motivo = self.motivo_input.value.strip() or "Mantenimiento administrativo"
+        if self.target == "eco":
+            set_economy_halt(True, motivo)
+        else:
+            set_market_halt(True, motivo)
+
+        embed = build_admin_economia_embed()
+        view = AdminEconomiaControlView()
+        await interaction.response.edit_message(embed=embed, view=view)
+
+
+class AdminEconomiaControlView(discord.ui.View):
+    """Botonera interactiva en tiempo real para alternar paros de emergencia."""
+
+    def __init__(self):
+        super().__init__(timeout=None)
+        self._build_components()
+
+    def _build_components(self):
+        self.clear_items()
+        from modulos.economia_core import is_economy_halted
+        from modulos.bolsa_sanvi import is_market_halted
+
+        eco_halted = is_economy_halted()
+        bolsa_halted = is_market_halted()
+
+        # Fila 0: Control de Economía
+        if not eco_halted:
+            btn_eco = discord.ui.Button(
+                label="⛔ Pausar Economía",
+                style=discord.ButtonStyle.danger,
+                custom_id="admin_eco:halt_eco",
+                row=0,
+            )
+        else:
+            btn_eco = discord.ui.Button(
+                label="🟢 Reanudar Economía",
+                style=discord.ButtonStyle.success,
+                custom_id="admin_eco:resume_eco",
+                row=0,
+            )
+        self.add_item(btn_eco)
+
+        # Fila 1: Control de Bolsa
+        if not bolsa_halted:
+            btn_bolsa = discord.ui.Button(
+                label="⛔ Pausar Bolsa",
+                style=discord.ButtonStyle.danger,
+                custom_id="admin_eco:halt_bolsa",
+                row=1,
+            )
+        else:
+            btn_bolsa = discord.ui.Button(
+                label="🟢 Reanudar Bolsa",
+                style=discord.ButtonStyle.success,
+                custom_id="admin_eco:resume_bolsa",
+                row=1,
+            )
+        self.add_item(btn_bolsa)
+
+        # Fila 2: Refresco
+        btn_refresh = discord.ui.Button(
+            label="🔄 Refrescar Panel",
+            style=discord.ButtonStyle.primary,
+            custom_id="admin_eco:refresh",
+            row=2,
+        )
+        self.add_item(btn_refresh)
+
+
+async def handle_admin_eco_interaction(interaction: discord.Interaction) -> bool:
+    """Intermediario global para capturar y procesar cualquier botón del panel /admin_economia."""
+    if interaction.type != discord.InteractionType.component:
+        return False
+
+    custom_id = interaction.data.get("custom_id", "")
+    if not custom_id.startswith("admin_eco:"):
+        return False
+
+    is_admin = getattr(interaction.user.guild_permissions, "administrator", False) or (
+        interaction.user.id in {857923274771136522, 1170704124631846993}
+    )
+    if not is_admin:
+        await interaction.response.send_message(
+            "❌ Comando y controles exclusivos para Administradores del Servidor.",
+            ephemeral=True,
+        )
+        return True
+
+    action = custom_id.split(":", 1)[1] if ":" in custom_id else ""
+
+    if action == "halt_eco":
+        modal = AdminHaltModal(target="eco")
+        await interaction.response.send_modal(modal)
+        return True
+    elif action == "resume_eco":
+        from modulos.economia_core import set_economy_halt
+        set_economy_halt(False)
+        embed = build_admin_economia_embed()
+        view = AdminEconomiaControlView()
+        await interaction.response.edit_message(embed=embed, view=view)
+        return True
+    elif action == "halt_bolsa":
+        modal = AdminHaltModal(target="bolsa")
+        await interaction.response.send_modal(modal)
+        return True
+    elif action == "resume_bolsa":
+        from modulos.bolsa_sanvi import set_market_halt
+        set_market_halt(False)
+        embed = build_admin_economia_embed()
+        view = AdminEconomiaControlView()
+        await interaction.response.edit_message(embed=embed, view=view)
+        return True
+    elif action == "refresh":
+        embed = build_admin_economia_embed()
+        view = AdminEconomiaControlView()
+        await interaction.response.edit_message(embed=embed, view=view)
+        return True
+
+    return False
+
+
+@app_commands.command(
+    name="admin_economia",
+    description="Panel interactivo de supervisión y paro de emergencia de Economía y Bolsa (Solo Admins)",
+)
+async def cmd_admin_economia(interaction: discord.Interaction):
+    is_admin = getattr(interaction.user.guild_permissions, "administrator", False) or (
+        interaction.user.id in {857923274771136522, 1170704124631846993}
+    )
+    if not is_admin:
+        await interaction.response.send_message(
+            "❌ Comando exclusivo para Administradores del Servidor.", ephemeral=True
+        )
+        return
+
+    embed = build_admin_economia_embed()
+    view = AdminEconomiaControlView()
+    await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+
+
 ECONOMY_SLASH_COMMANDS = [
     cmd_slots,
     cmd_balance,
@@ -1224,6 +1471,7 @@ ECONOMY_SLASH_COMMANDS = [
     cmd_regalar,
     cmd_admin_dinero,
     cmd_admin_bolsa,
+    cmd_admin_economia,
     cmd_bolsa,
     cmd_cartera,
     cmd_aura,

@@ -30,6 +30,8 @@ from modulos.economia_core import (
     modify_server_jackpot,
     reset_server_jackpot,
     JACKPOT_FEED_PERCENT,
+    is_economy_halted,
+    get_economy_halt_reason,
 )
 
 MIN_SLOTS_BET = 100
@@ -436,6 +438,11 @@ def build_payouts_text() -> str:
 def handle_slots_spin(user_id: Any, bet: int) -> Tuple[bool, str, Optional[Dict[str, Any]], Optional[Dict[str, int]]]:
     """Ejecuta el ciclo de una tirada de slots 5x3 de forma segura."""
     uid = str(user_id)
+    if is_economy_halted():
+        r = get_economy_halt_reason()
+        reason_str = f" Motivo: {r}" if r else ""
+        return False, f"⛔ Las tragaperras y el casino están temporalmente pausados por administración.{reason_str}", None, None
+
     if bet < MIN_SLOTS_BET:
         return False, f"La apuesta mínima en la tragaperras es de {MIN_SLOTS_BET} Porros.", None, None
 

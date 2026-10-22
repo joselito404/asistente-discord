@@ -30,6 +30,8 @@ from modulos.economia_core import (
     get_balance,
     modify_balance,
     user_has_shield,
+    is_economy_halted,
+    get_economy_halt_reason,
 )
 
 # Catálogo Oficial de la Tienda (9 Ítems)
@@ -144,6 +146,11 @@ def buy_shop_item(
 ) -> Tuple[bool, str, Optional[Dict[str, Any]], Dict[str, int]]:
     """Compra un artículo de la tienda y añade el rol si procede."""
     uid = str(user_id)
+    if is_economy_halted():
+        r = get_economy_halt_reason()
+        reason_str = f" Motivo: {r}" if r else ""
+        return False, f"⛔ La tienda está temporalmente pausada por administración.{reason_str}", None, get_balance(uid)
+
     item_key_clean = item_key.strip().lower()
 
     # Mapeo flexible de identificadores
@@ -660,6 +667,11 @@ def gift_inventory_item(
     """
     f_uid = str(from_user_id)
     t_uid = str(to_user_id)
+
+    if is_economy_halted():
+        r = get_economy_halt_reason()
+        reason_str = f" Motivo: {r}" if r else ""
+        return False, f"⛔ Los regalos e intercambios están temporalmente pausados por administración.{reason_str}", None
 
     if f_uid == t_uid:
         return False, "❌ No puedes regalarte artículos a ti mismo.", None

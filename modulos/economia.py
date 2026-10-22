@@ -72,6 +72,9 @@ from modulos.economia_core import (
     _normalize_target_field,
     admin_modify_money,
     admin_airdrop_role,
+    is_economy_halted,
+    get_economy_halt_reason,
+    set_economy_halt,
 )
 
 from modulos.economia_tienda import (

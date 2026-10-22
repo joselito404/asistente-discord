@@ -489,10 +489,310 @@
           "spread_pool": 4.0,
           "spread_burned": 4.0,
           "timestamp": "2026-10-22T19:26:29.798195+00:00"
+        },
+        {
+          "id": "BUY_1792707578_999888",
+          "type": "BUY",
+          "user_id": "999888777666",
+          "shares": 50,
+          "price": 79.92,
+          "market_price": 79.52,
+          "cost": 3996,
+          "spread_pool": 10.0,
+          "spread_burned": 10.0,
+          "timestamp": "2026-10-22T22:19:38.756292+00:00"
+        },
+        {
+          "id": "SELL_1792707578_999888",
+          "type": "SELL",
+          "user_id": "999888777666",
+          "shares": 20,
+          "price": 81.1,
+          "market_price": 81.51,
+          "payout": 1622,
+          "spread_pool": 4.1,
+          "spread_burned": 4.1,
+          "timestamp": "2026-10-22T22:19:38.773930+00:00"
+        },
+        {
+          "id": "SELL_1792707578_999888",
+          "type": "SELL",
+          "user_id": "999888777666",
+          "shares": 30,
+          "price": 80.31,
+          "market_price": 80.71,
+          "payout": 2409,
+          "spread_pool": 6.0,
+          "spread_burned": 6.0,
+          "timestamp": "2026-10-22T22:19:38.791941+00:00"
+        },
+        {
+          "id": "BUY_1792707578_999888",
+          "type": "BUY",
+          "user_id": "999888777666",
+          "shares": 20,
+          "price": 79.92,
+          "market_price": 79.52,
+          "cost": 1598,
+          "spread_pool": 4.0,
+          "spread_burned": 4.0,
+          "timestamp": "2026-10-22T22:19:38.848607+00:00"
+        },
+        {
+          "id": "SELL_1792707578_999888",
+          "type": "SELL",
+          "user_id": "999888777666",
+          "shares": 20,
+          "price": 79.92,
+          "market_price": 80.32,
+          "payout": 1598,
+          "spread_pool": 4.0,
+          "spread_burned": 4.0,
+          "timestamp": "2026-10-22T22:19:38.869353+00:00"
+        },
+        {
+          "id": "BUY_1792707601_999888",
+          "type": "BUY",
+          "user_id": "999888777666",
+          "shares": 50,
+          "price": 79.92,
+          "market_price": 79.52,
+          "cost": 3996,
+          "spread_pool": 10.0,
+          "spread_burned": 10.0,
+          "timestamp": "2026-10-22T22:20:01.783924+00:00"
+        },
+        {
+          "id": "SELL_1792707601_999888",
+          "type": "SELL",
+          "user_id": "999888777666",
+          "shares": 20,
+          "price": 81.1,
+          "market_price": 81.51,
+          "payout": 1622,
+          "spread_pool": 4.1,
+          "spread_burned": 4.1,
+          "timestamp": "2026-10-22T22:20:01.803160+00:00"
+        },
+        {
+          "id": "SELL_1792707601_999888",
+          "type": "SELL",
+          "user_id": "999888777666",
+          "shares": 30,
+          "price": 80.31,
+          "market_price": 80.71,
+          "payout": 2409,
+          "spread_pool": 6.0,
+          "spread_burned": 6.0,
+          "timestamp": "2026-10-22T22:20:01.822969+00:00"
+        },
+        {
+          "id": "BUY_1792707601_999888",
+          "type": "BUY",
+          "user_id": "999888777666",
+          "shares": 20,
+          "price": 79.92,
+          "market_price": 79.52,
+          "cost": 1598,
+          "spread_pool": 4.0,
+          "spread_burned": 4.0,
+          "timestamp": "2026-10-22T22:20:01.882159+00:00"
+        },
+        {
+          "id": "SELL_1792707601_999888",
+          "type": "SELL",
+          "user_id": "999888777666",
+          "shares": 20,
+          "price": 79.92,
+          "market_price": 80.32,
+          "payout": 1598,
+          "spread_pool": 4.0,
+          "spread_burned": 4.0,
+          "timestamp": "2026-10-22T22:20:01.900772+00:00"
+        },
+        {
+          "id": "BUY_1792707629_999888",
+          "type": "BUY",
+          "user_id": "999888777666",
+          "shares": 50,
+          "price": 79.92,
+          "market_price": 79.52,
+          "cost": 3996,
+          "spread_pool": 10.0,
+          "spread_burned": 10.0,
+          "timestamp": "2026-10-22T22:20:29.839495+00:00"
+        },
+        {
+          "id": "SELL_1792707629_999888",
+          "type": "SELL",
+          "user_id": "999888777666",
+          "shares": 20,
+          "price": 81.1,
+          "market_price": 81.51,
+          "payout": 1622,
+          "spread_pool": 4.1,
+          "spread_burned": 4.1,
+          "timestamp": "2026-10-22T22:20:29.859527+00:00"
+        },
+        {
+          "id": "SELL_1792707629_999888",
+          "type": "SELL",
+          "user_id": "999888777666",
+          "shares": 30,
+          "price": 80.31,
+          "market_price": 80.71,
+          "payout": 2409,
+          "spread_pool": 6.0,
+          "spread_burned": 6.0,
+          "timestamp": "2026-10-22T22:20:29.878559+00:00"
+        },
+        {
+          "id": "BUY_1792707629_999888",
+          "type": "BUY",
+          "user_id": "999888777666",
+          "shares": 20,
+          "price": 79.92,
+          "market_price": 79.52,
+          "cost": 1598,
+          "spread_pool": 4.0,
+          "spread_burned": 4.0,
+          "timestamp": "2026-10-22T22:20:29.936220+00:00"
+        },
+        {
+          "id": "SELL_1792707629_999888",
+          "type": "SELL",
+          "user_id": "999888777666",
+          "shares": 20,
+          "price": 79.92,
+          "market_price": 80.32,
+          "payout": 1598,
+          "spread_pool": 4.0,
+          "spread_burned": 4.0,
+          "timestamp": "2026-10-22T22:20:29.954401+00:00"
+        },
+        {
+          "id": "BUY_1792710044_999888",
+          "type": "BUY",
+          "user_id": "999888777666",
+          "shares": 50,
+          "price": 79.92,
+          "market_price": 79.52,
+          "cost": 3996,
+          "spread_pool": 10.0,
+          "spread_burned": 10.0,
+          "timestamp": "2026-10-22T23:00:44.677846+00:00"
+        },
+        {
+          "id": "SELL_1792710044_999888",
+          "type": "SELL",
+          "user_id": "999888777666",
+          "shares": 20,
+          "price": 81.1,
+          "market_price": 81.51,
+          "payout": 1622,
+          "spread_pool": 4.1,
+          "spread_burned": 4.1,
+          "timestamp": "2026-10-22T23:00:44.697878+00:00"
+        },
+        {
+          "id": "SELL_1792710044_999888",
+          "type": "SELL",
+          "user_id": "999888777666",
+          "shares": 30,
+          "price": 80.31,
+          "market_price": 80.71,
+          "payout": 2409,
+          "spread_pool": 6.0,
+          "spread_burned": 6.0,
+          "timestamp": "2026-10-22T23:00:44.715556+00:00"
+        },
+        {
+          "id": "BUY_1792710044_999888",
+          "type": "BUY",
+          "user_id": "999888777666",
+          "shares": 20,
+          "price": 79.92,
+          "market_price": 79.52,
+          "cost": 1598,
+          "spread_pool": 4.0,
+          "spread_burned": 4.0,
+          "timestamp": "2026-10-22T23:00:44.778756+00:00"
+        },
+        {
+          "id": "SELL_1792710044_999888",
+          "type": "SELL",
+          "user_id": "999888777666",
+          "shares": 20,
+          "price": 79.92,
+          "market_price": 80.32,
+          "payout": 1598,
+          "spread_pool": 4.0,
+          "spread_burned": 4.0,
+          "timestamp": "2026-10-22T23:00:44.796772+00:00"
+        },
+        {
+          "id": "BUY_1792710071_999888",
+          "type": "BUY",
+          "user_id": "999888777666",
+          "shares": 50,
+          "price": 79.92,
+          "market_price": 79.52,
+          "cost": 3996,
+          "spread_pool": 10.0,
+          "spread_burned": 10.0,
+          "timestamp": "2026-10-22T23:01:12.000587+00:00"
+        },
+        {
+          "id": "SELL_1792710072_999888",
+          "type": "SELL",
+          "user_id": "999888777666",
+          "shares": 20,
+          "price": 81.1,
+          "market_price": 81.51,
+          "payout": 1622,
+          "spread_pool": 4.1,
+          "spread_burned": 4.1,
+          "timestamp": "2026-10-22T23:01:12.019068+00:00"
+        },
+        {
+          "id": "SELL_1792710072_999888",
+          "type": "SELL",
+          "user_id": "999888777666",
+          "shares": 30,
+          "price": 80.31,
+          "market_price": 80.71,
+          "payout": 2409,
+          "spread_pool": 6.0,
+          "spread_burned": 6.0,
+          "timestamp": "2026-10-22T23:01:12.038746+00:00"
+        },
+        {
+          "id": "BUY_1792710072_999888",
+          "type": "BUY",
+          "user_id": "999888777666",
+          "shares": 20,
+          "price": 79.92,
+          "market_price": 79.52,
+          "cost": 1598,
+          "spread_pool": 4.0,
+          "spread_burned": 4.0,
+          "timestamp": "2026-10-22T23:01:12.097299+00:00"
+        },
+        {
+          "id": "SELL_1792710072_999888",
+          "type": "SELL",
+          "user_id": "999888777666",
+          "shares": 20,
+          "price": 79.92,
+          "market_price": 80.32,
+          "payout": 1598,
+          "spread_pool": 4.0,
+          "spread_burned": 4.0,
+          "timestamp": "2026-10-22T23:01:12.116321+00:00"
         }
       ],
       "last_orders": {
-        "999888777666": 1792697189.789373
+        "999888777666": 1792710072.1068056
       }
     },
     "TERRE": {
@@ -696,10 +996,130 @@
           "spread_pool": 1.2,
           "spread_burned": 1.2,
           "timestamp": "2026-10-22T19:26:29.760025+00:00"
+        },
+        {
+          "id": "BUY_1792707578_999888",
+          "type": "BUY",
+          "user_id": "999888777666",
+          "shares": 10,
+          "price": 48.76,
+          "market_price": 48.52,
+          "cost": 488,
+          "spread_pool": 1.2,
+          "spread_burned": 1.2,
+          "timestamp": "2026-10-22T22:19:38.809930+00:00"
+        },
+        {
+          "id": "SELL_1792707578_999888",
+          "type": "SELL",
+          "user_id": "999888777666",
+          "shares": 10,
+          "price": 48.52,
+          "market_price": 48.76,
+          "payout": 485,
+          "spread_pool": 1.2,
+          "spread_burned": 1.2,
+          "timestamp": "2026-10-22T22:19:38.830030+00:00"
+        },
+        {
+          "id": "BUY_1792707601_999888",
+          "type": "BUY",
+          "user_id": "999888777666",
+          "shares": 10,
+          "price": 48.76,
+          "market_price": 48.52,
+          "cost": 488,
+          "spread_pool": 1.2,
+          "spread_burned": 1.2,
+          "timestamp": "2026-10-22T22:20:01.840518+00:00"
+        },
+        {
+          "id": "SELL_1792707601_999888",
+          "type": "SELL",
+          "user_id": "999888777666",
+          "shares": 10,
+          "price": 48.52,
+          "market_price": 48.76,
+          "payout": 485,
+          "spread_pool": 1.2,
+          "spread_burned": 1.2,
+          "timestamp": "2026-10-22T22:20:01.863049+00:00"
+        },
+        {
+          "id": "BUY_1792707629_999888",
+          "type": "BUY",
+          "user_id": "999888777666",
+          "shares": 10,
+          "price": 48.76,
+          "market_price": 48.52,
+          "cost": 488,
+          "spread_pool": 1.2,
+          "spread_burned": 1.2,
+          "timestamp": "2026-10-22T22:20:29.896704+00:00"
+        },
+        {
+          "id": "SELL_1792707629_999888",
+          "type": "SELL",
+          "user_id": "999888777666",
+          "shares": 10,
+          "price": 48.52,
+          "market_price": 48.76,
+          "payout": 485,
+          "spread_pool": 1.2,
+          "spread_burned": 1.2,
+          "timestamp": "2026-10-22T22:20:29.913991+00:00"
+        },
+        {
+          "id": "BUY_1792710044_999888",
+          "type": "BUY",
+          "user_id": "999888777666",
+          "shares": 10,
+          "price": 48.76,
+          "market_price": 48.52,
+          "cost": 488,
+          "spread_pool": 1.2,
+          "spread_burned": 1.2,
+          "timestamp": "2026-10-22T23:00:44.735609+00:00"
+        },
+        {
+          "id": "SELL_1792710044_999888",
+          "type": "SELL",
+          "user_id": "999888777666",
+          "shares": 10,
+          "price": 48.52,
+          "market_price": 48.76,
+          "payout": 485,
+          "spread_pool": 1.2,
+          "spread_burned": 1.2,
+          "timestamp": "2026-10-22T23:00:44.758138+00:00"
+        },
+        {
+          "id": "BUY_1792710072_999888",
+          "type": "BUY",
+          "user_id": "999888777666",
+          "shares": 10,
+          "price": 48.76,
+          "market_price": 48.52,
+          "cost": 488,
+          "spread_pool": 1.2,
+          "spread_burned": 1.2,
+          "timestamp": "2026-10-22T23:01:12.058191+00:00"
+        },
+        {
+          "id": "SELL_1792710072_999888",
+          "type": "SELL",
+          "user_id": "999888777666",
+          "shares": 10,
+          "price": 48.52,
+          "market_price": 48.76,
+          "payout": 485,
+          "spread_pool": 1.2,
+          "spread_burned": 1.2,
+          "timestamp": "2026-10-22T23:01:12.078047+00:00"
         }
       ],
       "last_orders": {
-        "999888777666": 1792697189.7510211
+        "999888777666": 1792710072.0695398
       }
     },
     "OMEN": {
@@ -729,6 +1149,8 @@
   },
   "meta": {
     "version": "1.0",
-    "updated_at": "2026-10-22T19:26:29.798195+00:00"
+    "updated_at": "2026-10-22T23:01:12.174622+00:00",
+    "emergency_halt": false,
+    "halt_reason": ""
   }
 }

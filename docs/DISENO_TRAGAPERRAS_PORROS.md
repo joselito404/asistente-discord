@@ -88,3 +88,15 @@ Rodillo 1    Rodillo 2    Rodillo 3    Rodillo 4    Rodillo 5
 - **Hit Rate**: **$73.83\%$** (premio en ~3 de cada 4 tiradas, dinamismo continuo gracias a las rachas consecutivas de 3 y 4 símbolos en cualquier posición de la línea).
 - **Frecuencia de Free Spins**: 1 de cada ~50 tiradas (1.952 eventos y 11.215 tiradas gratis jugadas en 100k).
 - **Frecuencia de Grand Jackpot**: 1 de cada ~15.000 tiradas.
+
+---
+
+## 7. Registro de Decisiones y Estado Canónico (Compuerta 5 — Regla Global §13)
+
+- [x] Formato de matriz $5 \times 3$ con 7 líneas de pago limpias y consecutivas en cualquier posición (`[Confirmada · Jose · 19/10/2026]`).
+- [x] Eliminación de Scatters/Free Spins molestos en slots puras, calibrada a RTP 110.0% (`[Confirmada · Jose · 19/10/2026]`).
+- [x] Bote progresivo alimentado con el 3% de pérdidas netas (`[Confirmada · Jose · 19/10/2026]`).
+- [x] Salarios progresivos por nivel con decaimiento del 5% diario (`[Confirmada · Jose · 19/10/2026]`).
+- [x] Paro de Emergencia Transaccional de Economía (`emergency_halt`): bloqueo total de juegos (slots, blackjack, ruleta, coinflip), ingresos (/trabajar, /crimen, /robar, /salario) y transferencias/banca, manteniendo /balance, /ranking e /inventario en modo sólo lectura (`[Confirmada · Jose · 23/10/2026]`).
+- [x] Panel Administrativo Interactivo (`/admin_economia`): panel exclusivo para Administradores con botones directos `[⛔ Pausar Economía]` / `[🟢 Reanudar Economía]` y `[⛔ Pausar Bolsa]` / `[🟢 Reanudar Bolsa]` con ventanas modales para el motivo (`[Confirmada · Jose · 23/10/2026]`).
+

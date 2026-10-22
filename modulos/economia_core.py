@@ -212,6 +212,33 @@ def save_economy_data(data: Optional[Dict[str, Any]] = None) -> None:
         safe_write_json(ECONOMY_DATA_PATH, _ECONOMY_CACHE)
 
 
+def is_economy_halted() -> bool:
+    """Indica si el sistema de economía está pausado administrativamente."""
+    with ECONOMY_LOCK:
+        data = load_economy_data()
+        meta = data.get("meta", {})
+        return bool(meta.get("emergency_halt", False))
+
+
+def get_economy_halt_reason() -> str:
+    """Devuelve el motivo del paro de emergencia de la economía si existe."""
+    with ECONOMY_LOCK:
+        data = load_economy_data()
+        meta = data.get("meta", {})
+        return str(meta.get("halt_reason", "") or "")
+
+
+def set_economy_halt(halted: bool, reason: str = "") -> None:
+    """Establece o retira el paro de emergencia de la economía de forma atómica."""
+    with ECONOMY_LOCK:
+        data = load_economy_data()
+        meta = data.setdefault("meta", {})
+        meta["emergency_halt"] = bool(halted)
+        meta["halt_reason"] = str(reason).strip() if halted else ""
+        save_economy_data(data)
+        _bot_log(f"Estado de economía actualizado: emergency_halt={halted}, reason='{reason}'")
+
+
 def ensure_user(user_id: Any, default_cash: int = DEFAULT_STARTING_CASH) -> Dict[str, Any]:
     """Garantiza que un usuario exista en la base de datos de economía con campos completos."""
     uid = str(user_id)
@@ -361,6 +388,10 @@ def deposit_cash(user_id: Any, amount: Union[int, str]) -> Tuple[bool, str, Dict
     uid = str(user_id)
     with ECONOMY_LOCK:
         bal = get_balance(uid)
+        if is_economy_halted():
+            r = get_economy_halt_reason()
+            reason_str = f" Motivo: {r}" if r else ""
+            return False, f"⛔ Las operaciones bancarias están temporalmente pausadas por administración.{reason_str}", bal
         cash = bal["cash"]
 
         if isinstance(amount, str):
@@ -391,6 +422,10 @@ def withdraw_cash(user_id: Any, amount: Union[int, str]) -> Tuple[bool, str, Dic
     uid = str(user_id)
     with ECONOMY_LOCK:
         bal = get_balance(uid)
+        if is_economy_halted():
+            r = get_economy_halt_reason()
+            reason_str = f" Motivo: {r}" if r else ""
+            return False, f"⛔ Las operaciones bancarias están temporalmente pausadas por administración.{reason_str}", bal
         bank = bal["bank"]
 
         if isinstance(amount, str):
@@ -438,6 +473,11 @@ def transfer_funds(
         return False, "La cantidad a transferir debe ser mayor a 0 Porros.", None, None
 
     with ECONOMY_LOCK:
+        if is_economy_halted():
+            r = get_economy_halt_reason()
+            reason_str = f" Motivo: {r}" if r else ""
+            return False, f"⛔ Las transferencias están temporalmente pausadas por administración.{reason_str}", None, None
+
         sender_bal = get_balance(from_uid)
         if sender_bal["cash"] < amount:
             return (
@@ -529,8 +569,12 @@ def get_level_role_multiplier(
     return 1.0, None
 
 
-def can_work(user_id: Any, cooldown_seconds: int = 14400) -> Tuple[bool, float]:
+def can_work(user_id: Any, cooldown_seconds: int = 14400) -> Tuple[bool, Union[float, str]]:
     """Comprueba si un usuario puede trabajar según su cooldown (por defecto 4 horas = 14400s)."""
+    if is_economy_halted():
+        r = get_economy_halt_reason()
+        return False, f"⛔ La economía está temporalmente pausada por administración.{' Motivo: ' + r if r else ''}"
+
     user = ensure_user(user_id)
     last_work_str = user.get("last_work")
     if not last_work_str:
@@ -558,8 +602,14 @@ def execute_work(
     """Ejecuta una jornada laboral y abona la recompensa con multiplicador de rol de nivel si no está en cooldown."""
     uid = str(user_id)
     with ECONOMY_LOCK:
+        if is_economy_halted():
+            r = get_economy_halt_reason()
+            return False, f"⛔ La economía está temporalmente pausada por administración.{' Motivo: ' + r if r else ''}", 0
+
         allowed, remaining = can_work(uid, cooldown_seconds)
         if not allowed:
+            if isinstance(remaining, str):
+                return False, remaining, 0
             hours = int(remaining // 3600)
             minutes = int((remaining % 3600) // 60)
             seconds = int(remaining % 60)
@@ -606,8 +656,12 @@ def execute_work(
 
 
 
-def can_crime(user_id: Any, cooldown_seconds: int = 43200) -> Tuple[bool, float]:
+def can_crime(user_id: Any, cooldown_seconds: int = 43200) -> Tuple[bool, Union[float, str]]:
     """Comprueba si un usuario puede cometer un delito (/crimen) según su cooldown (por defecto 12 horas = 43200s)."""
+    if is_economy_halted():
+        r = get_economy_halt_reason()
+        return False, f"⛔ La economía está temporalmente pausada por administración.{' Motivo: ' + r if r else ''}"
+
     user = ensure_user(user_id)
     last_crime_str = user.get("last_crime")
     if not last_crime_str:
@@ -641,8 +695,14 @@ def execute_crime(
     """
     uid = str(user_id)
     with ECONOMY_LOCK:
+        if is_economy_halted():
+            r = get_economy_halt_reason()
+            return False, f"⛔ La economía está temporalmente pausada por administración.{' Motivo: ' + r if r else ''}", 0
+
         allowed, remaining = can_crime(uid, cooldown_seconds)
         if not allowed:
+            if isinstance(remaining, str):
+                return False, remaining, 0
             hours = int(remaining // 3600)
             minutes = int((remaining % 3600) // 60)
             seconds = int(remaining % 60)
@@ -753,8 +813,12 @@ def user_has_shield(user_id: Any, member: Optional[Any] = None) -> bool:
     return False
 
 
-def can_rob(user_id: Any, cooldown_seconds: int = 86400) -> Tuple[bool, float]:
+def can_rob(user_id: Any, cooldown_seconds: int = 86400) -> Tuple[bool, Union[float, str]]:
     """Comprueba si un usuario puede robar según su cooldown (por defecto 24 horas)."""
+    if is_economy_halted():
+        r = get_economy_halt_reason()
+        return False, f"⛔ La economía está temporalmente pausada por administración.{' Motivo: ' + r if r else ''}"
+
     user = ensure_user(user_id)
     last_rob_str = user.get("last_rob")
     if not last_rob_str:
@@ -794,8 +858,14 @@ def execute_rob(
         return False, "❌ No puedes robarte a ti mismo. Ve al casino si quieres perder dinero.", 0
 
     with ECONOMY_LOCK:
+        if is_economy_halted():
+            r = get_economy_halt_reason()
+            return False, f"⛔ La economía está temporalmente pausada por administración.{' Motivo: ' + r if r else ''}", 0
+
         allowed, remaining = can_rob(r_uid, cooldown_seconds)
         if not allowed:
+            if isinstance(remaining, str):
+                return False, remaining, 0
             hours = int(remaining // 3600)
             mins = int((remaining % 3600) // 60)
             secs = int(remaining % 60)
@@ -993,8 +1063,12 @@ def calculate_accumulated_salary(
     return max(1, accumulated)
 
 
-def can_claim_salary(user_id: Any, cooldown_seconds: int = 86400) -> Tuple[bool, float]:
+def can_claim_salary(user_id: Any, cooldown_seconds: int = 86400) -> Tuple[bool, Union[float, str]]:
     """Comprueba si un usuario puede cobrar su salario acumulado (cooldown de 24 horas)."""
+    if is_economy_halted():
+        r = get_economy_halt_reason()
+        return False, f"⛔ Cobro de salarios temporalmente suspendido por administración.{' Motivo: ' + r if r else ''}"
+
     user = ensure_user(user_id)
     last_sal_str = user.get("last_salary")
     if not last_sal_str:
@@ -1024,6 +1098,9 @@ def claim_salary(
     """
     uid = str(user_id)
     with ECONOMY_LOCK:
+        if is_economy_halted():
+            return False, "⛔ Cobro de salarios temporalmente suspendido por administración.", 0, 0
+
         user = ensure_user(uid)
         last_sal_str = user.get("last_salary")
         daily_salary = calculate_daily_salary(member=member, user_roles=user_roles, user_level=user_level)
