@@ -287,6 +287,10 @@ Los indicadores cuantitativos se computan sobre la serie temporal de snapshots d
 - [x] Paro de Emergencia y Mantenimiento Técnico: el mercado solo se suspende manualmente ante contingencias o ajustes críticos mediante el interruptor administrativo `emergency_halt` (`[Confirmada · Jose · 22/10/2026]`).
 - [x] Temporalidades Intradía Reales para fases tempranas ratificadas: `[Trades]` (vela por orden), `[15m]` (velas 1 min), `[1h]` (velas 2 min), `[4h]` (velas 10 min) y `[1D]` (velas 30 min), con indicación explícita de resolución de vela en la cabecera/footer (`[Confirmada · Jose · 22/10/2026]`).
 - [x] Terminal Web Bursátil Interactiva en Render (`/bolsa`) ratificada: panel web servido en puerto 10000 con TradingView Lightweight Charts (velas interactivas, zoom, los 4 tickers, libro de órdenes y cartera) (`[Confirmada · Jose · 22/10/2026]`).
+- [x] Batería completa de 8 temporalidades ratificada (Discord y Web): incorporación de `[1S]` (velas de 4h, 42 velas), `[1M]` (velas de 1D, 30 velas) y `[MAX]` (velas de 1D/adaptativas desde el origen, hasta 60 velas) distribuidas en 2 filas de 4 botones (`[Trades, 15m, 1h, 4h]` y `[1D, 1S, 1M, MAX]`) (`[Confirmada · Jose · 23/10/2026]`).
+- [x] Selección nativa de Tickers sin escritura manual ratificada: `@app_commands.choices` en `/bolsa` + menú desplegable `Select` en la Fila 3 de la terminal para cambiar de ticker al instante (`[Confirmada · Jose · 23/10/2026]`).
+- [x] Unificación técnica de Informe IA y renderizado de emojis: fuente única de verdad (`get_ticker_technical_metrics`) entre la terminal y `generate_market_report`, conversión automática con `format_server_emojis` y presentación en Embed institucional coloreado según dictamen (`[Confirmada · Jose · 23/10/2026]`).
+- [x] Rediseño visual HD (960x540) de gráfica Pillow y Embed de Terminal: eliminación de rayas verdes en cubetas con `volume=0` (línea gris tenue sin barra de volumen), curva EMA 14 superpuesta, eje X con fechas/horas, caja de estadísticas (Máx/Mín/Vol) y barra de progreso de Float/Liquidez con emojis nativos del servidor (`[Confirmada · Jose · 23/10/2026]`).
 
 
 

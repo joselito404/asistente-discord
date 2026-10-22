@@ -1937,159 +1937,182 @@ def detect_crosses(ema_short: Optional[float], sma_long: Optional[float]) -> str
 
 
 
-# ==========================================
-
-# INFORME FINANCIERO DE ASISTENTE IA
-
-# ==========================================
-
-
-
-async def generate_market_report(ticker: str) -> str:
-
+def get_ticker_technical_metrics(ticker: str) -> Dict[str, Any]:
     """
-
-    Genera un informe analítico financiero institucional para un ticker.
-
-    Utiliza Gemini AI con fallback determinista impecable.
-
-    docs/DISENO_BOLSA_SANVI.md (§9.3)
-
+    Calcula y devuelve las métricas técnicas canónicas y unificadas de un ticker
+    (serie real de precios, RSI 14, medias móviles y señal de cruce), garantizando
+    consistencia del 100% entre el Embed de /bolsa, la Web Terminal y el Informe IA.
     """
-
     sym = ticker.upper().lstrip("$")
-
-    t_info = get_ticker_info(sym)
-
-    if not t_info:
-
-        return f"⚠️ Ticker **${sym}** no encontrado en la Bolsa Sanvi."
-
-
-
-    stats = get_member_stats(sym)
-
-    bv = calculate_book_value(stats["level"], stats["voice_hours"], stats["messages"])
-
-    e30 = calculate_earnings_30d(stats["delta_voice_hours"], stats["delta_messages"])
-
     base_price = calculate_base_price(sym)
-
     market_price = calculate_market_price(sym)
+    mercado = load_market_data()
+    t_data = mercado.get("tickers", {}).get(sym, {})
+    history = t_data.get("order_history", [])
 
-    quotes = get_bid_ask_prices(sym)
+    raw_prices = [
+        float(o.get("market_price") or o.get("price") or base_price)
+        for o in history
+        if isinstance(o, dict)
+    ]
 
+    if len(raw_prices) < 5:
+        price_series = [base_price] + raw_prices
+    else:
+        price_series = list(raw_prices)
 
+    if not price_series or abs(price_series[-1] - market_price) > 1e-4:
+        price_series.append(market_price)
 
-    # Simulación o lectura de serie para RSI y Medias
-
-    # Construimos una serie sintética congruente si la historia es corta
-
-    series = [base_price * 0.95, base_price * 0.98, base_price, market_price]
-
-    rsi = calculate_rsi(series, period=14)
-
-    mas = calculate_moving_averages(series)
-
+    rsi = calculate_rsi(price_series, period=14)
+    mas = calculate_moving_averages(price_series)
     cross_signal = detect_crosses(mas.get("ema_14"), mas.get("sma_50"))
 
+    return {
+        "price_series": price_series,
+        "rsi": rsi,
+        "mas": mas,
+        "cross_signal": cross_signal,
+        "base_price": base_price,
+        "market_price": market_price,
+    }
 
 
-    # Intentar invocación a Gemini
+def _format_and_sanitize_report_emojis(text: str, guild: Any = None) -> str:
+    """
+    Convierte shortcodes de emojis del servidor en menciones reales <:nombre:ID>
+    y limpia cualquier :shortcode: huérfano que no exista en el servidor.
+    """
+    if not text:
+        return text
 
-    prompt_context = (
+    import re as _re
 
-        f"Eres el Analista Financiero Jefe de Sanvi Capital en Discord ('El Lobo de Sanvi'). "
-
-        f"Genera un informe financiero en tono de colega pero técnicamente riguroso sobre la acción ${sym} ({t_info['name']}).\n"
-
-        f"Datos:\n"
-
-        f"- Valor Contable (Book Value): {bv:.2f} Porros (Lvl {stats['level']}, {stats['voice_hours']}h voz, {stats['messages']} msgs)\n"
-
-        f"- Rendimiento 30d (Earnings): +{e30:.2f} Porros\n"
-
-        f"- Precio Base (Aura Fundamental): {base_price:.2f} Porros\n"
-
-        f"- Precio de Mercado: {market_price:.2f} Porros (Ask: {quotes['ask']:.2f}, Bid: {quotes['bid']:.2f})\n"
-
-        f"- RSI (14 días): {rsi:.2f}\n"
-
-        f"- Señal Técnica: {cross_signal}\n"
-
-        f"Estructura obligatoria:\n"
-
-        f"1. 🏛️ Análisis Fundamental (Book Value y salud comunitaria)\n"
-
-        f"2. 📈 Momento Técnico (RSI y presión compradora)\n"
-
-        f"3. 🎯 Dictamen Sanvi Capital (Comprar / Mantener / Tomar Beneficios) y justificación en 2 frases."
-
-    )
-
-
+    # Alias frecuentes que el modelo puede emitir
+    alias_map = {
+        ":stonks:": "📈",
+        ":notstonks:": "📉",
+        ":rocket:": "🚀",
+        ":chart_with_upwards_trend:": "📈",
+        ":chart_with_downwards_trend:": "📉",
+        ":moneybag:": "💰",
+        ":gem:": "💎",
+        ":fire:": "🔥",
+        ":crown:": "👑",
+    }
+    for k, v in alias_map.items():
+        text = _re.sub(_re.escape(k), v, text, flags=_re.IGNORECASE)
 
     try:
-
         from modulos import chat_ia
+        if hasattr(chat_ia, "format_server_emojis"):
+            text = chat_ia.format_server_emojis(text, guild=guild)
+    except Exception:
+        pass
 
-        if hasattr(chat_ia, "call_gemini_multiturn"):
-
-            turns = [{"role": "user", "parts": [{"text": prompt_context}]}]
-
-            ai_text = await asyncio.to_thread(chat_ia.call_gemini_multiturn, turns)
-
-            if ai_text and "temporalmente saturada" not in ai_text:
-
-                return ai_text
-
-    except Exception as e:
-
-        _bot_log(f"Fallo en llamada IA, utilizando dictamen financiero determinista: {e}")
+    # Post-filtro: eliminar cualquier :shortcode: huérfano no convertido
+    text = _re.sub(r"(?<!<)(?<!<a):([a-zA-Z0-9_]+):(?!\d+>)", "", text)
+    # Limpiar posibles espacios dobles dejados tras borrar un shortcode
+    text = _re.sub(r" {2,}", " ", text)
+    return text.strip()
 
 
+# ==========================================
+# INFORME FINANCIERO DE ASISTENTE IA
+# ==========================================
 
-    # Fallback determinista estructurado
+async def generate_market_report(ticker: str, guild: Any = None) -> str:
+    """
+    Genera un informe analítico financiero institucional para un ticker.
+    Utiliza exactamente las mismas métricas que la terminal (/bolsa) vía get_ticker_technical_metrics
+    y convierte los emojis nativos del servidor.
+    docs/DISENO_BOLSA_SANVI.md (§9.3)
+    """
+    sym = ticker.upper().lstrip("$")
+    t_info = get_ticker_info(sym)
+    if not t_info:
+        return f"⚠️ Ticker **${sym}** no encontrado en la Bolsa Sanvi."
 
-    dictamen = "MANTENER (HOLD)"
+    stats = get_member_stats(sym)
+    bv = calculate_book_value(stats["level"], stats["voice_hours"], stats["messages"])
+    e30 = calculate_earnings_30d(stats["delta_voice_hours"], stats["delta_messages"])
+    quotes = get_bid_ask_prices(sym)
 
-    if rsi < 35 or market_price <= base_price * 1.02:
+    tech = get_ticker_technical_metrics(sym)
+    base_price = tech["base_price"]
+    market_price = tech["market_price"]
+    rsi = tech["rsi"]
+    mas = tech["mas"]
+    ema_14 = mas.get("ema_14") or market_price
+    sma_50 = mas.get("sma_50") or market_price
+    cross_signal = tech["cross_signal"]
 
-        dictamen = "COMPRAR (BUY THE DIP)"
+    if cross_signal == "GOLDEN_CROSS":
+        cross_desc = "Cruce Alcista (EMA 14 por encima de SMA 50)"
+    elif cross_signal == "DEATH_CROSS":
+        cross_desc = "Cruce Bajista / Consolidación (EMA 14 ligeramente por debajo de SMA 50)"
+    else:
+        cross_desc = "Tendencia Neutral (EMA 14 alineada con SMA 50)"
 
-    elif rsi > 70 or market_price >= base_price * 1.30:
+    if rsi >= 70:
+        rsi_state = "Sobrecompra"
+    elif rsi <= 30:
+        rsi_state = "Sobreventa"
+    else:
+        rsi_state = "Zona Neutral / Consolidación"
 
-        dictamen = "TOMAR BENEFICIOS (TAKE PROFIT)"
-
-
-
-    report = (
-
-        f"📊 **INFORME INSTITUCIONAL SANVI CAPITAL — ${sym} ({t_info['name']})**\n\n"
-
-        f"🏛️ **Fundamentales Contables (P_base):**\n"
-
-        f"• **Book Value (Suelo):** `{bv:.2f}` Porros *(Nivel {stats['level']} · {stats['voice_hours']}h voz · {stats['messages']} msgs)*\n"
-
-        f"• **Earnings Mensuales (30d):** `+{e30:.2f}` Porros *(50% voz / 50% chat)*\n"
-
-        f"• **Precio Fundamental Base:** `{base_price:.2f}` Porros\n\n"
-
-        f"📈 **Cotización de Mercado y Horquilla:**\n"
-
-        f"• **Precio de Mercado:** `{market_price:.2f}` Porros\n"
-
-        f"• **Ask (Compra):** `{quotes['ask']:.2f}` Porros | **Bid (Venta):** `{quotes['bid']:.2f}` Porros\n"
-
-        f"• **RSI (14 días):** `{rsi:.2f}` *(Señal: {cross_signal})*\n\n"
-
-        f"🎯 **Dictamen Sanvi Capital:** **`{dictamen}`**\n"
-
-        f"El suelo fundamental de ${sym} está sólidamente respaldado por su actividad en el servidor. "
-
-        f"La horquilla del 1% destina la mitad del spread directamente al Yield Pool de dividendos comunitarios."
-
+    # Intentar invocación a Gemini
+    prompt_context = (
+        f"Eres el Analista Financiero Jefe de Sanvi Capital en Discord ('El Lobo de Sanvi'). "
+        f"Genera un informe financiero con tono de colega experto, cercano y técnicamente riguroso sobre la acción ${sym} ({t_info['name']}).\n"
+        f"REGLAS ESTRICTAS DE CONSISTENCIA:\n"
+        f"1. Usa EXACTAMENTE las cifras siguientes sin contradecirlas jamás. Si el RSI es {rsi:.1f} ({rsi_state}), NO digas que está en sobrecompra ni inventes otro RSI.\n"
+        f"2. Explica la relación entre la EMA 14 ({ema_14:.2f}) y la SMA 50 ({sma_50:.2f}) en lenguaje natural ({cross_desc}), NUNCA escribas los identificadores crudos 'DEATH_CROSS' ni 'GOLDEN_CROSS'.\n"
+        f"3. Puedes usar emojis del servidor como :Porro:, :aura:, :gigachad:, :Messirve: o :cooked:, pero NUNCA inventes códigos :emoji: que no sean esos.\n\n"
+        f"Datos Oficiales en Tiempo Real de ${sym}:\n"
+        f"- Valor Contable (Book Value): {bv:.2f} Porros (Nivel {stats['level']}, {stats['voice_hours']}h voz, {stats['messages']} msgs)\n"
+        f"- Rendimiento 30d (Earnings): +{e30:.2f} Porros\n"
+        f"- Precio Base (Aura Fundamental): {base_price:.2f} Porros\n"
+        f"- Precio de Mercado: {market_price:.2f} Porros (Ask: {quotes['ask']:.2f}, Bid: {quotes['bid']:.2f})\n"
+        f"- RSI (14 periodos): {rsi:.1f} ({rsi_state})\n"
+        f"- Medias Móviles: EMA 14 = {ema_14:.2f} | SMA 50 = {sma_50:.2f} ({cross_desc})\n\n"
+        f"Estructura obligatoria (concisa y directa):\n"
+        f"1. 🏛️ **Análisis Fundamental** (Book Value, Earnings 30d y prima sobre el suelo de Aura)\n"
+        f"2. 📈 **Pulso Técnico** (RSI {rsi:.1f}, EMA 14 vs SMA 50 y horquilla Bid/Ask)\n"
+        f"3. 🎯 **Dictamen Sanvi Capital** (Comprar / Mantener / Tomar Beneficios) y justificación en 2 frases."
     )
 
-    return report
+    try:
+        from modulos import chat_ia
+        if hasattr(chat_ia, "call_gemini_multiturn"):
+            turns = [{"role": "user", "parts": [{"text": prompt_context}]}]
+            ai_text = await asyncio.to_thread(chat_ia.call_gemini_multiturn, turns)
+            if ai_text and "temporalmente saturada" not in ai_text:
+                return _format_and_sanitize_report_emojis(ai_text, guild=guild)
+    except Exception as e:
+        _bot_log(f"Fallo en llamada IA, utilizando dictamen financiero determinista: {e}")
+
+    # Fallback determinista estructurado 100% consistente
+    dictamen = "MANTENER (HOLD)"
+    if rsi < 35 or market_price <= base_price * 1.02:
+        dictamen = "COMPRAR (BUY THE DIP)"
+    elif rsi > 70 or market_price >= base_price * 1.30:
+        dictamen = "TOMAR BENEFICIOS (TAKE PROFIT)"
+
+    report = (
+        f"🏛️ **1. Análisis Fundamental (`P_base`):**\n"
+        f"• **Book Value (Suelo):** `{bv:.2f}` :Porro: *(Nivel {stats['level']} · {stats['voice_hours']}h voz · {stats['messages']} msgs)*\n"
+        f"• **Earnings Mensuales (30d):** `+{e30:.2f}` :Porro: *(50% voz / 50% chat)*\n"
+        f"• **Aura Fundamental Base:** `{base_price:.2f}` :aura:\n\n"
+        f"📈 **2. Pulso Técnico y Horquilla:**\n"
+        f"• **Cotización Actual:** `{market_price:.2f}` :Porro: *(Ask: `{quotes['ask']:.2f}` | Bid: `{quotes['bid']:.2f}`)*\n"
+        f"• **RSI (14 periodos):** `{rsi:.1f}` *({rsi_state})*\n"
+        f"• **Medias Móviles:** EMA 14 `{ema_14:.2f}` vs SMA 50 `{sma_50:.2f}` *({cross_desc})*\n\n"
+        f"🎯 **3. Dictamen Sanvi Capital:** **`{dictamen}`** :Messirve:\n"
+        f"El suelo contable de **${sym}** está respaldado por su actividad histórica en el servidor (:gigachad:). "
+        f"Con un RSI en `{rsi:.1f}` y horquilla del 1% que nutre el Yield Pool de dividendos, la estructura ofrece soporte sólido."
+    )
+
+    return _format_and_sanitize_report_emojis(report, guild=guild)
+
 

@@ -45,13 +45,13 @@ def get_bolsa_api_payload():
         user_shares = 10000 - amm_shares
         float_pct = round((user_shares / 10000.0) * 100.0, 2)
 
-        price_series = [o.get("price", base_p) for o in history] or [base_p]
-        rsi = bolsa_sanvi.calculate_rsi(price_series)
-        mas = bolsa_sanvi.calculate_moving_averages(price_series)
+        tech = bolsa_sanvi.get_ticker_technical_metrics(ticker)
+        rsi = tech["rsi"]
+        mas = tech["mas"]
 
-        # Generar series OHLCV para las 5 temporalidades
+        # Generar series OHLCV para las 8 temporalidades completas
         series = {}
-        for tf in ["Trades", "15m", "1h", "4h", "1D"]:
+        for tf in ["Trades", "15m", "1h", "4h", "1D", "1S", "1M", "MAX"]:
             candles = bolsa_graficas._normalize_or_generate_candles(
                 history_candles=history,
                 current_price=prices["market"],
@@ -622,6 +622,9 @@ def render_bolsa_html() -> str:
           <button class="tf-btn" onclick="setTimeframe('1h')">1h</button>
           <button class="tf-btn" onclick="setTimeframe('4h')">4h</button>
           <button class="tf-btn active" onclick="setTimeframe('1D')">1D</button>
+          <button class="tf-btn" onclick="setTimeframe('1S')">1S</button>
+          <button class="tf-btn" onclick="setTimeframe('1M')">1M</button>
+          <button class="tf-btn" onclick="setTimeframe('MAX')">MAX</button>
         </div>
       </div>
     </div>

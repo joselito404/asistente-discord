@@ -6,14 +6,19 @@ Suite de Pruebas Unitarias para el Motor Bursátil Sanvi Exchange:
 - Valida blindajes anti-ballenas (límite 500 acciones y cooldown 30s).
 - Valida Sinergia de Cartera y bonus multiplicador de /trabajar.
 - Valida indicadores técnicos institucionales (RSI 14, Medias Móviles y Cruces).
-- Valida renderizado gráfico de velas japonesas en Pillow (formato PNG válido).
+- Valida las 8 temporalidades completas ('Trades', '15m', '1h', '4h', '1D', '1S', '1M', 'MAX')
+  y el renderizado gráfico HD (960x540) en Pillow.
+- Valida unificación del 100% de métricas técnicas con Informe IA y conversión de emojis del servidor.
+- Valida estructura de BolsaTerminalView (2 filas de 4 botones de TF + 1 fila operativa + Select de tickers) y choices en /bolsa.
 """
 
+import asyncio
 import os
 import sys
 import io
 import time
 import unittest
+from PIL import Image
 
 # Asegurar importación de módulos en la raíz del proyecto
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -22,6 +27,7 @@ if BASE_DIR not in sys.path:
 
 from modulos import bolsa_sanvi
 from modulos import bolsa_graficas
+from modulos import comandos_bolsa
 from modulos import economia_core
 from modulos import web_server
 
@@ -188,8 +194,8 @@ class TestBolsaSanvi(unittest.TestCase):
         cross_death = bolsa_sanvi.detect_crosses(ema_short=45.0, sma_long=50.0)
         self.assertEqual(cross_death, "DEATH_CROSS")
 
-    def test_09_candlestick_chart_generation(self):
-        """Valida que el generador gráfico devuelva un buffer BytesIO con un PNG válido."""
+    def test_09_candlestick_chart_generation_hd(self):
+        """Valida que el generador gráfico devuelva un buffer BytesIO con un PNG HD (960x540) válido."""
         chart_buffer = bolsa_graficas.generate_candlestick_chart(
             ticker="JOSE",
             timeframe="1D",
@@ -199,9 +205,12 @@ class TestBolsaSanvi(unittest.TestCase):
         self.assertIsInstance(chart_buffer, io.BytesIO)
         content = chart_buffer.getvalue()
         self.assertGreater(len(content), 1000, "La imagen generada debe superar 1KB")
-        # Validar cabecera mágica de archivo PNG (\x89PNG\r\n\x1a\n)
         self.assertTrue(content.startswith(b"\x89PNG\r\n\x1a\n"), "El archivo generado no tiene cabecera PNG válida")
 
+        # Verificar resolución HD exacta 960x540
+        chart_buffer.seek(0)
+        with Image.open(chart_buffer) as img:
+            self.assertEqual(img.size, (960, 540))
 
     def test_10_emergency_halt(self):
         """Valida que el interruptor de paro de emergencia bloquee compras y ventas en 24/7."""
@@ -227,17 +236,13 @@ class TestBolsaSanvi(unittest.TestCase):
         self.assertTrue(res_resume["success"])
         self.assertFalse(bolsa_sanvi.is_market_halted())
 
-    def test_11_new_intraday_timeframes(self):
-        """Valida las 5 temporalidades reales intradía (Trades, 15m, 1h, 4h, 1D)."""
-        # 1. Validar diccionarios y resoluciones
-        self.assertIn("Trades", bolsa_graficas.TIMEFRAME_CONFIG)
-        self.assertIn("15m", bolsa_graficas.TIMEFRAME_CONFIG)
-        self.assertIn("1h", bolsa_graficas.TIMEFRAME_CONFIG)
-        self.assertIn("4h", bolsa_graficas.TIMEFRAME_CONFIG)
-        self.assertIn("1D", bolsa_graficas.TIMEFRAME_CONFIG)
+    def test_11_eight_timeframes_complete(self):
+        """Valida las 8 temporalidades completas (Trades, 15m, 1h, 4h, 1D, 1S, 1M, MAX) y sus PNGs HD."""
+        all_tfs = ["Trades", "15m", "1h", "4h", "1D", "1S", "1M", "MAX"]
+        for tf in all_tfs:
+            self.assertIn(tf, bolsa_graficas.TIMEFRAME_CONFIG)
+            self.assertEqual(bolsa_graficas.normalize_timeframe(tf), tf)
 
-        # 2. Generar series OHLCV para cada timeframe sin órdenes previas (serie plana suave)
-        for tf in ["Trades", "15m", "1h", "4h", "1D"]:
             candles = bolsa_graficas._normalize_or_generate_candles(
                 history_candles=[],
                 current_price=79.52,
@@ -246,7 +251,6 @@ class TestBolsaSanvi(unittest.TestCase):
             cfg = bolsa_graficas.TIMEFRAME_CONFIG[tf]
             expected_count = cfg["default_count"]
             self.assertEqual(len(candles), expected_count, f"Fallo en count de {tf}: {len(candles)} != {expected_count}")
-            # Validar que los campos clave existan y sean consistentes
             for c in candles:
                 self.assertIn("open", c)
                 self.assertIn("high", c)
@@ -255,7 +259,7 @@ class TestBolsaSanvi(unittest.TestCase):
                 self.assertIn("volume", c)
                 self.assertIn("time", c)
 
-            # Validar renderizado gráfico en Pillow para cada timeframe
+            # Validar renderizado gráfico HD (960x540) en Pillow para cada timeframe
             chart_buf = bolsa_graficas.generate_candlestick_chart(
                 ticker="JOSE",
                 timeframe=tf,
@@ -265,8 +269,11 @@ class TestBolsaSanvi(unittest.TestCase):
             self.assertIsInstance(chart_buf, io.BytesIO)
             data = chart_buf.getvalue()
             self.assertTrue(data.startswith(b"\x89PNG\r\n\x1a\n"))
+            chart_buf.seek(0)
+            with Image.open(chart_buf) as img:
+                self.assertEqual(img.size, (960, 540), f"Fallo tamaño HD en {tf}: {img.size}")
 
-        # 3. Validar Trades con historial real (proyección 1 vela por orden)
+        # Validar Trades con historial real (proyección 1 vela por orden)
         mock_trades = [
             {"price": 79.50, "shares": 10.0, "timestamp": "2026-10-22T20:00:00Z"},
             {"price": 80.20, "shares": 25.0, "timestamp": "2026-10-22T20:05:00Z"},
@@ -279,33 +286,24 @@ class TestBolsaSanvi(unittest.TestCase):
             target_count=30,
         )
         self.assertEqual(len(trade_candles), 30)
-        # Las últimas 3 velas deben corresponder a los mock trades
         self.assertEqual(trade_candles[-1]["close"], 80.50)
         self.assertEqual(trade_candles[-2]["close"], 80.20)
         self.assertEqual(trade_candles[-3]["close"], 79.50)
-        # Las velas de relleno previo deben ser planas (sin dientes de sierra ni volumen falso)
         self.assertEqual(trade_candles[0]["volume"], 0.0)
         self.assertEqual(trade_candles[0]["close"], 79.50)
 
     def test_12_web_terminal_endpoints(self):
-        """Valida la generación del HTML de /bolsa y el payload JSON de /api/bolsa/data."""
-        # 1. Validar render_bolsa_html
+        """Valida la generación del HTML de /bolsa y el payload JSON de /api/bolsa/data con las 8 temporalidades."""
         html_page = web_server.render_bolsa_html()
         self.assertIsInstance(html_page, str)
         self.assertIn("<!DOCTYPE html>", html_page)
         self.assertIn("lightweight-charts", html_page)
         self.assertIn("tv-chart", html_page)
-        self.assertIn("$JOSE", html_page)
-        self.assertIn("$TERRE", html_page)
-        self.assertIn("$OMEN", html_page)
-        self.assertIn("$RACER", html_page)
-        self.assertIn("Trades", html_page)
-        self.assertIn("15m", html_page)
-        self.assertIn("1h", html_page)
-        self.assertIn("4h", html_page)
-        self.assertIn("1D", html_page)
+        for sym in ["$JOSE", "$TERRE", "$OMEN", "$RACER"]:
+            self.assertIn(sym, html_page)
+        for tf in ["Trades", "15m", "1h", "4h", "1D", "1S", "1M", "MAX"]:
+            self.assertIn(tf, html_page)
 
-        # 2. Validar get_bolsa_api_payload
         payload = web_server.get_bolsa_api_payload()
         self.assertIsInstance(payload, dict)
         self.assertIn("timestamp", payload)
@@ -325,16 +323,81 @@ class TestBolsaSanvi(unittest.TestCase):
             self.assertIn("rsi_14", t_info)
             self.assertIn("series", t_info)
 
-            # Validar que cada ticker tenga las 5 series completas
+            # Validar que el RSI de la API coincida al 100% con get_ticker_technical_metrics
+            canon_tech = bolsa_sanvi.get_ticker_technical_metrics(sym)
+            self.assertEqual(t_info["rsi_14"], round(canon_tech["rsi"], 2))
+
             series = t_info["series"]
-            for tf in ["Trades", "15m", "1h", "4h", "1D"]:
+            for tf in ["Trades", "15m", "1h", "4h", "1D", "1S", "1M", "MAX"]:
                 self.assertIn(tf, series)
                 self.assertIn("candles", series[tf])
                 self.assertIn("volume", series[tf])
                 self.assertGreater(len(series[tf]["candles"]), 0)
-                # Validar monotonía en tiempo
                 times = [c["time"] for c in series[tf]["candles"]]
                 self.assertEqual(times, sorted(times))
+
+    def test_13_unified_technical_metrics_and_emoji_report(self):
+        """Valida consistencia del 100% entre get_ticker_technical_metrics, Informe IA y conversión de emojis."""
+        for sym in ["JOSE", "TERRE", "OMEN", "RACER"]:
+            tech = bolsa_sanvi.get_ticker_technical_metrics(sym)
+            self.assertIn("rsi", tech)
+            self.assertIn("mas", tech)
+            self.assertIn("cross_signal", tech)
+            self.assertGreaterEqual(tech["rsi"], 0.0)
+            self.assertLessEqual(tech["rsi"], 100.0)
+
+        # Validar sanitizador y conversor de emojis del servidor
+        import re as _re
+        raw_sample = "Análisis de :Porro: y :aura: con :cooked:, :Messirve:, :gigachad:, :stonks: y :inventado_123:"
+        formatted = bolsa_sanvi._format_and_sanitize_report_emojis(raw_sample, guild=None)
+        self.assertIsNone(_re.search(r"(?<!<)(?<!<a):([a-zA-Z0-9_]+):(?!\d+>)", formatted))
+        self.assertIn("<:Porro:1535685303317172305>", formatted)
+        self.assertIn("<:aura:1535728704129466462>", formatted)
+        self.assertIn("<:cooked:1535726716901789726>", formatted)
+        self.assertIn("<:Messirve:1535726367847743528>", formatted)
+        self.assertIn("<:gigachad:1535682070536519730>", formatted)
+        self.assertIn("📈", formatted)
+        self.assertNotIn("inventado_123", formatted)
+
+        # Validar generate_market_report y build_market_report_embed
+        report_text = asyncio.run(bolsa_sanvi.generate_market_report("JOSE", guild=None))
+        self.assertIsInstance(report_text, str)
+        self.assertGreater(len(report_text), 50)
+        self.assertIsNone(_re.search(r"(?<!<)(?<!<a):([a-zA-Z0-9_]+):(?!\d+>)", report_text))
+
+        report_embed = comandos_bolsa.build_market_report_embed("JOSE", report_text)
+        self.assertIn("$JOSE", report_embed.title)
+        self.assertEqual(len(report_embed.fields), 3)
+
+    def test_14_bolsa_terminal_view_and_choices(self):
+        """Valida la estructura de BolsaTerminalView (2 filas de 4 TF + operativa + Select) y choices de /bolsa."""
+        async def _check_view_and_embed():
+            embed, file, view = await comandos_bolsa.build_bolsa_terminal("JOSE", "1S")
+            self.assertIn("$JOSE", embed.title)
+            self.assertIn("<:Porro:1535685303317172305>", embed.description)
+            self.assertEqual(len(view.children), 13)  # 4 + 4 + 4 botones + 1 Select
+
+            row0_labels = [c.label for c in view.children if getattr(c, "row", None) == 0]
+            row1_labels = [c.label for c in view.children if getattr(c, "row", None) == 1]
+            row2_labels = [c.label for c in view.children if getattr(c, "row", None) == 2]
+            row3_items = [c for c in view.children if getattr(c, "row", None) == 3]
+
+            self.assertEqual(row0_labels, ["Trades", "15m", "1h", "4h"])
+            self.assertEqual(row1_labels, ["1D", "1S", "1M", "MAX"])
+            self.assertEqual(len(row2_labels), 4)
+            self.assertEqual(len(row3_items), 1)
+
+            select_item = row3_items[0]
+            option_values = [opt.value for opt in select_item.options]
+            self.assertEqual(option_values, ["JOSE", "TERRE", "OMEN", "RACER"])
+
+        asyncio.run(_check_view_and_embed())
+
+        # Validar choices nativos de /bolsa
+        params = comandos_bolsa.cmd_bolsa._params
+        self.assertIn("ticker", params)
+        choices = [c.value for c in params["ticker"].choices]
+        self.assertEqual(choices, ["JOSE", "TERRE", "OMEN", "RACER"])
 
 
 if __name__ == "__main__":

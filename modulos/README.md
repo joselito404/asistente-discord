@@ -81,19 +81,18 @@ Cualquier agente o desarrollador autorizado que trabaje en nuevas funcionalidade
     - Órdenes bursátiles con blindaje anti-ballenas (`execute_buy_order`, `execute_sell_order`): tope de 500 acciones por orden y cooldown de 30s.
     - Sinergia de Cartera y Utilidad Real (`get_user_portfolio_aura`, `get_user_portfolio_buff`): bono pasivo en `/trabajar` de +5% a +25%.
     - Bote de dividendos semanal (`distribute_weekly_dividends`): reparto ponderado en cuenta `bank` de los accionistas.
-    - Indicadores técnicos institucionales (`calculate_rsi`, `calculate_moving_averages`, `detect_crosses`) y analista financiero IA (`generate_market_report`).
-15. **`bolsa_graficas.py`**: Renderizado Gráfico de Velas Japonesas con Pillow (PIL):
-    - Gráficos institucionales estilo Trading 212 a 800x450 px (`generate_candlestick_chart`).
-    - Paleta de alto contraste: fondo negro puro (`#000000`), velas alcistas verde neón (`#00E676`), bajistas rojo vivo (`#FF5252`).
-    - Nuevas temporalidades intradía reales (`TIMEFRAME_CONFIG`): `Trades` (1 vela por orden ejecutada), `15m` (velas de 1m), `1h` (velas de 2m), `4h` (velas de 10m) y `1D` (velas de 30m).
-    - Cubetas vacías con precio plano de cierre previo (`open=close=prev_close`, `volume=0.0`) y relleno suave hacia atrás sin patrones artificiales ni oscilaciones inventadas.
-    - Badges explícitos en cabecera con resolución (ej: `[ TRADES · 1x orden ]`, `[ 15m · velas 1m ]`).
+    - Indicadores técnicos institucionales (`calculate_rsi`, `calculate_moving_averages`, `detect_crosses`), fuente única de métricas (`get_ticker_technical_metrics`) y analista financiero IA (`generate_market_report`, `_format_and_sanitize_report_emojis`).
+15. **`bolsa_graficas.py`**: Renderizado Gráfico HD de Velas Japonesas con Pillow (PIL):
+    - Gráficos institucionales estilo Trading 212 a **960x540 px HD** (`generate_candlestick_chart`).
+    - Paleta de alto contraste: fondo negro puro (`#000000`), velas alcistas verde neón (`#00E676`), bajistas rojo vivo (`#FF5252`), y trazo gris azulado (`#3A4659`) sin barra de volumen en cubetas planas con `volume=0`.
+    - **8 Temporalidades completas** (`TIMEFRAME_CONFIG`): `Trades` (1 vela por orden), `15m` (velas de 1m), `1h` (velas de 2m), `4h` (velas de 10m), `1D` (velas de 30m), `1S` (velas de 4h, 42 velas), `1M` (velas de 1D, 30 velas) y `MAX` (velas de 1D/adaptativas desde el origen, hasta 45-60 velas).
+    - Superposición de curva **EMA 14** (`#FFB300`), eje X inferior con fechas/horas reales y caja de estadísticas (`MÁX`, `MÍN`, `VOL`) junto al badge de resolución.
     - Subgráfico inferior de volumen, línea horizontal de cotización cian (`#00A3FF`) con badge flotante en el eje de precios y grid tenue (`#1E1E1E`).
     - Retorno de buffer `io.BytesIO` en formato PNG nativo para `discord.File`.
 16. **`web_server.py`**: Servidor HTTP en puerto 10000 para Render:
     - Endpoints de salud y logs: `GET /status`, `GET /logs`.
     - Streaming de audios: `GET /audios`, `GET /audios/zip`, `GET /api/audios`.
-    - **Terminal Web Bursátil**: `GET /bolsa` con interfaz oscura interactiva basada en **TradingView Lightweight Charts v4.2.0** (velas, volumen, zoom, selector de 4 tickers y 5 temporalidades, métricas en directo, libro de órdenes y dividendos).
+    - **Terminal Web Bursátil**: `GET /bolsa` con interfaz oscura interactiva basada en **TradingView Lightweight Charts v4.2.0** (velas, volumen, zoom, selector de 4 tickers y las 8 temporalidades `Trades, 15m, 1h, 4h, 1D, 1S, 1M, MAX`, métricas en directo, libro de órdenes y dividendos).
     - **API Bursátil en Tiempo Real**: `GET /api/bolsa/data` con cotizaciones, estadísticas, pool y series OHLCV monótonas en tiempo.
 
 ## Cómo se usa e integra con `bot_service.py`
