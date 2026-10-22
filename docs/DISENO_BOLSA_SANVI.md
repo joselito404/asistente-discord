@@ -285,6 +285,8 @@ Los indicadores cuantitativos se computan sobre la serie temporal de snapshots d
 - [x] Ponderación de Earnings 30d ratificada al 50/50: 1h voz = +0,50 Porros, 10 msgs = +0,50 Porros (`[Aprobado · Jose · 22/10/2026]`).
 - [x] Régimen Operativo Continuo 24/7 ratificado: negociación ininterrumpida los 7 días de la semana (`[Confirmada · Jose · 22/10/2026]`).
 - [x] Paro de Emergencia y Mantenimiento Técnico: el mercado solo se suspende manualmente ante contingencias o ajustes críticos mediante el interruptor administrativo `emergency_halt` (`[Confirmada · Jose · 22/10/2026]`).
+- [x] Temporalidades Intradía Reales para fases tempranas ratificadas: `[Trades]` (vela por orden), `[15m]` (velas 1 min), `[1h]` (velas 2 min), `[4h]` (velas 10 min) y `[1D]` (velas 30 min), con indicación explícita de resolución de vela en la cabecera/footer (`[Confirmada · Jose · 22/10/2026]`).
+- [x] Terminal Web Bursátil Interactiva en Render (`/bolsa`) ratificada: panel web servido en puerto 10000 con TradingView Lightweight Charts (velas interactivas, zoom, los 4 tickers, libro de órdenes y cartera) (`[Confirmada · Jose · 22/10/2026]`).
 
 
 
