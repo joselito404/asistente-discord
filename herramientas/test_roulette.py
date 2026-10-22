@@ -401,7 +401,7 @@ def run_tests():
             assert hasattr(bot_service, attr), f"bot_service debe reexportar {attr}"
 
         assert len(ECONOMY_SLASH_COMMANDS) == 20, f"Debe haber 20 comandos de economía, hay {len(ECONOMY_SLASH_COMMANDS)}"
-        assert len(ALL_SLASH_COMMANDS) == 42, f"Debe haber 42 comandos en total, hay {len(ALL_SLASH_COMMANDS)}"
+        assert len(ALL_SLASH_COMMANDS) == 43, f"Debe haber 43 comandos en total, hay {len(ALL_SLASH_COMMANDS)}"
         print("  ✅ TEST 8 PASADO: Presencia en ECONOMY_SLASH_COMMANDS y reexportación pública en bot_service confirmada.")
 
         print("\n" + "=" * 70)

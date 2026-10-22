@@ -853,259 +853,31 @@ def is_admin_or_mod(member_or_user) -> bool:
     return any(getattr(r, "id", 0) in (1446145987335950549, 1536783626199633940, 1446145803432235120) for r in roles)
 
 
-# --- SISTEMA DE SUGERENCIAS COMUNITARIAS 24/7 (REEMPLAZO DE CARL-BOT EN #💡sugerencias💡) ---
-SUGGESTIONS_CHANNEL_ID = 1537582722812481696
-# Estado de votos en memoria por message_id: {msg_id: {"up": set(user_ids), "down": set(user_ids), "base_up": int, "base_down": int}}
-SUGGESTION_VOTES_STATE = {}
+# --- REEXPORTACIÓN SUBSISTEMA DE SUGERENCIAS 2.0 (MODULOS.SUGERENCIAS) ---
+# Extraído de autoroles.py hacia modulos/sugerencias.py cumpliendo docs/DISENO_SUGERENCIAS_2.md.
+# Se mantienen los símbolos públicos para retrocompatibilidad 100%.
 
+from modulos.sugerencias import (
+    SUGGESTIONS_CHANNEL_ID,
+    SUGGESTIONS_DATA_PATH,
+    SUGGESTIONS_LOCK,
+    format_progress_bar,
+    build_suggestion_embed,
+    build_suggestions_hub_embed,
+    publish_suggestions_hub,
+    get_or_generate_ai_verdict,
+    SuggestionSubmitModal,
+    SuggestionDecisionModal,
+    SuggestionActiveView,
+    SuggestionClosedView,
+    SuggestionHubView,
+    handle_direct_suggestion,
+    # Símbolos legados
+    SuggestionPersistentView,
+    SUGGESTION_VOTES_STATE,
+    _extract_votes_from_embed,
+    _extract_vote_state_from_embed,
+    _update_suggestion_embed_votes,
+    _get_next_suggestion_number,
+)
 
-def _get_votes_state_dict() -> dict:
-    bs = _bs()
-    return getattr(bs, "SUGGESTION_VOTES_STATE", SUGGESTION_VOTES_STATE)
-
-
-def _extract_votes_from_embed(embed: discord.Embed) -> tuple:
-    """Extrae los contadores (up, down) actuales desde el campo Votos del embed como respaldo tras reinicios."""
-    if not embed or not getattr(embed, "fields", None):
-        return 0, 0
-    for f in embed.fields:
-        if "Votos" in (f.name or ""):
-            m = re.search(r"👍\s*\*\*(\d+)\*\*.*?👎\s*\*\*(\d+)\*\*", f.value or "")
-            if m:
-                return int(m.group(1)), int(m.group(2))
-    return 0, 0
-
-
-def _extract_vote_state_from_embed(embed: discord.Embed) -> dict:
-    """Reconstruye el estado completo de votantes (sets 'up' y 'down' + base_up/base_down) directamente
-    desde el embed de la sugerencia para que ni siquiera un reinicio o redespliegue de Render permita votos duplicados."""
-    b_up, b_down = _extract_votes_from_embed(embed)
-    up_ids = set()
-    down_ids = set()
-    if embed and getattr(embed, "fields", None):
-        for f in embed.fields:
-            if "Votos" in (f.name or ""):
-                for line in (f.value or "").splitlines()[1:]:
-                    line_s = line.strip()
-                    if line_s.startswith("👍:"):
-                        up_ids.update(int(x) for x in re.findall(r"<@!?(\d+)>", line_s))
-                    elif line_s.startswith("👎:"):
-                        down_ids.update(int(x) for x in re.findall(r"<@!?(\d+)>", line_s))
-
-    # Si no había línea explícita de votantes pero el footer tiene Autor ID y hay al menos 1 voto a favor, atribuir al autor
-    if not up_ids and not down_ids and b_up >= 1 and embed:
-        footer_txt = getattr(getattr(embed, "footer", None), "text", "") or ""
-        m_auth = re.search(r"Autor ID:\s*(\d+)", footer_txt)
-        if m_auth:
-            up_ids.add(int(m_auth.group(1)))
-
-    base_up = max(0, b_up - len(up_ids))
-    base_down = max(0, b_down - len(down_ids))
-    return {"up": up_ids, "down": down_ids, "base_up": base_up, "base_down": base_down}
-
-
-def _update_suggestion_embed_votes(embed: discord.Embed, up_count: int, down_count: int, up_ids: set = None, down_ids: set = None) -> discord.Embed:
-    """Actualiza el campo de votos y el registro de votantes en el embed de una sugerencia."""
-    d = embed.to_dict()
-    fields = d.get("fields", [])
-    lines = [f"👍 **{up_count}** a favor · 👎 **{down_count}** en contra"]
-    if up_ids:
-        lines.append("👍: " + ", ".join(f"<@{uid}>" for uid in sorted(up_ids)[:25]))
-    if down_ids:
-        lines.append("👎: " + ", ".join(f"<@{uid}>" for uid in sorted(down_ids)[:25]))
-    vote_str = "\n".join(lines)
-    updated = False
-    for f in fields:
-        if "Votos" in f.get("name", ""):
-            f["value"] = vote_str
-            updated = True
-            break
-    if not updated:
-        fields.append({"name": "🗳️ Votos", "value": vote_str, "inline": True})
-    d["fields"] = fields
-    return discord.Embed.from_dict(d)
-
-
-class SuggestionDecisionModal(discord.ui.Modal):
-    """Modal para que un administrador apruebe o rechace una sugerencia indicando el motivo."""
-
-    def __init__(self, action: str, suggestion_message: discord.Message):
-        title = "✅ Aprobar Sugerencia" if action == "approve" else "❌ Rechazar Sugerencia"
-        super().__init__(title=title)
-        self.action = action
-        self.suggestion_message = suggestion_message
-        self.reason_input = discord.ui.TextInput(
-            label="Motivo o comentario de la administración",
-            style=discord.TextStyle.paragraph,
-            placeholder="Ej: Todos los @🔮Pendejo Veterano🔮 votaron a favor / Inviable técnicamente...",
-            required=False,
-            max_length=500,
-        )
-        self.add_item(self.reason_input)
-
-    async def on_submit(self, interaction: discord.Interaction):
-        target_msg = getattr(interaction, "message", None) or self.suggestion_message
-        if not target_msg or not getattr(target_msg, "embeds", None):
-            await interaction.response.send_message("❌ No se encontró el embed de la sugerencia.", ephemeral=True)
-            return
-
-        await interaction.response.defer(ephemeral=True)
-        old_embed = target_msg.embeds[0]
-        d = old_embed.to_dict()
-        num_match = re.search(r"#(\d+)", d.get("title", ""))
-        sug_num = num_match.group(1) if num_match else "?"
-        reason_text = (self.reason_input.value or "").strip() or "Sin motivo especificado"
-        admin_name = interaction.user.display_name
-
-        if self.action == "approve":
-            d["title"] = f"✅ Sugerencia #{sug_num} Aprobada"
-            d["color"] = 0x10B981
-            status_val = f"✅ Aprobada por **{admin_name}**"
-        else:
-            d["title"] = f"❌ Sugerencia #{sug_num} Rechazada"
-            d["color"] = 0xEF4444
-            status_val = f"❌ Rechazada por **{admin_name}**"
-
-        fields = d.get("fields", [])
-        new_fields = []
-        for f in fields:
-            if "Estado" in f.get("name", ""):
-                new_fields.append({"name": "📊 Estado", "value": status_val, "inline": True})
-            elif not f.get("name", "").startswith("⚖️ Motivo de"):
-                new_fields.append(f)
-        new_fields.append({"name": f"⚖️ Motivo de {admin_name}", "value": reason_text, "inline": False})
-        d["fields"] = new_fields
-
-        up_c, down_c = _extract_votes_from_embed(old_embed)
-        closed_view = SuggestionPersistentView(up_count=up_c, down_count=down_c, disabled=True)
-        await target_msg.edit(embed=discord.Embed.from_dict(d), view=closed_view)
-        _bot_log(f"💡 [Sugerencia #{sug_num}] {'Aprobada' if self.action == 'approve' else 'Rechazada'} por {admin_name}: {reason_text}")
-        await interaction.followup.send(
-            f"✅ Has marcado la **Sugerencia #{sug_num}** como **{'Aprobada' if self.action == 'approve' else 'Rechazada'}**.",
-            ephemeral=True,
-        )
-
-
-class SuggestionPersistentView(discord.ui.View):
-    """Vista interactiva persistente 24/7 para votar y moderar sugerencias de la comunidad."""
-
-    def __init__(self, up_count: int = 0, down_count: int = 0, disabled: bool = False):
-        super().__init__(timeout=None)
-        btn_up = discord.ui.Button(
-            label=f"A favor ({up_count})",
-            style=discord.ButtonStyle.success,
-            emoji="👍",
-            custom_id="sugerencia:vote:up",
-            disabled=disabled,
-            row=0,
-        )
-        btn_up.callback = self.on_vote_up
-        self.add_item(btn_up)
-
-        btn_down = discord.ui.Button(
-            label=f"En contra ({down_count})",
-            style=discord.ButtonStyle.secondary,
-            emoji="👎",
-            custom_id="sugerencia:vote:down",
-            disabled=disabled,
-            row=0,
-        )
-        btn_down.callback = self.on_vote_down
-        self.add_item(btn_down)
-
-        btn_approve = discord.ui.Button(
-            label="Aprobar",
-            style=discord.ButtonStyle.primary,
-            emoji="✅",
-            custom_id="sugerencia:mod:approve",
-            disabled=disabled,
-            row=0,
-        )
-        btn_approve.callback = self.on_approve
-        self.add_item(btn_approve)
-
-        btn_reject = discord.ui.Button(
-            label="Rechazar",
-            style=discord.ButtonStyle.danger,
-            emoji="❌",
-            custom_id="sugerencia:mod:reject",
-            disabled=disabled,
-            row=0,
-        )
-        btn_reject.callback = self.on_reject
-        self.add_item(btn_reject)
-
-    async def _handle_vote(self, interaction: discord.Interaction, direction: str):
-        msg = interaction.message
-        if not msg or not msg.embeds:
-            await interaction.response.send_message("❌ No se pudo leer la sugerencia.", ephemeral=True)
-            return
-
-        emb = msg.embeds[0]
-        votes_dict = _get_votes_state_dict()
-        state = votes_dict.get(msg.id)
-        if state is None:
-            state = _extract_vote_state_from_embed(emb)
-            votes_dict[msg.id] = state
-
-        uid = interaction.user.id
-        if direction == "up":
-            if uid in state["up"]:
-                state["up"].remove(uid)
-                notice = "ℹ️ Has retirado tu voto a favor."
-            else:
-                state["down"].discard(uid)
-                state["up"].add(uid)
-                notice = "👍 ¡Voto a favor registrado!"
-        else:
-            if uid in state["down"]:
-                state["down"].remove(uid)
-                notice = "ℹ️ Has retirado tu voto en contra."
-            else:
-                state["up"].discard(uid)
-                state["down"].add(uid)
-                notice = "👎 Voto en contra registrado."
-
-        up_total = state["base_up"] + len(state["up"])
-        down_total = state["base_down"] + len(state["down"])
-        new_emb = _update_suggestion_embed_votes(emb, up_total, down_total, state["up"], state["down"])
-        new_view = SuggestionPersistentView(up_count=up_total, down_count=down_total, disabled=False)
-        await interaction.response.edit_message(embed=new_emb, view=new_view)
-        await interaction.followup.send(notice, ephemeral=True)
-
-    async def on_vote_up(self, interaction: discord.Interaction):
-        await self._handle_vote(interaction, "up")
-
-    async def on_vote_down(self, interaction: discord.Interaction):
-        await self._handle_vote(interaction, "down")
-
-    async def on_approve(self, interaction: discord.Interaction):
-        member = await _resolve_guild_member(interaction)
-        if not is_admin_or_mod(member or interaction.user):
-            await interaction.response.send_message("❌ Solo los administradores pueden aprobar o rechazar sugerencias.", ephemeral=True)
-            return
-        await interaction.response.send_modal(SuggestionDecisionModal("approve", interaction.message))
-
-    async def on_reject(self, interaction: discord.Interaction):
-        member = await _resolve_guild_member(interaction)
-        if not is_admin_or_mod(member or interaction.user):
-            await interaction.response.send_message("❌ Solo los administradores pueden aprobar o rechazar sugerencias.", ephemeral=True)
-            return
-        await interaction.response.send_modal(SuggestionDecisionModal("reject", interaction.message))
-
-
-async def _get_next_suggestion_number(channel: discord.TextChannel) -> int:
-    """Obtiene el siguiente número correlativo de sugerencia leyendo el historial de #sugerencias."""
-    highest = 8  # Carl-bot llegó hasta Suggestion #8
-    try:
-        async for m in channel.history(limit=35):
-            for emb in getattr(m, "embeds", []):
-                t = getattr(emb, "title", "") or ""
-                match = re.search(r"(?:Suggestion|Sugerencia)\s*#(\d+)", t, re.IGNORECASE)
-                if match:
-                    num = int(match.group(1))
-                    if num > highest:
-                        highest = num
-    except Exception:
-        pass
-    return highest + 1

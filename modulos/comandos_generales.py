@@ -1,15 +1,15 @@
 """
 Módulo de Comandos Slash Nativos para los bots 'Asistente' y 'Economia Asistente' en Discord:
-Contiene los 41 comandos interactivos oficiales (@app_commands.command) divididos en Runner Dual:
-- Comandos Generales del Asistente (22):
+Contiene los 43 comandos interactivos oficiales (@app_commands.command) divididos en Runner Dual:
+- Comandos Generales del Asistente (23):
   * Multimedia y Arte: /dibuja, /musica
   * Gaming y Catálogo: /steam, /tribunal
   * Asistencia y Lore: /perfil, /pregunta, /voz, /recuerda, /xp
   * Voz Neuronal y Gemini Live: /habla, /geminilive, /cambiar_voz, /unete, /desconecta, /para_audio
   * Minijuegos del Servidor: /trivial, /ranking_trivial, /tres_en_raya, /conecta4, /ajedrez
-  * Moderación y Reemplazo de Carl-bot: /autoroles, /sugerencia
-- Comandos de Economía y Casino de Economia Asistente (19):
-  * Economía de Porros y Casino: /slots, /balance, /trabajar, /transferir, /depositar, /retirar, /robar, /tienda, /salario, /blackjack, /bj, /ruleta, /coinflip, /casino, /crimen, /ranking, /inventario, /usar, /admin_dinero
+  * Moderación y Reemplazo de Carl-bot: /autoroles, /sugerencia, /panel_sugerencias
+- Comandos de Economía y Casino de Economia Asistente (20):
+  * Economía de Porros y Casino: /slots, /balance, /trabajar, /transferir, /depositar, /retirar, /robar, /tienda, /salario, /blackjack, /bj, /ruleta, /coinflip, /casino, /crimen, /ranking, /inventario, /usar, /admin_dinero, /ajustes_dinero
 """
 
 import os
@@ -1063,10 +1063,15 @@ from modulos.autoroles import (
     AutoRolesPersistentView,
     _resolve_guild_member,
     is_admin_or_mod,
+)
+from modulos.sugerencias import (
     SUGGESTIONS_CHANNEL_ID,
     SUGGESTION_VOTES_STATE,
-    SuggestionPersistentView,
+    SuggestionSubmitModal,
+    publish_suggestions_hub,
+    handle_direct_suggestion,
     _get_next_suggestion_number,
+    SuggestionPersistentView,
 )
 
 
@@ -1117,64 +1122,55 @@ async def cmd_autoroles(interaction: discord.Interaction, canal: discord.TextCha
         await interaction.followup.send(f"❌ Error al publicar el panel de Auto-Roles: {e}", ephemeral=True)
 
 
-@app_commands.command(name="sugerencia", description="Envía una propuesta a #💡sugerencias💡 para votación comunitaria (Reemplazo de Carl-bot)")
-@app_commands.describe(idea="Describe tu sugerencia o mejora para el servidor")
-async def cmd_sugerencia(interaction: discord.Interaction, idea: str):
+@app_commands.command(name="sugerencia", description="Propón una idea para el servidor con votación e hilos de debate comunitarios")
+@app_commands.describe(idea="Idea o propuesta directa (opcional; si se omite, abre el modal guiado)")
+async def cmd_sugerencia(interaction: discord.Interaction, idea: Optional[str] = None):
     if not interaction.guild:
         await interaction.response.send_message("❌ Este comando solo funciona en el servidor.", ephemeral=True)
         return
 
-    clean_idea = idea.strip()
-    if len(clean_idea) < 5:
-        await interaction.response.send_message("⚠️ Describe tu sugerencia con un poco más de detalle (mínimo 5 caracteres).", ephemeral=True)
+    if not idea:
+        await interaction.response.send_modal(SuggestionSubmitModal())
+        return
+
+    await handle_direct_suggestion(interaction, idea)
+
+
+@app_commands.command(name="panel_sugerencias", description="Publica el panel fijado 24/7 del Buzón de Sugerencias con botón de propuesta")
+@app_commands.default_permissions(administrator=True)
+async def cmd_panel_sugerencias(interaction: discord.Interaction):
+    if not interaction.guild:
+        await interaction.response.send_message("❌ Este comando solo funciona en el servidor.", ephemeral=True)
+        return
+
+    member = await _resolve_guild_member(interaction)
+    if not is_admin_or_mod(member or interaction.user):
+        await interaction.response.send_message("❌ Solo los administradores o moderadores pueden publicar el panel de sugerencias.", ephemeral=True)
         return
 
     await interaction.response.defer(ephemeral=True)
-    sug_channel = interaction.guild.get_channel(SUGGESTIONS_CHANNEL_ID)
-    if not sug_channel or not isinstance(sug_channel, discord.TextChannel):
-        sug_channel = discord.utils.find(lambda c: "sugerencia" in c.name.lower(), interaction.guild.text_channels) or interaction.channel
+    target_channel = interaction.guild.get_channel(SUGGESTIONS_CHANNEL_ID)
+    if not target_channel or not isinstance(target_channel, discord.TextChannel):
+        target_channel = (
+            discord.utils.find(lambda c: "sugerencia" in c.name.lower(), interaction.guild.text_channels)
+            or interaction.channel
+        )
 
-    next_num = await _get_next_suggestion_number(sug_channel)
-    embed = discord.Embed(
-        title=f"💡 Sugerencia #{next_num}",
-        description=clean_idea,
-        color=0x3B82F6,
-        timestamp=datetime.now(timezone.utc),
-    )
-    embed.set_author(
-        name=f"{interaction.user.display_name} (@{interaction.user.name})",
-        icon_url=str(interaction.user.display_avatar.url),
-    )
-    embed.add_field(name="📊 Estado", value="⏳ En votación comunitaria", inline=True)
-    embed.add_field(
-        name="🗳️ Votos",
-        value=f"👍 **1** a favor · 👎 **0** en contra\n👍: <@{interaction.user.id}>",
-        inline=True,
-    )
-    embed.set_footer(text=f"Autor ID: {interaction.user.id} • Usa /sugerencia para proponer ideas")
-
-    view = SuggestionPersistentView(up_count=1, down_count=0, disabled=False)
-    sent_msg = await sug_channel.send(embed=embed, view=view)
-    SUGGESTION_VOTES_STATE[sent_msg.id] = {
-        "up": {interaction.user.id},
-        "down": set(),
-        "base_up": 0,
-        "base_down": 0,
-    }
-    _bot_log(f"💡 [Sugerencia #{next_num}] Creada por {interaction.user.display_name} en #{sug_channel.name}.")
-    await interaction.followup.send(
-        f"✅ ¡Tu **Sugerencia #{next_num}** ha sido publicada en <#{sug_channel.id}> para votación comunitaria!",
-        ephemeral=True,
-    )
-
-
-
+    try:
+        await publish_suggestions_hub(target_channel)
+        _bot_log(f"💡 [Sugerencias 2.0] Panel fijado publicado en #{target_channel.name} por {interaction.user.display_name}.")
+        await interaction.followup.send(
+            f"✅ Panel interactivo del Buzón de Sugerencias publicado correctamente en <#{target_channel.id}>.",
+            ephemeral=True,
+        )
+    except Exception as e:
+        await interaction.followup.send(f"❌ Error al publicar el panel de sugerencias: {e}", ephemeral=True)
 
 
 # ==========================================
-# 22 COMANDOS GENERALES (BOT 'ASISTENTE')
+# 23 COMANDOS GENERALES (BOT 'ASISTENTE')
 # ==========================================
-# 22 Comandos Generales para el Bot 'Asistente'
+# 23 Comandos Generales para el Bot 'Asistente'
 GENERAL_SLASH_COMMANDS = [
     cmd_dibuja,
     cmd_musica,
@@ -1198,12 +1194,12 @@ GENERAL_SLASH_COMMANDS = [
     cmd_ajedrez,
     cmd_autoroles,
     cmd_sugerencia,
+    cmd_panel_sugerencias,
 ]
 
 
-
 def register_general_commands(tree: app_commands.CommandTree):
-    """Registra los 22 comandos slash generales en el árbol del bot Asistente."""
+    """Registra los 23 comandos slash generales en el árbol del bot Asistente."""
     for cmd in GENERAL_SLASH_COMMANDS:
         try:
             tree.add_command(cmd)
@@ -1211,6 +1207,7 @@ def register_general_commands(tree: app_commands.CommandTree):
             pass
         except Exception as e:
             _bot_log(f"Aviso registrando comando general /{cmd.name}: {e}")
+
 
 
 

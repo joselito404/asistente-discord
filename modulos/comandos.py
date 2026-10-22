@@ -1,6 +1,6 @@
 """
 Fachada de Reexportación y Compatibilidad de Comandos Slash para 'Asistente':
-- Reexporta los 22 comandos de modulos.comandos_generales (Bot Asistente).
+- Reexporta los 23 comandos de modulos.comandos_generales (Bot Asistente).
 - Reexporta los 20 comandos de modulos.comandos_economia (Bot Economia Asistente).
 - Proporciona ALL_SLASH_COMMANDS y register_slash_commands para retrocompatibilidad total.
 """
@@ -32,6 +32,7 @@ from modulos.comandos_generales import (
     cmd_ajedrez,
     cmd_autoroles,
     cmd_sugerencia,
+    cmd_panel_sugerencias,
     # Componentes y helpers generales reexportados
     _bs,
     _bot_log,
@@ -97,7 +98,7 @@ from modulos.comandos_economia import (
     cmd_admin_dinero,
 )
 
-# Total de 42 comandos para retrocompatibilidad total
+# Total de 43 comandos para retrocompatibilidad total
 ALL_SLASH_COMMANDS = GENERAL_SLASH_COMMANDS + ECONOMY_SLASH_COMMANDS
 
 

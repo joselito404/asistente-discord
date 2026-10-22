@@ -31,6 +31,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATOS_DIR = os.path.join(BASE_DIR, "datos")
 ECONOMIA_PATH = os.path.join(DATOS_DIR, "economia.json")
 USER_MEMORY_PATH = os.path.join(DATOS_DIR, "user_memory.json")
+SUGGESTIONS_PATH = os.path.join(DATOS_DIR, "sugerencias.json")
 
 # Control de cambios para evitar respaldos innecesarios idénticos
 _LAST_BACKUP_MTIMES: Dict[str, float] = {}
@@ -130,6 +131,7 @@ async def restore_from_discord(client: discord.Client, guild_id: int = GUILD_ID)
     target_files = {
         "economia.json": ECONOMIA_PATH,
         "user_memory.json": USER_MEMORY_PATH,
+        "sugerencias.json": SUGGESTIONS_PATH,
     }
     found_targets = set()
 
@@ -217,7 +219,7 @@ async def backup_to_discord(client: discord.Client, guild_id: int = GUILD_ID, re
         files_info: List[str] = []
         now_utc = datetime.now(timezone.utc)
 
-        for fname, fpath in [("economia.json", ECONOMIA_PATH), ("user_memory.json", USER_MEMORY_PATH)]:
+        for fname, fpath in [("economia.json", ECONOMIA_PATH), ("user_memory.json", USER_MEMORY_PATH), ("sugerencias.json", SUGGESTIONS_PATH)]:
             if os.path.exists(fpath):
                 size_bytes = os.path.getsize(fpath)
                 mtime = os.path.getmtime(fpath)
@@ -261,7 +263,7 @@ async def backup_to_discord(client: discord.Client, guild_id: int = GUILD_ID, re
 
 def _has_data_mutated() -> bool:
     """Comprueba si alguno de los archivos clave fue modificado desde el último backup."""
-    for fname, fpath in [("economia.json", ECONOMIA_PATH), ("user_memory.json", USER_MEMORY_PATH)]:
+    for fname, fpath in [("economia.json", ECONOMIA_PATH), ("user_memory.json", USER_MEMORY_PATH), ("sugerencias.json", SUGGESTIONS_PATH)]:
         if os.path.exists(fpath):
             current_mtime = os.path.getmtime(fpath)
             last_mtime = _LAST_BACKUP_MTIMES.get(fname, 0.0)

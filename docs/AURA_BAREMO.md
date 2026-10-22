@@ -156,22 +156,30 @@ Aprobado en la hoja de ruta sustituir a Cakey Bot por un **Sistema de Niveles Na
 
 ## 📈 Integración con la Bolsa Sanvi (`Sanvi Exchange`)
 
-El Aura Total alimenta la valoración bursátil de cada miembro cotizado según la arquitectura de dos horizontes ratificada en [`docs/DISENO_BOLSA_SANVI.md`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/DISENO_BOLSA_SANVI.md):
+> **Estado:** `Ratificado por Jose` `[Aprobado · Jose · 22/10/2026]`
 
-$$\text{Precio Acción} = \text{Book Value (Patrimonio Histórico)} + (\text{PER} \times \text{Rendimiento Mensual})$$
+El Aura se define formalmente como el **Precio Fundamental Base ($P_{\text{base}}$)** de cada miembro cotizado en el mercado, erradicando escalas arbitrarias desconectadas y unificando la economía y el prestigio:
 
-- **Patrimonio Histórico (*Book Value / Equity*)**: El Pilar 3 del Aura (trayectoria histórica, nivel y horas de por vida desde Cakey Bot) establece el suelo patrimonial inmutable que impide la quiebra.
-- **Rendimiento Mensual (*Earnings*)**: Los Pilares 1 y 2 (actividad móvil de 30 días) alimentan los beneficios recientes que, al multiplicarse por el PER de mercado, generan las subidas y bajadas de cotización.
+$$P_{\text{base}} = \text{Aura} = \text{Book Value (Patrimonio Histórico)} + \text{Rendimiento Mensual (Earnings}_{30d})$$
+
+- **Patrimonio Histórico (*Book Value / Equity*)**: La trayectoria acumulada de por vida extraída de Cakey Bot establece el suelo patrimonial inmutable que impide la quiebra:
+  $$BV = 10 + (0{,}8 \times \text{Nivel}) + (0{,}2 \times \text{Horas Históricas Voz}) + (0{,}01 \times \text{Mensajes Históricos})$$
+- **Rendimiento Mensual (*Trailing 30-Day Earnings*)**: Mide la actividad reciente (voz y chat de los últimos 30 días) calculada limpiamente mediante la **diferencia entre snapshots diarios de Cakey Bot** (`datos/cakey_history.json`):
+  $$E_{30d} = (0{,}4 \times \Delta\text{Horas Voz}_{30d}) + (0{,}05 \times \Delta\text{Mensajes}_{30d})$$
+- **Precio Final de Mercado ($P_{\text{mercado}}$)**: La presión compradora y vendedora de los miembros en el Market Maker ajusta la cotización:
+  $$P_{\text{mercado}} = P_{\text{base}} \times \left(1 + \frac{\text{Acciones en Cartera de Usuarios} - 100}{2.000}\right)$$
 
 ---
 
 ## 📋 Registro de Decisiones y Estado Canónico (Compuerta 5 — Regla Global §13)
 
-- [x] Baremo v4 de 10.000 puntos en 3 pilares (`[Aprobado · Jose · 20/10/2026]`).
-- [x] Pilar 1: Presencia y Actividad en Canales de Voz (40% — 4.000 pts) (`[Aprobado · Jose · 20/10/2026]`).
-- [x] Pilar 2: Comunicación y Vínculo Social en Canales de Texto (40% — 4.000 pts) (`[Aprobado · Jose · 20/10/2026]`).
-- [x] Pilar 3: Veteranía y Prestigio en el Servidor (20% — 2.000 pts) (`[Aprobado · Jose · 20/10/2026]`).
-- [x] Mantenimiento de Cakey Bot como fuente canónica de niveles y XP vía Leaderboard Web (`[Aprobado · Jose · 20/10/2026]`).
+- [x] Baremo unificado con la Bolsa Sanvi: El Aura constituye el Precio Fundamental Base de la acción ($P_{\text{base}}$) (`[Aprobado · Jose · 22/10/2026]`).
+- [x] Mantenimiento de Cakey Bot como fuente canónica de niveles, XP, minutos y mensajes vía Leaderboard Web (`[Aprobado · Jose · 20/10/2026]`).
 - [x] Desestimación de niveles nativos propios (`datos/niveles.json`) (`[Aprobado · Jose · 20/10/2026]`).
-- [ ] [Pendiente de matizar: frecuencia de guardado de snapshots diarios del leaderboard para la ventana rodante de 30 días].
+- [x] Ventana móvil de 30 días calculada mediante snapshots diarios de Cakey Bot a las 00:00 UTC en `datos/cakey_history.json` (`[Aprobado · Jose · 22/10/2026]`).
+- [x] Fórmulas matemáticas ratificadas de Book Value y Earnings 30d (`[Aprobado · Jose · 22/10/2026]`).
+- [x] Curva de elasticidad del Market Maker con factor $K=2.000$ (+5% por 100 acciones, suelo en $P_{\text{base}}$) (`[Aprobado · Jose · 22/10/2026]`).
+- [ ] [Pendiente de matizar: revisión y enriquecimiento del sistema de Dividendos Pasivos / Inyecciones Externas por Aura].
+
+
 

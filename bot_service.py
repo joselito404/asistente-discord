@@ -225,15 +225,32 @@ from modulos.autoroles import (
     AutoRolesPersistentView,
     AutoRoleCategoryView,
     is_admin_or_mod,
+)
+
+from modulos.sugerencias import (
     SUGGESTIONS_CHANNEL_ID,
+    SUGGESTIONS_DATA_PATH,
+    SUGGESTIONS_LOCK,
+    format_progress_bar,
+    build_suggestion_embed,
+    build_suggestions_hub_embed,
+    publish_suggestions_hub,
+    get_or_generate_ai_verdict,
+    SuggestionSubmitModal,
+    SuggestionDecisionModal,
+    SuggestionActiveView,
+    SuggestionClosedView,
+    SuggestionHubView,
+    handle_direct_suggestion,
+    # Símbolos legados para compatibilidad
+    SuggestionPersistentView,
     SUGGESTION_VOTES_STATE,
     _extract_votes_from_embed,
     _extract_vote_state_from_embed,
     _update_suggestion_embed_votes,
-    SuggestionDecisionModal,
-    SuggestionPersistentView,
     _get_next_suggestion_number,
 )
+
 
 from modulos.chat_ia import (
     SERVER_EMOJIS_DATA,
@@ -440,7 +457,7 @@ async def on_ready():
     bot_log(f"Bot '{bot.user}' conectado y listo en Discord.")
     bot_log(f"Motores de IA con respaldo: {MODELS_PRIORITY}")
     bot_log(f"Ajedrez: python-chess {'OK' if chess else 'NO disponible'} | Stockfish {'OK' if os.path.exists(STOCKFISH_PATH) else 'NO encontrado'} ({STOCKFISH_PATH})")
-    bot_log("Capacidades activas: Gemini Live en Voz (/geminilive), Auto-Roles 24/7 (/autoroles), Sugerencias (/sugerencia), Memoria Persistente, Trivial, Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y 22 Slash Commands Generales.")
+    bot_log("Capacidades activas: Gemini Live en Voz (/geminilive), Auto-Roles 24/7 (/autoroles), Sugerencias 2.0 (/sugerencia, /panel_sugerencias), Memoria Persistente, Trivial, Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y 23 Slash Commands Generales.")
 
     # 1. Hidratación inicial desde Discord (Render Cloud 24/7 - docs/PERSISTENCIA_DATOS.md)
     try:
@@ -458,8 +475,9 @@ async def on_ready():
     try:
         bot.add_view(AutoRolesPersistentView())
         bot.add_view(PersonalAutoRolesView())
-        bot.add_view(SuggestionPersistentView())
-        bot_log("🎭 [Persistent Views] AutoRolesPersistentView, PersonalAutoRolesView y SuggestionPersistentView registradas 24/7.")
+        bot.add_view(SuggestionActiveView())
+        bot.add_view(SuggestionHubView())
+        bot_log("🎭 [Persistent Views] AutoRolesPersistentView, PersonalAutoRolesView, SuggestionActiveView y SuggestionHubView registradas 24/7.")
     except Exception as e_view:
         bot_log(f"Aviso registrando vistas persistentes: {e_view}")
 
@@ -469,7 +487,7 @@ async def on_ready():
         guild_obj = discord.Object(id=GUILD_ID)
         tree.copy_global_to(guild=guild_obj)
         await tree.sync(guild=guild_obj)
-        bot_log(f"Comandos Slash Generales (22) sincronizados limpiamente en el servidor ID {GUILD_ID} (sin duplicados).")
+        bot_log(f"Comandos Slash Generales (23) sincronizados limpiamente en el servidor ID {GUILD_ID} (sin duplicados).")
     except Exception as e:
         bot_log(f"Aviso sincronización comandos slash generales: {e}")
 

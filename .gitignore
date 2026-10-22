@@ -9,6 +9,8 @@ config_discord.json
 !user_memory.json
 !trivia_data.json
 !economia.json
+!sugerencias.json
+!datos/sugerencias.json
 !.agents/skills.json
 /CHAT_RAW.md
 /HISTORIAL_CONVERSACION.md
@@ -33,6 +35,7 @@ herramientas/*
 !herramientas/test_roulette.py
 !herramientas/test_coinflip.py
 !herramientas/test_casino_hub.py
+!herramientas/test_sugerencias.py
 !herramientas/update_discord_channels.py
 documentos_pdf/
 *.zip

@@ -15,6 +15,14 @@
 - **Estado:** `en espera de Jose`.
 - **Detalle:** [docs/DISENO_ECONOMIA_NATIVA.md](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/DISENO_ECONOMIA_NATIVA.md#L1).
 
+### 1.2. Sugerencias 2.0 (Reemplazo Integral de Carl-bot en `#💡sugerencias💡`)
+- **Qué falta:** Despliegue en Render Cloud 24/7 y publicación del panel interactivo permanente en `#💡sugerencias💡` con `/panel_sugerencias`.
+- **Por qué importa:** El código (`modulos/sugerencias.py`), la persistencia en `datos/sugerencias.json`, los hilos automáticos de debate, la barra dinámica de 10 bloques `🟩`/`🟥`, el veredicto satírico con IA y las 8 suites de tests unitarios (86/86 en verde) ya están terminados y validados localmente.
+- **Siguiente paso:** Aprobación de Jose para ejecutar `git commit`, `git push` y `python herramientas/deploy_render.py`.
+- **Responsable:** Jose / Chat.
+- **Estado:** `en espera de Jose`.
+- **Detalle:** [docs/DISENO_SUGERENCIAS_2.md](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/DISENO_SUGERENCIAS_2.md#L1) y [modulos/sugerencias.py](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/sugerencias.py).
+
 ---
 
 ## 🎰 Área 2: Casino & Economía Nativa
@@ -29,12 +37,13 @@
 
 ---
 
-## ⚙️ Área 3: Entorno y Gobernanza Modular
+## 📈 Área 3: Bolsa Sanvi & Aura
 
-### 3.1. Creación de Módulo Declarativo `harness_claudecode.md`
-- **Qué falta:** Añadir `.agents/rules/harness_claudecode.md` con cabecera `trigger: model_decision` y descripción indicando «SOLO para Claude Code».
-- **Por qué importa:** Completar la separación simétrica por entorno prescrita en `AGENTS_CORE.md` §7, asegurando que Claude Code disponga de su harness declarado si se abre sesión desde dicho CLI.
-- **Siguiente paso:** Crear el archivo atómico en `.agents/rules/` e indexarlo en `.agents/rules/README.md`.
-- **Responsable:** Chat.
-- **Estado:** `por hacer`.
-- **Detalle:** `AGENTS_CORE.md` §7 y `.agents/rules/harness_antigravity.md`.
+### 3.1. Enriquecimiento del Sistema de Dividendos Pasivos e Inyecciones de Aura
+- **Qué falta:** Definir cómo potenciar los dividendos pasivos (que a Jose le parecieron flojos) mediante inyecciones externas vinculadas a la actividad real, hitos de Aura, bote del servidor o premios periódicos.
+- **Por qué importa:** Concluir el modelo de dividendos antes de delegar la codificación completa a `especialista-codigo`.
+- **Siguiente paso:** Jose evalúa la propuesta de dividendos enriquecidos con Aura.
+- **Responsable:** Jose / Chat.
+- **Estado:** `en curso`.
+- **Detalle:** [docs/DISENO_BOLSA_SANVI.md](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/DISENO_BOLSA_SANVI.md#L132-L143) y [docs/AURA_BAREMO.md](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/AURA_BAREMO.md#L157-L177).
+

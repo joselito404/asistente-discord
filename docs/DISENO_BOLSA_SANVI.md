@@ -175,25 +175,66 @@ Aprobado el modelo híbrido dual para máxima comodidad y profundidad visual:
 
 ---
 
-## 9. Próxima Sesión: Modelo de Valoración Dinámico (Patrimonio Histórico + Múltiplo PER de Rendimiento Mensual)
+## 9. Modelo de Valoración Dinámico (Aura Fundamental + Flujo de Mercado con PER)
 
-> **Estado:** `Propuesta de Jose para debate en nueva sesión` `[Propuesta · Jose / Chat 1 · 20/10/2026]`
+> **Estado:** `Ratificado por Jose` `[Aprobado · Jose · 22/10/2026]`
 
-Iniciativa conceptual de Jose para sustituir los techos fijos y dotar al mercado de realismo financiero puro (estilo Trading 212 / Wall Street):
+Arquitectura contable bursátil real ratificada para el Sanvi Exchange:
 
-### 9.1. La Doble Capa Fundamental
-1. **Patrimonio Histórico Acumulado (*Book Value / Equity*)**:
-   - Acumulación permanente sin límite basada en la trayectoria total del miembro en el servidor (niveles, horas de voz de por vida, mensajes históricos).
-   - Crece de forma lenta, continua e indestructible: representa los "activos netos" de la empresa que aseguran que una acción nunca quiebre.
-2. **Rendimiento Mensual Temporal (*Trailing 30-Day Earnings*)**:
-   - Mide la actividad reciente (voz y chat de los últimos 30 días).
-   - **Naturaleza Temporal**: Caduca y se renueva en ventana móvil. Si el miembro para de hablar o jugar durante 30 días, su beneficio mensual se desvanece temporalmente hacia cero.
+### 9.1. Ventana Móvil de 30 Días con Snapshots Diarios de Cakey Bot
+> **Estado:** `[Aprobado · Jose · 22/10/2026]`
 
-### 9.2. El Múltiplo PER Real (*Price-to-Earnings*)
-- En lugar de un precio fijo, la cotización se descompone fiel a la contabilidad bursátil:
-  $$\text{Precio} = \text{Valor Patrimonial Histórico} + (\text{PER} \times \text{Rendimiento Mensual})$$
-- Si un miembro tiene un mes estelar de actividad (*earnings beat*), su beneficio mensual temporal se dispara, y al multiplicarse por el PER del mercado, la acción experimenta un *rally* alcista.
-- Si entra en sequía temporal, los beneficios caen, pero la acción encuentra soporte sólido en su Patrimonio Histórico.
-- Pendiente de debatir y modelar formalmente en la siguiente sesión dedicada.
+En sustitución de oyentes complejos en vivo de audio y texto en Discord:
+- El bot almacena diariamente a las 00:00 UTC una instantánea en `datos/cakey_history.json` a través de [`modulos/cakey_client.py`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/cakey_client.py).
+- El **Rendimiento de los últimos 30 días** se obtiene como la diferencia respecto al snapshot de hace 30 días:
+  $$\Delta \text{Voz}_{30d} = \text{Voz}_{\text{hoy}} - \text{Voz}_{\text{hace 30 días}}$$
+  $$\Delta \text{Mensajes}_{30d} = \text{Mensajes}_{\text{hoy}} - \text{Mensajes}_{\text{hace 30 días}}$$
+- Cero listeners pesados en Discord, cero desincronizaciones y persistencia tolerante a reinicios en Render.
+
+### 9.2. El Aura como Base del Precio y Fuerte Sensibilidad al Flujo de Órdenes
+> **Estado:** `[Aprobado · Jose · 22/10/2026]`
+
+1. **Aura = Precio Fundamental Base ($P_{\text{base}}$)**:
+   - El Aura se define como el valor fundamental intrínseco de cada acción individual en Porros:
+     $$P_{\text{base}} = \text{Book Value (Suelo Indestructible)} + \text{Earnings Mensuales (30 días)}$$
+   - **Book Value ($BV$)**: Premia el nivel y la veteranía de por vida extraída de Cakey Bot:
+     $$BV = 10 + (0{,}8 \times \text{Nivel}) + (0{,}2 \times \text{Horas Históricas Voz}) + (0{,}01 \times \text{Mensajes Históricos})$$
+     - *Joselito (Lvl 54, 65.8h voz, 658 msgs)*: **72,94 Porros**
+     - *Terre (Lvl 37, 25.0h voz, 196 msgs)*: **46,56 Porros**
+     - *Omen (Lvl 36, 29.8h voz, 148 msgs)*: **46,24 Porros**
+     - *Racer (Lvl 33, 29.0h voz, 129 msgs)*: **43,49 Porros**
+     - *Aspirante Nivel 20 (IPO mínima)*: **~28 - 30 Porros**
+   - **Rendimiento Mensual Temporal ($\text{Earnings}_{30d}$)**:
+     $$E_{30d} = (0{,}4 \times \Delta\text{Horas Voz}_{30d}) + (0{,}05 \times \Delta\text{Mensajes}_{30d})$$
+     - La actividad reciente en la ventana móvil de 30 días añade valor a la acción; si el miembro reduce su actividad o está de exámenes, decae temporalmente a 0 sin tocar el suelo $BV$.
+
+2. **Curva de Elasticidad del Market Maker ($P_{\text{mercado}}$)**:
+   > **Estado:** `[Aprobado · Jose · 22/10/2026]`
+   - El precio de mercado ($P_{\text{mercado}}$) responde directamente a las acciones netas absorbidas por los miembros:
+     $$P_{\text{mercado}} = P_{\text{base}} \times \left(1 + \frac{\text{Acciones en Cartera de Usuarios} - 100}{2.000}\right)$$
+     - Cada **100 acciones** compradas: **$+5\%$** de subida.
+     - Cada **200 acciones** compradas: **$+10\%$** de subida.
+     - Cada **500 acciones** compradas: **$+25\%$** de subida.
+     - **1.000 acciones** compradas (10% del float): **$+50\%$** de subida (*rally* alcista).
+     - **2.000 acciones** compradas (20% del float): **$+100\%$** de subida ($2\times$ el valor base).
+   - **Suelo Garantizado:** $P_{\text{mercado}} \ge P_{\text{base}}$ (las ventas devuelven el precio a su valor contable objetivo).
+   - **Blindaje Anti-Ballenas:** Máximo **500 acciones** por transacción y **30 segundos** de cooldown por usuario en el mismo ticker.
+
+---
+
+## 10. Registro de Decisiones y Estado Canónico (Compuerta 5 — Regla Global §13)
+
+- [x] Ticker bursátil propio por miembro cotizado (ej. `$JOSE`, `$TERRE`) (`[Aprobado · Jose · 20/10/2026]`).
+- [x] Suministro fijo de 10.000 acciones por miembro cotizado (`[Aprobado · Jose · 20/10/2026]`).
+- [x] Asignación inicial: 100 acciones (1%) al fundador en su cartera, 9.900 acciones (99%) al Market Maker del bot (`[Aprobado · Jose · 20/10/2026]`).
+- [x] Horquilla Bid/Ask con spread del 1% (0,5% compra / 0,5% venta) quemado como tasa deflacionaria (`[Aprobado · Jose · 20/10/2026]`).
+- [x] Interfaz gráfica de velas japonesas estilo Trading 212 en Pillow + Components V2 interactivos (`[Aprobado · Jose · 20/10/2026]`).
+- [x] Ventana móvil de 30 días calculada mediante snapshots diarios de Cakey Bot en `datos/cakey_history.json` (`[Aprobado · Jose · 22/10/2026]`).
+- [x] El Aura se redefine como el Precio Fundamental Base ($P_{\text{base}} = \text{Book Value} + \text{Earnings}_{30d}$) (`[Aprobado · Jose · 22/10/2026]`).
+- [x] Fórmulas matemáticas ratificadas de Book Value y Earnings 30d (`[Aprobado · Jose · 22/10/2026]`).
+- [x] Curva de elasticidad del Market Maker con factor $K=2.000$ (+5% por 100 acciones, suelo en $P_{\text{base}}$) (`[Aprobado · Jose · 22/10/2026]`).
+- [x] Blindaje anti-ballenas: tope de 500 acciones/orden y cooldown de 30s (`[Aprobado · Jose · 22/10/2026]`).
+- [ ] [Pendiente de matizar: revisión y enriquecimiento del sistema de Dividendos Pasivos / Inyecciones Externas por Aura].
+
 
 

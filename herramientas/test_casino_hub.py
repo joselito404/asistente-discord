@@ -231,7 +231,7 @@ def run_tests():
         assert len(cmd_casino.parameters) == 0, f"/casino no debe requerir parámetros obligatorios, tiene {len(cmd_casino.parameters)}"
 
         assert len(ECONOMY_SLASH_COMMANDS) == 20, f"Se esperaban 20 comandos de economía, encontrados: {len(ECONOMY_SLASH_COMMANDS)}"
-        assert len(ALL_SLASH_COMMANDS) == 42, f"Se esperaban 42 comandos en total, encontrados: {len(ALL_SLASH_COMMANDS)}"
+        assert len(ALL_SLASH_COMMANDS) == 43, f"Se esperaban 43 comandos en total, encontrados: {len(ALL_SLASH_COMMANDS)}"
 
         eco_cmd_names = [c.name for c in ECONOMY_SLASH_COMMANDS]
         expected_eco = [
