@@ -904,6 +904,7 @@ class RouletteActionView(discord.ui.View):
         label="🔄 Repetir Apuesta",
         style=discord.ButtonStyle.primary,
         custom_id="roulette:repeat",
+        row=0,
     )
     async def repeat_bet(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.do_spin(interaction, new_bet=self.bet_amount)
@@ -912,9 +913,48 @@ class RouletteActionView(discord.ui.View):
         label="🪙 Duplicar Apuesta",
         style=discord.ButtonStyle.success,
         custom_id="roulette:double",
+        row=0,
     )
     async def double_bet(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.do_spin(interaction, new_bet=self.bet_amount * 2)
+
+    @discord.ui.button(
+        label="🔴 Apostar al Rojo",
+        style=discord.ButtonStyle.danger,
+        custom_id="roulette:bet_red",
+        row=1,
+    )
+    async def bet_red(self, interaction: discord.Interaction, button: discord.ui.Button):
+        bal = get_balance(self.user_id)
+        if bal["cash"] < self.bet_amount:
+            await interaction.response.send_message(
+                f"❌ No tienes suficientes Porros en efectivo para apostar {self.bet_amount:,} "
+                f"({bal['cash']:,} disponibles). Usa `/trabajar` o retira de tu `/banco`.",
+                ephemeral=True,
+            )
+            return
+        self.bet_type = "rojo"
+        self.bet_number = None
+        await self.do_spin(interaction, new_bet=self.bet_amount)
+
+    @discord.ui.button(
+        label="⚫ Apostar al Negro",
+        style=discord.ButtonStyle.secondary,
+        custom_id="roulette:bet_black",
+        row=1,
+    )
+    async def bet_black(self, interaction: discord.Interaction, button: discord.ui.Button):
+        bal = get_balance(self.user_id)
+        if bal["cash"] < self.bet_amount:
+            await interaction.response.send_message(
+                f"❌ No tienes suficientes Porros en efectivo para apostar {self.bet_amount:,} "
+                f"({bal['cash']:,} disponibles). Usa `/trabajar` o retira de tu `/banco`.",
+                ephemeral=True,
+            )
+            return
+        self.bet_type = "negro"
+        self.bet_number = None
+        await self.do_spin(interaction, new_bet=self.bet_amount)
 
     async def on_timeout(self) -> None:
         self.disable_all_buttons()

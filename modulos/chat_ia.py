@@ -21,6 +21,7 @@ import urllib.parse
 import urllib.error
 import io
 import discord
+from typing import Any, Optional, Union
 from datetime import datetime, timezone, timedelta
 
 
@@ -71,11 +72,13 @@ def get_spain_now_str() -> str:
 # ==========================================
 
 MODELS_PRIORITY = [
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-8b",
     "gemini-flash-lite-latest",
-    "gemini-3.5-flash-lite",
-    "gemini-3.1-flash-lite",
-    "gemini-3.6-flash",
-    "gemini-3.8-flash",
     "gemini-flash-latest",
 ]
 model_cooldowns = {}
@@ -283,7 +286,11 @@ DISABLED_EMOJI_FALLBACK = {
     "ranked_gold": "🥇",
 }
 
+RAW_DISCORD_EMOJI_PATTERN = re.compile(r"<(?P<anim>a)?:(?P<name>[a-zA-Z0-9_]+):(?P<id>\d+)>")
 EMOJI_PATTERN = re.compile(r"(?<!<)(?<!<a):([a-zA-Z0-9_]+):(?!\d+>)")
+ID_LEAK_PATTERN = re.compile(
+    r"([\U00010000-\U0010ffff\u2600-\u27bf\u2300-\u23ff\u2b50]|<a?:[a-zA-Z0-9_]+:\d+>)(?:\s*)(\d{15,21})"
+)
 
 
 def format_server_emojis(text: str, guild: discord.Guild = None) -> str:
@@ -291,15 +298,16 @@ def format_server_emojis(text: str, guild: discord.Guild = None) -> str:
     Convierte automáticamente patrones ':nombre_emoji:' en menciones nativas de Discord:
       <:nombre_emoji:ID> (estáticos) o <a:nombre_emoji:ID> (animados).
 
-    Resiliencia de Server Boosts y compatibilidad:
-    - Si se pasa 'guild' (discord.py activo), consulta 'guild.emojis' en tiempo real.
-      Inspecciona 'e.available': si Discord deshabilitó el emoji tras expirar las mejoras
-      del servidor, aplica automáticamente el fallback seguro (DISABLED_EMOJI_FALLBACK)
-      para que el mensaje nunca muestre texto crudo ni falle.
-    - Si 'guild' es None o el bot se ejecuta en modo headless/tests, utiliza el catálogo
-      canónico base (SERVER_EMOJIS_DATA).
+    Resiliencia de Server Boosts, compatibilidad y blindaje:
+    - Soporte para menciones <:name:ID> y <a:name:ID> ya presentes o generadas por Gemini:
+      Si el emoji en guild.emojis tiene available == False (o no existe en el servidor),
+      se sustituye por su fallback limpio de DISABLED_EMOJI_FALLBACK (o Unicode).
+    - Limpieza de fugas de ID crudo:
+      Si un emoji queda seguido de un ID numérico (ej: 💸1535726716901789726.), se purga
+      el remanente para dejar únicamente el emoji limpio.
+    - Puntuación adyacente:
+      Procesa de forma infalible casos con puntuaciones pegadas (:bruh:.., :grass:,, :KEKWLaugh:., (:Porro:), ¡:aura:!).
     - Protege bloques de código (```...```) y código inline (`...`) para no alterar fragmentos técnicos.
-    - Ignora menciones de emojis ya formateadas previamente (<:name:id> o <a:name:id>).
     """
     if not text or not isinstance(text, str):
         return text
@@ -313,25 +321,65 @@ def format_server_emojis(text: str, guild: discord.Guild = None) -> str:
     text_protected = re.sub(r"(```[\s\S]*?```|`[^`\n]+`)", _save_code, text)
 
     live_map = {}
+    live_id_map = {}
     if guild and hasattr(guild, "emojis") and guild.emojis:
         for e in guild.emojis:
             live_map[e.name.lower()] = e
+            try:
+                live_id_map[int(e.id)] = e
+            except (ValueError, TypeError):
+                pass
 
+    # Paso 1: Sanitizar menciones crudas ya formateadas (<:name:id> o <a:name:id>)
+    # Si el servidor reporta que el emoji está deshabilitado o no existe, aplicar fallback limpio
+    def _replace_raw_mention(match):
+        raw_name = match.group("name")
+        lower_name = raw_name.lower()
+        try:
+            raw_id = int(match.group("id"))
+        except (ValueError, TypeError):
+            raw_id = None
+
+        if live_map or live_id_map:
+            e = live_id_map.get(raw_id) or live_map.get(lower_name)
+            if e:
+                is_available = getattr(e, "available", True)
+                if is_available:
+                    prefix = "a" if e.animated else ""
+                    return f"<{prefix}:{e.name}:{e.id}>"
+                else:
+                    if lower_name in DISABLED_EMOJI_FALLBACK:
+                        return DISABLED_EMOJI_FALLBACK[lower_name]
+                    return match.group(0)
+            else:
+                # No existe en el servidor activo
+                if lower_name in DISABLED_EMOJI_FALLBACK:
+                    return DISABLED_EMOJI_FALLBACK[lower_name]
+                return match.group(0)
+
+        return match.group(0)
+
+    text_protected = RAW_DISCORD_EMOJI_PATTERN.sub(_replace_raw_mention, text_protected)
+
+    # Paso 2: Convertir patrones :nombre_emoji:
     def _replace(match):
         raw_name = match.group(1)
         lower_name = raw_name.lower()
 
         # 1. Consulta en tiempo real en discord.py si guild está disponible
-        if live_map and lower_name in live_map:
-            e = live_map[lower_name]
-            is_available = getattr(e, "available", True)
-            if is_available:
-                prefix = "a" if e.animated else ""
-                return f"<{prefix}:{e.name}:{e.id}>"
-            else:
-                if lower_name in DISABLED_EMOJI_FALLBACK:
-                    return DISABLED_EMOJI_FALLBACK[lower_name]
-                return match.group(0)
+        if live_map or live_id_map:
+            if lower_name in live_map:
+                e = live_map[lower_name]
+                is_available = getattr(e, "available", True)
+                if is_available:
+                    prefix = "a" if e.animated else ""
+                    return f"<{prefix}:{e.name}:{e.id}>"
+                else:
+                    if lower_name in DISABLED_EMOJI_FALLBACK:
+                        return DISABLED_EMOJI_FALLBACK[lower_name]
+                    return match.group(0)
+            elif lower_name in DISABLED_EMOJI_FALLBACK:
+                return DISABLED_EMOJI_FALLBACK[lower_name]
 
         # 2. Fallback de catálogo canónico base (para tests, DMs o bot headless)
         if lower_name in SERVER_EMOJIS_DATA:
@@ -343,16 +391,21 @@ def format_server_emojis(text: str, guild: discord.Guild = None) -> str:
 
     converted = EMOJI_PATTERN.sub(_replace, text_protected)
 
+    # Paso 3: Limpieza de fugas de ID crudo (ej: 💸1535726716901789726. -> 💸.)
+    converted = ID_LEAK_PATTERN.sub(r"\1", converted)
+    converted = re.sub(r"<([\U00010000-\U0010ffff\u2600-\u27bf\u2300-\u23ff\u2b50]):?\d{15,21}>", r"\1", converted)
+
+    # Paso 4: Restaurar bloques de código markdown
     for idx, block in enumerate(code_blocks):
         converted = converted.replace(f"___CODE_BLOCK_{idx}___", block)
 
     return converted
 
 
-SYSTEM_PROMPT = r"""Eres 'Asistente', la IA oficial y colega del servidor de Discord 'LOS MONGOLOS DEL SANVI Y SUS AMIGOS'.
+SYSTEM_PROMPT = r"""Eres 'Asistenta', la IA oficial y colega del servidor de Discord 'LOS MONGOLOS DEL SANVI Y SUS AMIGOS'.
 
 🎯 PERSONALIDAD Y TONO DE COLEGA:
-- Eres un colega más del grupo, maduro, cercano, divertido, resolutivo y con buen rollo de Discord.
+- Eres una colega más del grupo, madura, cercana, divertida. Te llamas Asistenta y hablas en femenino, resolutivo y con buen rollo de Discord.
 - ❌ CERO "MODO CUÑADO VACILÓN" / CERO FALTAS DE RESPETO: Trata a todos con respeto y estima. NUNCA te burles de los miembros, no uses apodos despectivos, no hagas chistes pesados de mafiosos ni te pongas arrogante o condescendiente. No digas tonterías como "meme de dueño" o "menudo espectáculo de admin".
 - ❌ CERO PELOTEO / SUMISIÓN: Habla de tú a tú como un igual con todos, incluido Joselito. Eres un colega inteligente del grupo, no un lacayo.
 - ❌ CERO INVENCIÓN DE FECHAS HISTÓRICAS: NUNCA inventes fechas del pasado ("tiene admin desde el 4 de diciembre de 2025"). Si alguien te pregunta desde cuándo tiene un rango o rol, di con honestidad que en tus datos actuales ves sus roles vigentes, pero no dispones de la fecha exacta histórica de asignación.
@@ -428,6 +481,50 @@ SYSTEM_PROMPT = r"""Eres 'Asistente', la IA oficial y colega del servidor de Dis
   * `/autoroles [canal] [formato]`: Publica el panel interactivo 24/7 de Auto-Roles (menús desplegables y vista personal, reemplazando a Carl-bot).
   * `/sugerencia [idea]`: Envía una sugerencia a `#💡sugerencias💡` con botones de votación en vivo y moderación para admins.
 
+💰 ECONOMÍA OFICIAL DE PORROS, CASINO Y BOLSA SANVI (BOT: ECONOMIA ASISTENTE):
+- 👑 BOT SOBERANO Y JUBILACIÓN DE UNBELIEVABOAT:
+  * El bot oficial, soberano y único de economía en el servidor es **Economia Asistente** (`Economia Asistente#5317`), un bot hermano nativo en Discord.
+  * ❌ UnbelievaBoat HA SIDO RETIRADO Y JUBILADO DEFINITIVAMENTE del servidor. Ya no existe ni gestiona saldo alguno.
+  * ❌ CERO COMANDOS CON PREFIJOS DE TEXTO: Todos los comandos de economía son estricta y obligatoriamente **Comandos Slash (`/`)**. NUNCA existen comandos con `!` (`!roulette`, `!rob`, `!work`, `!bj`, `!dep`, `!with` son del pasado y no funcionan). Si algún usuario intenta usar prefijo `!` o pregunta por ellos, corrígelo con humor y vacile sano de colega: recuérdale que UnbelievaBoat está criando malvas y que ahora todo se ejecuta con la barra `/` de `Economia Asistente`.
+  * 🌿 MONEDA OFICIAL: `<:Porro:1535685303317172305>` **Porros** (saldo inicial al registrarse: 1.000 porros).
+- 👀 VISIÓN TOTAL DE EMBEDS, COMPONENTES Y MENSAJES DE BOTS:
+  * Tienes visión completa de los Embeds, componentes interactivos y mensajes de otros bots (especialmente 'Economia Asistente', Cakey Bot, etc.) tanto en la conversación reciente como cuando un usuario responde directamente citando uno de sus mensajes ([RESPONDIENDO DIRECTAMENTE AL MENSAJE DEL BOT ...]).
+  * Si un usuario responde a o cita un saldo (/balance), transferencia, premio de ruleta/slots, atraco o estado bursátil, VES PERFECTAMENTE las cifras, porros en mano, porros en banco, total y detalles.
+  * ❌ CERO CEGUERA: NUNCA digas que "no ves nada", que "está vacío" o que el usuario "no enseña nada". Comenta las cifras exactas, felicítale por estar forrado, vacílale amistosamente por arruinarse o flipa con sus números con total naturalidad y complicidad de colega.
+
+🎰 MECÁNICA CANÓNICA DEL BOTE PROGRESIVO (JACKPOT DEL SERVIDOR) Y RULETA:
+- **¿Cómo funciona el bote en la ruleta?**: En la Ruleta Europea (`/ruleta`), las pérdidas netas de los jugadores alimentan continuamente el bote progresivo del servidor (`server_jackpot`) aportando un 3% directo de cada tirada perdida. Cada vez que alguien palma porros en la ruleta, ¡está engordando el bote del servidor para la gloria de quien lo gane!
+- **¿Cómo se saca/revienta el bote?**: El bote progresivo acumulado se gana principalmente en las **Tragaperras 5x3** (`/slots`) al alinear una combinación ganadora de Jackpot de 5 símbolos mayores. ¡En la ruleta lo alimentas y aumentas con tus desgracias, pero el pozo gordo se revienta en las slots!
+- **Pagos de la Ruleta Europea (`/ruleta`)**: Cilindro europeo de 37 casillas (del 0 al 36):
+  * 1:1 en suertes sencillas: Rojo / Negro, Par / Impar, Pasa / Falta (Baja 1-18 / Alta 19-36).
+  * 2:1 en Docenas (1ª, 2ª, 3ª) y Columnas.
+  * 35:1 en Pleno directo al número exacto (0-36).
+
+📋 CATÁLOGO CANÓNICO DE COMANDOS SLASH DE ECONOMIA ASISTENTE:
+- 🎲 Casino y Apuestas:
+  * `/slots [apuesta]`: Tragaperras 5x3 con carretes animados (7 líneas de pago, RTP 110.03%, tiradas gratis Free Spins y donde se revienta el Jackpot acumulado).
+  * `/ruleta [apuesta] [tipo] [numero]`: Ruleta Europea clásica de 37 casillas (Rojo, Negro, Par, Impar, Docenas, Columnas, Pleno 0-36). Cada tirada perdida alimenta el bote en un 3%.
+  * `/blackjack` o `/bj [apuesta]`: Blackjack 21 contra el crupier con baraja interactiva, doblar apuesta y pago 3:2.
+  * `/coinflip [apuesta] [lado] [rival]`: Cara o cruz (PvE contra la banca o duelos de honor PvP 1v1 con aceptación interactiva).
+  * `/casino`: Hub central del casino con reglas completas, saldo personal y estado en vivo del Bote Acumulado.
+- 💼 Finanzas y Progresión:
+  * `/balance [usuario]`: Consulta de porros en mano (efectivo), cuenta bancaria y patrimonio total.
+  * `/trabajar`: Jornada laboral cada 2 horas (1.000-2.500 Porros + bonus de nivel del servidor y multiplicador de Aura bursátil).
+  * `/salario`: Sueldo diario acumulativo según roles y nivel del servidor.
+  * `/crimen` y `/robar [usuario]`: Hurtos callejeros y atracos a otros usuarios (con riesgo de multa policial o calabozo).
+  * `/depositar [monto]` y `/retirar [monto]`: Blindar porros en el banco ante robos callejeros.
+  * `/transferir [usuario] [monto]`: Enviar porros limpios a un colega sin comisiones.
+  * `/ranking`: Tabla de clasificación de los usuarios más forrados del servidor.
+- 📈 Bolsa Sanvi & Reputación:
+  * `/bolsa [ticker]`: Cotizaciones bursátiles en tiempo real de miembros del servidor con gráficas financieras Pillow (estilo Trading 212).
+  * `/cartera`: Portafolio bursátil con acciones adquiridas y balance de ganancias/pérdidas no realizadas.
+  * `/aura [usuario]`: Reputación comunitaria de miembros que genera dividendos pasivos y prestigio.
+- 🏪 Tienda y Artículos:
+  * `/tienda`: Catálogo de objetos útiles (`🛡️ Cartera Blindada`, `⚡ Monster Blanco`, etc.).
+  * `/inventario`: Mochila personal con artículos adquiridos.
+  * `/usar [item]`: Consumir o activar un objeto del inventario.
+  * `/regalar [item] [usuario]`: Transferir artículos a otro colega.
+
 👥 MIEMBROS CLAVE DEL SERVIDOR (Lore & Respeto):
 - Joselito (@joselito3499): Fundador, dueño y Administrador del servidor. Fanático de los manhwas (Olympus Scanlation, Asura Scans). En #cultura tiene anclado su top 69 manhwas.
 - Iván / RobaAbuelas (@racerwasp): Co-Administrador del servidor junto a Joselito y Magistrado oficial de El Tribunal Gaming. Veterano del colegio/grupo, jugador de Brawl Stars, Soulslike y lector de manhwas. Trátale con el respeto y la confianza de colega y Admin veterano que es.
@@ -442,7 +539,8 @@ SYSTEM_PROMPT = r"""Eres 'Asistente', la IA oficial y colega del servidor de Dis
 - #la-shit-de-todos-los-dias: El canal de charla general del día a día.
 - #violencia: Debates intensos, piques deportivos y salseo.
 - #muro-de-la-fama: Starboard oficial del servidor.
-- #casino-y-apuestas: Zona de economía UnbelievaBoat (slots, blackjack, ruleta).
+- #casino-y-apuestas: Zona oficial de casino y vicio de Economia Asistente (/slots, /ruleta, /blackjack, /coinflip, /casino).
+- #tienda-y-mercado: Mercado oficial de Sanvi (/tienda, /inventario, compras e ítems de protección).
 
 🌐 BÚSQUEDA WEB EN VIVO:
 - Cuando recibas el bloque [BÚSQUEDA WEB EN VIVO], utilízalo como verdad absoluta para responder con fechas reales, estrenos, secuelas y noticias de actualidad.
@@ -452,7 +550,8 @@ SYSTEM_PROMPT = r"""Eres 'Asistente', la IA oficial y colega del servidor de Dis
 - Para roles de juegos, plataformas, géneros y hobbies, gestionas el panel interactivo oficial de Auto-Roles en <#1537575617111920782> (`#🎭roles🎭` / comando `/autoroles`), reemplazando por completo al antiguo Carl-bot.
 
 🎭 USO DE EMOJIS DEL SERVIDOR Y LORE HUMORÍSTICO:
-- Tienes a tu disposición los 124 emojis del servidor. Úsalos con soltura, gracia y naturalidad en tus respuestas como un colega más escribiendo `:nombre_emoji:` (el sistema los convierte automáticamente a formato de Discord):
+- Tienes a tu disposición los 124 emojis del servidor. Úsalos con soltura, gracia y naturalidad en tus respuestas como un colega más:
+  * ⚠️ DIRECTRIZ ESTRICTA DE FORMATO: Escribe los emojis ÚNICAMENTE con el formato simple `:nombre_emoji:` (ejemplo: `:Porro:`, `:bruh:`, `:grass:`). NUNCA inventes ni escribas IDs numéricos ni la sintaxis `<:nombre:ID>`. El sistema los convierte automáticamente a formato de Discord.
   * `:aura:` / `:gigachad:` / `:chadgif:` / `:sigmajawline:` / `:Sigma_Male_Bale:`: Para momentos de máximo respeto, jugadas maestras (+1.000 aura), respuestas legendarias o actitud sigma imperturbable.
   * `:Porro:`: Para situaciones surrealistas, momentos de "qué me estás contando", teorías imposibles, relajación o fumadas sanas.
   * `:absolutecinema:`: Imprescindible para elogiar manhwas sublimes (como los del Top 69 de Joselito en #cultura), animes top o momentos de cine puro.
@@ -505,8 +604,15 @@ def call_gemini_multiturn(turns: list) -> str:
                     print(f"Cuota/Sobrecarga en {model_name} (HTTP {e.code}). Activando Circuit Breaker...")
                     mark_model_cooldown(model_name, 60)
                     break
-                break
-            except Exception:
+                elif e.code in (404, 400):
+                    print(f"Modelo no disponible o no encontrado: {model_name} (HTTP {e.code}). Descartando...")
+                    mark_model_cooldown(model_name, 3600)  # Descarte por 1 hora sin tumbar la cascada
+                    break
+                else:
+                    print(f"Error HTTP {e.code} en {model_name}.")
+                    break
+            except Exception as e:
+                print(f"Excepción en {model_name}: {e}. Activando cooldown temporal...")
                 mark_model_cooldown(model_name, 45)
                 break
 
@@ -929,6 +1035,163 @@ async def get_pins_context(channel: discord.TextChannel) -> str:
 
 
 # ==========================================
+# EXTRACCIÓN UNIVERSAL DE TEXTO, EMBEDS Y COMPONENTES
+# ==========================================
+
+def _extract_components_text(comps: Any) -> list:
+    """Extrae texto recursivamente de componentes de Discord (ActionRows, Buttons, TextDisplay, Containers, etc.)."""
+    parts = []
+    if not comps:
+        return parts
+    if isinstance(comps, (list, tuple)):
+        for c in comps:
+            parts.extend(_extract_components_text(c))
+        return parts
+
+    if isinstance(comps, dict):
+        for k in ("content", "label", "placeholder", "description", "value", "title"):
+            val = comps.get(k)
+            if val and isinstance(val, str) and val.strip():
+                parts.append(val.strip())
+        if "components" in comps:
+            parts.extend(_extract_components_text(comps["components"]))
+        if "children" in comps:
+            parts.extend(_extract_components_text(comps["children"]))
+        return parts
+
+    for attr in ("content", "label", "placeholder", "description", "value", "title"):
+        val = getattr(comps, attr, None)
+        if val and isinstance(val, str) and val.strip():
+            parts.append(val.strip())
+
+    for child_attr in ("children", "components"):
+        sub = getattr(comps, child_attr, None)
+        if sub:
+            parts.extend(_extract_components_text(sub))
+
+    return parts
+
+
+def _extract_embed_text(e: Any) -> str:
+    """Extrae y formatea en una cadena compacta el contenido de un Discord Embed."""
+    if not e:
+        return ""
+
+    if isinstance(e, dict):
+        title = (e.get("title") or "").strip()
+        desc = (e.get("description") or "").strip()
+        author_info = e.get("author") or {}
+        author = author_info.get("name", "").strip() if isinstance(author_info, dict) else ""
+        fields = []
+        for f in (e.get("fields") or []):
+            if isinstance(f, dict):
+                fn = (f.get("name") or "").strip()
+                fv = (f.get("value") or "").strip()
+                if fn or fv:
+                    fields.append(f"{fn}: {fv}" if fn else fv)
+        footer_info = e.get("footer") or {}
+        footer = footer_info.get("text", "").strip() if isinstance(footer_info, dict) else ""
+    else:
+        title = (getattr(e, "title", "") or "").strip()
+        desc = (getattr(e, "description", "") or "").strip()
+        author = ""
+        e_author = getattr(e, "author", None)
+        if e_author:
+            author = (getattr(e_author, "name", "") or "").strip()
+        fields = []
+        e_fields = getattr(e, "fields", []) or []
+        for f in e_fields:
+            if isinstance(f, dict):
+                fn = (f.get("name") or "").strip()
+                fv = (f.get("value") or "").strip()
+            else:
+                fn = (getattr(f, "name", "") or "").strip()
+                fv = (getattr(f, "value", "") or "").strip()
+            if fn or fv:
+                fields.append(f"{fn}: {fv}" if fn else fv)
+        footer = ""
+        e_footer = getattr(e, "footer", None)
+        if e_footer:
+            footer = (getattr(e_footer, "text", "") or "").strip()
+
+    items = []
+    if author:
+        items.append(f"Autor: {author}")
+    if title:
+        items.append(title)
+    if desc:
+        items.append(desc)
+    if fields:
+        items.append(" | ".join(fields))
+    if footer:
+        items.append(footer)
+
+    if not items:
+        return ""
+    return "[Embed: " + " | ".join(items) + "]"
+
+
+def extract_discord_message_text(msg: Any, max_len: int = 500) -> str:
+    """
+    Extrae todo el contenido textual legible de un mensaje de Discord:
+    texto principal, componentes interactivos (TextDisplay, Container, Botones),
+    Embeds formateados ([Embed: ...]) y nombres de archivos adjuntos.
+    Soporta objetos discord.Message y diccionarios o stubs de test.
+    """
+    if not msg:
+        return ""
+
+    # 1. Contenido base
+    text_content = ""
+    if isinstance(msg, dict):
+        text_content = msg.get("clean_content") or msg.get("content") or ""
+    else:
+        text_content = getattr(msg, "clean_content", None) or getattr(msg, "content", "") or ""
+    text_content = str(text_content).strip()
+
+    # 2. Componentes (ActionRows, Containers, TextDisplay, Botones)
+    comps = msg.get("components", []) if isinstance(msg, dict) else getattr(msg, "components", [])
+    comp_parts = _extract_components_text(comps)
+    comp_text = " ".join([p for p in comp_parts if p]).strip()
+
+    # 3. Embeds
+    embeds = msg.get("embeds", []) if isinstance(msg, dict) else getattr(msg, "embeds", [])
+    embed_parts = []
+    for emb in (embeds or []):
+        emb_txt = _extract_embed_text(emb)
+        if emb_txt:
+            embed_parts.append(emb_txt)
+    embeds_text = " ".join(embed_parts).strip()
+
+    # 4. Attachments
+    attachments = msg.get("attachments", []) if isinstance(msg, dict) else getattr(msg, "attachments", [])
+    att_parts = []
+    for a in (attachments or []):
+        fn = a.get("filename", "") if isinstance(a, dict) else getattr(a, "filename", "")
+        if fn:
+            att_parts.append(f"[Archivo adjunto: {fn}]")
+    att_text = " ".join(att_parts).strip()
+
+    # Combinación de fragmentos
+    pieces = []
+    if text_content:
+        pieces.append(text_content)
+    if comp_text:
+        pieces.append(f"[Componentes: {comp_text}]")
+    if embeds_text:
+        pieces.append(embeds_text)
+    if att_text:
+        pieces.append(att_text)
+
+    combined = " ".join(pieces).replace("\n", " ").strip()
+    import re
+    combined = re.sub(r"\s+", " ", combined)
+    if max_len and len(combined) > max_len:
+        combined = combined[:max_len].rstrip() + "..."
+    return combined
+
+
+# ==========================================
 # PIPELINE CONVERSACIONAL Y ENRUTADOR SEGURO
 # ==========================================
 
@@ -1102,12 +1365,10 @@ async def _handle_message_safe(message: discord.Message):
         try:
             async for prev_msg in message.channel.history(limit=35, before=message):
                 if prev_msg.author.bot and prev_msg.author != bot.user:
-                    if any("queue" in str(e.to_dict()).lower() for e in prev_msg.embeds):
+                    if any("queue" in str(getattr(e, "to_dict", lambda: e)()).lower() for e in getattr(prev_msg, "embeds", [])):
                         continue
-                    if not prev_msg.clean_content and not prev_msg.attachments:
-                        continue
-                clean_prev = prev_msg.clean_content.strip()
-                if clean_prev or prev_msg.attachments:
+                msg_txt = extract_discord_message_text(prev_msg, max_len=400)
+                if msg_txt:
                     raw_msgs.append(prev_msg)
         except Exception as e:
             print(f"Aviso lectura historial canal: {e}")
@@ -1117,15 +1378,17 @@ async def _handle_message_safe(message: discord.Message):
         # Transcripción estructurada reciente del canal
         recent_lines = []
         for m in raw_msgs[-20:]:
-            m_author = m.author.display_name
-            m_tag = f"@{m.author.name}"
-            m_text = m.clean_content.replace("\n", " ").strip()
-            if not m_text and m.attachments:
-                m_text = f"[Archivo/Imagen adjunta: {m.attachments[0].filename}]"
+            m_author = getattr(m.author, "display_name", "Usuario")
+            m_tag = f"@{getattr(m.author, 'name', 'usuario')}"
+            is_bot_author = getattr(m.author, "bot", False)
+            bot_tag = " [BOT]" if (is_bot_author and m.author != bot.user) else ""
+            m_text = extract_discord_message_text(m, max_len=300)
+            if not m_text:
+                continue
             if m.author == bot.user:
-                recent_lines.append(f"  * [Asistente (Tú)]: {m_text[:250]}")
+                recent_lines.append(f"  * [Asistenta (Tú)]: {m_text[:250]}")
             else:
-                recent_lines.append(f"  * [{m_author} ({m_tag})]: {m_text[:250]}")
+                recent_lines.append(f"  * [{m_author}{bot_tag} ({m_tag})]: {m_text[:250]}")
         recent_channel_ctx = ""
         if recent_lines:
             recent_channel_ctx = f"\n[CONVERSACIÓN RECIENTE EN #{message.channel.name} (últimos mensajes del grupo)]:\n" + "\n".join(recent_lines)
@@ -1205,12 +1468,16 @@ async def _handle_message_safe(message: discord.Message):
         # Montar turnos cronológicos para Gemini
         turns = []
         for m in raw_msgs[-12:]:
-            m_text = re.sub(r"<@&?\d+>", "", m.clean_content).strip()
+            raw_extracted = extract_discord_message_text(m, max_len=400)
+            m_text = re.sub(r"<@&?\d+>", "", raw_extracted).strip()
             if not m_text:
                 continue
             is_bot = (m.author == bot.user)
             role = "model" if is_bot else "user"
-            prefix = "" if is_bot else f"{m.author.display_name}: "
+            author_label = getattr(m.author, "display_name", "Usuario")
+            if getattr(m.author, "bot", False) and not is_bot:
+                author_label += " [BOT]"
+            prefix = "" if is_bot else f"{author_label}: "
             formatted = f"{prefix}{m_text}"
 
             if turns and turns[-1]["role"] == role:
@@ -1289,8 +1556,9 @@ async def _handle_message_safe(message: discord.Message):
                 try:
                     recent_msgs = []
                     async for rm in ch.history(limit=3):
-                        if rm.content:
-                            recent_msgs.append(f"[{rm.author.display_name}]: {rm.content[:200]}")
+                        rm_txt = extract_discord_message_text(rm, max_len=200)
+                        if rm_txt:
+                            recent_msgs.append(f"[{rm.author.display_name}]: {rm_txt}")
                     if recent_msgs:
                         recent_msgs.reverse()
                         channel_lookup_ctx += f"\n[ÚLTIMOS MENSAJES LEÍDOS EN VIVO DE #{ch.name}]:\n" + "\n".join(recent_msgs)
@@ -1299,10 +1567,25 @@ async def _handle_message_safe(message: discord.Message):
 
         # Contexto si el mensaje es una respuesta citada a otro mensaje
         reply_ref_ctx = ""
-        if message.reference and getattr(message.reference.resolved, "content", None):
-            ref_m = message.reference.resolved
-            ref_txt = ref_m.clean_content.replace("\n", " ").strip()[:200]
-            reply_ref_ctx = f"\n[RESPONDIENDO DIRECTAMENTE AL MENSAJE DE {ref_m.author.display_name}]: \"{ref_txt}\""
+        if getattr(message, "reference", None):
+            ref_m = getattr(message.reference, "resolved", None)
+            if ref_m is None or not isinstance(ref_m, discord.Message):
+                ref_mid = getattr(message.reference, "message_id", None)
+                ch = getattr(message, "channel", None)
+                if ref_mid and ch and hasattr(ch, "fetch_message"):
+                    try:
+                        ref_m = await ch.fetch_message(ref_mid)
+                    except Exception:
+                        ref_m = None
+
+            if ref_m:
+                ref_txt = extract_discord_message_text(ref_m, max_len=400)
+                if ref_txt:
+                    author_name = getattr(ref_m.author, "display_name", "Usuario")
+                    if getattr(ref_m.author, "bot", False):
+                        reply_ref_ctx = f"\n[RESPONDIENDO DIRECTAMENTE AL MENSAJE DEL BOT {author_name}]: \"{ref_txt}\""
+                    else:
+                        reply_ref_ctx = f"\n[RESPONDIENDO DIRECTAMENTE AL MENSAJE DE {author_name}]: \"{ref_txt}\""
 
         # Contexto de El Tribunal Gaming y Steam Store si se consultan en el chat
         tribunal_ctx = get_tribunal_query_ctx(clean_text)

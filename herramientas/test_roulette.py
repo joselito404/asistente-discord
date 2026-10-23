@@ -337,6 +337,51 @@ def run_tests():
         mock_double_inter.response.edit_message.assert_called_once()
         assert view.bet_amount == 200
 
+        # Botón Apostar al Rojo (roulette:bet_red)
+        red_btn = next(c for c in view.children if getattr(c, "custom_id", None) == "roulette:bet_red")
+        assert red_btn is not None
+        assert red_btn.style == discord.ButtonStyle.danger
+        assert red_btn.row == 1
+        mock_red_inter = MagicMock()
+        mock_red_inter.user.id = uid_view
+        mock_red_inter.response = AsyncMock()
+        mock_red_inter.response.is_done = MagicMock(return_value=False)
+
+        view.bet_type = "negro"
+        asyncio.run(red_btn.callback(mock_red_inter))
+        mock_red_inter.response.edit_message.assert_called_once()
+        assert view.bet_type == "rojo"
+        assert view.bet_number is None
+
+        # Botón Apostar al Negro (roulette:bet_black)
+        black_btn = next(c for c in view.children if getattr(c, "custom_id", None) == "roulette:bet_black")
+        assert black_btn is not None
+        assert black_btn.style == discord.ButtonStyle.secondary
+        assert black_btn.row == 1
+        mock_black_inter = MagicMock()
+        mock_black_inter.user.id = uid_view
+        mock_black_inter.response = AsyncMock()
+        mock_black_inter.response.is_done = MagicMock(return_value=False)
+
+        asyncio.run(black_btn.callback(mock_black_inter))
+        mock_black_inter.response.edit_message.assert_called_once()
+        assert view.bet_type == "negro"
+        assert view.bet_number is None
+
+        # Validación de saldo insuficiente en botones interactivos
+        view.bet_amount = 500000  # Mayor al saldo de 10000
+        mock_poor_inter = MagicMock()
+        mock_poor_inter.user.id = uid_view
+        mock_poor_inter.response = AsyncMock()
+        mock_poor_inter.response.is_done = MagicMock(return_value=False)
+
+        asyncio.run(black_btn.callback(mock_poor_inter))
+        mock_poor_inter.response.send_message.assert_called_once()
+        poor_args, poor_kwargs = mock_poor_inter.response.send_message.call_args
+        assert "No tienes suficientes Porros" in poor_args[0]
+        assert poor_kwargs.get("ephemeral") is True
+        view.bet_amount = 100
+
         # Timeout: deshabilita todos los botones
         asyncio.run(view.on_timeout())
         for child in view.children:
@@ -365,7 +410,7 @@ def run_tests():
         assert "Ruleta Europea" in embed.title
         assert "ENHORABUENA" in embed.description
         assert "👑 [ 32🟥 ] 👑" in embed.description
-        print("  ✅ TEST 7 PASADO: RouletteActionView (repetir, duplicar, seguridad y timeout) y Embed validados.")
+        print("  ✅ TEST 7 PASADO: RouletteActionView (repetir, duplicar, rojo, negro, seguridad y timeout) y Embed validados.")
 
         # TEST 8: Registro en ECONOMY_SLASH_COMMANDS y bot_service
         print("\n[TEST 8] Registro en ECONOMY_SLASH_COMMANDS y bot_service...")
@@ -400,12 +445,78 @@ def run_tests():
         ]:
             assert hasattr(bot_service, attr), f"bot_service debe reexportar {attr}"
 
-        assert len(ECONOMY_SLASH_COMMANDS) == 23, f"Debe haber 20 comandos de economía, hay {len(ECONOMY_SLASH_COMMANDS)}"
-        assert len(ALL_SLASH_COMMANDS) == 46, f"Debe haber 43 comandos en total, hay {len(ALL_SLASH_COMMANDS)}"
+        assert len(ECONOMY_SLASH_COMMANDS) == 25, f"Debe haber 25 comandos de economía, hay {len(ECONOMY_SLASH_COMMANDS)}"
+        assert len(ALL_SLASH_COMMANDS) == 48, f"Debe haber 48 comandos en total, hay {len(ALL_SLASH_COMMANDS)}"
         print("  ✅ TEST 8 PASADO: Presencia en ECONOMY_SLASH_COMMANDS y reexportación pública en bot_service confirmada.")
 
+        # TEST 9: Detección inteligente de orden de argumentos (Smart Argument Swap)
+        print("\n[TEST 9] Detección inteligente de orden de argumentos (Smart Argument Swap)...")
+        from modulos.comandos_economia import _handle_roulette_command
+
+        uid_swap = 800000000000000004
+        eco.ensure_user(uid_swap, default_cash=50000)
+
+        async def call_roulette(apuesta_val, tipo_val="rojo", numero_val=None):
+            inter = MagicMock()
+            inter.user.id = uid_swap
+            inter.user.name = "TestSwapUser"
+            inter.channel_id = None
+            inter.channel = None
+            inter.guild = MagicMock()
+            inter.guild.id = 999999
+            inter.response = AsyncMock()
+            inter.original_response = AsyncMock()
+            await _handle_roulette_command(inter, apuesta=apuesta_val, tipo=tipo_val, numero=numero_val)
+            return inter
+
+        # 9.1 Orden invertido con valor numérico: /ruleta negro 500
+        inter1 = asyncio.run(call_roulette("negro", "500"))
+        inter1.response.send_message.assert_called_once()
+        _, kwargs1 = inter1.response.send_message.call_args
+        assert "view" in kwargs1 and isinstance(kwargs1["view"], RouletteActionView)
+        assert kwargs1["view"].bet_type == "negro"
+        assert kwargs1["view"].bet_amount == 500
+
+        # 9.2 Orden invertido con 'all': /ruleta negro all
+        cash_now = eco.get_balance(uid_swap)["cash"]
+        inter2 = asyncio.run(call_roulette("negro", "all"))
+        inter2.response.send_message.assert_called_once()
+        _, kwargs2 = inter2.response.send_message.call_args
+        assert kwargs2["view"].bet_type == "negro"
+        assert kwargs2["view"].bet_amount == cash_now
+
+        # 9.3 Solo tipo de apuesta: /ruleta negro (tipo toma el valor por defecto 'rojo')
+        eco.modify_balance(uid_swap, cash_delta=20000)
+        inter3 = asyncio.run(call_roulette("negro", "rojo"))
+        inter3.response.send_message.assert_called_once()
+        _, kwargs3 = inter3.response.send_message.call_args
+        assert kwargs3["view"].bet_type == "negro"
+        assert kwargs3["view"].bet_amount == 100
+
+        # 9.4 Orden estándar tradicional: /ruleta 500 negro
+        inter4 = asyncio.run(call_roulette("500", "negro"))
+        inter4.response.send_message.assert_called_once()
+        _, kwargs4 = inter4.response.send_message.call_args
+        assert kwargs4["view"].bet_type == "negro"
+        assert kwargs4["view"].bet_amount == 500
+
+        # 9.5 Solo cantidad numérica: /ruleta 1000 (tipo toma 'rojo' por defecto)
+        inter5 = asyncio.run(call_roulette("1000", "rojo"))
+        inter5.response.send_message.assert_called_once()
+        _, kwargs5 = inter5.response.send_message.call_args
+        assert kwargs5["view"].bet_type == "rojo"
+        assert kwargs5["view"].bet_amount == 1000
+
+        # 9.6 Apuesta inválida: tipo inválido
+        inter6 = asyncio.run(call_roulette("patata", "tomate"))
+        inter6.response.send_message.assert_called_once()
+        args6, kwargs6 = inter6.response.send_message.call_args
+        assert "no válido" in args6[0]
+
+        print("  ✅ TEST 9 PASADO: Smart Argument Swap verificado en todos los escenarios (/ruleta negro 500, /ruleta negro all, /ruleta negro, /ruleta 500 negro, /ruleta 1000).")
+
         print("\n" + "=" * 70)
-        print("🎉 TODOS LOS TESTS DE RULETA EUROPEA PASARON SATISFACTORIAMENTE (8/8)")
+        print("🎉 TODOS LOS TESTS DE RULETA EUROPEA PASARON SATISFACTORIAMENTE (9/9)")
         print("=" * 70)
 
     finally:

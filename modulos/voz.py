@@ -6,6 +6,7 @@ Subsistema de Voz, DAVE E2EE, TTS Neuronal y Gemini Live Bidireccional:
 - Control de estado de desconexión manual y automática.
 - Sink bidireccional en tiempo real (GeminiLiveVoiceSink) con VAD, anti-alucinación, dictado a chat ([CHAT:]) y búsqueda web en vivo.
 """
+from __future__ import annotations
 
 import asyncio
 import base64
@@ -23,9 +24,10 @@ import time
 import urllib.error
 import urllib.request
 import wave
-import discord
-from discord.ext import voice_recv
-import edge_tts
+try:
+    from discord.ext import voice_recv
+except ImportError:
+    voice_recv = None
 
 
 def _bs():
@@ -311,7 +313,10 @@ def pcm_stereo_to_mono_48k(pcm_bytes: bytes) -> bytes:
         return struct.pack(f"<{count}h", *mono_shorts)
 
 
-class GeminiLiveVoiceSink(voice_recv.AudioSink):
+_BaseAudioSink = voice_recv.AudioSink if voice_recv is not None else object
+
+
+class GeminiLiveVoiceSink(_BaseAudioSink):
     """
     Sink de audio bidireccional en tiempo real (estilo Gemini Live) para llamadas de Discord.
     """

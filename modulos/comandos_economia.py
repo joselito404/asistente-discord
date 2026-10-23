@@ -552,7 +552,23 @@ async def _handle_roulette_command(
         await interaction.response.send_message(msg, ephemeral=True)
         return
 
-    norm_type = normalize_roulette_bet_type(tipo)
+    # Detección inteligente de orden de argumentos (Smart Argument Swap)
+    norm_apuesta = normalize_roulette_bet_type(apuesta)
+    if norm_apuesta in ROULETTE_BET_INFO:
+        norm_type = norm_apuesta
+        s_tipo = str(tipo).strip().lower()
+        if (
+            s_tipo in ("all", "todo", "max", "all-in", "allin")
+            or s_tipo.isdigit()
+            or s_tipo.replace(",", "").replace(".", "").isdigit()
+        ):
+            real_apuesta = tipo
+        else:
+            real_apuesta = "100"
+    else:
+        norm_type = normalize_roulette_bet_type(tipo)
+        real_apuesta = apuesta
+
     if norm_type not in ROULETTE_BET_INFO:
         await interaction.response.send_message(
             f"❌ Tipo de apuesta '{tipo}' no válido. Elige una opción oficial del menú.",
@@ -574,7 +590,7 @@ async def _handle_roulette_command(
             )
             return
 
-    ok, bet, err = parse_roulette_bet(interaction.user.id, apuesta)
+    ok, bet, err = parse_roulette_bet(interaction.user.id, real_apuesta)
     if not ok:
         await interaction.response.send_message(f"❌ {err}", ephemeral=True)
         return

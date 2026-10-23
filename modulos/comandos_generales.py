@@ -22,7 +22,10 @@ import urllib.parse
 from typing import Optional
 import discord
 from discord import app_commands
-from discord.ext import voice_recv
+try:
+    from discord.ext import voice_recv
+except ImportError:
+    voice_recv = None
 from datetime import datetime, timezone
 import asyncio
 
@@ -649,7 +652,7 @@ async def cmd_geminilive(
         if sink and hasattr(sink, "_is_active"):
             sink._is_active = True
             await interaction.followup.send("▶️ **Gemini Live reanudado**: El bot vuelve a escuchar activamente la llamada.")
-        elif vc and vc.is_connected() and isinstance(vc, voice_recv.VoiceRecvClient) and bot:
+        elif vc and vc.is_connected() and voice_recv and isinstance(vc, voice_recv.VoiceRecvClient) and bot:
             new_sink = GeminiLiveVoiceSink(vc, bot.loop)
             vc.listen(new_sink)
             await interaction.followup.send(f"🎙️ **Gemini Live iniciado** en **#{vc.channel.name}**.")

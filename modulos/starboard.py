@@ -173,25 +173,194 @@ def _draw_diamond_polygon(
 
 def _clean_discord_text(text: str) -> str:
     """
-    Limpia el texto de formato interno de Discord para maquetación tipográfica de prensa:
+    Limpia el texto de formato interno de Discord para maquetación tipográfica de prensa vintage:
+    - Retira bloques de código y código inline.
+    - Retira encabezados markdown (#, ##, ###, -#) y citas (>).
     - Retira emojis personalizados <:nombre:123456> para que no ensucien la cita de prensa.
     - Limpia menciones de usuarios, canales y roles.
+    - Retira negritas/cursivas (**texto**, __texto__).
     - Normaliza espacios en blanco.
     """
     if not text:
         return ""
     import re
-    # 1. Retirar emojis personalizados de Discord (<:nombre:id> o <a:nombre:id>)
-    clean = re.sub(r"<a?:\w+:\d+>", "", text)
-    # 2. Reemplazar menciones numéricas de usuarios por @usuario
+    # 1. Retirar bloques de código y código inline
+    clean = re.sub(r"```[a-zA-Z]*\n?([\s\S]*?)```", r"\1", text)
+    clean = re.sub(r"`([^`]+)`", r"\1", clean)
+    # 2. Retirar encabezados markdown y subtextos
+    clean = re.sub(r"(?m)^#{1,3}\s*", "", clean)
+    clean = re.sub(r"(?m)^-#\s*", "", clean)
+    clean = re.sub(r"#{1,3}\s+", "", clean)
+    # 3. Retirar blockquotes markdown
+    clean = re.sub(r"(?m)^>+\s*", "", clean)
+    # 4. Retirar emojis personalizados de Discord (<:nombre:id> o <a:nombre:id>)
+    clean = re.sub(r"<a?:\w+:\d+>", "", clean)
+    # 5. Reemplazar menciones numéricas de usuarios por @usuario
     clean = re.sub(r"<@!?\d+>", "@usuario", clean)
-    # 3. Reemplazar menciones de canales <#id> por #canal
+    # 6. Reemplazar menciones de canales <#id> por #canal
     clean = re.sub(r"<#\d+>", "#canal", clean)
-    # 4. Reemplazar menciones de roles <@&id> por @rol
+    # 7. Reemplazar menciones de roles <@&id> por @rol
     clean = re.sub(r"<@&\d+>", "@rol", clean)
-    # 5. Colapsar espacios múltiples y limpiar extremos
+    # 8. Retirar negritas y cursivas excesivas (**texto**, __texto__)
+    clean = re.sub(r"\*\*(.*?)\*\*", r"\1", clean)
+    clean = re.sub(r"__(.*?)__", r"\1", clean)
+    clean = clean.replace("**", "").replace("__", "")
+    # 9. Colapsar espacios múltiples y limpiar extremos
     clean = re.sub(r"\s+", " ", clean).strip()
     return clean
+
+
+def _iter_all_components(components: Any):
+    """
+    Recorre recursivamente cualquier jerarquía de componentes de Discord,
+    soportando tanto instancias de discord.py (ActionRow, Container, etc.)
+    como diccionarios JSON raw de Discord Components V2.
+    """
+    if not components:
+        return
+    for item in components:
+        yield item
+        sub_items = None
+        if isinstance(item, dict):
+            raw_sub = item.get("components") or item.get("children")
+            if isinstance(raw_sub, (list, tuple)):
+                sub_items = raw_sub
+        else:
+            for attr in ("components", "children"):
+                val = getattr(item, attr, None)
+                if isinstance(val, (list, tuple)):
+                    sub_items = val
+                    break
+        if sub_items:
+            yield from _iter_all_components(sub_items)
+
+
+def _resolve_message_author(message: Any) -> Any:
+    """
+    Examina el mensaje para resolver su autor humano real.
+    Si message.author es un bot (ej. Economia Asistente al responder a /slots):
+    1. Si hasattr(message, 'interaction') y message.interaction tiene atributo 'user':
+       el autor real es message.interaction.user.
+    2. Si en los embeds o contenido se identifica un usuario iniciador (por mención o guild), lo retorna.
+    3. Si en los custom_ids de componentes se identifica un user_id, lo busca en el servidor.
+    4. En caso contrario, hace fallback a message.author.
+    Si message.author no es bot, retorna message.author directamente.
+    """
+    author = getattr(message, "author", None)
+    if not author:
+        return author
+
+    # Comprobar si el autor es un bot
+    is_bot = (getattr(author, "bot", False) is True)
+    if not is_bot:
+        return author
+
+    # 1. Interacción directa de Discord Slash Command / Context Menu
+    interaction = getattr(message, "interaction", None)
+    if interaction and hasattr(interaction, "user") and interaction.user:
+        return interaction.user
+
+    # 2. Búsqueda en embeds (mención en título, descripción o campos)
+    embeds = getattr(message, "embeds", []) or []
+    import re
+    for emb in embeds:
+        text_chunks = [getattr(emb, "title", "") or "", getattr(emb, "description", "") or ""]
+        for f in getattr(emb, "fields", []) or []:
+            text_chunks.append(getattr(f, "name", "") or "")
+            text_chunks.append(getattr(f, "value", "") or "")
+        combined = " ".join(text_chunks)
+        m = re.search(r"<@!?(\d+)>", combined)
+        if m:
+            uid = int(m.group(1))
+            guild = getattr(message, "guild", None)
+            if guild and hasattr(guild, "get_member"):
+                member = guild.get_member(uid)
+                if member:
+                    return member
+
+    # 3. Búsqueda en custom_ids de componentes (ej: slots:play-again:100:USER_ID)
+    components = getattr(message, "components", []) or []
+    for comp in _iter_all_components(components):
+        custom_id = getattr(comp, "custom_id", None) or (comp.get("custom_id") if isinstance(comp, dict) else None)
+        if custom_id and isinstance(custom_id, str):
+            parts = custom_id.split(":")
+            if len(parts) >= 4 and parts[0] == "slots" and parts[-1].isdigit():
+                uid = int(parts[-1])
+                guild = getattr(message, "guild", None)
+                if guild and hasattr(guild, "get_member"):
+                    member = guild.get_member(uid)
+                    if member:
+                        return member
+
+    # Fallback canónico
+    return author
+
+
+def _extract_message_text(message: Any) -> str:
+    """
+    Extrae el texto representativo de un mensaje con soporte exhaustivo para:
+    1. message.content si no está vacío.
+    2. message.components (Components V2, Containers y TextDisplays).
+    3. message.embeds (título, descripción y campos).
+    4. Fallbacks contextuales para adjuntos o interactivos sin texto.
+    """
+    # 1. Contenido textual estándar
+    content = getattr(message, "content", None)
+    if content and isinstance(content, str) and content.strip():
+        return content.strip()
+
+    # 2. Inspección profunda de componentes V2 (TextDisplay / Container)
+    components = getattr(message, "components", []) or []
+    comp_texts: List[str] = []
+    for comp in _iter_all_components(components):
+        comp_type = getattr(comp, "type", None)
+        if comp_type is None and isinstance(comp, dict):
+            comp_type = comp.get("type")
+        comp_type_val = getattr(comp_type, "value", comp_type)
+
+        # TextDisplay es tipo 10 o componente con atributo 'content'
+        if comp_type_val == 10 or hasattr(comp, "content") or (isinstance(comp, dict) and "content" in comp):
+            c = getattr(comp, "content", None)
+            if c is None and isinstance(comp, dict):
+                c = comp.get("content")
+            if isinstance(c, str) and c.strip():
+                comp_texts.append(c.strip())
+
+    if comp_texts:
+        return "\n\n".join(comp_texts)
+
+    # 3. Inspección de embeds
+    embeds = getattr(message, "embeds", []) or []
+    embed_texts: List[str] = []
+    for emb in embeds:
+        title = getattr(emb, "title", None) or (emb.get("title") if isinstance(emb, dict) else None)
+        desc = getattr(emb, "description", None) or (emb.get("description") if isinstance(emb, dict) else None)
+        if title and isinstance(title, str) and title.strip():
+            embed_texts.append(title.strip())
+        if desc and isinstance(desc, str) and desc.strip():
+            embed_texts.append(desc.strip())
+        fields = getattr(emb, "fields", None) or (emb.get("fields") if isinstance(emb, dict) else None)
+        if fields:
+            for f in fields:
+                fname = getattr(f, "name", None) or (f.get("name") if isinstance(f, dict) else None)
+                fval = getattr(f, "value", None) or (f.get("value") if isinstance(f, dict) else None)
+                if fname and fval:
+                    embed_texts.append(f"{fname}: {fval}")
+                elif fname:
+                    embed_texts.append(str(fname))
+                elif fval:
+                    embed_texts.append(str(fval))
+
+    if embed_texts:
+        return "\n\n".join(embed_texts)
+
+    # 4. Fallback para adjuntos multimedia
+    attachments = getattr(message, "attachments", []) or []
+    if attachments and len(attachments) > 0:
+        return "“(Contenido multimedia o imagen adjunta)”"
+
+    # 5. Fallback final interactivo
+    return "“(Mensaje interactivo sin texto)”"
 
 
 # ==========================================
@@ -336,12 +505,14 @@ def render_sanvi_daily_cover(
 
     # Añadir comillas tipográficas
     if wrapped_lines:
-        wrapped_lines[0] = f"“ {wrapped_lines[0]}"
-        if len(wrapped_lines) <= max_quote_lines:
-            wrapped_lines[-1] = f"{wrapped_lines[-1]} ”"
-        else:
-            wrapped_lines = wrapped_lines[:max_quote_lines]
-            wrapped_lines[-1] = f"{wrapped_lines[-1]}... ”"
+        if not wrapped_lines[0].startswith("“"):
+            wrapped_lines[0] = f"“ {wrapped_lines[0]}"
+        if not wrapped_lines[-1].endswith("”"):
+            if len(wrapped_lines) <= max_quote_lines:
+                wrapped_lines[-1] = f"{wrapped_lines[-1]} ”"
+            else:
+                wrapped_lines = wrapped_lines[:max_quote_lines]
+                wrapped_lines[-1] = f"{wrapped_lines[-1]}... ”"
     else:
         wrapped_lines = ["“ (Sin texto) ”"]
 
@@ -493,7 +664,12 @@ async def handle_starboard_reaction_add(payload: discord.RawReactionActionEvent,
         _log(f"Error leyendo usuarios de la reacción ⭐: {e}")
         return
 
-    valid_stargazers = [u for u in reaction_users if u.id != message.author.id]
+    real_author = _resolve_message_author(message)
+    excluded_author_ids = {message.author.id}
+    if real_author and hasattr(real_author, "id"):
+        excluded_author_ids.add(real_author.id)
+
+    valid_stargazers = [u for u in reaction_users if u.id not in excluded_author_ids]
     stars_count = len(valid_stargazers)
 
     entry_key = f"{message.channel.id}_{message.id}"
@@ -542,10 +718,12 @@ async def handle_starboard_reaction_add(payload: discord.RawReactionActionEvent,
 
         _log(f"🌟 ¡Mensaje {message.id} alcanzó {stars_count} ⭐! Imprimiendo Edición Nº {edition}...")
 
-        # Descargar avatar del autor
+        # Descargar avatar del autor real
+        target_author = real_author or message.author
         author_avatar_bytes: Optional[bytes] = None
         try:
-            author_avatar_bytes = await message.author.display_avatar.read()
+            if hasattr(target_author, "display_avatar") and target_author.display_avatar:
+                author_avatar_bytes = await target_author.display_avatar.read()
         except Exception as e_av:
             _log(f"Aviso descargando avatar del autor: {e_av}")
 
@@ -561,12 +739,16 @@ async def handle_starboard_reaction_add(payload: discord.RawReactionActionEvent,
                 except Exception as e_att:
                     _log(f"Aviso descargando adjunto {att.filename}: {e_att}")
 
+        # Extraer texto representativo del mensaje (content, components V2, embeds o fallbacks)
+        extracted_content = _extract_message_text(message)
+
         # Renderizar la portada con Pillow
         created_at_str = message.created_at.strftime("%d/%m/%Y %H:%M UTC")
+        author_name = getattr(target_author, "display_name", getattr(target_author, "name", "Ciudadano"))
         img_bytes = render_sanvi_daily_cover(
-            author_name=message.author.display_name,
+            author_name=author_name,
             author_avatar_bytes=author_avatar_bytes,
-            content=message.content or "",
+            content=extracted_content,
             created_at_str=created_at_str,
             edition_num=edition,
             stars_count=stars_count,
@@ -576,7 +758,7 @@ async def handle_starboard_reaction_add(payload: discord.RawReactionActionEvent,
         # Construir Embed Dorado Canónico (0xF59E0B)
         embed = discord.Embed(
             title=f"⭐ #{edition} | The Sanvi Daily",
-            description=f"Mensaje célebre de <@{message.author.id}> en <#{message.channel.id}>",
+            description=f"Mensaje célebre de <@{target_author.id}> en <#{message.channel.id}>",
             color=0xF59E0B,
             timestamp=message.created_at,
         )
@@ -609,8 +791,8 @@ async def handle_starboard_reaction_add(payload: discord.RawReactionActionEvent,
                 "orig_channel_id": message.channel.id,
                 "orig_message_id": message.id,
                 "starboard_message_id": sent_msg.id,
-                "author_id": message.author.id,
-                "author_name": message.author.name,
+                "author_id": target_author.id,
+                "author_name": getattr(target_author, "name", str(target_author)),
                 "stars_count": stars_count,
                 "stargazers": [u.id for u in valid_stargazers],
                 "created_at": message.created_at.isoformat(),
@@ -664,11 +846,16 @@ async def handle_starboard_reaction_remove(payload: discord.RawReactionActionEve
                 star_reaction = r
                 break
 
+        real_author = _resolve_message_author(message)
+        excluded_author_ids = {message.author.id}
+        if real_author and hasattr(real_author, "id"):
+            excluded_author_ids.add(real_author.id)
+
         valid_stargazers = []
         if star_reaction:
             try:
                 reaction_users = [u async for u in star_reaction.users()]
-                valid_stargazers = [u for u in reaction_users if u.id != message.author.id]
+                valid_stargazers = [u for u in reaction_users if u.id not in excluded_author_ids]
             except Exception:
                 pass
 

@@ -421,6 +421,136 @@ class TestStarboardLogic(unittest.IsolatedAsyncioTestCase):
         self.assertIn("777_502", data["entries"])
         self.assertEqual(data["entries"]["777_502"]["stars_count"], 1)
 
+    async def test_09_bot_slots_interaction_and_components_v2(self):
+        """Valida que mensajes de bot con componentes V2 (slots) atribuyan la autoría al usuario real y extraigan el texto."""
+        from modulos.starboard import _resolve_message_author, _extract_message_text, _clean_discord_text
+
+        # 1. Simular bot y usuario humano real (Joselito)
+        bot_author = MagicMock()
+        bot_author.id = 999000
+        bot_author.bot = True
+        bot_author.name = "Economia Asistente"
+        bot_author.display_name = "ECONOMIA ASISTENTE"
+
+        human_user = MagicMock()
+        human_user.id = 123456
+        human_user.bot = False
+        human_user.name = "Joselito"
+        human_user.display_name = "Joselito"
+        human_user.display_avatar.read = AsyncMock(return_value=b"fake_human_avatar")
+
+        # 2. Simular estructura de componentes V2 de slots (/slots)
+        comp_title = MagicMock()
+        comp_title.type = 10  # TextDisplay
+        comp_title.content = "### 🎰 TRAGAPERRAS 5×3 — ¡PREMIO!"
+
+        comp_body = MagicMock()
+        comp_body.type = 10  # TextDisplay
+        comp_body.content = "🍋 🍋 🍋 🍋 🍋\n**Línea Ganadora:** • 🍋 Centro (×10)\n**Premio Total:** 50,000 Porros"
+
+        container = MagicMock()
+        container.type = 17  # Container
+        container.components = [comp_title, comp_body]
+
+        action_button = MagicMock()
+        action_button.type = 2  # Button
+        action_button.custom_id = "slots:play-again:100:123456"
+
+        # Mensaje de Discord generado por el bot vía interacción de Joselito
+        channel = AsyncMock()
+        channel.id = 777
+        channel.name = "casino-y-apuestas"
+
+        message = MagicMock()
+        message.id = 600
+        message.channel = channel
+        message.author = bot_author
+        message.interaction = MagicMock()
+        message.interaction.user = human_user
+        message.content = ""  # En Components V2 content es vacío
+        message.components = [container]
+        message.embeds = []
+        message.attachments = []
+        message.created_at = datetime.now(timezone.utc)
+        message.jump_url = "https://discord.com/channels/1/777/600"
+
+        # A) Verificación unitaria de _resolve_message_author
+        resolved_author = _resolve_message_author(message)
+        self.assertEqual(resolved_author.id, 123456, "Debe resolver al usuario humano real de la interacción")
+        self.assertEqual(resolved_author.display_name, "Joselito")
+
+        # B) Verificación unitaria de _extract_message_text
+        extracted_text = _extract_message_text(message)
+        self.assertIn("TRAGAPERRAS 5×3", extracted_text)
+        self.assertIn("50,000 Porros", extracted_text)
+        self.assertNotIn("(Mensaje sin texto adjunto", extracted_text)
+
+        # C) Verificación de sanitización tipográfica para la portada
+        cleaned = _clean_discord_text(extracted_text)
+        self.assertNotIn("###", cleaned, "Debe retirar encabezados markdown")
+        self.assertNotIn("**", cleaned, "Debe retirar marcas de negrita")
+        self.assertIn("TRAGAPERRAS 5×3 — ¡PREMIO!", cleaned)
+
+        # D) Integración reactiva en handle_starboard_reaction_add
+        bot = MagicMock()
+        channel.fetch_message = AsyncMock(return_value=message)
+
+        sb_channel = AsyncMock()
+        sb_channel.name = "⭐muro-de-la-fama⭐"
+        sent_sb_msg = MagicMock()
+        sent_sb_msg.id = 77777
+        sb_channel.send = AsyncMock(return_value=sent_sb_msg)
+
+        def _get_ch(cid):
+            if cid == 777:
+                return channel
+            if cid == STARBOARD_CHANNEL_ID:
+                return sb_channel
+            return None
+
+        bot.get_channel.side_effect = _get_ch
+
+        # Anti-autobombo: La estrella de Joselito (el ganador) NO cuenta
+        user_joselito = MagicMock(id=123456)
+        user_fan1 = MagicMock(id=301)
+        user_fan2 = MagicMock(id=302)
+
+        async def _users_with_self():
+            yield user_joselito
+            yield user_fan1
+
+        reaction = MagicMock(emoji=STAR_EMOJI, users=_users_with_self)
+        message.reactions = [reaction]
+
+        payload = MagicMock(emoji=STAR_EMOJI, channel_id=777, message_id=600)
+        await handle_starboard_reaction_add(payload, bot)
+        sb_channel.send.assert_not_called()  # Solo 1 estrella válida (la de Joselito no cuenta)
+
+        # Con 2 estrellas de fans externos (3 en total contando a Joselito), se publica
+        async def _users_threshold():
+            yield user_joselito
+            yield user_fan1
+            yield user_fan2
+
+        reaction.users = _users_threshold
+        await handle_starboard_reaction_add(payload, bot)
+
+        sb_channel.send.assert_called_once()
+        _, kwargs = sb_channel.send.call_args
+        embed_sent = kwargs["embed"]
+
+        # Validar que el embed atribuye la autoría a Joselito y no a Economia Asistente
+        self.assertIn("<@123456>", embed_sent.description)
+        self.assertNotIn("<@999000>", embed_sent.description)
+
+        # Validar persistencia atómica con el autor humano
+        data = load_starboard_data()
+        self.assertIn("777_600", data["entries"])
+        entry = data["entries"]["777_600"]
+        self.assertEqual(entry["author_id"], 123456)
+        self.assertEqual(entry["author_name"], "Joselito")
+        self.assertEqual(entry["stars_count"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()

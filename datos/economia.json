@@ -2,7 +2,7 @@
   "users": {
     "857923274771136522": {
       "username": "joselito3499",
-      "cash": 433802,
+      "cash": 2913802,
       "bank": 0,
       "last_work": null,
       "last_rob": null,
@@ -10,7 +10,9 @@
       "inventory": [
         "🛡️ Cartera Blindada"
       ],
-      "portfolio": {}
+      "portfolio": {},
+      "last_crime": null,
+      "active_buffs": []
     },
     "1170704124631846993": {
       "username": "omen2042_38051",
@@ -93,7 +95,7 @@
       "portfolio": {}
     },
     "999888777666": {
-      "cash": 1650416,
+      "cash": 1750480,
       "bank": 0,
       "last_work": null,
       "last_crime": null,

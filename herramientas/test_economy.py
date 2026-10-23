@@ -412,7 +412,28 @@ def run_tests():
         assert wl_1w["symbol"] == "Pro"
         assert wl_1w["count"] == 5
         assert wl_1w["mult"] == 240.0, f"1 Wild + 4 Pro debe pagar x240.0, obtenido: {wl_1w['mult']}"
-        print("  ✅ TEST 10 PASADO: Comodín WILD para 3, 4 y 5 aciertos validado.")
+
+        # 10c: Caso crítico reportado por Jose: [Mythic, WILD, WILD, WILD, Diamond]
+        # Regla de oro: Highest Win Paid per Line
+        # 4 Míticos (Mítico + 3 Wilds) pagaría x5.2, pero 3 WILDs consecutivos puros pagan x30.0.
+        # Debe ganar x30.0 de los 3 Wilds y NO el x5.2 de Mítico.
+        sym_jose, count_jose, mult_jose = engine.evaluate_line(["Mythic", "Wild", "Wild", "Wild", "Diamond"])
+        assert sym_jose == "Wild", f"Símbolo esperado 'Wild', obtenido: {sym_jose}"
+        assert count_jose == 3, f"Count esperado 3, obtenido: {count_jose}"
+        assert mult_jose == 30.0, f"Mult esperado 30.0 (Wilds 3x), obtenido: {mult_jose}"
+
+        # También probado a través de la matriz completa en Línea Arriba
+        grid_jose = [
+            ["Mythic", "Wild", "Wild", "Wild", "Diamond"],
+            ["Gold", "Diamond", "Gold", "Diamond", "Gold"],
+            ["Gold", "Diamond", "Gold", "Diamond", "Gold"],
+        ]
+        res_jose = engine.evaluate(grid_jose, 1000)
+        wl_jose = [wl for wl in res_jose["winning_lines"] if "Línea Arriba" in wl["line"]][0]
+        assert wl_jose["symbol"] == "Wild"
+        assert wl_jose["count"] == 3
+        assert wl_jose["mult"] == 30.0, f"Línea Arriba debe pagar x30.0 (Wilds 3x), obtenido: {wl_jose['mult']}"
+        print("  ✅ TEST 10 PASADO: Comodín WILD (3, 4, 5 aciertos, caso Jose x30.0 y 'Highest Win Paid per Line') validado.")
 
         # TEST 11: Retirada de 'El Ojo' y verificación de sólo líneas limpias
         print("\n[TEST 11] Comprobación de eliminación de 'El Ojo' y sólo 9 líneas limpias...")

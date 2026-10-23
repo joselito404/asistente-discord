@@ -99,12 +99,12 @@ SLOT_PAYLINES = [
     ("Línea Arriba", [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)]),
     ("Línea Centro", [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)]),
     ("Línea Abajo", [(2, 0), (2, 1), (2, 2), (2, 3), (2, 4)]),
-    ("Diagonal Descendente", [(0, 0), (1, 1), (2, 2)]),
-    ("Diagonal Descendente", [(0, 1), (1, 2), (2, 3)]),
-    ("Diagonal Descendente", [(0, 2), (1, 3), (2, 4)]),
-    ("Diagonal Ascendente", [(2, 0), (1, 1), (0, 2)]),
-    ("Diagonal Ascendente", [(2, 1), (1, 2), (0, 3)]),
-    ("Diagonal Ascendente", [(2, 2), (1, 3), (0, 4)]),
+    ("Diagonal Descendente 1 (Cols 1-3)", [(0, 0), (1, 1), (2, 2)]),
+    ("Diagonal Descendente 2 (Cols 2-4)", [(0, 1), (1, 2), (2, 3)]),
+    ("Diagonal Descendente 3 (Cols 3-5)", [(0, 2), (1, 3), (2, 4)]),
+    ("Diagonal Ascendente 1 (Cols 1-3)", [(2, 0), (1, 1), (0, 2)]),
+    ("Diagonal Ascendente 2 (Cols 2-4)", [(2, 1), (1, 2), (0, 3)]),
+    ("Diagonal Ascendente 3 (Cols 3-5)", [(2, 2), (1, 3), (0, 4)]),
 ]
 
 
@@ -134,7 +134,9 @@ class SlotEngine:
         Evalúa una línea de pago en matriz 5x3:
         - Si la línea tiene 3 casillas (diagonales D1-D6): evalúa si las 3 casillas coinciden (k=3).
         - Si la línea tiene 5 casillas (horizontales L1-L3): evalúa ventanas consecutivas de tamaño
-          k = 5, 4, 3 en cualquier posición de la fila, priorizando mayor k y mayor multiplicador.
+          k = 5, 4, 3 en cualquier posición de la fila, aplicando la regla de oro de casinos:
+          "Highest Win Paid per Line" (se abona la combinación que otorgue el mayor multiplicador;
+          en caso de empate exacto de multiplicador, se prioriza el de mayor longitud k).
         Wild sustituye a cualquier regular; una racha de Wilds puros también premia.
         Devuelve (best_sym, best_count, best_mult).
         """
@@ -153,27 +155,37 @@ class SlotEngine:
                     return reg, 3, reg_mult
             return None, 0, 0.0
 
-        # Horizontales (5 casillas): evaluar k in (5, 4, 3) con ventanas consecutivas
+        # Horizontales (5 casillas): evaluar todas las ventanas k in (5, 4, 3)
+        # Regla "Highest Win Paid per Line" (mayor multiplicador absoluto en la línea)
+        best_cand: Optional[Tuple[str, int, float]] = None
+        best_mult = 0.0
+        best_k = 0
+
         for k in (5, 4, 3):
-            best_cand = None
-            best_mult = 0.0
             for start in range(len(line_syms) - k + 1):
                 window = line_syms[start:start+k]
+                cand_sym = None
+                cand_mult = 0.0
                 if all(s == "Wild" for s in window):
-                    w_mult = self.symbols["Wild"]["mults"].get(k, 0.0)
-                    if w_mult > best_mult:
-                        best_mult = w_mult
-                        best_cand = ("Wild", k, w_mult)
+                    cand_sym = "Wild"
+                    cand_mult = self.symbols["Wild"]["mults"].get(k, 0.0)
                 else:
                     nw = [s for s in window if s != "Wild"]
                     if len(nw) > 0 and all(s == nw[0] for s in nw) and nw[0] in regular_keys:
-                        reg = nw[0]
-                        reg_mult = self.symbols[reg]["mults"].get(k, 0.0)
-                        if reg_mult > best_mult:
-                            best_mult = reg_mult
-                            best_cand = (reg, k, reg_mult)
-            if best_cand is not None:
-                return best_cand
+                        cand_sym = nw[0]
+                        cand_mult = self.symbols[cand_sym]["mults"].get(k, 0.0)
+
+                if cand_sym is not None and cand_mult > 0.0:
+                    if cand_mult > best_mult:
+                        best_mult = cand_mult
+                        best_k = k
+                        best_cand = (cand_sym, k, cand_mult)
+                    elif cand_mult == best_mult and k > best_k:
+                        best_k = k
+                        best_cand = (cand_sym, k, cand_mult)
+
+        if best_cand is not None:
+            return best_cand
 
         return None, 0, 0.0
 
@@ -245,16 +257,16 @@ class SlotEngine:
             title = "### 🌟 ¡¡PANTALLA COMPLETA 15/15!! 🌟"
             accent_color = 16766720
         elif total_mult == 0:
-            title = "### No Win"
+            title = "### 💀 Sin Premio"
             accent_color = 15684432  # Rojo #EF5350
         elif total_mult < 5.0:
-            title = "### You Won!"
+            title = "### ✅ ¡Has Ganado!"
             accent_color = 6732650   # Verde #66B96A
         elif total_mult < 20.0:
-            title = "### Good Win!"
+            title = "### 🎉 ¡Buen Premio!"
             accent_color = 6732650   # Verde #66B96A
         else:
-            title = "### Big Win!"
+            title = "### 💥 ¡¡Gran Premio!! 💥"
             accent_color = 16766720  # Dorado #FFC107
 
         return {
@@ -329,7 +341,7 @@ class SlotEngine:
         content_parts = [grid_text]
 
         if result.get("winning_lines"):
-            lines_header = "**Winning Lines:**" if len(result["winning_lines"]) > 1 else "**Winning Line:**"
+            lines_header = "**Líneas Ganadoras:**" if len(result["winning_lines"]) > 1 else "**Línea Ganadora:**"
             content_parts.append("\n" + lines_header)
             for wl in result["winning_lines"]:
                 content_parts.append(f"• {wl['emoji']} {wl['line']} (×{wl['mult']})")
@@ -339,7 +351,7 @@ class SlotEngine:
             content_parts.append(f"\n💥 **{jp_title}** {PORRO_EMOJI}{result['jackpot_won']:,}")
 
         payout_str = f"{result['payout']:,}"
-        content_parts.append(f"\n**Payout:** {PORRO_EMOJI}{payout_str}")
+        content_parts.append(f"\n**Premio Total:** {PORRO_EMOJI}{payout_str}")
 
         body_text = "\n".join(content_parts)
 
@@ -350,14 +362,14 @@ class SlotEngine:
                 "id": 7,
                 "custom_id": f"slots:play-again:{bet}:{user_id}",
                 "style": 1,
-                "label": "Play Again",
+                "label": "Volver a Tirar",
             },
             {
                 "type": 2,
                 "id": 8,
                 "custom_id": "slots:payouts",
                 "style": 2,
-                "label": "Payouts",
+                "label": "Tabla de Pagos",
             },
         ]
 
@@ -416,7 +428,8 @@ def build_payouts_text() -> str:
         "🎰 **TABLA DE PAGOS Y REGLAS — TRAGAPERRAS 5×3 DE PORROS**",
         "La máquina evalúa **9 líneas de pago limpias reales** en cuadrícula de 5 rodillos × 3 filas:",
         "• **Horizontales**: Línea Arriba, Línea Centro, Línea Abajo (premia por 3, 4 o 5 seguidos en la fila).",
-        "• **Diagonales**: Diagonales Descendentes y Ascendentes (premia por 3 aciertos en línea recta).",
+        "• **Diagonales**: Diagonales Descendentes (1 a 3) y Ascendentes (1 a 3) (premia por 3 aciertos en línea recta).",
+        "• **Regla de Oro**: Se abona siempre el premio de mayor multiplicador en cada línea.",
         "",
         "**Multiplicadores por acierto (3 / 4 / 5 aciertos):**",
         "• <:absolutecinema:1478115607336714300> **WILD (Comodín)**: **×30.0** / **×95.0** / **×290.0** — Sustituye a cualquier regular. 5 en Línea Centro = ¡Grand Jackpot!",
@@ -506,7 +519,7 @@ class SlotsPlayAgainButton(Button):
     def __init__(self, bet: int, user_id: str):
         super().__init__(
             style=discord.ButtonStyle.primary,
-            label="Play Again",
+            label="Volver a Tirar",
             custom_id=f"slots:play-again:{bet}:{user_id}",
         )
         self.bet = bet
@@ -520,7 +533,7 @@ class SlotsPayoutsButton(Button):
     def __init__(self):
         super().__init__(
             style=discord.ButtonStyle.secondary,
-            label="Payouts",
+            label="Tabla de Pagos",
             custom_id="slots:payouts",
         )
 
@@ -572,7 +585,7 @@ class SlotsLayoutView(LayoutView):
         content_parts = [grid_text]
 
         if result.get("winning_lines"):
-            lines_header = "**Winning Lines:**" if len(result["winning_lines"]) > 1 else "**Winning Line:**"
+            lines_header = "**Líneas Ganadoras:**" if len(result["winning_lines"]) > 1 else "**Línea Ganadora:**"
             content_parts.append("\n" + lines_header)
             for wl in result["winning_lines"]:
                 content_parts.append(f"• {wl['emoji']} {wl['line']} (×{wl['mult']})")
@@ -582,7 +595,7 @@ class SlotsLayoutView(LayoutView):
             content_parts.append(f"\n💥 **{jp_title}** {PORRO_EMOJI}{result['jackpot_won']:,}")
 
         payout_str = f"{result['payout']:,}"
-        content_parts.append(f"\n**Payout:** {PORRO_EMOJI}{payout_str}")
+        content_parts.append(f"\n**Premio Total:** {PORRO_EMOJI}{payout_str}")
 
         body_text = "\n".join(content_parts)
 

@@ -24,6 +24,7 @@ from modulos.chat_ia import (
     SERVER_EMOJIS_DATA,
     DISABLED_EMOJI_FALLBACK,
     format_server_emojis,
+    MODELS_PRIORITY,
 )
 
 
@@ -168,6 +169,91 @@ class TestEmojiConverter(unittest.TestCase):
         text = "Son las 12:30 de la noche y el ratio es 16:9 con :not_an_emoji: y :gigachad:"
         expected = "Son las 12:30 de la noche y el ratio es 16:9 con :not_an_emoji: y <:gigachad:1535682070536519730>"
         self.assertEqual(format_server_emojis(text), expected)
+
+    def test_adjacent_punctuation_conversion(self):
+        """Verifica que patrones con puntuaciones pegadas (:bruh:.., :grass:,, :KEKWLaugh:., (:Porro:), ¡:aura:!) se procesan sin fallo."""
+        # 1. Sin guild (catálogo base)
+        self.assertEqual(format_server_emojis(":bruh:.."), "<:bruh:1535682294139060235>..")
+        self.assertEqual(format_server_emojis(":grass:,"), "<:grass:1535727100365901855>,")
+        self.assertEqual(format_server_emojis(":KEKWLaugh:."), "<a:KEKWLaugh:1535679941059018903>.")
+        self.assertEqual(format_server_emojis("(:Porro:)"), "(<:Porro:1535685303317172305>)")
+        self.assertEqual(format_server_emojis("¡:aura:!"), "¡<:aura:1535728704129466462>!")
+
+        # 2. Con guild donde boost expiró (grass y Porro tienen available=False)
+        mock_emojis = [
+            MockDiscordEmoji("grass", 1535727100365901855, animated=False, available=False),
+            MockDiscordEmoji("Porro", 1535685303317172305, animated=False, available=False),
+            MockDiscordEmoji("bruh", 1535682294139060235, animated=False, available=True),
+        ]
+        guild = MockGuild(mock_emojis)
+        self.assertEqual(format_server_emojis(":grass:,", guild=guild), "🌱,")
+        self.assertEqual(format_server_emojis("(:Porro:)", guild=guild), "(🚬)")
+        self.assertEqual(format_server_emojis(":bruh:..", guild=guild), "<:bruh:1535682294139060235>..")
+
+    def test_raw_id_leak_cleanup(self):
+        """Verifica la purga de fugas de ID numérico (ej: 💸1535726716901789726. -> 💸.)."""
+        self.assertEqual(format_server_emojis("💸1535726716901789726."), "💸.")
+        text = "¡Mira esto 💸1535726716901789726. Y toma 100 porros!"
+        expected = "¡Mira esto 💸. Y toma 100 porros!"
+        self.assertEqual(format_server_emojis(text), expected)
+
+    def test_raw_mention_fallback_when_disabled(self):
+        """
+        Verifica que menciones completas <:name:ID> generadas por Gemini
+        se reemplacen por su fallback limpio cuando el emoji no está disponible en Discord.
+        """
+        mock_emojis = [
+            MockDiscordEmoji("cooked", 1535726716901789726, animated=False, available=False),
+            MockDiscordEmoji("take_my_money", 1535728830097133751, animated=False, available=False),
+            MockDiscordEmoji("gigachad", 1535682070536519730, animated=False, available=True),
+        ]
+        guild = MockGuild(mock_emojis)
+
+        # cooked deshabilitado -> fallback 💀
+        self.assertEqual(
+            format_server_emojis("<:cooked:1535726716901789726>", guild=guild),
+            "💀"
+        )
+        # take_my_money deshabilitado -> fallback 💸
+        self.assertEqual(
+            format_server_emojis("<:take_my_money:1535728830097133751>", guild=guild),
+            "💸"
+        )
+        # gigachad disponible -> se conserva la mención nativa
+        self.assertEqual(
+            format_server_emojis("<:gigachad:1535682070536519730>", guild=guild),
+            "<:gigachad:1535682070536519730>"
+        )
+        # Emoji que no existe en el servidor (ID inventado o inexistente) pero con fallback
+        self.assertEqual(
+            format_server_emojis("<:cooked:999999999999999999>", guild=guild),
+            "💀"
+        )
+
+    def test_models_priority_cascade_validity(self):
+        """Verifica que la cascada MODELS_PRIORITY solo contiene modelos Gemini canónicos y oficiales."""
+        # Modelos prohibidos/inexistentes que saturaban cuota con 404
+        invalid_models = [
+            "gemini-3.5-flash-lite",
+            "gemini-3.1-flash-lite",
+            "gemini-3.6-flash",
+            "gemini-3.8-flash",
+        ]
+        for m in invalid_models:
+            self.assertNotIn(m, MODELS_PRIORITY, f"Modelo inexistente en cascada: {m}")
+
+        # Cascada canónica esperada
+        expected_models = [
+            "gemini-2.5-flash",
+            "gemini-2.5-flash-lite",
+            "gemini-2.0-flash",
+            "gemini-2.0-flash-lite",
+            "gemini-1.5-flash",
+            "gemini-1.5-flash-8b",
+            "gemini-flash-lite-latest",
+            "gemini-flash-latest",
+        ]
+        self.assertEqual(MODELS_PRIORITY, expected_models)
 
     def test_edge_cases(self):
         """Verifica entradas vacías o tipos no esperados."""
