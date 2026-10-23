@@ -5,6 +5,7 @@ Este fichero solo importa las reglas bajo el estándar de Constitución Modular 
 ## Reglas Globales de Jose (Constitución Global)
 @~/OneDrive/Antigravity-general/AGENTS_CORE.md
 @~/OneDrive/Antigravity-general/AGENTS_WORKFLOWS.md
+@~/OneDrive/Antigravity-general/AGENTS_DOCS.md
 @~/OneDrive/Antigravity-general/AGENTS_CLAUDECODE.md
 
 ## Reglas Locales del Proyecto (Constitución Modular)

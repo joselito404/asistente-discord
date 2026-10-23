@@ -11,6 +11,7 @@
 | :--- | :---: | :---: | :--- |
 | [`reglas_globales_core.md`](./reglas_globales_core.md) | `always_on` | Global Core | Perfil de Jose, hardware AM4/AM5, almacenamiento multi-PC y constitución modular (`AGENTS_CORE.md`). |
 | [`reglas_globales_workflows.md`](./reglas_globales_workflows.md) | `always_on` | Global Workflows | Control de versiones Git, docs vivas, orquestación, co-worker mindset y skills (`AGENTS_WORKFLOWS.md`). |
+| [`reglas_globales_docs.md`](./reglas_globales_docs.md) | `always_on` | Global Workflows | Documentación: resumen, Relevos y raw (§4), README por carpeta (§8), `CONOCIMIENTO.md` (§9), `docs/` (§13), sincronización (§14) y pendientes (§21). Transcluye `AGENTS_DOCS.md`. |
 | [`reglas_globales_antigravity.md`](./reglas_globales_antigravity.md) | `always_on` | Global Antigravity | Solo Antigravity: telemetría, inyector de reglas, subagentes declarativos (§18), hooks (§19) y `skills.json` (§20). Transcluye `AGENTS_ANTIGRAVITY.md`. |
 | [`seguridad_credenciales.md`](./seguridad_credenciales.md) | `always_on` | Local Proyecto | Protección de `config_discord.json`, cliente API REST, veto absoluto a kick/ban y respuestas efímeras. |
 | [`despliegue_render.md`](./despliegue_render.md) | `always_on` | Local Proyecto | Supervisor 24/7 en Render Cloud, keep-alive cada 5 min y despliegue manual obligatorio con script. |
