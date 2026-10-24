@@ -232,6 +232,8 @@ class TestChatIAEmbedsVision(unittest.TestCase):
         self.assertEqual(pers_a["name"], "Asistente")
         self.assertIn("avatar_asistente_original.png", pers_a["avatar_path"])
         self.assertIn("Eres 'Asistente'", pers_a["system_prompt"])
+        self.assertIn("Desarrollador del servidor", pers_a["system_prompt"])
+        self.assertIn("Administrador y Dueño del servidor", pers_a["system_prompt"])
 
         pers_b = BOT_PERSONALITIES["B"]
         self.assertEqual(pers_b["name"], "Asistenta")
