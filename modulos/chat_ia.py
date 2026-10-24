@@ -286,6 +286,17 @@ DISABLED_EMOJI_FALLBACK = {
     "ranked_gold": "🥇",
 }
 
+REACTION_SINGLE_UNICODE_FALLBACK = {
+    "monkeythink": "🤔",
+    "pensivebetrayal": "😔",
+    "cathink": "🤔",
+    "blue_screen": "💥",
+    "9999iq": "🧠",
+    "messirve": "👍",
+    "skillissue": "💀",
+    "aura": "🗿",
+}
+
 RAW_DISCORD_EMOJI_PATTERN = re.compile(r"<(?P<anim>a)?:(?P<name>[a-zA-Z0-9_]+):(?P<id>\d+)>")
 EMOJI_PATTERN = re.compile(r"(?<!<)(?<!<a):([a-zA-Z0-9_]+):(?!\d+>)")
 ID_LEAK_PATTERN = re.compile(
@@ -402,6 +413,171 @@ def format_server_emojis(text: str, guild: discord.Guild = None) -> str:
     return converted
 
 
+SINGLE_UNICODE_EMOJI_PATTERN = re.compile(
+    r"[\U00010000-\U0010ffff\u2600-\u27bf\u2300-\u23ff\u2b50\u2764\u203c\u2049\u2122\u2139\u2194-\u2199\u21a9-\u21aa]"
+    r"(?:\ufe0f)?(?:\u200d[\U00010000-\U0010ffff\u2600-\u27bf\u2640\u2642\u2695\u2696\u2708\u2764](?:\ufe0f)?)*"
+)
+
+
+def _extract_first_unicode_emoji(s: str) -> Optional[str]:
+    if not s:
+        return None
+    m = SINGLE_UNICODE_EMOJI_PATTERN.search(s)
+    if m:
+        return m.group(0)
+    return None
+
+
+def resolve_reaction_emoji(raw_emoji: str, guild: discord.Guild = None) -> Optional[Union[discord.Emoji, str]]:
+    """
+    Resuelve cualquier formato de emoji emitido por Gemini en [ACTION_REACT: ...]
+    a un objeto discord.Emoji activo, una cadena <:name:id> segura o un único emoji Unicode válido
+    para message.add_reaction.
+    """
+    if not raw_emoji or not isinstance(raw_emoji, str):
+        return None
+
+    cleaned = raw_emoji.strip()
+    if not cleaned:
+        return None
+
+    live_map = {}
+    live_id_map = {}
+    has_live_emojis = False
+    if guild and hasattr(guild, "emojis") and guild.emojis:
+        has_live_emojis = True
+        for e in guild.emojis:
+            live_map[e.name.lower()] = e
+            try:
+                live_id_map[int(e.id)] = e
+            except (ValueError, TypeError):
+                pass
+
+    target_name = None
+    target_id = None
+
+    m_raw = RAW_DISCORD_EMOJI_PATTERN.fullmatch(cleaned) or RAW_DISCORD_EMOJI_PATTERN.search(cleaned)
+    if m_raw:
+        target_name = m_raw.group("name").lower()
+        try:
+            target_id = int(m_raw.group("id"))
+        except (ValueError, TypeError):
+            target_id = None
+    else:
+        m_colon = re.fullmatch(r":([a-zA-Z0-9_]+):", cleaned)
+        if m_colon:
+            target_name = m_colon.group(1).lower()
+        elif re.fullmatch(r"[a-zA-Z0-9_]+", cleaned):
+            cand = cleaned.lower()
+            if (
+                cand in SERVER_EMOJIS_DATA
+                or cand in DISABLED_EMOJI_FALLBACK
+                or cand in REACTION_SINGLE_UNICODE_FALLBACK
+                or cand in live_map
+            ):
+                target_name = cand
+            else:
+                return None
+
+    if target_name is not None or target_id is not None:
+        if has_live_emojis:
+            e = (live_id_map.get(target_id) if target_id is not None else None) or (
+                live_map.get(target_name) if target_name else None
+            )
+            if e and getattr(e, "available", True):
+                return e
+
+            # Emoji deshabilitado o no presente en guild.emojis
+            lower_name = target_name or (e.name.lower() if e else "")
+            if lower_name in DISABLED_EMOJI_FALLBACK:
+                fb_val = DISABLED_EMOJI_FALLBACK[lower_name]
+                fb_match = RAW_DISCORD_EMOJI_PATTERN.search(fb_val)
+                if fb_match:
+                    other_name = fb_match.group("name").lower()
+                    try:
+                        other_id = int(fb_match.group("id"))
+                    except (ValueError, TypeError):
+                        other_id = None
+                    other_e = (live_id_map.get(other_id) if other_id else None) or live_map.get(other_name)
+                    if other_e and getattr(other_e, "available", True):
+                        return other_e
+                    if lower_name in REACTION_SINGLE_UNICODE_FALLBACK:
+                        return REACTION_SINGLE_UNICODE_FALLBACK[lower_name]
+                    return "👍"
+                if lower_name in REACTION_SINGLE_UNICODE_FALLBACK:
+                    return REACTION_SINGLE_UNICODE_FALLBACK[lower_name]
+                uni = _extract_first_unicode_emoji(fb_val)
+                return uni if uni else "🤔"
+
+            if lower_name in REACTION_SINGLE_UNICODE_FALLBACK:
+                return REACTION_SINGLE_UNICODE_FALLBACK[lower_name]
+            return "🤔"
+        else:
+            # Sin guild o sin guild.emojis (ej. DMs o tests sin guild)
+            lower_name = target_name or ""
+            if lower_name in SERVER_EMOJIS_DATA:
+                info = SERVER_EMOJIS_DATA[lower_name]
+                if info.get("is_safe", True):
+                    prefix = "a" if info.get("animated") else ""
+                    return f"<{prefix}:{info['name']}:{info['id']}>"
+                if lower_name in REACTION_SINGLE_UNICODE_FALLBACK:
+                    return REACTION_SINGLE_UNICODE_FALLBACK[lower_name]
+                if lower_name in DISABLED_EMOJI_FALLBACK:
+                    fb_val = DISABLED_EMOJI_FALLBACK[lower_name]
+                    if RAW_DISCORD_EMOJI_PATTERN.search(fb_val):
+                        return fb_val
+                    uni = _extract_first_unicode_emoji(fb_val)
+                    return uni if uni else "🤔"
+                return "🤔"
+            if lower_name in REACTION_SINGLE_UNICODE_FALLBACK:
+                return REACTION_SINGLE_UNICODE_FALLBACK[lower_name]
+            if lower_name in DISABLED_EMOJI_FALLBACK:
+                fb_val = DISABLED_EMOJI_FALLBACK[lower_name]
+                uni = _extract_first_unicode_emoji(fb_val)
+                return uni if uni else "🤔"
+            return None
+
+    # Emoji Unicode directo
+    first_uni = _extract_first_unicode_emoji(cleaned)
+    if first_uni:
+        return first_uni
+
+    return None
+
+
+def extract_reaction_tag(text: str) -> tuple[str, Optional[str]]:
+    """
+    Extrae todas las etiquetas [ACTION_REACT: ...] del texto usando extract_action_block
+    y limpieza por regex de respaldo.
+    Devuelve (clean_text, first_raw_emoji) conservando únicamente la primera reacción válida.
+    """
+    if not text or not isinstance(text, str):
+        return text, None
+
+    from modulos.graficos import extract_action_block
+
+    first_raw_emoji: Optional[str] = None
+    cleaned = text
+
+    while True:
+        block = extract_action_block(cleaned, "ACTION_REACT")
+        if not block:
+            break
+        full_tag, content = block
+        cand = content.strip()
+        if cand and first_raw_emoji is None:
+            first_raw_emoji = cand
+        cleaned = cleaned.replace(full_tag, "", 1)
+
+    if first_raw_emoji is None:
+        m = re.search(r"\[ACTION_REACT:\s*([^\]]*)\]", cleaned, flags=re.IGNORECASE)
+        if m and m.group(1).strip():
+            first_raw_emoji = m.group(1).strip()
+
+    cleaned = re.sub(r"\[ACTION_REACT:\s*[^\]]*\]", "", cleaned, flags=re.IGNORECASE).strip()
+    return cleaned, first_raw_emoji
+
+
 SYSTEM_PROMPT_BODY = r"""
 - ❌ CERO "MODO CUÑADO VACILÓN" / CERO FALTAS DE RESPETO: Trata a todos con respeto y estima. NUNCA te burles de los miembros, no uses apodos despectivos, no hagas chistes pesados de mafiosos ni te pongas arrogante o condescendiente. No digas tonterías como "meme de dueño" o "menudo espectáculo de admin".
 - ❌ CERO PELOTEO / SUMISIÓN: Habla de tú a tú como un igual con todos, incluido Joselito. Eres un colega inteligente del grupo, no un lacayo.
@@ -452,6 +628,11 @@ SYSTEM_PROMPT_BODY = r"""
 5. 💻 TARJETAS DE CÓDIGO ESTILIZADAS:
    - Si piden código de programación destacado, además de tu explicación puedes emitir:
      [ACTION_CODE: <código limpio sin backticks>]
+6. 😄 REACCIÓN CON EMOJI AL MENSAJE DEL USUARIO (OPCIONAL):
+   - Cuando el mensaje del usuario sea gracioso, irónico, picante, surrealista o tenga carga emocional clara (vaciles, quejas del casino, opiniones de cine/manhwas, preguntas cómplices), puedes añadir UNA reacción debajo de su mensaje incluyendo al final de tu respuesta:
+     [ACTION_REACT: :nombre_emoji:] o [ACTION_REACT: 🤔]
+   - Combina con naturalidad emojis del servidor (:pensando:, :bruh:, :KEKWLaugh:, :gigachad:, :absolutecinema:, :Porro:, :cooked:, :skillissue:, :pepeCRY:, :cat_sus:) y emojis Unicode clásicos (🤔, 💀, 😂, ❤️, 👀, 🔥).
+   - Regla: Pon máximo 1 reacción y SOLO cuando aporte gracia o complicidad real (no reacciones en consultas técnicas o serias).
 
 ⚖️ EL TRIBUNAL GAMING (tribunal-gaming.vercel.app):
 - Conoces al dedillo la base de datos oficial de El Tribunal Gaming (113 juegos cooperativos catalogados por categorías como Salvavidas o Guerreros con notas de rendimiento, 151 títulos evaluados con Metacritic y HowLongToBeat, y el Muro de la Vergüenza).
@@ -1654,6 +1835,20 @@ async def _handle_message_safe(message: discord.Message):
             turns.pop(0)
 
         response_text = await asyncio.to_thread(call_gemini_multiturn, turns)
+
+        # Extraer y aplicar reacción dinámica opcional al mensaje del usuario (máximo 1)
+        response_text, reaction_raw = extract_reaction_tag(response_text)
+        if reaction_raw is not None:
+            resolved_react = resolve_reaction_emoji(reaction_raw, guild=message.guild)
+            if resolved_react:
+                try:
+                    await message.add_reaction(resolved_react)
+                except Exception as react_err:
+                    print(f"Aviso añadiendo reacción '{resolved_react}': {react_err}")
+                    try:
+                        await message.add_reaction("🤔")
+                    except Exception:
+                        pass
 
         # 8. Interceptar acciones visuales y gráficas generadas por IA
         files_to_send = []

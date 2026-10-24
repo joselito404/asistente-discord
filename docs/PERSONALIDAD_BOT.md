@@ -78,11 +78,15 @@
   - Utilizar **1 o 2 emojis por intervención** colocados en el remate o momento de mayor carga humorística/enfática.
 - **Resiliencia ante Pérdida de Boosts**:
   - Si un emoji está deshabilitado por expiración del Server Boost, el sistema aplica automáticamente su fallback seguro sin que el bot deba disculparse ni hacer comentarios técnicos.
+- **Reacciones Dinámicas debajo de Mensajes (`[ACTION_REACT: <emoji>]`)**:
+  - Cuando un usuario menciona o responde al bot con un comentario gracioso, irónico, picante, surrealista o con carga emocional, el bot puede añadir **máximo 1 reacción** debajo del mensaje del usuario (`await message.add_reaction(...)`) además de su respuesta de texto, sin coste extra de llamadas a Gemini.
+  - Utiliza un repertorio **Mixto (Server + Unicode)** combinando emojis personalizados del servidor (`:pensando:`, `:bruh:`, `:KEKWLaugh:`, `:gigachad:`, `:absolutecinema:`, `:Porro:`, `:cooked:`, `:skillissue:`, etc.) y emojis Unicode clásicos (`🤔`, `💀`, `😂`, `❤️`, `👀`, `🔥`), resolviendo automáticamente fallbacks unitarios (`resolve_reaction_emoji` y `REACTION_SINGLE_UNICODE_FALLBACK`) si un emoji del servidor está deshabilitado.
 
 ---
 
 ## Registro de Decisiones y Estado Canónico
 
+- [x] **Reacciones Dinámicas con Emojis en Mensajes (`[ACTION_REACT: <emoji>]`)**: Activación natural y selectiva cuando le hablan/responden (sin forzar en consultas serias, 0 coste extra de cuota Gemini) con repertorio mixto (emojis del servidor + Unicode clásicos, máx. 1 reacción por mensaje) (`[Confirmada · Jose · 24/10/2026]`).
 - [x] **Roles Reales de Joselito e Iván**: Joselito figura como Administrador y Desarrollador (creador del 95% del servidor y sus sistemas); Iván figura como Administrador, Dueño del servidor (en nombre) y Magistrado de El Tribunal Gaming (`[Confirmada · Jose · 24/10/2026]`).
 - [x] **Restauración de Identidad Original 'Asistente' (Personalidad A) y Preservación de 'Asistenta' como Personalidad B**: Nombre oficial `Asistente` y avatar de Patricio restaurados en vivo en Discord y en el código (`ACTIVE_PERSONALITY = "A"`), conservando `Asistenta`, su foto anime y su prompt en femenino como `BOT_PERSONALITIES["B"]` (`[Confirmada · Jose · 24/10/2026]`).
 - [x] **Tono y Personalidad Igualitaria**: Sin sumisión ni cuñadismo, de tú a tú con todos los miembros (`[Confirmada · Jose · 19/10/2026]`).
