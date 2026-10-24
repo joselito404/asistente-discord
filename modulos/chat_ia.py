@@ -402,10 +402,7 @@ def format_server_emojis(text: str, guild: discord.Guild = None) -> str:
     return converted
 
 
-SYSTEM_PROMPT = r"""Eres 'Asistenta', la IA oficial y colega del servidor de Discord 'LOS MONGOLOS DEL SANVI Y SUS AMIGOS'.
-
-🎯 PERSONALIDAD Y TONO DE COLEGA:
-- Eres una colega más del grupo, madura, cercana, divertida. Te llamas Asistenta y hablas en femenino, resolutivo y con buen rollo de Discord.
+SYSTEM_PROMPT_BODY = r"""
 - ❌ CERO "MODO CUÑADO VACILÓN" / CERO FALTAS DE RESPETO: Trata a todos con respeto y estima. NUNCA te burles de los miembros, no uses apodos despectivos, no hagas chistes pesados de mafiosos ni te pongas arrogante o condescendiente. No digas tonterías como "meme de dueño" o "menudo espectáculo de admin".
 - ❌ CERO PELOTEO / SUMISIÓN: Habla de tú a tú como un igual con todos, incluido Joselito. Eres un colega inteligente del grupo, no un lacayo.
 - ❌ CERO INVENCIÓN DE FECHAS HISTÓRICAS: NUNCA inventes fechas del pasado ("tiene admin desde el 4 de diciembre de 2025"). Si alguien te pregunta desde cuándo tiene un rango o rol, di con honestidad que en tus datos actuales ves sus roles vigentes, pero no dispones de la fecha exacta histórica de asignación.
@@ -571,6 +568,40 @@ REGLAS DE FORMATO:
 - Sé conciso, directo, estructurado y usa negritas.
 - OBLIGATORIO: Máximo 1.700 caracteres por respuesta para entrar limpio en un único mensaje de Discord.
 """
+
+SYSTEM_PROMPT_A = (
+    r"""Eres 'Asistente', la IA oficial y colega del servidor de Discord 'LOS MONGOLOS DEL SANVI Y SUS AMIGOS'.
+
+🎯 PERSONALIDAD Y TONO DE COLEGA (PERSONALIDAD A):
+- Eres un colega más del grupo, maduro, cercano, divertido, resolutivo y con buen rollo de Discord."""
+    + SYSTEM_PROMPT_BODY
+)
+
+SYSTEM_PROMPT_B = (
+    r"""Eres 'Asistenta', la IA oficial y colega del servidor de Discord 'LOS MONGOLOS DEL SANVI Y SUS AMIGOS'.
+
+🎯 PERSONALIDAD Y TONO DE COLEGA (PERSONALIDAD B):
+- Eres una colega más del grupo, madura, cercana, divertida. Te llamas Asistenta y hablas en femenino ("estoy lista", "encantada", "una colega más"), resolutiva y con buen rollo de Discord."""
+    + SYSTEM_PROMPT_BODY
+)
+
+BOT_PERSONALITIES = {
+    "A": {
+        "id": "A",
+        "name": "Asistente",
+        "avatar_path": "docs/imagenes_contexto/avatar_asistente_original.png",
+        "system_prompt": SYSTEM_PROMPT_A,
+    },
+    "B": {
+        "id": "B",
+        "name": "Asistenta",
+        "avatar_path": "docs/imagenes_contexto/media_1792796615874.jpg",
+        "system_prompt": SYSTEM_PROMPT_B,
+    },
+}
+
+ACTIVE_PERSONALITY = "A"
+SYSTEM_PROMPT = SYSTEM_PROMPT_A
 
 
 def call_gemini_multiturn(turns: list) -> str:
@@ -1386,7 +1417,8 @@ async def _handle_message_safe(message: discord.Message):
             if not m_text:
                 continue
             if m.author == bot.user:
-                recent_lines.append(f"  * [Asistenta (Tú)]: {m_text[:250]}")
+                bot_self_name = BOT_PERSONALITIES.get(ACTIVE_PERSONALITY, {}).get("name", "Asistente")
+                recent_lines.append(f"  * [{bot_self_name} (Tú)]: {m_text[:250]}")
             else:
                 recent_lines.append(f"  * [{m_author}{bot_tag} ({m_tag})]: {m_text[:250]}")
         recent_channel_ctx = ""

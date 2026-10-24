@@ -40,7 +40,7 @@ Cualquier agente o desarrollador autorizado que trabaje en nuevas funcionalidade
 7. **`web_server.py`**: Servidor HTTP de diagnÃ³stico y portal de grabaciones (puerto 10000 en Render):
    - Health-check `HTTP 200 OK` (`/`), estado JSON (`/status`), visor de logs en vivo (`/logs`) y portal/API de grabaciones de voz de las Ãºltimas 24h (`/audios`, `/audios/zip`, `/api/audios`).
 8. **`chat_ia.py`**: Motor conversacional y orquestador LLM de Gemini:
-   - System Prompt con lore del servidor, Circuit Breaker inteligente de modelos (`MODELS_PRIORITY`, `mark_model_cooldown`), cliente multi-turno (`call_gemini_multiturn`).
+   - Sistema dual de identidades (`BOT_PERSONALITIES`, `ACTIVE_PERSONALITY = 'A'` con 'Asistente' como Personalidad A activa y 'Asistenta' guardada como Personalidad B), System Prompt con lore del servidor (`SYSTEM_PROMPT_A`, `SYSTEM_PROMPT_B`, `SYSTEM_PROMPT`), Circuit Breaker inteligente de modelos (`MODELS_PRIORITY`, `mark_model_cooldown`), cliente multi-turno (`call_gemini_multiturn`).
    - Monitor de niveles reales de Cakey Bot (`get_live_levels_dict`), cÃ¡lculo cuadrÃ¡tico de XP (`calculate_xp_gap`), memoria de usuarios (`user_memory`).
    - CatÃ¡logo canÃ³nico de 124 emojis del servidor (`SERVER_EMOJIS_DATA`), auto-conversor pre-envÃ­o regex (`format_server_emojis`) y arquitectura resiliente ante expiraciÃ³n de Server Boost con fallbacks limpios (`DISABLED_EMOJI_FALLBACK`).
    - BÃºsqueda web contextual en vivo (`search_web_lite`), radar de voz, censos y enrutador principal de mensajes (`_handle_message_safe`).
