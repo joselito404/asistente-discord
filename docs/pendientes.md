@@ -15,3 +15,16 @@
 - **Estado:** `en espera de Jose`.
 - **Detalle:** [docs/DISENO_BOLSA_SANVI.md](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/DISENO_BOLSA_SANVI.md) y [modulos/bolsa_sanvi.py](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/bolsa_sanvi.py).
 
+---
+
+## 🤖 Área 2: Chat IA y Personalidad de Asistenta
+
+### 2.1. Capacidad de Reaccionar con Emojis a Mensajes de Usuarios
+- **Qué falta:** Implementar en `modulos/chat_ia.py` la capacidad de que Asistenta añada reacciones (`message.add_reaction`) a los mensajes a los que responde o en conversaciones del servidor, según el tono emocional, sarcástico o cómplice (ej. `🤔`, `💀`, `😂`, `❤️` o emojis personalizados del servidor).
+- **Por qué importa:** Incrementa el dinamismo, la expresividad visual y el realismo de Asistenta como colega y bot conversacional (emulando comportamientos como el de MAID mostrado por Jose).
+- **Siguiente paso:** Diseñar la detección de reacción en el flujo de `chat_ia.py` (mediante directriz en `SYSTEM_PROMPT` con etiqueta parseable como `[REACCION: :emoji:]` o extracción heurística), implementar los tests unitarios correspondientes y desplegar a Render.
+- **Responsable:** Chat 3 / Especialista de Código.
+- **Estado:** `por hacer`.
+- **Detalle:** [docs/PERSONALIDAD_BOT.md](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/PERSONALIDAD_BOT.md) y [modulos/chat_ia.py](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/chat_ia.py).
+
+
