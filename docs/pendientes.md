@@ -22,3 +22,15 @@
 - **Responsable:** Chat 3 / Especialista de Código.
 - **Estado:** `por hacer`.
 - **Detalle:** [modulos/economia_core.py](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/economia_core.py) y [modulos/comandos_economia.py](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/comandos_economia.py).
+
+---
+
+## 🧠 Área 4: Inteligencia, Contexto del Servidor y Habilidades de Asistente
+
+### 4.1. Expansión de Contexto Social (Servidor + Miembros) y Nuevas Habilidades
+- **Qué falta:** Dotar a Asistente de un conocimiento mucho más profundo y contextualizado sobre el servidor (lore, historia, canales, dinámicas) y sobre las personas que lo integran (perfiles de miembros, anécdotas, afinidades, roles y costumbres). Secundariamente, expandir sus habilidades operativas dentro del servidor (nuevos comandos contextuales, herramientas prácticas y capacidades de interacción directa).
+- **Por qué importa:** Erradica respuestas genéricas de IA, logrando que el bot interactúe como un miembro veterano y consciente de la comunidad, aumentando drásticamente el engagement y la utilidad del bot.
+- **Siguiente paso:** Definir la arquitectura de persistencia/inyección de memoria social (perfiles de usuario vs contexto global) y seleccionar las habilidades secundarias a incorporar.
+- **Responsable:** Chat 3 / Jose.
+- **Estado:** `por hacer`.
+- **Detalle:** [docs/INFO_SERVIDOR.md](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/INFO_SERVIDOR.md), [docs/PERSONALIDAD_BOT.md](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/PERSONALIDAD_BOT.md) y [modulos/chat_ia.py](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/chat_ia.py).
