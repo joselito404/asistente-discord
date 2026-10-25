@@ -25,6 +25,7 @@ from modulos.comandos_generales import (
     cmd_unete,
     cmd_desconecta,
     cmd_para_audio,
+    cmd_resumen_llamada,
     cmd_trivial,
     cmd_ranking_trivial,
     cmd_tres_en_raya,

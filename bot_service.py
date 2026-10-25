@@ -135,6 +135,10 @@ from modulos.voz import (
     RECORDINGS_DIR,
     METADATA_FILE,
     RETENTION_SECONDS,
+    MAX_STORAGE_BYTES,
+    TARGET_STORAGE_BYTES,
+    enforce_storage_quota,
+    generate_call_summary,
     VOICE_TURNS_LOCK,
     load_recordings_metadata,
     save_recordings_metadata,
@@ -426,6 +430,7 @@ from modulos.comandos import (
     cmd_unete,
     cmd_desconecta,
     cmd_para_audio,
+    cmd_resumen_llamada,
     cmd_recuerda,
     cmd_trivial,
     cmd_ranking_trivial,
@@ -483,7 +488,7 @@ async def on_ready():
     bot_log(f"Bot '{bot.user}' conectado y listo en Discord.")
     bot_log(f"Motores de IA con respaldo: {MODELS_PRIORITY}")
     bot_log(f"Ajedrez: python-chess {'OK' if chess else 'NO disponible'} | Stockfish {'OK' if os.path.exists(STOCKFISH_PATH) else 'NO encontrado'} ({STOCKFISH_PATH})")
-    bot_log("Capacidades activas: Gemini Live en Voz (/geminilive), Auto-Roles 24/7 (/autoroles), Sugerencias 2.0 (/sugerencia, /panel_sugerencias), Memoria Persistente, Trivial, Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y 23 Slash Commands Generales.")
+    bot_log("Capacidades activas: Gemini Live en Voz (/geminilive), Auto-Roles 24/7 (/autoroles), Sugerencias 2.0 (/sugerencia, /panel_sugerencias), Memoria Persistente, Trivial, Niveles Reales, Búsqueda Web, FLUX.1, Steam Store, Tribunal Gaming y 24 Slash Commands Generales.")
 
     # 1. Hidratación inicial desde Discord (Render Cloud 24/7 - docs/PERSISTENCIA_DATOS.md)
     try:
@@ -513,7 +518,7 @@ async def on_ready():
         guild_obj = discord.Object(id=GUILD_ID)
         tree.copy_global_to(guild=guild_obj)
         await tree.sync(guild=guild_obj)
-        bot_log(f"Comandos Slash Generales (23) sincronizados limpiamente en el servidor ID {GUILD_ID} (sin duplicados).")
+        bot_log(f"Comandos Slash Generales (24) sincronizados limpiamente en el servidor ID {GUILD_ID} (sin duplicados).")
     except Exception as e:
         bot_log(f"Aviso sincronización comandos slash generales: {e}")
 
@@ -569,31 +574,14 @@ async def on_ready():
 
     bot.loop.create_task(_voice_channel_watchdog())
 
-    # Tarea periódica de limpieza de grabaciones con más de 24 horas
+    # Tarea periódica de salvaguarda de cuota de grabaciones en disco (Render Cloud)
     async def _recordings_retention_cleaner():
         await asyncio.sleep(60.0)
         while not bot.is_closed():
             try:
-                now = time.time()
-                with VOICE_TURNS_LOCK:
-                    valid = []
-                    for t in VOICE_TURNS_LOG:
-                        epoch = t.get("epoch", 0.0)
-                        if (now - epoch) < RETENTION_SECONDS:
-                            valid.append(t)
-                        else:
-                            fname = t.get("filename")
-                            if fname:
-                                fpath = os.path.join(RECORDINGS_DIR, fname)
-                                if os.path.exists(fpath):
-                                    try:
-                                        os.remove(fpath)
-                                    except Exception:
-                                        pass
-                    if len(valid) != len(VOICE_TURNS_LOG):
-                        VOICE_TURNS_LOG[:] = valid
-                        save_recordings_metadata()
-                        bot_log(f"🧹 [Grabaciones] Limpieza 24h completada. {len(valid)} grabaciones activas.")
+                purged = enforce_storage_quota()
+                if purged > 0:
+                    bot_log(f"🧹 [Grabaciones] Salvaguarda de cuota ejecutada: purgados {purged} audios antiguos.")
             except Exception as e:
                 bot_log(f"Aviso limpiador grabaciones: {e}")
             await asyncio.sleep(600.0)
@@ -631,7 +619,45 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
     if vc and vc.is_connected() and vc.channel:
         human_members = [m for m in vc.channel.members if m and not getattr(m, "bot", False)]
         if len(human_members) == 0:
-            bot_log(f"ℹ️ Canal de voz #{vc.channel.name} vacío. Desconectando Asistente...")
+            ch_name = getattr(vc.channel, "name", "llamada")
+            bot_log(f"ℹ️ Canal de voz #{ch_name} vacío. Desconectando Asistente...")
+
+            # Auto-resumen opcional al desconectarse de la sala de voz
+            try:
+                cutoff = time.time() - 3600.0  # Última hora de la llamada
+                with VOICE_TURNS_LOCK:
+                    recent_real_turns = [
+                        t for t in VOICE_TURNS_LOG
+                        if t.get("epoch", 0.0) >= cutoff
+                        and t.get("transcription")
+                        and t.get("transcription") not in ["(audio procesado)", "[Silencio]", "[Ruido]"]
+                        and not str(t.get("transcription", "")).strip().startswith(("[Silencio]", "[Ruido]", "[ininteligible]"))
+                    ]
+                if len(recent_real_turns) > 3:
+                    bot_log(f"📝 [Voice Summary] Generando crónica automática de llamada en #{ch_name} ({len(recent_real_turns)} intervenciones)...")
+                    summary_embed = await generate_call_summary(hours=1.0, channel_name=ch_name)
+                    target_ch = None
+                    if hasattr(vc.channel, "send"):
+                        target_ch = vc.channel
+                    if not target_ch and getattr(vc.channel, "category", None):
+                        for tch in vc.channel.category.text_channels:
+                            target_ch = tch
+                            break
+                    if not target_ch:
+                        target_ch = guild.get_channel(1446143938044887052)
+                    if not target_ch:
+                        for tch in guild.text_channels:
+                            if "shit-de-todos-los-dias" in tch.name:
+                                target_ch = tch
+                                break
+                    if not target_ch:
+                        target_ch = guild.system_channel
+                    if target_ch and hasattr(target_ch, "send"):
+                        await target_ch.send(embed=summary_embed)
+                        bot_log(f"📢 [Voice Summary] Crónica de voz publicada en #{getattr(target_ch, 'name', 'canal')}")
+            except Exception as e_sum:
+                bot_log(f"Aviso generando resumen automático de llamada: {e_sum}")
+
             mark_internal_voice_disconnect(guild.id)
             if hasattr(vc, "stop_listening"):
                 try:

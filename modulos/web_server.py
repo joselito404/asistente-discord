@@ -1080,7 +1080,7 @@ def run_health_check_server():
                                         zf.write(fpath, arcname=fname)
                     zip_data = zip_buffer.getvalue()
                     now_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    zip_filename = f"grabaciones_24h_{now_str}.zip"
+                    zip_filename = f"grabaciones_{now_str}.zip"
                     self.send_response(200)
                     self.send_header("Content-type", "application/zip")
                     self.send_header("Content-Disposition", f'attachment; filename="{zip_filename}"')
@@ -1184,7 +1184,7 @@ audio {{ flex: 1; height: 36px; min-width: 220px; }}
   <header>
     <div class="title-group">
       <h1>🎙️ Grabaciones de Voz - Asistente Discord</h1>
-      <p>Escucha las intervenciones de los usuarios y las respuestas del Asistente en tiempo real. <span style="background: rgba(87, 242, 135, 0.15); color: #57f287; border: 1px solid rgba(87, 242, 135, 0.3); border-radius: 4px; padding: 2px 6px; font-weight: 600; font-size: 11px; margin-left: 6px;">🕒 Retención: Últimas 24 Horas</span></p>
+      <p>Escucha las intervenciones de los usuarios y las respuestas del Asistente en tiempo real. <span style="background: rgba(87, 242, 135, 0.15); color: #57f287; border: 1px solid rgba(87, 242, 135, 0.3); border-radius: 4px; padding: 2px 6px; font-weight: 600; font-size: 11px; margin-left: 6px;">🕒 Retención: Permanente (Protegida por Cuota)</span></p>
     </div>
     <div class="actions">
       <a href="/audios/zip" class="btn" style="background:#23a55a;">📦 Descargar Todo (ZIP)</a>

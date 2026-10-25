@@ -1170,10 +1170,34 @@ async def cmd_panel_sugerencias(interaction: discord.Interaction):
         await interaction.followup.send(f"❌ Error al publicar el panel de sugerencias: {e}", ephemeral=True)
 
 
+@app_commands.command(
+    name="resumen_llamada",
+    description="Genera una crónica con IA de las conversaciones en la sala de voz en las últimas horas."
+)
+@app_commands.describe(
+    horas="Intervalo en horas para analizar la llamada (por defecto: 2.0h, mín: 0.5, máx: 24.0)"
+)
+async def cmd_resumen_llamada(interaction: discord.Interaction, horas: Optional[float] = 2.0):
+    if horas is None:
+        horas = 2.0
+    horas = max(0.5, min(24.0, float(horas)))
+    await interaction.response.defer(thinking=True)
+    try:
+        from modulos.voz import generate_call_summary
+        channel_name = None
+        if interaction.channel:
+            channel_name = getattr(interaction.channel, "name", None)
+        embed = await generate_call_summary(hours=horas, channel_name=channel_name)
+        await interaction.followup.send(embed=embed)
+    except Exception as e:
+        _bot_log(f"Error en /resumen_llamada: {e}")
+        await interaction.followup.send(f"❌ Error al generar el resumen de la llamada: {e}", ephemeral=True)
+
+
 # ==========================================
-# 23 COMANDOS GENERALES (BOT 'ASISTENTE')
+# 24 COMANDOS GENERALES (BOT 'ASISTENTE')
 # ==========================================
-# 23 Comandos Generales para el Bot 'Asistente'
+# 24 Comandos Generales para el Bot 'Asistente'
 GENERAL_SLASH_COMMANDS = [
     cmd_dibuja,
     cmd_musica,
@@ -1190,6 +1214,7 @@ GENERAL_SLASH_COMMANDS = [
     cmd_unete,
     cmd_desconecta,
     cmd_para_audio,
+    cmd_resumen_llamada,
     cmd_trivial,
     cmd_ranking_trivial,
     cmd_tres_en_raya,

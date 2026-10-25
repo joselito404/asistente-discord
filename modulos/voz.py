@@ -24,6 +24,7 @@ import time
 import urllib.error
 import urllib.request
 import wave
+import discord
 try:
     from discord.ext import voice_recv
 except ImportError:
@@ -202,34 +203,88 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RECORDINGS_DIR = os.path.join(ROOT_DIR, "recordings")
 os.makedirs(RECORDINGS_DIR, exist_ok=True)
 METADATA_FILE = os.path.join(RECORDINGS_DIR, "recordings_metadata.json")
-RETENTION_SECONDS = 24 * 3600  # Retención de 24 horas completas (1 día)
+MAX_STORAGE_BYTES = 450 * 1024 * 1024      # 450 MB cuota máxima en Render Cloud
+TARGET_STORAGE_BYTES = 350 * 1024 * 1024   # 350 MB nivel estabilizado tras purga FIFO
+RETENTION_SECONDS = None                   # Retención infinita / permanente gobernada por cuota de disco
 
 # Reentrante: el limpiador de grabaciones llama a save_recordings_metadata() con el candado ya tomado
 VOICE_TURNS_LOCK = threading.RLock()
 
 
+def enforce_storage_quota(target_bytes: int = TARGET_STORAGE_BYTES, max_bytes: int = MAX_STORAGE_BYTES) -> int:
+    """
+    Salvaguarda inteligente de disco para Render Cloud:
+    Calcula el tamaño total de la carpeta recordings/. Si supera max_bytes (450 MB),
+    purga de forma FIFO (los archivos WAV más antiguos primero) hasta estabilizar en target_bytes (350 MB).
+    Retorna el número de archivos purgados.
+    """
+    rec_dir = RECORDINGS_DIR
+    if not os.path.exists(rec_dir):
+        return 0
+
+    try:
+        files_info = []
+        total_size = 0
+        for fname in os.listdir(rec_dir):
+            if fname.endswith(".wav"):
+                fpath = os.path.join(rec_dir, fname)
+                if os.path.isfile(fpath):
+                    try:
+                        sz = os.path.getsize(fpath)
+                        mtime = os.path.getmtime(fpath)
+                        total_size += sz
+                        files_info.append({"filename": fname, "path": fpath, "size": sz, "mtime": mtime})
+                    except Exception:
+                        pass
+
+        if total_size <= max_bytes:
+            return 0
+
+        _bot_log(f"⚠️ [Storage Quota] Espacio ocupado ({total_size / (1024*1024):.1f} MB) supera cuota máxima ({max_bytes / (1024*1024):.1f} MB). Iniciando purga FIFO...")
+
+        # Ordenar por fecha de modificación / antigüedad ascendente (más antiguos primero)
+        files_info.sort(key=lambda x: x["mtime"])
+
+        purged_count = 0
+        purged_filenames = set()
+
+        for item in files_info:
+            if total_size <= target_bytes:
+                break
+            try:
+                os.remove(item["path"])
+                total_size -= item["size"]
+                purged_filenames.add(item["filename"])
+                purged_count += 1
+            except Exception as e_del:
+                _bot_log(f"Aviso al eliminar archivo {item['filename']} en purga FIFO: {e_del}")
+
+        if purged_filenames:
+            with VOICE_TURNS_LOCK:
+                filtered_log = [t for t in VOICE_TURNS_LOG if t.get("filename") not in purged_filenames]
+                if len(filtered_log) != len(VOICE_TURNS_LOG):
+                    VOICE_TURNS_LOG[:] = filtered_log
+            save_recordings_metadata()
+            _bot_log(f"🧹 [Storage Quota] Purga FIFO completada: eliminados {purged_count} audios. Espacio actual: {total_size / (1024*1024):.1f} MB.")
+
+        return purged_count
+    except Exception as ex:
+        _bot_log(f"Error en enforce_storage_quota: {ex}")
+        return 0
+
+
 def load_recordings_metadata():
-    """Carga de disco el historial de grabaciones válidas de las últimas 24 horas."""
+    """Carga de disco el historial de grabaciones válidas de forma permanente (sin límite de 24h) y valida cuota."""
     if not os.path.exists(METADATA_FILE):
         return []
     try:
         with open(METADATA_FILE, "r", encoding="utf-8") as f:
             entries = json.load(f)
-        now = time.time()
         valid = []
         for e in entries:
-            epoch = e.get("epoch", 0.0)
-            if (now - epoch) < RETENTION_SECONDS:
-                fpath = os.path.join(RECORDINGS_DIR, e.get("filename", ""))
-                if os.path.exists(fpath):
-                    valid.append(e)
-            else:
-                fpath = os.path.join(RECORDINGS_DIR, e.get("filename", ""))
-                if os.path.exists(fpath):
-                    try:
-                        os.remove(fpath)
-                    except Exception:
-                        pass
+            fpath = os.path.join(RECORDINGS_DIR, e.get("filename", ""))
+            if os.path.exists(fpath):
+                valid.append(e)
         return valid
     except Exception as ex:
         _bot_log(f"Aviso carga grabaciones: {ex}")
@@ -244,16 +299,12 @@ VOICE_INTERNAL_DISCONNECT = {}
 def save_recordings_metadata():
     """Persiste de forma atómica el registro de grabaciones en recordings_metadata.json."""
     try:
-        bs = _bs()
-        lock = getattr(bs, "VOICE_TURNS_LOCK", VOICE_TURNS_LOCK)
-        turns_log = getattr(bs, "VOICE_TURNS_LOG", VOICE_TURNS_LOG)
-        meta_file = getattr(bs, "METADATA_FILE", METADATA_FILE)
-        with lock:
-            data = list(turns_log)
-        tmp = meta_file + ".tmp"
+        with VOICE_TURNS_LOCK:
+            data = list(VOICE_TURNS_LOG)
+        tmp = METADATA_FILE + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
-        os.replace(tmp, meta_file)
+        os.replace(tmp, METADATA_FILE)
     except Exception as ex:
         _bot_log(f"Aviso guardado grabaciones metadata: {ex}")
 
@@ -986,3 +1037,139 @@ def play_audio_in_voice(voice_client: discord.VoiceClient, audio_path: str):
 
     audio_source = discord.FFmpegPCMAudio(audio_path)
     voice_client.play(audio_source, after=after_play)
+
+
+async def generate_call_summary(hours: float = 2.0, channel_name: str = None) -> discord.Embed:
+    """
+    Genera una crónica estructurada con personalidad de Asistente a partir de las transcripciones de voz
+    de las últimas `hours` horas en VOICE_TURNS_LOG.
+    """
+    now = time.time()
+    cutoff = now - (hours * 3600.0)
+
+    bs = _bs()
+    with VOICE_TURNS_LOCK:
+        recent_entries = [
+            t for t in VOICE_TURNS_LOG
+            if t.get("epoch", 0.0) >= cutoff
+        ]
+
+    # Filtrar solo intervenciones con transcripción real (no ruido, silencio ni procesando)
+    valid_turns = []
+    ignored_patterns = ["(audio procesado)", "[ruido]", "[silencio]", "[ininteligible]"]
+    for t in recent_entries:
+        trans = (t.get("transcription") or "").strip()
+        trans_lower = trans.lower()
+        if not trans or any(ign in trans_lower for ign in ignored_patterns):
+            continue
+        valid_turns.append(t)
+
+    ch_label = f"#{channel_name}" if channel_name else "Llamada de Voz"
+
+    if not valid_turns:
+        embed = discord.Embed(
+            title=f"🎙️ Resumen de {ch_label}",
+            description=(
+                f"No se han detectado conversaciones ni intervenciones de voz en las últimas "
+                f"{hours:g} hora{'s' if hours != 1 else ''}."
+            ),
+            color=discord.Color.orange(),
+        )
+        embed.set_footer(text="Asistente Discord • Transcripciones en Vivo")
+        return embed
+
+    # Estadísticas de participantes
+    speaker_counts = {}
+    for t in valid_turns:
+        u = t.get("user") or "Usuario"
+        speaker_counts[u] = speaker_counts.get(u, 0) + 1
+
+    sorted_speakers = sorted(speaker_counts.items(), key=lambda x: x[1], reverse=True)
+    top_speaker, top_count = sorted_speakers[0]
+    participants_str = ", ".join(f"**{u}** ({c})" for u, c in sorted_speakers)
+
+    # Construir diálogo cronológico
+    dialogue_lines = []
+    for t in valid_turns[-50:]:  # Limitar a las últimas 50 para evitar sobrecoste de tokens
+        u = t.get("user") or "Usuario"
+        ts = t.get("timestamp") or ""
+        time_part = ts.split(" ")[-1] if " " in ts else ts
+        dialogue_lines.append(f"[{time_part}] {u}: {t.get('transcription')}")
+
+    dialogue_text = "\n".join(dialogue_lines)
+
+    # Prompt para Gemini con personalidad canónica de Asistente
+    prompt = (
+        f"Eres 'Asistente', el bot oficial y cronista del servidor de Discord de Jose.\n"
+        f"Se te proporciona el registro acústico cronológico de una llamada de voz en {ch_label} "
+        f"durante las últimas {hours:g} horas.\n\n"
+        f"PARTICIPANTES Y ACTIVIDAD:\n{participants_str}\n\n"
+        f"DIÁLOGO REGISTRADO:\n{dialogue_text}\n\n"
+        f"INSTRUCCIONES CLAVE:\n"
+        f"Genera una crónica estructurada, concisa y entretenida con tu personalidad característica "
+        f"(español de España, tono gamer/colega, con toque irónico pero sin faltar al respeto).\n"
+        f"Devuelve estrictamente el texto con estas 3 secciones:\n\n"
+        f"🎙️ **Participantes y Actividad**:\n"
+        f"<Menciona quiénes estuvieron y destaca a {top_speaker} como el más activo de la sesión>\n\n"
+        f"💬 **Puntos Clave y Salseo**:\n"
+        f"<3 o 4 viñetas resumiendo los temas principales hablados, anécdotas o momentos cómicos>\n\n"
+        f"🏆 **Momento o Frase Destacada**:\n"
+        f"<La mejor frase literal o el momento más memorable de la llamada>\n"
+    )
+
+    avail_fn = getattr(bs, "get_available_models", lambda: [])
+    cooldown_fn = getattr(bs, "mark_model_cooldown", lambda m, s=60: None)
+    gemini_key = getattr(bs, "GEMINI_KEY", "")
+
+    summary_text = ""
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.4, "maxOutputTokens": 800},
+    }
+    data = json.dumps(payload).encode("utf-8")
+
+    for model_name in avail_fn():
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={gemini_key}"
+        try:
+            req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+
+            def _call_gemini(r=req):
+                with urllib.request.urlopen(r, timeout=10) as resp:
+                    return json.loads(resp.read().decode("utf-8"))
+
+            res = await asyncio.to_thread(_call_gemini)
+            candidates = res.get("candidates", [])
+            if candidates and "content" in candidates[0]:
+                summary_text = candidates[0]["content"]["parts"][0]["text"].strip()
+                if summary_text:
+                    break
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 500, 503):
+                cooldown_fn(model_name, 60)
+            continue
+        except Exception:
+            continue
+
+    if not summary_text:
+        # Fallback determinista si los modelos están inaccesibles
+        last_phrase = valid_turns[-1].get("transcription", "")
+        last_user = valid_turns[-1].get("user", "Alguien")
+        summary_text = (
+            f"🎙️ **Participantes y Actividad**:\n"
+            f"{participants_str}. El miembro más activo fue **{top_speaker}** con {top_count} intervenciones.\n\n"
+            f"💬 **Puntos Clave y Salseo**:\n"
+            f"- Se registraron {len(valid_turns)} intervenciones de voz en la llamada de {ch_label}.\n"
+            f"- Sesión de charla activa entre los miembros.\n\n"
+            f"🏆 **Momento o Frase Destacada**:\n"
+            f"\"{last_phrase}\" — {last_user}"
+        )
+
+    embed = discord.Embed(
+        title=f"🎙️ Crónica de Voz — {ch_label}",
+        description=summary_text,
+        color=discord.Color.from_rgb(88, 101, 242),
+    )
+    embed.set_footer(
+        text=f"Analizadas {len(valid_turns)} intervenciones en las últimas {hours:g}h • Más activo: {top_speaker}"
+    )
+    return embed
