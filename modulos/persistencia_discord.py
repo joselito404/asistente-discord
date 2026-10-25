@@ -307,13 +307,13 @@ def setup_persistence(bot: discord.Client, guild_id: int = GUILD_ID):
         return
     _PERSISTENCE_LOOP_STARTED = True
 
-    # 1. Bucle cíclico de 5 minutos
-    @tasks.loop(minutes=5.0)
+    # 1. Bucle cíclico de 1 minuto
+    @tasks.loop(minutes=1.0)
     async def _persistence_periodic_task():
         # Respaldar si los archivos mutaron o si es la primera comprobación
         if _has_data_mutated() or not _LAST_BACKUP_MTIMES:
             _log("Detectadas modificaciones en datos locales. Iniciando backup cíclico...")
-            await backup_to_discord(bot, guild_id=guild_id, reason="periodico_5min")
+            await backup_to_discord(bot, guild_id=guild_id, reason="periodico_1min")
 
     @_persistence_periodic_task.before_loop
     async def _before_persistence_loop():
@@ -322,7 +322,7 @@ def setup_persistence(bot: discord.Client, guild_id: int = GUILD_ID):
 
     try:
         _persistence_periodic_task.start()
-        _log("Bucle de persistencia periódico (5 min) configurado y arrancado.")
+        _log("Bucle de persistencia periódico (1 min) configurado y arrancado.")
     except RuntimeError:
         # Si no hay running event loop en este hilo (por ejemplo en tests unitarios o antes de bot.run),
         # se evita la excepción no controlada

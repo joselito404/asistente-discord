@@ -1,5 +1,5 @@
 {
-  "next_edition_number": 8,
+  "next_edition_number": 9,
   "entries": {
     "1455700883378536559_1547697788379341051": {
       "edition_number": 1,
@@ -83,6 +83,21 @@
       "stars_count": 2,
       "stargazers": [],
       "created_at": "2026-10-22T20:03:09.268278+00:00",
+      "has_image": false
+    },
+    "1549458785485987890_1563315473339392040": {
+      "edition_number": 8,
+      "orig_channel_id": 1549458785485987890,
+      "orig_message_id": 1563315473339392040,
+      "starboard_message_id": 1563318211401748514,
+      "author_id": 1561751626681679966,
+      "author_name": "Economia Asistente",
+      "stars_count": 2,
+      "stargazers": [
+        1549771495293587528,
+        857923274771136522
+      ],
+      "created_at": "2026-10-23T22:17:33.841000+00:00",
       "has_image": false
     }
   }

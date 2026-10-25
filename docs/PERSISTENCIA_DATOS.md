@@ -39,10 +39,10 @@
    - Si no hay copias previas en el canal, arranca de forma segura con la versión local inicial.
    - Registra en `bot_log` el timestamp y tamaño de la restauración completada con éxito.
 
-### 2.3. Respaldo Cíclico en Tiempo Real (Intervalo: 5 Minutos)
-- Un bucle persistente asíncrono (`tasks.loop(minutes=5)`) monitoriza las marcas de modificación o un flag en memoria `dirty_state`.
-- Cada **5 minutos exactos**, si se ha producido alguna mutación económica o de memoria, empaqueta los archivos y los envía como adjuntos al canal `#🔒backup-datos` con un mensaje estructurado:
-  `📦 Backup Automático • [YYYY-MM-DD HH:MM:SS UTC] • Base: economia.json + user_memory.json`
+### 2.3. Respaldo Cíclico en Tiempo Real (Intervalo: 1 Minuto)
+- Un bucle persistente asíncrono (`tasks.loop(minutes=1)`) monitoriza las marcas de modificación (`mtime`) de los archivos clave (`[Confirmada · Jose · 25/10/2026]`).
+- Cada **1 minuto**, si se ha producido alguna mutación económica, de bolsa o de memoria, empaqueta los archivos y los envía como adjuntos al canal `#🔒backup-datos` con un mensaje estructurado:
+  `📦 Backup Automático • [YYYY-MM-DD HH:MM:SS UTC] • Base: economia.json + user_memory.json + bolsa_mercado.json + bolsa_pool.json...`
 - Mantiene limpio el canal purgando o dejando histórico ordenado según conveniencia.
 
 ### 2.4. Respaldo Atómico en Apagado Controlado (`Graceful Shutdown`)
@@ -68,7 +68,7 @@
 
 - [x] Diagnóstico de riesgo en Render Free Tier verificado (`[Aprobado · Jose · 20/10/2026]`).
 - [x] Arquitectura de persistencia mediante canal privado de Discord (`#🔒backup-datos`) (`[Aprobado · Jose · 20/10/2026]`).
-- [x] Cadencia de respaldo cíclico fijada en **5 minutos exactos** (`[Aprobado · Jose · 20/10/2026]`).
+- [x] Cadencia de respaldo periódico reducida a **1 minuto exacto** ante mutaciones de datos (`[Confirmada · Jose · 25/10/2026]`).
 - [x] Interceptación de `SIGTERM`/`SIGINT` para volcado final en despliegues (`[Aprobado · Jose · 20/10/2026]`).
-- [x] Inclusión de `datos/user_memory.json` junto a `datos/economia.json` en el respaldo (`[Aprobado · Jose · 20/10/2026]`).
+- [x] Inclusión de `datos/user_memory.json`, `bolsa_mercado.json`, `bolsa_pool.json`, `sugerencias.json`, `starboard.json` y `cakey_history.json` junto a `datos/economia.json` en el respaldo (`[Aprobado · Jose · 20/10/2026]`).
 - [ ] [Pendiente de matizar: política de retención de mensajes en `#🔒backup-datos` (ej. purgar backups de más de 7 días para no saturar el canal)].

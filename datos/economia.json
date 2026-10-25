@@ -2,16 +2,20 @@
   "users": {
     "857923274771136522": {
       "username": "joselito3499",
-      "cash": 2913802,
-      "bank": 0,
-      "last_work": null,
+      "cash": 6442048,
+      "bank": 2500000,
+      "last_work": "2026-10-24T21:01:43.664505+00:00",
       "last_rob": null,
-      "last_salary": null,
+      "last_salary": "2026-10-24T21:01:46.261392+00:00",
       "inventory": [
-        "🛡️ Cartera Blindada"
+        "🛡️ Cartera Blindada",
+        "👑 Aura de XP Permanente"
       ],
-      "portfolio": {},
-      "last_crime": null,
+      "portfolio": {
+        "JOSE": 700,
+        "RACER": 500
+      },
+      "last_crime": "2026-10-23T22:16:59.645177+00:00",
       "active_buffs": []
     },
     "1170704124631846993": {
@@ -57,12 +61,18 @@
     "1208551025578082367": {
       "username": "racerwasp",
       "cash": 0,
-      "bank": 0,
-      "last_work": null,
-      "last_rob": null,
-      "last_salary": null,
-      "inventory": [],
-      "portfolio": {}
+      "bank": 21935,
+      "last_work": "2026-10-24T11:29:21.907615+00:00",
+      "last_rob": "2026-10-25T18:35:32.748327+00:00",
+      "last_salary": "2026-10-23T21:41:46.442181+00:00",
+      "inventory": [
+        "🛡️ Cartera Blindada"
+      ],
+      "portfolio": {
+        "RACER": 163
+      },
+      "last_crime": "2026-10-24T11:29:28.096740+00:00",
+      "active_buffs": []
     },
     "1305627063147036683": {
       "username": "carlitosmf__",
@@ -86,27 +96,21 @@
     },
     "794223776215990332": {
       "username": "terreneiror",
-      "cash": 0,
+      "cash": 9204,
       "bank": 0,
-      "last_work": null,
+      "last_work": "2026-10-20T20:54:05.552949+00:00",
       "last_rob": null,
-      "last_salary": null,
-      "inventory": [],
-      "portfolio": {}
-    },
-    "999888777666": {
-      "cash": 2400904,
-      "bank": 0,
-      "last_work": null,
+      "last_salary": "2026-10-23T20:15:23.701348+00:00",
+      "inventory": [
+        "👑 Aura de XP Permanente",
+        "💠 Pase Mensual de XP"
+      ],
+      "portfolio": {},
       "last_crime": null,
-      "last_rob": null,
-      "last_salary": null,
-      "inventory": [],
-      "active_buffs": [],
-      "portfolio": {}
+      "active_buffs": []
     }
   },
-  "server_jackpot": 25000,
+  "server_jackpot": 983708,
   "meta": {
     "currency_name": "Porro",
     "currency_emoji": "<:Porro:1535685303317172305>",
