@@ -585,24 +585,28 @@ SYSTEM_PROMPT_BODY = r"""
   4. Facilita siempre el enlace directo de búsqueda de YouTube para que puedan escucharla al instante con un clic.
 
 🎨 MOTOR GRÁFICO MULTIMODAL & GENERACIÓN VISUAL:
-1. 🖼️ DIBUJO ARTÍSTICO (FLUX.1):
-   - Si te piden dibujar o pintar una escena, incluye la etiqueta:
+1. 🖼️ DIBUJO ARTÍSTICO CON IA (FLUX.1):
+   - Si te piden inventar, dibujar, ilustrar o pintar una escena artística generada por IA:
      [ACTION_DRAW: <detailed English visual prompt for FLUX.1 (max 40 words, subject, art style, lighting, cinematic)>]
-2. 📐 FÓRMULAS MATEMÁTICAS EN IMAGEN (LaTeX Render):
+2. 🔍 BÚSQUEDA Y ENVÍO DE MEMES O IMÁGENES REALES DE INTERNET:
+   - Si piden poner un meme conocido de internet, foto real, captura, póster, carátula o imagen existente (ej: "pon la imagen de pongan bachata", "pasa foto de...", "meme de el risitas"):
+     [ACTION_SEARCH_IMAGE: <término de búsqueda conciso y directo, ej: meme pongan bachata perro>]
+     ⚠️ NUNCA inventes con FLUX.1 un meme real de internet; usa siempre [ACTION_SEARCH_IMAGE: ...] para buscar y descargar la imagen real de la web.
+3. 📐 FÓRMULAS MATEMÁTICAS EN IMAGEN (LaTeX Render):
    - ❌ NUNCA escribas fórmulas matemáticas en texto plano con código LaTeX (`$...$`, `$$...$$`, `\frac`, `\lim`, etc.): Discord no renderiza LaTeX y a los usuarios les aparece como código ilegible ("chino").
    - SIEMPRE que una explicación requiera una o varias fórmulas matemáticas formales (límites, derivadas, integrales, matrices, teoremas), explica el concepto con palabras en español llano y emite la etiqueta especial:
      [ACTION_MATH: <fórmula matemática pura en LaTeX limpia sin dólares, ej: \lim_{n \to \infty} \frac{a_n - a_{n-1}}{b_n - b_{n-1}}>]
      El sistema renderizará la fórmula automáticamente como una tarjeta gráfica PNG oscura y nítida de alta resolución y la adjuntará a tu respuesta.
-3. 📊 GRÁFICAS ESTADÍSTICAS Y FUNCIONES:
+4. 📊 GRÁFICAS ESTADÍSTICAS Y FUNCIONES:
    - Si piden graficar una función f(x), comparar datos numéricos o mostrar estadísticas, emite la etiqueta:
      [ACTION_CHART: {"type": "line|bar|pie", "data": {"labels": [...], "datasets": [{"label": "...", "data": [...]}]}}]
-4. 🗺️ DIAGRAMAS DE FLUJO Y ESQUEMAS:
+5. 🗺️ DIAGRAMAS DE FLUJO Y ESQUEMAS:
    - Para mapas conceptuales, algoritmos o flujos paso a paso, emite la etiqueta:
      [ACTION_DIAGRAM: <código mermaid, ej: graph TD; A[Inicio] --> B{Decisión}; B -->|Sí| C[Fin]>]
-5. 💻 TARJETAS DE CÓDIGO ESTILIZADAS:
+6. 💻 TARJETAS DE CÓDIGO ESTILIZADAS:
    - Si piden código de programación destacado, además de tu explicación puedes emitir:
      [ACTION_CODE: <código limpio sin backticks>]
-6. 😄 REACCIÓN CON EMOJI AL MENSAJE DEL USUARIO (OPCIONAL):
+7. 😄 REACCIÓN CON EMOJI AL MENSAJE DEL USUARIO (OPCIONAL):
    - Cuando el mensaje del usuario sea gracioso, irónico, picante, surrealista o tenga carga emocional clara (vaciles, quejas del casino, opiniones de cine/manhwas, preguntas cómplices), puedes añadir UNA reacción debajo de su mensaje incluyendo al final de tu respuesta:
      [ACTION_REACT: :nombre_emoji:] o [ACTION_REACT: 🤔]
    - Combina con naturalidad emojis del servidor (:pensando:, :dead_stare:, :side_eye:, :KEKWLaugh:, :gigachad:, :absolutecinema:, :Porro:, :cooked:, :skillissue:, :pepeCRY:, :Doakes:) y emojis Unicode clásicos (🤔, 💀, 😂, ❤️, 👀, 🔥).
@@ -985,32 +989,136 @@ TEXT_EXTENSIONS = {
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 
 
+def search_web_image(query: str):
+    """Busca una imagen real o meme en internet (Bing/DuckDuckGo) y descarga sus bytes en memoria."""
+    clean_q = query.strip()
+    if not clean_q or len(clean_q) < 2:
+        return None
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+        "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
+    }
+
+    img_urls = []
+
+    # Estrategia 1: Bing Images (alta precisión para memes y fotos de internet)
+    try:
+        bing_url = f"https://www.bing.com/images/search?q={urllib.parse.quote(clean_q)}&first=1"
+        req = urllib.request.Request(bing_url, headers=headers)
+        with urllib.request.urlopen(req, timeout=6) as resp:
+            page = resp.read().decode("utf-8", errors="ignore")
+            matches = re.findall(r'murl&quot;:&quot;(https?://[^&]+?\.(?:jpg|jpeg|png|webp|gif))&quot;', page, re.IGNORECASE)
+            img_urls.extend([html.unescape(u) for u in matches])
+    except Exception as e:
+        print(f"[search_web_image] Aviso Bing Images: {e}")
+
+    # Estrategia 2: Fallback a DuckDuckGo Images
+    if not img_urls:
+        try:
+            ddg_url = f"https://duckduckgo.com/?q={urllib.parse.quote(clean_q)}"
+            with urllib.request.urlopen(urllib.request.Request(ddg_url, headers=headers), timeout=5) as r:
+                page = r.read().decode("utf-8", errors="ignore")
+                vqd_match = re.search(r'vqd=([0-9\-]+)', page)
+                if vqd_match:
+                    vqd = vqd_match.group(1)
+                    api_url = f"https://duckduckgo.com/i.js?l=es-es&o=json&q={urllib.parse.quote(clean_q)}&vqd={vqd}"
+                    with urllib.request.urlopen(urllib.request.Request(api_url, headers=headers), timeout=5) as api_r:
+                        ddg_data = json.loads(api_r.read().decode("utf-8"))
+                        for item in ddg_data.get("results", []):
+                            u = item.get("image")
+                            if u:
+                                img_urls.append(u)
+        except Exception as e:
+            print(f"[search_web_image] Aviso DDG Images: {e}")
+
+    # Descargar la primera imagen que responda exitosamente (límite 8MB)
+    for u in img_urls[:6]:
+        try:
+            d_req = urllib.request.Request(u, headers=headers)
+            with urllib.request.urlopen(d_req, timeout=6) as d_resp:
+                content_type = d_resp.headers.get("Content-Type", "")
+                if "image" not in content_type and not any(u.lower().endswith(ext) for ext in [".jpg", ".jpeg", ".png", ".webp", ".gif"]):
+                    continue
+                data = d_resp.read(8 * 1024 * 1024)
+                if len(data) >= 1024:
+                    ext = ".jpg"
+                    if ".png" in u.lower():
+                        ext = ".png"
+                    elif ".webp" in u.lower():
+                        ext = ".webp"
+                    elif ".gif" in u.lower():
+                        ext = ".gif"
+                    return data, f"imagen_web{ext}", u
+        except Exception:
+            continue
+
+    return None
+
+
 def search_web_lite(query: str, max_results: int = 5) -> str:
-    """Busca en internet en tiempo real y devuelve los mejores resultados con título y snippet."""
+    """Busca en internet en tiempo real con motor dual (DuckDuckGo HTML + DuckDuckGo Lite) y soporte Wikipedia."""
     if not query or len(query.strip()) < 3:
         return ""
-    url = "https://html.duckduckgo.com/html/"
-    data = urllib.parse.urlencode({"q": query}).encode("utf-8")
-    req = urllib.request.Request(
-        url,
-        data=data,
-        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"},
-    )
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+        "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
+    }
+
+    results = []
+
+    # 1. Consulta DuckDuckGo HTML
     try:
+        url = "https://html.duckduckgo.com/html/"
+        data = urllib.parse.urlencode({"q": query}).encode("utf-8")
+        req = urllib.request.Request(url, data=data, headers=headers)
         with urllib.request.urlopen(req, timeout=6) as r:
             raw = r.read().decode("utf-8", errors="ignore")
             titles = re.findall(r'<h2 class="result__title">.*?<a[^>]*>(.*?)</a>', raw, re.DOTALL)
             snippets = re.findall(r'<a class="result__snippet[^"]*"[^>]*>(.*?)</a>', raw, re.DOTALL)
-            results = []
             for i in range(min(max_results, len(titles))):
                 t = html.unescape(re.sub(r'<[^>]+>', '', titles[i])).strip()
                 s = html.unescape(re.sub(r'<[^>]+>', '', snippets[i])).strip() if i < len(snippets) else ""
                 if t and s:
                     results.append(f"  * **{t}**: {s}")
-            if results:
-                return f"\n[BÚSQUEDA WEB EN VIVO PARA '{query}']:\n" + "\n".join(results)
     except Exception as e:
-        print(f"Aviso búsqueda web: {e}")
+        print(f"[search_web_lite] Fallo DuckDuckGo HTML: {e}")
+
+    # 2. Fallback a DuckDuckGo Lite si HTML devuelve vacío
+    if not results:
+        try:
+            lite_url = f"https://lite.duckduckgo.com/lite/?q={urllib.parse.quote(query)}"
+            req = urllib.request.Request(lite_url, headers=headers)
+            with urllib.request.urlopen(req, timeout=5) as r:
+                raw = r.read().decode("utf-8", errors="ignore")
+                snippets_lite = re.findall(r'<td class="result-snippet">(.*?)</td>', raw, re.DOTALL)
+                titles_lite = re.findall(r'<a rel="nofollow" class="result-link"[^>]*>(.*?)</a>', raw, re.DOTALL)
+                for i in range(min(max_results, len(titles_lite))):
+                    t = html.unescape(re.sub(r'<[^>]+>', '', titles_lite[i])).strip()
+                    s = html.unescape(re.sub(r'<[^>]+>', '', snippets_lite[i])).strip() if i < len(snippets_lite) else ""
+                    if t:
+                        results.append(f"  * **{t}**: {s}")
+        except Exception as e:
+            print(f"[search_web_lite] Fallo DuckDuckGo Lite: {e}")
+
+    # 3. Consulta de contexto en Wikipedia API para entidades y conceptos
+    if not results and len(query.split()) <= 4:
+        try:
+            wiki_term = urllib.parse.quote(query.replace(" ", "_"))
+            wiki_url = f"https://es.wikipedia.org/api/rest_v1/page/summary/{wiki_term}"
+            w_req = urllib.request.Request(wiki_url, headers=headers)
+            with urllib.request.urlopen(w_req, timeout=4) as w_resp:
+                w_data = json.loads(w_resp.read().decode("utf-8"))
+                extract = w_data.get("extract")
+                w_title = w_data.get("title")
+                if extract:
+                    results.append(f"  * **{w_title} (Wikipedia)**: {extract}")
+        except Exception:
+            pass
+
+    if results:
+        return f"\n[BÚSQUEDA WEB EN VIVO PARA '{query}']:\n" + "\n".join(results)
     return ""
 
 
@@ -2341,7 +2449,30 @@ async def _handle_message_safe(message: discord.Message):
         # 8. Interceptar acciones visuales y gráficas generadas por IA
         files_to_send = []
 
-        # A. Acción de dibujo FLUX.1
+        # A. Acción de búsqueda y envío de imagen/meme web real
+        search_img_block = extract_action_block(response_text, "ACTION_SEARCH_IMAGE")
+        if search_img_block:
+            full_s_img, query_s_img = search_img_block
+            query_s_img = query_s_img.strip()
+            clean_response = response_text.replace(full_s_img, "").strip()
+            try:
+                print(f"[WebImage] Buscando imagen/meme real para query: '{query_s_img}'")
+                res_img = await asyncio.to_thread(search_web_image, query_s_img)
+                if res_img:
+                    img_bytes, filename, src_url = res_img
+                    file = discord.File(io.BytesIO(img_bytes), filename=filename)
+                    if clean_response:
+                        clean_response = format_server_emojis(clean_response, guild=message.guild)
+                        await message.reply(content=clean_response, file=file)
+                    else:
+                        await message.reply(file=file)
+                    return
+                else:
+                    print(f"[WebImage] No se encontraron resultados web para '{query_s_img}', recurriendo a dibujo FLUX.1...")
+            except Exception as e_simg:
+                print(f"Error procesando ACTION_SEARCH_IMAGE: {e_simg}")
+
+        # B. Acción de dibujo FLUX.1
         draw_block = extract_action_block(response_text, "ACTION_DRAW")
         if draw_block:
             full_draw, prompt_flux = draw_block
@@ -2442,6 +2573,31 @@ async def _handle_message_safe(message: discord.Message):
                 else:
                     fallback_code = f"```python\n{clean_code}\n```"
                 response_text = response_text.replace(full_code, fallback_code, 1).strip()
+
+        # Fallback de seguridad para búsqueda directa de memes o fotos web
+        direct_web_img_prefix = (
+            "pon la imagen de ", "pon la imagen del ", "pon la foto de ", "pon la foto del ",
+            "pon el meme de ", "pon el meme del ", "busca el meme de ", "busca el meme del ",
+            "busca la imagen de ", "busca la imagen del ", "busca la foto de ", "busca la foto del ",
+            "busca en google la imagen ", "busca en google el meme ", "busca en google la foto "
+        )
+        for prefix in direct_web_img_prefix:
+            if lowered.startswith(prefix) and not files_to_send:
+                q_term = clean_text[len(prefix):].strip().strip('"').strip("'")
+                if q_term:
+                    try:
+                        print(f"[DirectWebImage] Interceptando petición de meme/imagen web: '{q_term}'")
+                        res_direct = await asyncio.to_thread(search_web_image, q_term)
+                        if res_direct:
+                            img_b, f_name, _ = res_direct
+                            f_obj = discord.File(io.BytesIO(img_b), filename=f_name)
+                            reply_txt = response_text if response_text and not any(bad in response_text.lower() for bad in ["aquí tienes", "aqui tienes", "he creado", "la imagen", "no tengo un navegador"]) else f"🖼️ **Aquí tienes la imagen de {q_term}:**"
+                            reply_txt = format_server_emojis(reply_txt, guild=message.guild)
+                            await message.reply(content=reply_txt, file=f_obj)
+                            return
+                    except Exception as err_direct:
+                        print(f"Error en fallback de imagen web directa: {err_direct}")
+                break
 
         # Fallback de seguridad para dibujo directo
         direct_draw_prefix = ("dibuja ", "dibújame ", "dibujame ", "crea una imagen de ", "genera una imagen de ", "haz un dibujo de ", "hazme un dibujo de ")
