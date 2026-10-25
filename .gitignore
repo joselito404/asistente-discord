@@ -50,6 +50,7 @@ herramientas/*
 !herramientas/test_chat_ia_embeds.py
 !herramientas/test_social_scrapers_and_lurker.py
 !herramientas/test_voz_retention_and_summary.py
+!herramientas/test_juicios_discord.py
 !herramientas/update_discord_channels.py
 documentos_pdf/
 *.zip

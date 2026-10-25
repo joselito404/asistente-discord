@@ -34,6 +34,7 @@ from modulos.comandos_generales import (
     cmd_autoroles,
     cmd_sugerencia,
     cmd_panel_sugerencias,
+    cmd_juicio,
     # Componentes y helpers generales reexportados
     _bs,
     _bot_log,

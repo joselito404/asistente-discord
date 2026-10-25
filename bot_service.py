@@ -440,6 +440,7 @@ from modulos.comandos import (
     cmd_autoroles,
     cmd_sugerencia,
     cmd_ajedrez,
+    cmd_juicio,
     cmd_slots,
     cmd_balance,
     cmd_trabajar,

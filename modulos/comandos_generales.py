@@ -26,8 +26,9 @@ try:
     from discord.ext import voice_recv
 except ImportError:
     voice_recv = None
-from datetime import datetime, timezone
 import asyncio
+
+from modulos.juicios_discord import cmd_juicio
 
 
 def _bs():
@@ -1224,6 +1225,7 @@ GENERAL_SLASH_COMMANDS = [
     cmd_autoroles,
     cmd_sugerencia,
     cmd_panel_sugerencias,
+    cmd_juicio,
 ]
 
 

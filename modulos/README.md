@@ -106,14 +106,17 @@ Cualquier agente o desarrollador autorizado que trabaje en nuevas funcionalidade
     - Persistencia thread-safe y atómica en `datos/social_graph.json` con claves de pares canónicos `user1:user2`.
     - Registro de minutos en llamada conjunta (`record_voice_duo`), partidas/duelos compartidos (`record_duel_interaction`) y afinidad calculada (`get_affinity`).
     - Generador de dinámica social contextual (`get_social_dynamics_ctx`) para enriquecer el System Prompt de Gemini identificando la complicidad entre participantes activos en el chat.
-19. **`tribunal_discord.py`**: Juicios Comunitarios de El Tribunal en Discord ([`docs/DISENO_TRIBUNAL_DISCORD.md`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/DISENO_TRIBUNAL_DISCORD.md)):
-    - Gestión del ciclo judicial lúdico en canales comunitarios con un único juicio activo por canal (`ACTIVE_TRIALS`).
-    - Retención atómica de fianzas en Porros (100 a 2500, defecto 300) de ambas partes y tasa judicial de apertura (50 Porros) enviada al `server_jackpot`.
+19. **`juicios_discord.py`**: Minijuego de Juicios Comunitarios en Discord ([`docs/DISENO_JUICIOS_DISCORD.md`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/DISENO_JUICIOS_DISCORD.md)):
+    - Gestión del ciclo judicial lúdico en canales comunitarios con un único juicio activo por canal (`ACTIVE_TRIALS` bajo `TRIALS_LOCK`).
+    - Modo Dual de Fianza:
+      * Modo Económico (`fianza >= 100` y `<= 2500`, defecto `300`): retención atómica de fianzas en Porros a ambas partes y tasa judicial de apertura de 50 Porros no reembolsables transferida al `server_jackpot` bajo `ECONOMY_LOCK`.
+      * Modo Moral (`fianza == 0`): juicio puramente honorífico y lúdico sin retención de fondos ni tasas judiciales.
     - Interfaz interactiva de deliberación popular (`TrialView`) con botones `[⚖️ Declarar Culpable]`, `[🕊️ Declarar Inocente]` y `[📜 Ver Cargos]`.
-    - Escrutinio en tiempo real con barra de bloques emoji y quorum mínimo de 2 votos ajenos.
-    - Resolución y sentencias satíricas del Asistente: Culpable (transferencia a demandante y rol penitenciario `'Culpable de Skill Issue'`), Inocente (indemnización a acusado por costas), Empate (In dubio pro reo) y Desestimación por falta de quorum (devolución de fianzas).
+    - Escrutinio en tiempo real con barra de bloques emoji (`🟥` y `🟩`), cálculo de porcentajes y quorum mínimo de 2 votos ajenos a las partes.
+    - Veto estricto a demandante y acusado (incompatibilidad procesal para votar en su propia causa).
+    - Veredicto y sentencias satíricas del Asistente: Culpable (pozo de fianza a demandante y rol penitenciario `'Culpable de Skill Issue'`), Inocente (indemnización a acusado por costas), Empate (In dubio pro reo) y Desestimación por falta de quorum (devolución íntegra de fianzas).
     - Comando Slash `/juicio` con acciones `demandar` y `estado`.
-    - Diferenciación canónica con la web oficial de videojuegos (`https://el-tribunal-gaming.vercel.app`).
+    - Desvinculación canónica absoluta de El Tribunal Gaming (sistema lúdico 100% de Discord sin relación con la web ni reseñas de videojuegos).
 
 ## CÃ³mo se usa e integra con `bot_service.py`
 - `bot_service.py` actÃºa como punto de entrada Ãºnico (`python bot_service.py`) y orquestador central bajo una **Arquitectura de Runner Dual**:
