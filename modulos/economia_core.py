@@ -725,16 +725,17 @@ def execute_crime(
             base_reward = random.randint(min_reward, max_reward)
             mult, mult_label = get_level_role_multiplier(member, user_roles)
 
-        # Sinergia de Cartera (Bolsa Sanvi / Aura)
-        try:
-            from modulos.bolsa_sanvi import get_user_portfolio_buff
-            aura_buff = get_user_portfolio_buff(uid)
-            if aura_buff > 0:
-                mult += aura_buff
-                aura_pct = int(round(aura_buff * 100))
-                mult_label = f"{mult_label} + Sinergia Aura +{aura_pct}%" if mult_label else f"Sinergia Aura +{aura_pct}%"
-        except Exception:
-            pass
+            # Sinergia de Cartera (Bolsa Sanvi / Aura)
+            try:
+                from modulos.bolsa_sanvi import get_user_portfolio_buff
+                aura_buff = get_user_portfolio_buff(uid)
+                if aura_buff > 0:
+                    mult += aura_buff
+                    aura_pct = int(round(aura_buff * 100))
+                    mult_label = f"{mult_label} + Sinergia Aura +{aura_pct}%" if mult_label else f"Sinergia Aura +{aura_pct}%"
+            except Exception:
+                pass
+
             reward = int(round(base_reward * mult))
             story = random.choice(CRIME_SUCCESS_MESSAGES)
             bonus_line = f"\n*(Bono aplicado: **{mult_label}** — Base: {base_reward:,} Porros)*" if (mult > 1.0 and mult_label) else ""

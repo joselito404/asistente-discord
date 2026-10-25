@@ -14,6 +14,7 @@ from modulos.comandos_generales import (
     cmd_musica,
     cmd_steam,
     cmd_tribunal,
+    cmd_juicio,
     cmd_perfil,
     cmd_pregunta,
     cmd_voz,

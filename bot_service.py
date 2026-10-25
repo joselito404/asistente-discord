@@ -420,6 +420,7 @@ from modulos.comandos import (
     cmd_dibuja,
     cmd_steam,
     cmd_tribunal,
+    cmd_juicio,
     cmd_perfil,
     cmd_pregunta,
     cmd_voz,
@@ -823,6 +824,23 @@ async def on_ready():
                         p_data["last_distribution_date"] = today_str
                         save_pool_data(p_data)
                         bot_log(f"🏆 [Bolsa Sanvi] Dividendos dominicales (22:00 ES) repartidos: {dist_res.get('distributed_amount', 0):,.2f} Porros.")
+                        # Aviso oficial en #🏪tienda-y-mercado🏪 (ID: 1549512919694442547, [Confirmada · Jose · 25/10/2026])
+                        try:
+                            ch_eco = economy_bot.get_channel(1549512919694442547)
+                            if ch_eco:
+                                emb = discord.Embed(
+                                    title="🏆 Liquidación Semanal del Yield Pool — Bolsa Sanvi",
+                                    description=(
+                                        f"Se han repartido **{dist_res.get('distributed_amount', 0):,.2f} Porros** "
+                                        f"en dividendos entre **{dist_res.get('recipients_count', 0)} accionistas**, "
+                                        "ingresados directamente en sus cuentas bancarias.\n\n"
+                                        "¡Gracias por invertir y holdear en la Bolsa Sanvi!"
+                                    ),
+                                    color=0x00E676
+                                )
+                                await ch_eco.send(embed=emb)
+                        except Exception as e_ch:
+                            bot_log(f"Aviso al enviar embed de Yield Pool en tienda-y-mercado: {e_ch}")
             except Exception as e_bolsa_loop:
                 bot_log(f"Aviso en _bolsa_lifecycle_watcher: {e_bolsa_loop}")
             await asyncio.sleep(600.0)

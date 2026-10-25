@@ -21,14 +21,6 @@
 
 ## 🏛️ Área 3: Dinámicas Sociales, Juicios y Entretenimiento
 
-### 3.1. Juicios Comunitarios de El Tribunal en Discord (Diferenciado de la Web Oficial)
-- **Qué falta:** Evolucionar el comando `/tribunal` en Discord a un juicio comunitario interactivo con votación de jurado popular (botones `[⚖️ Declarar Culpable]` y `[🕊️ Declarar Inocente]`) durante 5 minutos y sentencias automatizadas (multa en Porros de la cartera o rol temporal `"Culpable de Skill Issue"`). Claramente diferenciado de la web oficial de El Tribunal Gaming (`el-tribunal-gaming.vercel.app`).
-- **Por qué importa:** Fomenta piques divertidos y debates comunitarios en `#⚖️el-tribunal-gaming⚖️` con consecuencias reales dentro del servidor.
-- **Siguiente paso:** Diseñar el flujo de votación y las sanciones automáticas en Discord.
-- **Responsable:** Chat 3 / Jose.
-- **Estado:** `por hacer`.
-- **Detalle:** [modulos/juegos.py](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/juegos.py).
-
 ### 3.2. El Periódico Semanal / The Sanvi Weekly
 - **Qué falta:** Crónica semanal automática publicada cada domingo a las 20:00 ES en `#📣anuncios📣` o `#🗨️la-shit-de-todos-los-dias🗨️`, resumiendo el post más votado de Starboard de la semana, el tiburón del casino/bolsa, el récord de horas de voz en Cakey y una columna de opinión satírica de Asistente.
 - **Por qué importa:** Crea cultura y cohesión comunitaria semanal destacando los mejores momentos del servidor.
