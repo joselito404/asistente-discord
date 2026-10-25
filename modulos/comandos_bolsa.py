@@ -565,7 +565,7 @@ async def cmd_bolsa_ver(interaction: discord.Interaction, ticker: Optional[str] 
 
 @cmd_bolsa.command(
     name="ticker",
-    description="Cambia el ticker bursátil de tu acción cotizada (exclusivo para fundadores, coste: 500 Porros)",
+    description="Cambia el ticker bursátil de tu acción cotizada (exclusivo para fundadores, coste: 5.000 Porros)",
 )
 @app_commands.describe(nuevo="Introduce el nuevo ticker bursátil (3 a 6 caracteres alfanuméricos, ej: JOS3, TERRE)")
 async def cmd_bolsa_ticker(interaction: discord.Interaction, nuevo: str):
@@ -579,7 +579,7 @@ async def cmd_bolsa_ticker(interaction: discord.Interaction, nuevo: str):
                 color=0x2ECC71,
                 timestamp=datetime.now(timezone.utc),
             )
-            embed.set_footer(text="Bolsa Sanvi • Transacción Atómica y Deflación de 500 Porros")
+            embed.set_footer(text="Bolsa Sanvi • Transacción Atómica y Deflación de 5.000 Porros")
             await interaction.followup.send(embed=embed, ephemeral=True)
         else:
             embed = discord.Embed(

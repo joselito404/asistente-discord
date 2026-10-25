@@ -2160,7 +2160,7 @@ def change_founder_ticker(
 ) -> Tuple[bool, str]:
     """
     Permite a un fundador cambiar el ticker bursátil de su acción cotizada.
-    - Coste: 500 Porros (quemados para deflación económica).
+    - Coste: 5.000 Porros (quemados para deflación económica).
     - Cooldown: mínimo 7 días (604.800 segundos) entre cambios.
     - Formato: 3 a 6 caracteres alfanuméricos en mayúsculas (^[A-Z0-9]{3,6}$).
     - Migración atómica integral: bolsa_mercado.json, economia.json y memoria (TICKERS y TICKER_UI_META).
@@ -2226,19 +2226,19 @@ def change_founder_ticker(
             except Exception:
                 pass
 
-        # 5. Validar fondos (500 Porros) y quemar la tasa
-        TASA_CAMBIO_TICKER = 500
+        # 5. Validar fondos (5.000 Porros) y quemar la tasa
+        TASA_CAMBIO_TICKER = 5000
         bal = economia_core.get_balance(founder_user_id)
         if bal.get("cash", 0) < TASA_CAMBIO_TICKER:
             return (
                 False,
-                f"Fondos insuficientes: el cambio de ticker cuesta {TASA_CAMBIO_TICKER} Porros (tienes {bal.get('cash', 0):,} en efectivo).",
+                f"Fondos insuficientes: el cambio de ticker cuesta {TASA_CAMBIO_TICKER:,} Porros (tienes {bal.get('cash', 0):,} en efectivo).",
             )
 
         try:
             economia_core.modify_balance(founder_user_id, cash_delta=-TASA_CAMBIO_TICKER)
         except Exception as e:
-            return (False, f"Fallo al procesar el abono de {TASA_CAMBIO_TICKER} Porros: {e}")
+            return (False, f"Fallo al procesar el abono de {TASA_CAMBIO_TICKER:,} Porros: {e}")
 
         # 6. Migración atómica integral en datos y memoria
         now_iso = datetime.now(timezone.utc).isoformat()
@@ -2291,7 +2291,7 @@ def change_founder_ticker(
             pass
 
         _bot_log(f"Ticker de fundador cambiado exitosamente: ${old_t} -> ${new_t} por usuario {founder_user_id}")
-        return (True, f"Ticker bursátil cambiado exitosamente de ${old_t} a ${new_t}. Se han deducido y quemado {TASA_CAMBIO_TICKER} Porros.")
+        return (True, f"Ticker bursátil cambiado exitosamente de ${old_t} a ${new_t}. Se han deducido y quemado {TASA_CAMBIO_TICKER:,} Porros.")
 
 
 

@@ -445,12 +445,12 @@ class TestBolsaSanvi(unittest.TestCase):
         self.assertIn("ya está registrado en el mercado bursátil", msg)
 
     def test_16_change_founder_ticker_execution_and_atomic_migration(self):
-        """Valida cobro de 500 Porros, migración de carteras en economia.json, cooldown y atomicidad."""
+        """Valida cobro de 5.000 Porros, migración de carteras en economia.json, cooldown y atomicidad."""
         founder_id = 857923274771136522
         investor_id = 777666555444
 
         # Preparar fondos suficientes para fundador e inversor
-        economia_core.ensure_user(founder_id, default_cash=1000)
+        economia_core.ensure_user(founder_id, default_cash=10000)
         economia_core.ensure_user(investor_id, default_cash=1000)
 
         # Asignar acciones al inversor en cartera para verificar migración
@@ -472,10 +472,10 @@ class TestBolsaSanvi(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("Fondos insuficientes", msg)
 
-        # Restaurar fondos con saldo adecuado para abonar los 500 Porros
+        # Restaurar fondos con saldo adecuado para abonar los 5.000 Porros (10.000 Porros)
         with economia_core.ECONOMY_LOCK:
             edata = economia_core.load_economy_data()
-            edata["users"][str(founder_id)]["cash"] = 2000
+            edata["users"][str(founder_id)]["cash"] = 10000
             economia_core.save_economy_data(edata)
 
         # Ejecución exitosa de cambio de ticker JOSE -> JOS3
@@ -483,9 +483,9 @@ class TestBolsaSanvi(unittest.TestCase):
         self.assertTrue(ok, f"Fallo al cambiar ticker: {msg}")
         self.assertIn("JOS3", msg)
 
-        # 1. Comprobar deducción exacta de 500 Porros
+        # 1. Comprobar deducción exacta de 5.000 Porros (10.000 - 5.000 = 5.000)
         bal_founder = economia_core.get_balance(founder_id)
-        self.assertEqual(bal_founder["cash"], 1500)
+        self.assertEqual(bal_founder["cash"], 5000)
 
         # 2. Comprobar bolsa_mercado.json
         mdata = bolsa_sanvi.load_market_data()
@@ -519,10 +519,10 @@ class TestBolsaSanvi(unittest.TestCase):
             mdata["tickers"]["JOS3"]["last_ticker_change"] = None
             bolsa_sanvi.save_market_data(mdata)
 
-            # Revertir a JOSE
+            # Revertir a JOSE (fondos suficientes para la reversión)
             with economia_core.ECONOMY_LOCK:
                 edata = economia_core.load_economy_data()
-                edata["users"][str(founder_id)]["cash"] = 2000
+                edata["users"][str(founder_id)]["cash"] = 10000
                 economia_core.save_economy_data(edata)
 
             ok_rev, msg_rev = bolsa_sanvi.change_founder_ticker(founder_id, "JOS3", "JOSE")
