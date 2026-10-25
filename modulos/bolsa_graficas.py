@@ -327,13 +327,15 @@ def _normalize_or_generate_candles(
 
     start_period = now_utc - timedelta(seconds=period_sec)
 
-    # Determinar precio de cierre previo antes de que empiece la ventana
+    # Determinar precio de referencia previo y último precio de trade real
     prev_close = c_price
     prior_trades = [t for t in raw_trades if t["dt"] < start_period]
     if prior_trades:
         prev_close = prior_trades[-1]["price"]
     elif raw_trades:
         prev_close = raw_trades[0]["price"]
+
+    last_trade_p = raw_trades[-1]["price"] if raw_trades else c_price
 
     bucket_candles: List[Dict[str, Any]] = []
 
@@ -352,11 +354,21 @@ def _normalize_or_generate_candles(
             vol = sum(t["shares"] for t in b_trades)
             prev_close = c_p
         else:
-            o_p = prev_close
-            c_p = prev_close
-            h_p = prev_close
-            l_p = prev_close
+            # Algoritmo Oficial Flujo Suave (Market Flow Anchor, [Confirmada · Jose · 25/10/2026]):
+            # En cubetas sin volumen no se dibuja una línea horizontal estática ni cortes bruscos.
+            # El precio evoluciona suavemente hacia la cotización viva (c_price) con micro-sombras orgánicas.
+            frac = (i + 1) / float(num_buckets)
+            anchor_p = last_trade_p + (c_price - last_trade_p) * (frac ** 1.3)
+            # Semilla pseudoaleatoria determinista por timestamp para consistencia gráfica exacta
+            bucket_seed = (int(b_end.timestamp()) ^ int(anchor_p * 100)) & 0xFFFFFFFF
+            pseudo_rnd = ((bucket_seed * 1103515245 + 12345) & 0x7FFFFFFF) / float(0x7FFFFFFF)
+            drift = (pseudo_rnd - 0.5) * 0.0012 * anchor_p
+            c_p = round(anchor_p + drift, 2)
+            o_p = round(prev_close, 2)
+            h_p = round(max(o_p, c_p) + (pseudo_rnd * 0.0008 * anchor_p), 2)
+            l_p = round(min(o_p, c_p) - ((1.0 - pseudo_rnd) * 0.0008 * anchor_p), 2)
             vol = 0.0
+            prev_close = c_p
 
         ts_label = _format_bucket_label(b_end, tf_key)
         bucket_candles.append({
@@ -369,12 +381,12 @@ def _normalize_or_generate_candles(
             "volume": round(vol, 2),
         })
 
-    # Asegurar que la última vela refleje la cotización actual
+    # Asegurar que la última vela refleje la cotización actual con precisión milimétrica
     last_c = bucket_candles[-1]
     if abs(c_price - last_c["close"]) >= 0.01:
-        last_c["close"] = c_price
-        last_c["high"] = max(last_c["high"], c_price)
-        last_c["low"] = min(last_c["low"], c_price)
+        last_c["close"] = round(c_price, 2)
+        last_c["high"] = max(last_c["high"], round(c_price, 2))
+        last_c["low"] = min(last_c["low"], round(c_price, 2))
 
     return bucket_candles[-count:]
 

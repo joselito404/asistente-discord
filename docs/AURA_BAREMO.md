@@ -163,10 +163,10 @@ El Aura se define formalmente como el **Precio Fundamental Base ($P_{\text{base}
 $$P_{\text{base}} = \text{Aura} = \text{Book Value (Patrimonio Histórico)} + \text{Rendimiento Mensual (Earnings}_{30d})$$
 
 - **Patrimonio Histórico (*Book Value / Equity*)**: La trayectoria acumulada de por vida extraída de Cakey Bot establece el suelo patrimonial inmutable que impide la quiebra:
-  $$BV = 10 + (0{,}8 \times \text{Nivel}) + (0{,}2 \times \text{Horas Históricas Voz}) + (0{,}02 \times \text{Mensajes Históricos})$$
+  $$BV = 10 + (1{,}0 \times \text{Nivel}) + (0{,}2 \times \text{Horas Históricas Voz}) + (0{,}02 \times \text{Mensajes Históricos})$$
 - **Rendimiento Mensual (*Trailing 30-Day Earnings* — Ponderación 50/50)**: Mide la actividad reciente (voz y chat de los últimos 30 días) calculada limpiamente mediante la **diferencia entre snapshots diarios de Cakey Bot** (`datos/cakey_history.json`):
-  $$E_{30d} = (0{,}50 \times \Delta\text{Horas Voz}_{30d}) + (0{,}05 \times \Delta\text{Mensajes}_{30d})$$
-  - **1 hora de voz** en 30 días = **$+0{,}50 \text{ Porros}$**.
+  $$E_{30d} = (1{,}00 \times \Delta\text{Horas Voz}_{30d}) + (0{,}10 \times \Delta\text{Mensajes}_{30d})$$
+  - **1 hora de voz** en 30 días = **$+1{,}00 \text{ Porro}$**.
   - **10 mensajes con XP** en 30 días = **$+0{,}50 \text{ Porros}$** ($0{,}05 \text{ Porros/msg}$).
 - **Precio Final de Mercado ($P_{\text{mercado}}$)**: La presión compradora y vendedora de los miembros en el Market Maker ajusta la cotización:
   $$P_{\text{mercado}} = P_{\text{base}} \times \left(1 + \frac{\text{Acciones en Cartera de Usuarios} - 100}{2.000}\right)$$

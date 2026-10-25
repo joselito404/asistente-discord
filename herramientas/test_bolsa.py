@@ -48,36 +48,36 @@ class TestBolsaSanvi(unittest.TestCase):
         bolsa_sanvi.set_market_halt(cls.orig_halt, cls.orig_reason)
 
     def test_01_book_value_canonical(self):
-        """Valida que el cálculo de Book Value coincida exactamente con docs/DISENO_BOLSA_SANVI.md."""
-        # Joselito: Lvl 54, 65.8h voz, 658 msgs -> 79.52
+        """Valida que el cálculo de Book Value coincida exactamente con docs/DISENO_BOLSA_SANVI.md (1.0 por nivel)."""
+        # Joselito: Lvl 54, 65.8h voz, 658 msgs -> 10 + 54 + 13.16 + 13.16 = 90.32
         bv_jose = bolsa_sanvi.calculate_book_value(54, 65.8, 658)
-        self.assertEqual(bv_jose, 79.52, f"BV Joselito esperado 79.52, obtenido {bv_jose}")
+        self.assertEqual(bv_jose, 90.32, f"BV Joselito esperado 90.32, obtenido {bv_jose}")
 
-        # Terre: Lvl 37, 25.0h voz, 196 msgs -> 48.52
+        # Terre: Lvl 37, 25.0h voz, 196 msgs -> 10 + 37 + 5.0 + 3.92 = 55.92
         bv_terre = bolsa_sanvi.calculate_book_value(37, 25.0, 196)
-        self.assertEqual(bv_terre, 48.52, f"BV Terre esperado 48.52, obtenido {bv_terre}")
+        self.assertEqual(bv_terre, 55.92, f"BV Terre esperado 55.92, obtenido {bv_terre}")
 
-        # Omen: Lvl 36, 29.8h voz, 148 msgs -> 47.72
+        # Omen: Lvl 36, 29.8h voz, 148 msgs -> 10 + 36 + 5.96 + 2.96 = 54.92
         bv_omen = bolsa_sanvi.calculate_book_value(36, 29.8, 148)
-        self.assertEqual(bv_omen, 47.72, f"BV Omen esperado 47.72, obtenido {bv_omen}")
+        self.assertEqual(bv_omen, 54.92, f"BV Omen esperado 54.92, obtenido {bv_omen}")
 
-        # Racer: Lvl 33, 29.0h voz, 129 msgs -> 44.78
+        # Racer: Lvl 33, 29.0h voz, 129 msgs -> 10 + 33 + 5.8 + 2.58 = 51.38
         bv_racer = bolsa_sanvi.calculate_book_value(33, 29.0, 129)
-        self.assertEqual(bv_racer, 44.78, f"BV Racer esperado 44.78, obtenido {bv_racer}")
+        self.assertEqual(bv_racer, 51.38, f"BV Racer esperado 51.38, obtenido {bv_racer}")
 
     def test_02_earnings_30d_fifty_fifty(self):
-        """Valida la ponderación 50/50 de Earnings 30d (1h voz = 0.50, 10 msgs = 0.50)."""
+        """Valida la ponderación 50/50 de Earnings 30d (1h voz = 1.00, 10 msgs = 1.00)."""
         # 1 hora de voz sola
         e_voice = bolsa_sanvi.calculate_earnings_30d(1.0, 0)
-        self.assertEqual(e_voice, 0.50)
+        self.assertEqual(e_voice, 1.00)
 
         # 10 mensajes solos
         e_msgs = bolsa_sanvi.calculate_earnings_30d(0.0, 10)
-        self.assertEqual(e_msgs, 0.50)
+        self.assertEqual(e_msgs, 1.00)
 
-        # 20 horas de voz y 200 mensajes -> 10.0 + 10.0 = 20.0
+        # 20 horas de voz y 200 mensajes -> 20.0 + 20.0 = 40.0
         e_combined = bolsa_sanvi.calculate_earnings_30d(20.0, 200)
-        self.assertEqual(e_combined, 20.0)
+        self.assertEqual(e_combined, 40.0)
 
         # Deltas negativos deben ser acotados a 0
         e_negative = bolsa_sanvi.calculate_earnings_30d(-5.0, -20)

@@ -156,7 +156,7 @@ SPREAD_POOL_RATIO = 0.5  # 50% al Yield Pool de dividendos
 
 MAX_SHARES_PER_ORDER = 500
 
-ORDER_COOLDOWN_SECONDS = 30
+ORDER_COOLDOWN_SECONDS = 15
 
 AMM_FACTOR_K = 2000.0
 
@@ -556,7 +556,7 @@ def calculate_book_value(level: int, voice_hours: float, messages: int) -> float
 
     """
 
-    val = 10.0 + (0.8 * level) + (0.2 * float(voice_hours)) + (0.02 * int(messages))
+    val = 10.0 + (1.0 * level) + (0.2 * float(voice_hours)) + (0.02 * int(messages))
 
     return round(val, 2)
 
@@ -580,7 +580,7 @@ def calculate_earnings_30d(delta_voice_hours: float, delta_messages: int) -> flo
 
     """
 
-    val = (0.50 * max(0.0, float(delta_voice_hours))) + (0.05 * max(0, int(delta_messages)))
+    val = (1.00 * max(0.0, float(delta_voice_hours))) + (0.10 * max(0, int(delta_messages)))
 
     return round(val, 2)
 
@@ -1751,6 +1751,54 @@ def distribute_weekly_dividends() -> Dict[str, Any]:
 
             "details": distribution_details,
 
+        }
+
+
+def distribute_ticker_salary_dividends(ticker_or_user_id, total_dividend_amount: int):
+    """
+    Distribuye la retención del 5% del salario de un miembro cotizado entre los accionistas
+    que posean acciones de su ticker proporcionalmente a sus títulos (Modelo Dual).
+    docs/DISENO_BOLSA_SANVI.md (§7.2, [Confirmada · Jose · 25/10/2026])
+    """
+    sym = resolve_ticker_symbol(ticker_or_user_id)
+    if not sym or total_dividend_amount <= 0:
+        return {"success": False, "distributed": 0, "recipients": 0}
+
+    with BOLSA_LOCK:
+        mdata = load_market_data()
+        tickers_map = mdata.get("tickers", {})
+        t_data = tickers_map.get(sym)
+        if not t_data:
+            return {"success": False, "distributed": 0, "recipients": 0}
+
+        holdings = t_data.get("holdings", {})
+        total_user_shares = sum(holdings.values())
+        if total_user_shares <= 0:
+            return {"success": True, "distributed": 0, "recipients": 0}
+
+        from modulos import economia_core
+        credited_total = 0
+        recipients = {}
+
+        for uid_str, shares in holdings.items():
+            if shares > 0:
+                share_ratio = shares / float(total_user_shares)
+                user_div = int(round(total_dividend_amount * share_ratio))
+                if user_div > 0:
+                    try:
+                        economia_core.modify_balance(uid_str, bank_delta=user_div)
+                        credited_total += user_div
+                        recipients[uid_str] = {"shares": shares, "dividend": user_div}
+                    except Exception as e:
+                        _bot_log(f"Error al ingresar dividendo de salario a {uid_str}: {e}")
+
+        return {
+            "success": True,
+            "ticker": sym,
+            "total_dividend": total_dividend_amount,
+            "credited_total": credited_total,
+            "recipients_count": len(recipients),
+            "recipients": recipients,
         }
 
 

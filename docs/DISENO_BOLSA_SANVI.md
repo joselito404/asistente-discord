@@ -88,7 +88,7 @@ Para otorgar verdadero prestigio a cotizar en los mercados y evitar saturar el s
 
 ### 6.1. Requisito de Cotización (Nivel 20+)
 - **Condición de Salida a Bolsa**: Solo los miembros que alcancen o superen el **Nivel 20** en el servidor adquieren su propio *ticker* y comienzan a cotizar en la Bolsa Sanvi.
-- **Quiénes pueden operar**: Todos los miembros del servidor pueden **comprar y vender** acciones desde Nivel 0; el requisito de Nivel 20 aplica exclusivamente a **tener una acción propia cotizando**.
+- **Quiénes pueden operar**: Pueden **comprar y vender** acciones todos los miembros que alcancen o superen el **Nivel 10 (@🔹Pendejo de Rango Medio🔹)** (mismo requisito que otorga acceso a la categoría CASINO & ECONOMÍA); el requisito de Nivel 20 aplica exclusivamente a **tener una acción propia cotizando** ([Confirmada · Jose · 25/10/2026]).
 
 ### 6.2. Cuarteto Fundador Activo (Cotización Inmediata)
 Actualmente, 4 miembros cumplen el requisito de Nivel 20+ en el servidor y forman el mercado inicial:
@@ -156,8 +156,9 @@ Queda erradicado cualquier impuesto o deducción forzada sobre los salarios pers
      - El **50% del spread bursátil** (0,5% compra / 0,5% venta) recaudado por el AMM (el otro 50% se quema como freno deflacionario).
      - El **1% de las apuestas netas** recaudadas en la tragaperras [`/slots`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/economia.py).
    - **Reparto Automatizado:**
-     - Cada **domingo a las 23:59 UTC**, el bote acumulado en `datos/bolsa_pool.json` se acredita automáticamente en el banco de cada accionista de forma proporcional al valor de su cartera:
+     - Cada **domingo a las 22:00 (Hora Peninsular Española, `Europe/Madrid`)**, el bote acumulado en `datos/bolsa_pool.json` se acredita automáticamente en el banco de cada accionista de forma proporcional al valor de su cartera:
        $$\text{Dividendo del Usuario} = \text{Bote Semanal} \times \frac{\text{Valor de tu Cartera en Circulación}}{\text{Capital Total Invertido por Usuarios}}$$
+     - **Canal Oficial de Avisos Económicos:** La liquidación dominical y todos los avisos de economía del mercado se publican exclusivamente en [`#🏪tienda-y-mercado🏪`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/INFO_SERVIDOR.md) (`1549512919694442547`), preservando [`#📣anuncios📣`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/INFO_SERVIDOR.md) estrictamente para comunicados y novedades globales del servidor (`[Confirmada · Jose · 25/10/2026]`).
 
 ### 7.3. Creador de Mercado del Bot (*Automated Market Maker*) y Spread
 - Para evitar que las órdenes de compra o venta queden bloqueadas esperando a que otro humano las acepte, el bot actúa como **Market Maker central** garantizando ejecución 24/7.
@@ -216,7 +217,7 @@ En sustitución de oyentes complejos en vivo de audio y texto en Discord:
    - El Aura se define como el valor fundamental intrínseco de cada acción individual en Porros:
      $$P_{\text{base}} = \text{Book Value (Suelo Indestructible)} + \text{Earnings Mensuales (30 días)}$$
    - **Book Value ($BV$)**: Premia el nivel y la veteranía de por vida extraída de Cakey Bot:
-     $$BV = 10 + (0{,}8 \times \text{Nivel}) + (0{,}2 \times \text{Horas Históricas Voz}) + (0{,}02 \times \text{Mensajes Históricos})$$
+     $$BV = 10 + (1{,}0 \times \text{Nivel}) + (0{,}2 \times \text{Horas Históricas Voz}) + (0{,}02 \times \text{Mensajes Históricos})$$
      - *Joselito (Lvl 54, 65.8h voz, 658 msgs)*: **79,52 Porros**
      - *Terre (Lvl 37, 25.0h voz, 196 msgs)*: **48,52 Porros**
      - *Omen (Lvl 36, 29.8h voz, 148 msgs)*: **47,72 Porros**
@@ -224,9 +225,9 @@ En sustitución de oyentes complejos en vivo de audio y texto en Discord:
      - *Aspirante Nivel 20 (IPO mínima)*: **~30,00 Porros**
    - **Rendimiento Mensual Temporal ($\text{Earnings}_{30d}$ — Ponderación 50/50)**:
      > **Estado:** `[Aprobado · Jose · 22/10/2026]`
-     $$E_{30d} = (0{,}50 \times \Delta\text{Horas Voz}_{30d}) + (0{,}05 \times \Delta\text{Mensajes}_{30d})$$
+     $$E_{30d} = (1{,}00 \times \Delta\text{Horas Voz}_{30d}) + (0{,}10 \times \Delta\text{Mensajes}_{30d})$$
      - **Equilibrio 50% Voz / 50% Chat**:
-       - **1 hora de llamada** en los últimos 30 días = **$+0{,}50 \text{ Porros}$**.
+       - **1 hora de llamada** en los últimos 30 días = **$+1{,}00 \text{ Porro}$**.
        - **10 mensajes con XP** en los últimos 30 días = **$+0{,}50 \text{ Porros}$** ($0{,}05 \text{ Porros/msg}$).
        - Para un miembro activo medio con **20 horas de voz** y **200 mensajes** en el mes: la voz aporta **$+10 \text{ Porros}$ (50%)** y el chat aporta **$+10 \text{ Porros}$ (50%)**.
      - La actividad reciente en la ventana móvil de 30 días añade valor a la acción; si el miembro reduce su actividad o está de exámenes, decae suavemente a 0 sin tocar el suelo $BV$.
@@ -241,7 +242,7 @@ En sustitución de oyentes complejos en vivo de audio y texto en Discord:
      - **1.000 acciones** compradas (10% del float): **$+50\%$** de subida (*rally* alcista).
      - **2.000 acciones** compradas (20% del float): **$+100\%$** de subida ($2\times$ el valor base).
    - **Suelo Garantizado:** $P_{\text{mercado}} \ge P_{\text{base}}$ (las ventas devuelven el precio a su valor contable objetivo).
-   - **Blindaje Anti-Ballenas:** Máximo **500 acciones** por transacción y **30 segundos** de cooldown por usuario en el mismo ticker.
+   - **Blindaje Anti-Ballenas:** Máximo **500 acciones** por transacción y **15 segundos** de cooldown por usuario en el mismo ticker ([Confirmada · Jose · 25/10/2026]).
 
 ---
 
@@ -294,9 +295,19 @@ Los indicadores cuantitativos se computan sobre la serie temporal de snapshots d
 - [x] Suspensión Deliberada del Mercado por Calibración y Simulación Local: el mercado se mantiene formalmente en `emergency_halt = True` con motivo `'Fase de Calibración y Simulación Local'` hasta validar al 100% todos los escenarios en local (`[Confirmada · Jose · 25/10/2026]`).
 - [x] Metodología Iterativa de Diseño y Simulación: todo ajuste matemático, visual y económico se documenta previamente en la especificación y se valida mediante simulaciones reproducibles antes de aplicarlo en producción (`[Confirmada · Jose · 25/10/2026]`).
 - [x] Descongelación del Ciclo de Vida de Cakey Bot: corregida la extracción de snapshots diarios en `bot_service.py` (indexación por `username`) y sincronización inmediata de Book Value y Earnings con datos reales (`[Confirmada · Jose · 25/10/2026]`).
-- [ ] Calibración Visual de Gráficas Intradía en Baja Liquidez: `[Pendiente de matizar: algoritmo para evitar líneas planas y cortes artificiales en cubetas sin órdenes recientes]`.
-- [ ] Liquidación Oficial del Yield Pool de Dividendos: `[Pendiente de matizar: frecuencia, día de la semana y hora exacta de reparto a los accionistas]`.
-- [ ] Escalones Definitivos de Sinergia de Cartera en `/trabajar`: `[Pendiente de matizar: umbrales de Aura en cartera requeridos para cada porcentaje de bonus (+5% a +25%)]`.
+- [x] Generador de Simulaciones Visuales de Velas: creado `herramientas/simular_graficas.py` y renderizadas 2 propuestas en `docs/imagenes_contexto/` (`simulacion_velas_propuesta_1.png` y `simulacion_velas_propuesta_2.png`) para evaluar el comportamiento en baja liquidez (`[Aprobado · Jose · 25/10/2026]`).
+- [x] Algoritmo Oficial de Velas en Baja Liquidez (Flujo Suave / Market Flow Anchor): ratificado e implementado en `modulos/bolsa_graficas.py`. Las cubetas sin órdenes evolucionan suavemente hacia la cotización viva con micro-variaciones (±0,05%) y mechas deterministas, erradicando líneas planas y cortes abruptos (`[Confirmada · Jose · 25/10/2026]`).
+- [x] Liquidación Oficial del Yield Pool de Dividendos: fijado semanalmente los Domingos a las 22:00 (Hora Peninsular Española, `Europe/Madrid`), repartiendo el 50% de spreads bursátiles y 1% de slots acumulados proporcionalmente al valor de mercado de la cartera de cada accionista directamente a su cuenta bancaria (`[Confirmada · Jose · 25/10/2026]`).
+- [x] Escalones Definitivos de Sinergia de Cartera en `/trabajar`: ratificados los 5 tramos progresivos (+5% a 1.000 Aura, +10% a 5.000 Aura, +15% a 15.000 Aura, +20% a 30.000 Aura y +25% a 50.000+ Aura en cartera) premiando el hold a largo plazo y otorgando valor real a poseer acciones de usuarios de alto nivel (`[Confirmada · Jose · 25/10/2026]`).
+- [x] Simulación Integral de Mercado y Ciclo Semanal Validada: ejecutado `herramientas/simular_mercado.py` verificando el 100% de la lógica (compras/ventas AMM, aporte de 2.500 Porros de Slots, bonos de Sinergia en /trabajar, liquidación exacta del Yield Pool de 12.529,33 Porros sin remanentes y velas HD de Flujo Suave sin cortes) en entorno aislado con rollback (`[Confirmada · Jose · 25/10/2026]`).
+- [x] Canal Oficial de Avisos Económicos y Liquidación del Yield Pool: fijado `#🏪tienda-y-mercado🏪` (`1549512919694442547`) para avisos de economía, liquidaciones y comunicados bursátiles, preservando `#📣anuncios📣` exclusivamente para novedades globales del servidor (`[Confirmada · Jose · 25/10/2026]`).
+- [x] Curva AMM K=2.000 Ratificada: elasticidad de +5% por 100 acciones (+25% por 500 acciones tope anti-ballenas) con suelo en P_base ([Confirmada · Jose · 25/10/2026]).
+- [x] Modelo Dual de Dividendos Ratificado e Implementado: Yield Pool semanal (50% spreads + 1% slots a las 22:00 ES) más retención automática del 5% del /salario diario de miembros cotizados abonada inmediatamente a sus accionistas particulares ([Confirmada · Jose · 25/10/2026]).
+- [x] Renderizado Gráfico Bajo Demanda Ratificado: generación de velas en HD exclusivamente al invocar /bolsa o pulsar botones de temporalidad, erradicando consumo residual de CPU en Render ([Confirmada · Jose · 25/10/2026]).
+- [x] Requisito de Inversor en Bolsa fijado en Nivel 10 (@🔹Pendejo de Rango Medio🔹): alineado con el acceso a CASINO & ECONOMÍA ([Confirmada · Jose · 25/10/2026]).
+- [x] Cooldown Anti-Spam ajustado a 15 segundos por ticker: dinamismo y agilidad durante rallies y sesiones de pique ([Confirmada · Jose · 25/10/2026]).
+- [x] Reapertura Formal de la Bolsa Sanvi en Producción: desactivado el paro de emergencia (emergency_halt = False) y desplegado en Render Cloud ([Confirmada · Jose · 25/10/2026]).
+- [x] Catálogo Inicial Exclusivo y Requisito Estricto de IPO: ratificado mantener exclusivamente los 4 tickers fundadores (`$JOSE`, `$TERRE`, `$OMEN`, `$RACER`) y exigir Nivel 20 (`@🔮Pendejo Veterano🔮` — Categoría PRO) para cualquier futura salida a bolsa (`[Confirmada · Jose · 25/10/2026]`).
 
 
 

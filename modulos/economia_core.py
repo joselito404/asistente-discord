@@ -1152,7 +1152,27 @@ def claim_salary(
         payout = calculate_accumulated_salary(daily_salary, elapsed, decay_rate=0.05)
         days_float = round(elapsed / 86400.0, 1)
 
-        modify_balance(uid, cash_delta=payout)
+        # Modelo Dual: Si el usuario tiene ticker cotizado en la Bolsa Sanvi,
+        # se retiene el 5% de su salario para distribuirlo a sus accionistas particulares.
+        # docs/DISENO_BOLSA_SANVI.md (§7.2, [Confirmada · Jose · 25/10/2026])
+        dividend_note = ""
+        net_payout = payout
+        try:
+            from modulos import bolsa_sanvi
+            sym = bolsa_sanvi.resolve_ticker_symbol(uid)
+            if sym:
+                div_cut = int(round(payout * 0.05))
+                if div_cut > 0:
+                    net_payout = payout - div_cut
+                    div_res = bolsa_sanvi.distribute_ticker_salary_dividends(sym, div_cut)
+                    dividend_note = (
+                        f"\n📈 *Retención Bolsa Sanvi (5% a tus accionistas de ${sym}):* "
+                        f"-{div_cut:,} Porros repartidos a {div_res.get('recipients_count', 0)} inversores."
+                    )
+        except Exception as e_div:
+            _bot_log(f"Aviso en retención de dividendos de salario: {e_div}")
+
+        modify_balance(uid, cash_delta=net_payout)
         data = load_economy_data()
         data["users"][uid]["last_salary"] = now.isoformat()
         save_economy_data(data)
@@ -1160,11 +1180,11 @@ def claim_salary(
         msg = (
             f"💵 **¡SALARIO COBRADO CON ÉXITO!**\n"
             f"Tiempo acumulado: **{days_float} días** (con decaimiento del 5% diario).\n"
-            f"Total recibido: {PORRO_EMOJI} **+{payout:,}** Porros.\n"
-            f"Salario base de tu rango: **{daily_salary:,}** Porros/día."
+            f"Total recibido: {PORRO_EMOJI} **+{net_payout:,}** Porros.\n"
+            f"Salario base de tu rango: **{daily_salary:,}** Porros/día.{dividend_note}"
         )
-        _bot_log(f"💵 [Salario] {uid} cobró salario acumulado de {payout:,} Porros tras {days_float} días.")
-        return True, msg, payout, daily_salary
+        _bot_log(f"💵 [Salario] {uid} cobró salario acumulado de {net_payout:,} Porros (bruto {payout:,}) tras {days_float} días.")
+        return True, msg, net_payout, daily_salary
 
 
 

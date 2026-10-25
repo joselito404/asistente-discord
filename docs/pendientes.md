@@ -5,20 +5,6 @@
 
 ---
 
-## 📈 Área 1: Bolsa Sanvi & Aura
-
-### 1.1. Calibración Local, Simulaciones y Validación de la Bolsa Sanvi y Aura
-- **Qué falta:** Ejecutada con éxito la simulación de ciclo semanal y la **simulación real con datos vivos de la semana** en [herramientas/simular_economia_real.py](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/herramientas/simular_economia_real.py) (Joselito con 2.91M Porros adquiriendo 1.500 acciones bajo límite anti-ballenas, elasticidad $K=2000$, subida de $\$JOSE$ a 144,76 Porros, tramo 5 de sinergia con 132k Aura y absorción del 84,39% del Yield Pool dominical de 311k Porros). Pendiente decisión de Jose sobre cuándo retirar el paro de emergencia (`emergency_halt = False`) y desplegar en producción.
-- **Por qué importa:** La simulación matemática y visual ha verificado al 100% que todos los sistemas cuadran a la perfección tanto en escenarios abstractos como con la distribución real de riqueza del servidor.
-- **Siguiente paso:** Jose decide si desplegar y reabrir el mercado bursátil en Discord.
-- **Responsable:** Jose / Chat 1.
-- **Estado:** `en espera de Jose`.
-- **Detalle:** [docs/DISENO_BOLSA_SANVI.md](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/DISENO_BOLSA_SANVI.md) y [modulos/bolsa_sanvi.py](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/bolsa_sanvi.py).
-
-
-
----
-
 ## 🏛️ Área 3: Dinámicas Sociales, Juicios y Entretenimiento
 
 ### 3.2. El Periódico Semanal / The Sanvi Weekly
