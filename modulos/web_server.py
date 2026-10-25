@@ -84,6 +84,7 @@ def get_bolsa_api_payload():
 
             tf_pct = 0.0
             tf_diff = 0.0
+            tf_closes = [c["close"] for c in formatted_candles]
             if formatted_candles:
                 tf_first_open = formatted_candles[0]["open"]
                 tf_last_close = formatted_candles[-1]["close"]
@@ -91,11 +92,16 @@ def get_bolsa_api_payload():
                     tf_diff = round(tf_last_close - tf_first_open, 2)
                     tf_pct = round((tf_diff / tf_first_open) * 100.0, 2)
 
+            tf_rsi = bolsa_sanvi.calculate_rsi(tf_closes, period=14)
+            tf_mas = bolsa_sanvi.calculate_moving_averages(tf_closes)
+
             series[tf] = {
                 "candles": formatted_candles,
                 "volume": formatted_volume,
                 "pct_change": tf_pct,
                 "diff": tf_diff,
+                "rsi_14": tf_rsi,
+                "mas": tf_mas,
             }
 
         # Calcular cambio porcentual respecto a la primera vela disponible en 1D
@@ -911,19 +917,26 @@ def render_bolsa_html() -> str:
       // Métricas Fundamentales
       document.getElementById('val-fundamental').textContent = t.base_price.toFixed(2) + ' Porros';
 
+      // Métricas Técnicas Dinámicas por Timeframe
+      const s = t.series && t.series[selectedTf];
+      const rsiVal = (s && s.rsi_14 !== undefined) ? s.rsi_14 : t.rsi_14;
+      const masObj = (s && s.mas) ? s.mas : t.mas;
+
       // RSI
       const rsiElem = document.getElementById('val-rsi');
-      rsiElem.textContent = t.rsi_14.toFixed(1);
+      rsiElem.textContent = typeof rsiVal === 'number' ? rsiVal.toFixed(1) : '--';
       const subRsi = document.getElementById('sub-rsi');
-      if (t.rsi_14 >= 70) {
-        rsiElem.style.color = '#FF5252';
-        subRsi.textContent = 'Sobrecompra Cuantitativa';
-      } else if (t.rsi_14 <= 30) {
-        rsiElem.style.color = '#AB47BC';
-        subRsi.textContent = 'Sobreventa Cuantitativa';
-      } else {
-        rsiElem.style.color = '#00E676';
-        subRsi.textContent = 'Rango Neutral Saludable';
+      if (typeof rsiVal === 'number') {
+        if (rsiVal >= 70) {
+          rsiElem.style.color = '#FF5252';
+          subRsi.textContent = 'Sobrecompra Cuantitativa (' + selectedTf + ')';
+        } else if (rsiVal <= 30) {
+          rsiElem.style.color = '#AB47BC';
+          subRsi.textContent = 'Sobreventa Cuantitativa (' + selectedTf + ')';
+        } else {
+          rsiElem.style.color = '#00E676';
+          subRsi.textContent = 'Rango Neutral Saludable (' + selectedTf + ')';
+        }
       }
 
       // Float
@@ -932,9 +945,9 @@ def render_bolsa_html() -> str:
       document.getElementById('sub-float-pct').textContent = t.float_pct.toFixed(2) + '% en manos de usuarios';
 
       // MAs
-      if (t.mas) {
-        const ema14 = t.mas.ema_14 ? t.mas.ema_14.toFixed(2) : '--';
-        const sma50 = t.mas.sma_50 ? t.mas.sma_50.toFixed(2) : '--';
+      if (masObj) {
+        const ema14 = masObj.ema_14 ? masObj.ema_14.toFixed(2) : '--';
+        const sma50 = masObj.sma_50 ? masObj.sma_50.toFixed(2) : '--';
         document.getElementById('val-mas').textContent = 'EMA 14: ' + ema14;
         document.getElementById('sub-mas-signal').textContent = 'SMA 50: ' + sma50;
       }
