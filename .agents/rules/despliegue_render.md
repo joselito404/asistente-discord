@@ -21,6 +21,7 @@ description: "Reglas de despliegue y alojamiento 24/7 en Render Cloud, superviso
 
 ---
 
-## 3. Despliegue Manual en Render y Obligación de Notificación
-- Render **no autodespliega con Git**. Tras enviar cambios a la rama `main` de GitHub, es obligatorio ejecutar `python herramientas/deploy_render.py` (utiliza la clave de Render en `config/config_discord.json`). `[Confirmada · Jose · 10/10/2026]` [Chat 2]
-- Si un asistente realiza modificaciones en archivos de `modulos/` o en `bot_service.py`, tiene la obligación de ejecutar el script de deploy o advertir expresamente a Jose de que producción tiene código antiguo pendiente de despliegue.
+## 3. Despliegue en Render Exclusivamente bajo Permiso Explícito de Jose
+- **VETO ESTRICTO A DESPLIEGUES NO AUTORIZADOS:** Queda terminantemente prohibido ejecutar `python herramientas/deploy_render.py` o realizar cualquier despliegue en Render Cloud sin el consentimiento, orden o permiso explícito y previo de Jose en el chat. `[Confirmada · Jose · 25/10/2026]` [Chat 1]
+- **Causa Crítica (Persistencia Efímera vs Datos en Caliente):** El contenedor en Render Cloud opera sobre un sistema de archivos efímero que se restablece al código de Git en cada nuevo despliegue. Desplegar sin autorización previa o sin sincronizar los datos locales/remotos sobreescribe y destruye compras de acciones en la bolsa (`datos/bolsa_mercado.json`), transacciones de economía (`datos/economia.json`) y el fondo de dividendos acumulado (`datos/bolsa_pool.json`).
+- Si un asistente realiza modificaciones en archivos de `modulos/` o en `bot_service.py`, únicamente debe commitear y pushear a GitHub (si procede) y advertir expresamente a Jose de los cambios pendientes, solicitando su visto bueno antes de tocar el entorno en vivo.
