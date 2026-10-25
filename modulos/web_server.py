@@ -81,9 +81,20 @@ def get_bolsa_api_payload():
                     "color": "#00E67688" if c["close"] >= c["open"] else "#FF525288",
                 })
 
+            tf_pct = 0.0
+            tf_diff = 0.0
+            if formatted_candles:
+                tf_first_open = formatted_candles[0]["open"]
+                tf_last_close = formatted_candles[-1]["close"]
+                if tf_first_open > 0:
+                    tf_diff = round(tf_last_close - tf_first_open, 2)
+                    tf_pct = round((tf_diff / tf_first_open) * 100.0, 2)
+
             series[tf] = {
                 "candles": formatted_candles,
                 "volume": formatted_volume,
+                "pct_change": tf_pct,
+                "diff": tf_diff,
             }
 
         # Calcular cambio porcentual respecto a la primera vela disponible en 1D
@@ -808,10 +819,11 @@ def render_bolsa_html() -> str:
       });
       resizeObserver.observe(chartContainer);
 
-      // Crosshair Tooltip
+      // Crosshair Tooltip interactivo con precio y % dinámicos según vela inspeccionada
       tvChart.subscribeCrosshairMove(param => {
         if (!param || !param.seriesData || !param.seriesData.get(candleSeries)) {
           updateLegendFromCurrent();
+          updatePriceAndChange(null);
           return;
         }
         const data = param.seriesData.get(candleSeries);
@@ -822,6 +834,7 @@ def render_bolsa_html() -> str:
           document.getElementById('leg-low').textContent = data.low.toFixed(2);
           document.getElementById('leg-close').textContent = data.close.toFixed(2);
           document.getElementById('leg-vol').textContent = vol ? vol.value.toFixed(1) : '0.0';
+          updatePriceAndChange(data);
         }
       });
     }
@@ -841,6 +854,45 @@ def render_bolsa_html() -> str:
       }
     }
 
+    function updatePriceAndChange(hoverCandle = null) {
+      if (!bolsaData || !bolsaData.tickers) return;
+      const t = bolsaData.tickers[selectedTicker];
+      if (!t) return;
+
+      const s = t.series && t.series[selectedTf];
+      const candles = (s && s.candles) || [];
+
+      let currentP = t.current_price;
+      let baseOpen = currentP;
+
+      if (candles.length > 0) {
+        baseOpen = candles[0].open;
+        if (hoverCandle) {
+          currentP = hoverCandle.close;
+        } else {
+          currentP = candles[candles.length - 1].close || t.current_price;
+        }
+      }
+
+      const diff = currentP - baseOpen;
+      const pct = baseOpen > 0 ? (diff / baseOpen) * 100.0 : 0.0;
+
+      // Actualizar Precio mostrado
+      document.getElementById('asset-current-price').textContent = currentP.toFixed(2) + ' Porros';
+
+      // Actualizar Badge de % dinámico según las velas
+      const changeElem = document.getElementById('asset-change-badge');
+      const sign = pct > 0 ? '+' : '';
+      changeElem.textContent = sign + pct.toFixed(2) + '%';
+      if (pct > 0) {
+        changeElem.className = 'asset-change bull';
+      } else if (pct < 0) {
+        changeElem.className = 'asset-change bear';
+      } else {
+        changeElem.className = 'asset-change';
+      }
+    }
+
     function renderActiveData() {
       if (!bolsaData || !bolsaData.tickers) return;
       const t = bolsaData.tickers[selectedTicker];
@@ -849,19 +901,11 @@ def render_bolsa_html() -> str:
       // Actualizar Encabezado del Activo
       document.getElementById('asset-symbol-title').textContent = '$' + t.symbol;
       document.getElementById('asset-company-name').textContent = t.name;
-      document.getElementById('asset-current-price').textContent = t.current_price.toFixed(2) + ' Porros';
       document.getElementById('asset-ask-val').textContent = t.ask.toFixed(2);
       document.getElementById('asset-bid-val').textContent = t.bid.toFixed(2);
 
-      // Variación %
-      const changeElem = document.getElementById('asset-change-badge');
-      const sign = t.pct_change >= 0 ? '+' : '';
-      changeElem.textContent = sign + t.pct_change.toFixed(2) + '%';
-      if (t.pct_change >= 0) {
-        changeElem.className = 'asset-change bull';
-      } else {
-        changeElem.className = 'asset-change bear';
-      }
+      // Variación % y Precio dinámico según las velas del timeframe activo
+      updatePriceAndChange(null);
 
       // Métricas Fundamentales
       document.getElementById('val-fundamental').textContent = t.base_price.toFixed(2) + ' Porros';
