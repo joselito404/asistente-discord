@@ -756,10 +756,20 @@ async def on_ready():
                 history = load_cakey_history()
                 if today_str not in history.get("snapshots", {}):
                     lb = await get_cakey_leaderboard()
-                    if lb and "members" in lb:
-                        history["snapshots"][today_str] = lb["members"]
+                    if lb:
+                        snap = {}
+                        for uid, udata in lb.items():
+                            uname = udata.get("username")
+                            if uname:
+                                snap[uname] = {
+                                    "level": udata.get("level", 0),
+                                    "xp": udata.get("xp", 0.0),
+                                    "messages": udata.get("messages", 0),
+                                    "voice_minutes": udata.get("voice_minutes", 0),
+                                }
+                        history["snapshots"][today_str] = snap
                         save_cakey_history(history)
-                        bot_log(f"📈 [Bolsa Sanvi] Snapshot diario de Cakey Bot registrado para {today_str}.")
+                        bot_log(f"📈 [Bolsa Sanvi] Snapshot diario de Cakey Bot registrado para {today_str} ({len(snap)} miembros).")
 
                 # 2. Reparto de dividendos semanales los domingos a las 23:50+ UTC
                 if now_utc.weekday() == 6 and now_utc.hour == 23 and now_utc.minute >= 50:

@@ -35,9 +35,17 @@ from modulos import web_server
 class TestBolsaSanvi(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        # Crear usuario de pruebas en economia
+        # Crear usuario de pruebas en economia y asegurar mercado temporalmente abierto para el runner
         cls.test_user_id = 999888777666
+        cls.orig_halt = bolsa_sanvi.is_market_halted()
+        cls.orig_reason = bolsa_sanvi.get_market_halt_reason()
+        bolsa_sanvi.set_market_halt(False)
         economia_core.ensure_user(cls.test_user_id, default_cash=1000000)
+
+    @classmethod
+    def tearDownClass(cls):
+        # Restaurar estado de mercado original al terminar las pruebas
+        bolsa_sanvi.set_market_halt(cls.orig_halt, cls.orig_reason)
 
     def test_01_book_value_canonical(self):
         """Valida que el cálculo de Book Value coincida exactamente con docs/DISENO_BOLSA_SANVI.md."""

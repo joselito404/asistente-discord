@@ -44,11 +44,15 @@ herramientas/*
 !herramientas/test_starboard.py
 !herramientas/migrar_starboard_historico.py
 !herramientas/test_bolsa.py
+!herramientas/test_chat_ia_intelligence.py
+!herramientas/test_chat_ia_reactions.py
+!herramientas/test_chat_ia_embeds.py
 !herramientas/update_discord_channels.py
 documentos_pdf/
 *.zip
 *.txt
 *.exe
 .agents/chats/
+scratch/
 
 

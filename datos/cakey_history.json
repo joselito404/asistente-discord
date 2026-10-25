@@ -51,10 +51,84 @@
         "messages": 129,
         "voice_minutes": 1738
       }
+    },
+    "2026-10-25": {
+      "joselito3499": {
+        "level": 55,
+        "xp": 352300.0,
+        "messages": 674,
+        "voice_minutes": 4060
+      },
+      "terreneiror": {
+        "level": 38,
+        "xp": 136000.0,
+        "messages": 214,
+        "voice_minutes": 1660
+      },
+      "omen2042_38051": {
+        "level": 36,
+        "xp": 114000.0,
+        "messages": 148,
+        "voice_minutes": 1787
+      },
+      "racerwasp": {
+        "level": 33,
+        "xp": 94000.0,
+        "messages": 141,
+        "voice_minutes": 1858
+      },
+      "mpx56.": {
+        "level": 18,
+        "xp": 19100.0,
+        "messages": 62,
+        "voice_minutes": 3
+      },
+      "carlitosmf__": {
+        "level": 15,
+        "xp": 12500.0,
+        "messages": 0,
+        "voice_minutes": 362
+      },
+      "vexus_1128": {
+        "level": 14,
+        "xp": 11200.0,
+        "messages": 41,
+        "voice_minutes": 0
+      },
+      "ccmen1408": {
+        "level": 14,
+        "xp": 10100.0,
+        "messages": 39,
+        "voice_minutes": 0
+      },
+      "zixxer_donnuts_05511": {
+        "level": 12,
+        "xp": 7200.0,
+        "messages": 15,
+        "voice_minutes": 29
+      },
+      "alexpro0812": {
+        "level": 10,
+        "xp": 5700.0,
+        "messages": 24,
+        "voice_minutes": 0
+      },
+      "motor123ewfvioq3590tj_68922": {
+        "level": 6,
+        "xp": 2000.0,
+        "messages": 1,
+        "voice_minutes": 69
+      },
+      "miiguell_munozz": {
+        "level": 1,
+        "xp": 237.0,
+        "messages": 0,
+        "voice_minutes": 0
+      }
     }
   },
   "meta": {
     "source": "Cakey Bot Web Leaderboard Snapshot",
-    "updated_at": "2026-10-22T00:00:00Z"
+    "updated_at": "2026-10-25T12:00:00Z"
   }
 }

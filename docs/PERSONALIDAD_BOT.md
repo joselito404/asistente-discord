@@ -84,8 +84,23 @@
 
 ---
 
+## 7. Comprensión Contextual Profunda: Documentos, Enlaces y Acceso Multi-Canal
+
+- **Lectura Nativa de Google Docs y Sheets (`/export?format=txt` / `/export?format=csv`)**:
+  - Detección automática de enlaces públicos de Google Docs (`/document/d/...`) y Sheets (`/spreadsheets/d/...`), extrayendo el contenido íntegro en texto plano mediante sus endpoints nativos de exportación (incluyendo pestañas específicas `tab=t...`).
+  - Capacidad de procesar hasta 12.000 caracteres de texto real con caché en memoria (TTL de 15 minutos) para responder con conocimiento exacto sin re-descargas lentas.
+- **Persistencia de Enlaces en Historial Reciente (Multi-Turno)**:
+  - Cuando un usuario comparte un enlace o documento y en turnos posteriores formula preguntas referenciales ("¿cuál es el top 1?", "dime qué pone", "¿qué opinas?"), el bot recupera de forma proactiva el contenido del enlace analizado en los últimos 8 mensajes del canal.
+- **Acceso Transversal a Fijados (`pins`) y Canales del Servidor**:
+  - Normalización inteligente de nombres de canales eliminando emojis (`find_channel_by_name`). Si un usuario pregunta desde cualquier canal (ej. `#🛠️apps-solo-mods🛠️`) por mensajes fijados o recomendaciones de otro canal (ej. `#📖cultura📖` o `#⚖️el-tribunal-gaming⚖️`), el bot consulta de forma cruzada los pins y mensajes clave de dicho canal, leyendo incluso los Google Docs referenciados en ellos.
+- **Directiva Estricta Anti-Alucinación (Regla 7)**:
+  - Veto absoluto a inventar títulos, puestos, rankings o contenido si el enlace falló, es privado o no está disponible en su contexto. Di con honestidad y estilo de colega que no tienes acceso al texto y solicita que lo compartan públicamente o peguen el fragmento.
+
+---
+
 ## Registro de Decisiones y Estado Canónico
 
+- [x] **Lectura Nativa de Google Docs, Persistencia Multi-Turno y Búsqueda Transversal de Pins**: Extracción real vía `/export?format=txt` (con pestañas `tab=`), persistencia en memoria multi-turno, acceso transversal a pins/canales sin emojis y veto estricto a alucinación de documentos (`[Confirmada · Jose · 25/10/2026]`).
 - [x] **Reacciones Dinámicas con Emojis en Mensajes (`[ACTION_REACT: <emoji>]`)**: Activación natural y selectiva cuando le hablan/responden (sin forzar en consultas serias, 0 coste extra de cuota Gemini) con repertorio mixto (emojis del servidor + Unicode clásicos, máx. 1 reacción por mensaje) (`[Confirmada · Jose · 24/10/2026]`).
 - [x] **Roles Reales de Joselito e Iván**: Joselito figura como Administrador y Desarrollador (creador del 95% del servidor y sus sistemas); Iván figura como Administrador, Dueño del servidor (en nombre) y Magistrado de El Tribunal Gaming (`[Confirmada · Jose · 24/10/2026]`).
 - [x] **Restauración de Identidad Original 'Asistente' (Personalidad A) y Preservación de 'Asistenta' como Personalidad B**: Nombre oficial `Asistente` y avatar de Patricio restaurados en vivo en Discord y en el código (`ACTIVE_PERSONALITY = "A"`), conservando `Asistenta`, su foto anime y su prompt en femenino como `BOT_PERSONALITIES["B"]` (`[Confirmada · Jose · 24/10/2026]`).

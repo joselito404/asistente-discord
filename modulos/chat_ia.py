@@ -19,6 +19,8 @@ import html
 import urllib.request
 import urllib.parse
 import urllib.error
+import socket
+import unicodedata
 import io
 import discord
 from typing import Any, Optional, Union
@@ -584,6 +586,7 @@ SYSTEM_PROMPT_BODY = r"""
 - ❌ CERO INVENCIÓN DE FECHAS HISTÓRICAS: NUNCA inventes fechas del pasado ("tiene admin desde el 4 de diciembre de 2025"). Si alguien te pregunta desde cuándo tiene un rango o rol, di con honestidad que en tus datos actuales ves sus roles vigentes, pero no dispones de la fecha exacta histórica de asignación.
 - ❌ CERO RESPUESTAS DESCOLOCADAS O CRUZADAS: Responde única y exclusivamente a la duda o tema planteado por el usuario en el mensaje actual. No rescates temas antiguos o animes aleatorios que nadie ha pedido.
 - ❌ CERO SPAM DE NIVELES Y XP: Habla de forma natural y humana. NO menciones niveles de Cakey Bot ni rangos en cada mensaje como un loro. Menciónalos ÚNICAMENTE si el usuario te pregunta explícitamente por su nivel, XP o el ranking.
+- 7. 🚫 VETO ABSOLUTO A INVENTAR CONTENIDO DE DOCUMENTOS O ENLACES: Si el usuario te pregunta por el contenido, posiciones, tiers, recomendaciones o datos de un documento de Google Docs, enlace web o mensaje de otro canal, y NO dispones del texto real extraído en tu contexto (o el enlace falló / era privado): Queda TERMINANTEMENTE PROHIBIDO inventar obras, puestos, tiers o información verosímil (ej: decir que Solo Leveling, Omniscient Reader's Viewpoint o cualquier otra obra está en el top si no aparece literalmente en el texto extraído). Debes responder con sinceridad y con tu personalidad, diciendo que no pudiste leer el documento (o que no tienes el enlace/texto a la vista) y pidiéndole que verifique si el enlace es público o que te copie y pegue el fragmento directamente.
 - PUEDES Y DEBES RESPONDER A CUALQUIER TIPO DE PREGUNTA: anime, manhwas, videojuegos, hardware, programación, ciencia, dilemas, bromas, actualidad, cine o salseo.
 
 🎙️ PROTOCOLO ESTRICTO DE ESTADO DE VOZ Y LLAMADAS (AUDIO & TTS EN VIVO):
@@ -806,7 +809,7 @@ def call_gemini_multiturn(turns: list) -> str:
         for attempt in range(2):
             req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
             try:
-                with urllib.request.urlopen(req, timeout=7) as resp:
+                with urllib.request.urlopen(req, timeout=12) as resp:
                     res = json.loads(resp.read().decode("utf-8"))
                     candidates = res.get("candidates", [])
                     if candidates and "content" in candidates[0]:
@@ -822,6 +825,16 @@ def call_gemini_multiturn(turns: list) -> str:
                     break
                 else:
                     print(f"Error HTTP {e.code} en {model_name}.")
+                    break
+            except (socket.timeout, TimeoutError, urllib.error.URLError) as e:
+                # Si es timeout de red, no aplicar cooldown agresivo de 45s, solo intentar con el siguiente modelo
+                is_timeout = isinstance(e, (socket.timeout, TimeoutError)) or (isinstance(e, urllib.error.URLError) and isinstance(getattr(e, "reason", None), (socket.timeout, TimeoutError))) or "timed out" in str(e).lower()
+                if is_timeout:
+                    print(f"⏱️ Timeout de red en {model_name} (12s). Intentando siguiente modelo sin cooldown agresivo...")
+                    break
+                else:
+                    print(f"Excepción de red en {model_name}: {e}. Activando cooldown temporal...")
+                    mark_model_cooldown(model_name, 45)
                     break
             except Exception as e:
                 print(f"Excepción en {model_name}: {e}. Activando cooldown temporal...")
@@ -1052,19 +1065,147 @@ def build_search_query(current_text: str, raw_msgs: list) -> str:
     return clean_no_punct
 
 
+# ==========================================
+# LECTOR NATIVO DE GOOGLE DOCS / SHEETS Y WEB CON CACHÉ
+# ==========================================
+
+_URL_CONTENT_CACHE = {}  # {url: {"content": str, "expires_at": float}}
+_URL_CACHE_TTL = 15 * 60  # 15 minutos en segundos
+
+
+class GoogleDocInfo(dict):
+    """Estructura enriquecida para metadatos de Google Docs/Sheets que se comporta como dict y como string."""
+    def __str__(self):
+        return self.get("export_url", "")
+
+    def __eq__(self, other):
+        if isinstance(other, str):
+            return self.get("export_url") == other
+        return super().__eq__(other)
+
+
+def extract_google_docs_url(url: str) -> Optional[GoogleDocInfo]:
+    """
+    Detecta si una URL corresponde a Google Docs o Google Sheets y extrae metadatos y export URLs:
+    - type: 'docs' o 'sheets'
+    - id: identificador único del documento o spreadsheet
+    - tab: id de pestaña/tab si existe en el query string
+    - export_url: URL transformada para exportación directa (txt para docs, csv para sheets)
+    - fallback_export_url: URL de exportación sin tab si la primera fallara
+    """
+    if not url or not isinstance(url, str) or "docs.google.com" not in url:
+        return None
+
+    # Google Docs
+    doc_match = re.search(r"https?://docs\.google\.com/document/d/([a-zA-Z0-9_-]+)", url)
+    if doc_match:
+        doc_id = doc_match.group(1)
+        parsed = urllib.parse.urlparse(url)
+        qs = urllib.parse.parse_qs(parsed.query)
+        tab = qs.get("tab", [None])[0]
+        if tab:
+            export_url = f"https://docs.google.com/document/d/{doc_id}/export?format=txt&tab={tab}"
+            fallback_export_url = f"https://docs.google.com/document/d/{doc_id}/export?format=txt"
+        else:
+            export_url = f"https://docs.google.com/document/d/{doc_id}/export?format=txt"
+            fallback_export_url = None
+        return GoogleDocInfo({
+            "type": "docs",
+            "id": doc_id,
+            "tab": tab,
+            "export_url": export_url,
+            "fallback_export_url": fallback_export_url,
+        })
+
+    # Google Sheets
+    sheet_match = re.search(r"https?://docs\.google\.com/spreadsheets/d/([a-zA-Z0-9_-]+)", url)
+    if sheet_match:
+        sheet_id = sheet_match.group(1)
+        export_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
+        return GoogleDocInfo({
+            "type": "sheets",
+            "id": sheet_id,
+            "tab": None,
+            "export_url": export_url,
+            "fallback_export_url": None,
+        })
+
+    return None
+
+
 def fetch_url_content(url: str) -> str:
-    """Descarga y limpia el texto legible de una página web."""
+    """Descarga y limpia el texto legible de una página web, Google Docs o Google Sheets con caché en memoria."""
+    now = time.time()
+    # 1. Comprobar caché en memoria
+    if url in _URL_CONTENT_CACHE:
+        cached = _URL_CONTENT_CACHE[url]
+        if now < cached.get("expires_at", 0):
+            return cached.get("content", "")
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+    }
+
+    # 2. Si es Google Docs o Google Sheets
+    gmeta = extract_google_docs_url(url)
+    if gmeta:
+        export_url = gmeta["export_url"]
+        res_text = None
+
+        # Intento 1: export_url (con tab si existe)
+        try:
+            req = urllib.request.Request(export_url, headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                res_text = resp.read().decode("utf-8", errors="ignore")
+        except urllib.error.HTTPError as e:
+            if e.code in (401, 403, 404):
+                content = f"\n[AVISO GOOGLE DOCS: No se pudo leer el documento ({url}) porque es privado o no tiene permisos de lectura pública. NO inventes su contenido.]\n"
+                _URL_CONTENT_CACHE[url] = {"content": content, "expires_at": now + _URL_CACHE_TTL}
+                return content
+            elif gmeta.get("fallback_export_url"):
+                try:
+                    req_fb = urllib.request.Request(gmeta["fallback_export_url"], headers=headers)
+                    with urllib.request.urlopen(req_fb, timeout=10) as resp_fb:
+                        res_text = resp_fb.read().decode("utf-8", errors="ignore")
+                except urllib.error.HTTPError as e_fb:
+                    if e_fb.code in (401, 403, 404):
+                        content = f"\n[AVISO GOOGLE DOCS: No se pudo leer el documento ({url}) porque es privado o no tiene permisos de lectura pública. NO inventes su contenido.]\n"
+                        _URL_CONTENT_CACHE[url] = {"content": content, "expires_at": now + _URL_CACHE_TTL}
+                        return content
+                except Exception:
+                    pass
+        except Exception:
+            if gmeta.get("fallback_export_url"):
+                try:
+                    req_fb = urllib.request.Request(gmeta["fallback_export_url"], headers=headers)
+                    with urllib.request.urlopen(req_fb, timeout=10) as resp_fb:
+                        res_text = resp_fb.read().decode("utf-8", errors="ignore")
+                except Exception:
+                    pass
+
+        if res_text is not None:
+            clean_text = res_text.strip()
+            if len(clean_text) > 12000:
+                clean_text = clean_text[:12000] + "\n... [Contenido truncado a 12.000 caracteres]"
+
+            title_id = f"Google {'Docs' if gmeta['type'] == 'docs' else 'Sheets'} {gmeta['id']}"
+            content = f"\n[DOCUMENTO DE GOOGLE DOCS LEÍDO CON ÉXITO: '{title_id}' ({url})]:\n{clean_text}\n"
+            _URL_CONTENT_CACHE[url] = {"content": content, "expires_at": now + _URL_CACHE_TTL}
+            return content
+        else:
+            content = f"\n[AVISO GOOGLE DOCS: No se pudo leer el documento ({url}) porque es privado o no tiene permisos de lectura pública. NO inventes su contenido.]\n"
+            _URL_CONTENT_CACHE[url] = {"content": content, "expires_at": now + _URL_CACHE_TTL}
+            return content
+
+    # 3. Páginas web estándar
     try:
-        req = urllib.request.Request(
-            url,
-            headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
-            },
-        )
-        with urllib.request.urlopen(req, timeout=6) as resp:
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=8) as resp:
             ctype = resp.headers.get_content_type()
             if "html" not in ctype and "text" not in ctype:
-                return f"[Recurso binario: {ctype}]"
+                res = f"[Recurso binario: {ctype}]"
+                _URL_CONTENT_CACHE[url] = {"content": res, "expires_at": now + _URL_CACHE_TTL}
+                return res
             raw = resp.read().decode("utf-8", errors="ignore")
             title_match = re.search(r"<title>(.*?)</title>", raw, re.IGNORECASE | re.DOTALL)
             title = title_match.group(1).strip() if title_match else "Sin título"
@@ -1072,7 +1213,9 @@ def fetch_url_content(url: str) -> str:
             clean = re.sub(r"<[^>]+>", " ", clean)
             clean = html.unescape(clean)
             clean = re.sub(r"\s+", " ", clean).strip()
-            return f"\n[Página Web leída: '{title}' ({url})]:\n{clean[:3000]}"
+            res = f"\n[Página Web leída: '{title}' ({url})]:\n{clean[:3000]}"
+            _URL_CONTENT_CACHE[url] = {"content": res, "expires_at": now + _URL_CACHE_TTL}
+            return res
     except Exception as e:
         return f"\n[No se pudo acceder a {url}: {e}]"
 
@@ -1231,18 +1374,90 @@ def get_member_dossier(member: discord.Member, levels: dict) -> str:
     )
 
 
-async def get_pins_context(channel: discord.TextChannel) -> str:
-    """Extrae los mensajes anclados del canal para consultas clave."""
+def normalize_channel_name(name: str) -> str:
+    """Normaliza el nombre de un canal eliminando emojis, tildes, caracteres especiales y pasando a minúsculas."""
+    if not name:
+        return ""
+    nfkd = unicodedata.normalize("NFKD", name)
+    no_accents = "".join([c for c in nfkd if not unicodedata.combining(c)])
+    cleaned = re.sub(r"[\s]+", "-", no_accents.lower())
+    cleaned = re.sub(r"[^\w\-]", "", cleaned)
+    return re.sub(r"-+", "-", cleaned).strip("-_")
+
+
+def find_channel_by_name(guild: Any, query: str) -> Optional[Any]:
+    """Busca un canal de texto en el servidor normalizando nombres sin emojis ni símbolos."""
+    if not guild or not query:
+        return None
+    q_norm = normalize_channel_name(query)
+    if not q_norm:
+        return None
+
+    text_channels = getattr(guild, "text_channels", [])
+
+    # 1. Coincidencia exacta normalizada
+    for ch in text_channels:
+        if normalize_channel_name(ch.name) == q_norm:
+            return ch
+
+    # 2. Coincidencia si q_norm contiene el nombre normalizado del canal (ej: "fijado en cultura" contiene "cultura")
+    sorted_channels = sorted(text_channels, key=lambda c: len(normalize_channel_name(c.name)), reverse=True)
+    for ch in sorted_channels:
+        c_norm = normalize_channel_name(ch.name)
+        if len(c_norm) >= 3 and c_norm in q_norm:
+            return ch
+
+    # 3. Coincidencia si el nombre del canal contiene q_norm (ej: query="tribunal" -> "el-tribunal-gaming")
+    for ch in sorted_channels:
+        c_norm = normalize_channel_name(ch.name)
+        if len(q_norm) >= 3 and q_norm in c_norm:
+            return ch
+
+    return None
+
+
+async def get_pins_context(channel: discord.TextChannel, query: str = "", guild: Optional[discord.Guild] = None) -> str:
+    """Extrae los mensajes anclados del canal (o del canal referenciado en la consulta) para consultas clave."""
     try:
-        pins = await channel.pins()
+        target_channel = channel
+        g = guild or getattr(channel, "guild", None)
+        if g and query:
+            # Si el usuario en cualquier canal pregunta por pins de otro canal (ej: "fijado en cultura", "tier list de cultura", "normas fijadas")
+            found = find_channel_by_name(g, query)
+            if found:
+                target_channel = found
+
+        if not target_channel:
+            return ""
+
+        pins = await target_channel.pins()
         if not pins:
             return ""
+
         lines = []
+        doc_extra_ctx = ""
+        user_asks_content = any(w in query.lower() for w in [
+            "top", "tier", "manhwa", "manga", "lista", "que pone", "qué pone",
+            "resumen", "link", "doc", "documento", "recomienda", "recomendacion",
+            "recomendación", "norma", "regla"
+        ])
+
         for p in pins[:4]:
-            content = p.clean_content[:300].replace("\n", " ")
-            lines.append(f"  * [{p.author.display_name}]: {content}")
-        return f"\n[MENSAJES FIJADOS/PINNED EN #{channel.name}]:\n" + "\n".join(lines)
-    except Exception:
+            content = p.clean_content.replace("\n", " ")
+            lines.append(f"  * [{p.author.display_name}]: {content[:300]}")
+
+            # Si un pin contiene un enlace a Google Docs o URL externa y el usuario pide esa lista/tier list
+            if user_asks_content or "docs.google.com" in p.clean_content:
+                urls = re.findall(r"https?://[^\s<>\"']+", p.clean_content)
+                for u in urls[:2]:
+                    fetched = await asyncio.to_thread(fetch_url_content, u)
+                    if fetched and "No se pudo acceder" not in fetched:
+                        doc_extra_ctx += f"\n[DOCUMENTO/ENLACE VINCULADO AL PIN EN #{target_channel.name} ({u})]:\n{fetched}\n"
+
+        base_pins = f"\n[MENSAJES FIJADOS/PINNED EN #{target_channel.name}]:\n" + "\n".join(lines)
+        return f"{base_pins}{doc_extra_ctx}"
+    except Exception as e:
+        print(f"Aviso obteniendo pins context: {e}")
         return ""
 
 
@@ -1611,13 +1826,41 @@ async def _handle_message_safe(message: discord.Message):
         if message.guild:
             live_levels = await get_live_levels_dict(message.guild)
 
-        # 3. Detectar si hay URLs directas para leer
+        # 3. Detectar si hay URLs directas para leer en el mensaje actual
         urls = re.findall(r"https?://[^\s<>\"']+", clean_text)
         url_context = ""
         if urls:
             for u in urls[:2]:
                 fetched = await asyncio.to_thread(fetch_url_content, u)
                 url_context += fetched
+
+        # Persistencia de enlaces en historial reciente (multi-turno)
+        recent_urls = []
+        for rm in raw_msgs[-8:]:
+            rm_text = getattr(rm, "content", "") or ""
+            for emb in getattr(rm, "embeds", []):
+                if getattr(emb, "url", None):
+                    rm_text += f" {emb.url}"
+                if getattr(emb, "description", None):
+                    rm_text += f" {emb.description}"
+            for found_u in re.findall(r"https?://[^\s<>\"']+", rm_text):
+                if found_u not in urls and found_u not in recent_urls:
+                    recent_urls.append(found_u)
+
+        referential_keywords = [
+            "top", "tier", "manhwa", "manga", "lista", "qué pone", "que pone",
+            "resumen", "link", "doc", "documento", "opinas", "analiza", "enlace",
+            "hoja", "sheet", "drive", "primero", "puesto", "ranking", "orden",
+            "lee", "leído", "leido", "visto", "pasa", "mira"
+        ]
+        is_referential = any(k in lowered for k in referential_keywords) or "?" in clean_text or "¿" in clean_text
+
+        if recent_urls and (is_referential or not url_context):
+            sorted_recent = sorted(recent_urls, key=lambda x: 0 if "docs.google.com" in x else 1)
+            for u in sorted_recent[:2]:
+                content = await asyncio.to_thread(fetch_url_content, u)
+                if content and "No se pudo acceder" not in content:
+                    url_context += f"\n[DOCUMENTO/ENLACE COMPARTIDO RECIENTEMENTE EN LA CONVERSACIÓN ({u})]:\n{content}\n"
 
         # 4. Búsqueda Web en Vivo (Context-Aware)
         web_search_context = ""
@@ -1641,10 +1884,14 @@ async def _handle_message_safe(message: discord.Message):
             if len(search_query) >= 3:
                 web_search_context = await asyncio.to_thread(search_web_lite, search_query)
 
-        # 5. Lector de mensajes fijados (pins) - Selectivo para ahorrar tokens
+        # 5. Lector de mensajes fijados (pins) - Selectivo para ahorrar tokens (local o transversal)
         pins_context = ""
-        if any(w in lowered for w in ["fijado", "pinned", "pins", "anclado", "destacado"]) or (message.channel.name == "cultura" and any(w in lowered for w in ["top", "recomendacion", "recomendación", "recomienda", "manhwa", "manga", "lista", "que leo", "qué leo"])):
-            pins_context = await get_pins_context(message.channel)
+        pins_keywords = ["fijado", "pinned", "pins", "anclado", "destacado", "top", "tier", "lista", "normas", "reglas"]
+        user_asks_channel_pins = any(w in lowered for w in pins_keywords) or (
+            message.guild and any(normalize_channel_name(c.name) in lowered for c in getattr(message.guild, "text_channels", []) if len(normalize_channel_name(c.name)) >= 4 and any(w in lowered for w in ["top", "tier", "manhwa", "manga", "lista", "norma", "fijado", "pin"]))
+        )
+        if user_asks_channel_pins or (message.channel and "cultura" in normalize_channel_name(message.channel.name) and any(w in lowered for w in ["top", "recomendacion", "recomendación", "recomienda", "manhwa", "manga", "lista", "que leo", "qué leo"])):
+            pins_context = await get_pins_context(message.channel, query=clean_text, guild=message.guild)
 
         # 6. Ficha técnica de miembros si se menciona a alguien
         dossier_context = ""
@@ -1762,9 +2009,16 @@ async def _handle_message_safe(message: discord.Message):
                     target_channels.append(ch)
             for kw, target_name in channel_keywords.items():
                 if kw in clean_text.lower():
-                    ch = discord.utils.find(lambda c: target_name in c.name, message.guild.text_channels)
-                    if ch and ch != message.channel and ch not in target_channels:
+                    ch = find_channel_by_name(message.guild, target_name)
+                    if ch and ch != message.channel and ch not in target_channels and isinstance(ch, discord.TextChannel):
                         target_channels.append(ch)
+            # Buscar también canales directamente con find_channel_by_name si se mencionan como "#canal"
+            channel_mentions = re.findall(r"#([\w\-]+)", clean_text)
+            for cname in channel_mentions:
+                ch = find_channel_by_name(message.guild, cname)
+                if ch and ch != message.channel and ch not in target_channels and isinstance(ch, discord.TextChannel):
+                    target_channels.append(ch)
+
             for ch in target_channels[:2]:
                 try:
                     recent_msgs = []

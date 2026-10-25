@@ -291,6 +291,12 @@ Los indicadores cuantitativos se computan sobre la serie temporal de snapshots d
 - [x] Selección nativa de Tickers sin escritura manual ratificada: `@app_commands.choices` en `/bolsa` + menú desplegable `Select` en la Fila 3 de la terminal para cambiar de ticker al instante (`[Confirmada · Jose · 23/10/2026]`).
 - [x] Unificación técnica de Informe IA y renderizado de emojis: fuente única de verdad (`get_ticker_technical_metrics`) entre la terminal y `generate_market_report`, conversión automática con `format_server_emojis` y presentación en Embed institucional coloreado según dictamen (`[Confirmada · Jose · 23/10/2026]`).
 - [x] Rediseño visual HD (960x540) de gráfica Pillow y Embed de Terminal: eliminación de rayas verdes en cubetas con `volume=0` (línea gris tenue sin barra de volumen), curva EMA 14 superpuesta, eje X con fechas/horas, caja de estadísticas (Máx/Mín/Vol) y barra de progreso de Float/Liquidez con emojis nativos del servidor (`[Confirmada · Jose · 23/10/2026]`).
+- [x] Suspensión Deliberada del Mercado por Calibración y Simulación Local: el mercado se mantiene formalmente en `emergency_halt = True` con motivo `'Fase de Calibración y Simulación Local'` hasta validar al 100% todos los escenarios en local (`[Confirmada · Jose · 25/10/2026]`).
+- [x] Metodología Iterativa de Diseño y Simulación: todo ajuste matemático, visual y económico se documenta previamente en la especificación y se valida mediante simulaciones reproducibles antes de aplicarlo en producción (`[Confirmada · Jose · 25/10/2026]`).
+- [x] Descongelación del Ciclo de Vida de Cakey Bot: corregida la extracción de snapshots diarios en `bot_service.py` (indexación por `username`) y sincronización inmediata de Book Value y Earnings con datos reales (`[Confirmada · Jose · 25/10/2026]`).
+- [ ] Calibración Visual de Gráficas Intradía en Baja Liquidez: `[Pendiente de matizar: algoritmo para evitar líneas planas y cortes artificiales en cubetas sin órdenes recientes]`.
+- [ ] Liquidación Oficial del Yield Pool de Dividendos: `[Pendiente de matizar: frecuencia, día de la semana y hora exacta de reparto a los accionistas]`.
+- [ ] Escalones Definitivos de Sinergia de Cartera en `/trabajar`: `[Pendiente de matizar: umbrales de Aura en cartera requeridos para cada porcentaje de bonus (+5% a +25%)]`.
 
 
 
