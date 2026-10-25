@@ -21,22 +21,16 @@ Módulo de la Bolsa Sanvi (Sanvi Exchange & Aura Market) para 'Asistente':
 
 
 import os
-
 import sys
-
 import json
-
 import time
-
 import math
-
 import asyncio
-
 import threading
-
+import re
 from datetime import datetime, timezone, timedelta
-
 from typing import Dict, List, Optional, Tuple, Any, Union
+
 
 
 
@@ -189,38 +183,33 @@ CANONICAL_SEEDS = {
 
 
 def safe_write_json(filepath: str, data: Any) -> None:
-
-    """Escritura atómica usando archivo temporal y os.replace."""
-
+    """Escritura atómica usando archivo temporal y os.replace con reintentos para Windows."""
     os.makedirs(os.path.dirname(os.path.abspath(filepath)), exist_ok=True)
-
     temp_path = f"{filepath}.tmp"
-
     try:
-
         with open(temp_path, "w", encoding="utf-8") as f:
-
             json.dump(data, f, indent=2, ensure_ascii=False)
-
             f.flush()
-
             os.fsync(f.fileno())
 
-        os.replace(temp_path, filepath)
-
-    except Exception as e:
-
-        if os.path.exists(temp_path):
-
+        max_retries = 3
+        for attempt in range(max_retries):
             try:
-
+                os.replace(temp_path, filepath)
+                break
+            except PermissionError as pe:
+                if attempt < max_retries - 1:
+                    time.sleep(0.05)
+                else:
+                    raise pe
+    except Exception as e:
+        if os.path.exists(temp_path):
+            try:
                 os.remove(temp_path)
-
             except Exception:
-
                 pass
-
         raise e
+
 
 
 
@@ -2162,5 +2151,147 @@ async def generate_market_report(ticker: str, guild: Any = None) -> str:
     )
 
     return _format_and_sanitize_report_emojis(report, guild=guild)
+
+
+def change_founder_ticker(
+    founder_user_id: int,
+    old_ticker: str = "",
+    new_ticker: str = "",
+) -> Tuple[bool, str]:
+    """
+    Permite a un fundador cambiar el ticker bursátil de su acción cotizada.
+    - Coste: 500 Porros (quemados para deflación económica).
+    - Cooldown: mínimo 7 días (604.800 segundos) entre cambios.
+    - Formato: 3 a 6 caracteres alfanuméricos en mayúsculas (^[A-Z0-9]{3,6}$).
+    - Migración atómica integral: bolsa_mercado.json, economia.json y memoria (TICKERS y TICKER_UI_META).
+    """
+    from modulos import economia_core
+
+    with BOLSA_LOCK:
+        mdata = load_market_data()
+        tickers_data = mdata.setdefault("tickers", {})
+
+        # 1. Identificar tickers asociados al fundador
+        founder_tickers = []
+        for sym, info in TICKERS.items():
+            if info.get("user_id") == founder_user_id or info.get("alt_user_id") == founder_user_id:
+                if sym not in founder_tickers:
+                    founder_tickers.append(sym)
+
+        for sym, t_info in tickers_data.items():
+            f_id = t_info.get("founder_id")
+            if f_id and (f_id == founder_user_id or str(f_id) == str(founder_user_id)):
+                if sym not in founder_tickers:
+                    founder_tickers.append(sym)
+
+        # 2. Determinar old_ticker
+        old_t = (old_ticker or "").strip().replace("$", "").upper()
+        if old_t:
+            if old_t not in TICKERS and old_t not in tickers_data:
+                return (False, f"El ticker ${old_t} no existe en la Bolsa Sanvi.")
+            if old_t not in founder_tickers:
+                return (False, f"No tienes permisos de fundador sobre el ticker ${old_t}.")
+        else:
+            if not founder_tickers:
+                return (False, "No eres fundador de ninguna acción cotizada en la Bolsa Sanvi.")
+            if len(founder_tickers) > 1:
+                return (False, f"Eres fundador de múltiples tickers ({', '.join(founder_tickers)}). Debes especificar cuál deseas cambiar.")
+            old_t = founder_tickers[0]
+
+        # 3. Validar nuevo ticker (formato, unicidad y diferencia)
+        new_t = (new_ticker or "").strip().replace("$", "").upper()
+        if not re.match(r"^[A-Z0-9]{3,6}$", new_t):
+            return (False, "El nuevo ticker debe tener entre 3 y 6 caracteres alfanuméricos (A-Z, 0-9).")
+
+        if new_t == old_t:
+            return (False, "El nuevo ticker no puede ser idéntico al actual.")
+
+        if new_t in TICKERS or new_t in tickers_data:
+            return (False, f"El ticker ${new_t} ya está registrado en el mercado bursátil.")
+
+        # 4. Validar cooldown de 7 días (604.800 s)
+        t_data = tickers_data.get(old_t, {})
+        last_change_iso = t_data.get("last_ticker_change")
+        if last_change_iso:
+            try:
+                last_dt = datetime.fromisoformat(last_change_iso)
+                if last_dt.tzinfo is None:
+                    last_dt = last_dt.replace(tzinfo=timezone.utc)
+                now_dt = datetime.now(timezone.utc)
+                elapsed = (now_dt - last_dt).total_seconds()
+                cooldown_sec = 7 * 86400  # 604800 s
+                if elapsed < cooldown_sec:
+                    dias_restantes = math.ceil((cooldown_sec - elapsed) / 86400)
+                    return (False, f"Debes esperar 7 días entre cambios de ticker bursátil. Faltan {dias_restantes} día(s).")
+            except Exception:
+                pass
+
+        # 5. Validar fondos (500 Porros) y quemar la tasa
+        TASA_CAMBIO_TICKER = 500
+        bal = economia_core.get_balance(founder_user_id)
+        if bal.get("cash", 0) < TASA_CAMBIO_TICKER:
+            return (
+                False,
+                f"Fondos insuficientes: el cambio de ticker cuesta {TASA_CAMBIO_TICKER} Porros (tienes {bal.get('cash', 0):,} en efectivo).",
+            )
+
+        try:
+            economia_core.modify_balance(founder_user_id, cash_delta=-TASA_CAMBIO_TICKER)
+        except Exception as e:
+            return (False, f"Fallo al procesar el abono de {TASA_CAMBIO_TICKER} Porros: {e}")
+
+        # 6. Migración atómica integral en datos y memoria
+        now_iso = datetime.now(timezone.utc).isoformat()
+
+        # a) bolsa_mercado.json
+        if old_t in tickers_data:
+            t_obj = tickers_data.pop(old_t)
+            t_obj["ticker"] = new_t
+            t_obj["last_ticker_change"] = now_iso
+            tickers_data[new_t] = t_obj
+        else:
+            tickers_data[new_t] = {
+                "ticker": new_t,
+                "name": TICKERS.get(old_t, {}).get("name", new_t),
+                "founder_id": founder_user_id,
+                "total_shares": TOTAL_SHARES,
+                "amm_shares": INITIAL_AMM_SHARES,
+                "holdings": {str(founder_user_id): INITIAL_FOUNDER_SHARES},
+                "order_history": [],
+                "last_orders": {},
+                "last_ticker_change": now_iso,
+            }
+        save_market_data(mdata)
+
+        # b) economia.json (carteras de todos los usuarios)
+        try:
+            with economia_core.ECONOMY_LOCK:
+                edata = economia_core.load_economy_data()
+                users_map = edata.get("users", {})
+                for u in users_map.values():
+                    port = u.get("portfolio")
+                    if isinstance(port, dict) and old_t in port:
+                        shares = port.pop(old_t)
+                        port[new_t] = port.get(new_t, 0) + shares
+                economia_core.save_economy_data(edata)
+        except Exception as e:
+            _bot_log(f"Aviso migrando carteras en economia.json para ${old_t}->${new_t}: {e}")
+
+        # c) Memoria viva de TICKERS
+        if old_t in TICKERS:
+            t_info = TICKERS.pop(old_t)
+            TICKERS[new_t] = t_info
+
+        # d) Memoria viva de TICKER_UI_META en comandos_bolsa
+        try:
+            from modulos import comandos_bolsa
+            if hasattr(comandos_bolsa, "TICKER_UI_META") and old_t in comandos_bolsa.TICKER_UI_META:
+                comandos_bolsa.TICKER_UI_META[new_t] = comandos_bolsa.TICKER_UI_META.pop(old_t)
+        except Exception:
+            pass
+
+        _bot_log(f"Ticker de fundador cambiado exitosamente: ${old_t} -> ${new_t} por usuario {founder_user_id}")
+        return (True, f"Ticker bursátil cambiado exitosamente de ${old_t} a ${new_t}. Se han deducido y quemado {TASA_CAMBIO_TICKER} Porros.")
+
 
 

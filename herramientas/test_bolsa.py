@@ -401,12 +401,168 @@ class TestBolsaSanvi(unittest.TestCase):
 
         asyncio.run(_check_view_and_embed())
 
-        # Validar choices nativos de /bolsa
-        params = comandos_bolsa.cmd_bolsa._params
+        # Validar choices nativos de /bolsa ver
+        cmd_ver = comandos_bolsa.cmd_bolsa.get_command("ver")
+        self.assertIsNotNone(cmd_ver)
+        params = cmd_ver._params
         self.assertIn("ticker", params)
         choices = [c.value for c in params["ticker"].choices]
         self.assertEqual(choices, ["JOSE", "TERRE", "OMEN", "RACER"])
 
+    def test_15_change_founder_ticker_validation_and_permissions(self):
+        """Valida permisos de fundador, formatos de ticker (3-6 chars) y unicidad en change_founder_ticker."""
+        # 1. No fundador intenta cambiar
+        non_founder_id = 123456789
+        ok, msg = bolsa_sanvi.change_founder_ticker(non_founder_id, "JOSE", "NUEVO")
+        self.assertFalse(ok)
+        self.assertIn("No tienes permisos de fundador", msg)
+
+        # 2. Fundador real de JOSE (Joselito) intenta formatos inválidos
+        founder_id = 857923274771136522
+        # Muy corto (< 3 chars)
+        ok, msg = bolsa_sanvi.change_founder_ticker(founder_id, "JOSE", "NO")
+        self.assertFalse(ok)
+        self.assertIn("entre 3 y 6 caracteres", msg)
+
+        # Muy largo (> 6 chars)
+        ok, msg = bolsa_sanvi.change_founder_ticker(founder_id, "JOSE", "TOOLONG123")
+        self.assertFalse(ok)
+        self.assertIn("entre 3 y 6 caracteres", msg)
+
+        # Caracteres no alfanuméricos
+        ok, msg = bolsa_sanvi.change_founder_ticker(founder_id, "JOSE", "JO-SE")
+        self.assertFalse(ok)
+        self.assertIn("entre 3 y 6 caracteres", msg)
+
+        # Idéntico al actual
+        ok, msg = bolsa_sanvi.change_founder_ticker(founder_id, "JOSE", "JOSE")
+        self.assertFalse(ok)
+        self.assertIn("no puede ser idéntico al actual", msg)
+
+        # Colisión con ticker existente
+        ok, msg = bolsa_sanvi.change_founder_ticker(founder_id, "JOSE", "TERRE")
+        self.assertFalse(ok)
+        self.assertIn("ya está registrado en el mercado bursátil", msg)
+
+    def test_16_change_founder_ticker_execution_and_atomic_migration(self):
+        """Valida cobro de 500 Porros, migración de carteras en economia.json, cooldown y atomicidad."""
+        founder_id = 857923274771136522
+        investor_id = 777666555444
+
+        # Preparar fondos suficientes para fundador e inversor
+        economia_core.ensure_user(founder_id, default_cash=1000)
+        economia_core.ensure_user(investor_id, default_cash=1000)
+
+        # Asignar acciones al inversor en cartera para verificar migración
+        with economia_core.ECONOMY_LOCK:
+            edata = economia_core.load_economy_data()
+            u_inv = edata["users"].setdefault(str(investor_id), {})
+            port = u_inv.setdefault("portfolio", {})
+            port["JOSE"] = 25
+            economia_core.save_economy_data(edata)
+
+        # Test de saldo insuficiente: dejar al fundador con 100 Porros
+        with economia_core.ECONOMY_LOCK:
+            edata = economia_core.load_economy_data()
+            prev_cash = edata["users"][str(founder_id)]["cash"]
+            edata["users"][str(founder_id)]["cash"] = 100
+            economia_core.save_economy_data(edata)
+
+        ok, msg = bolsa_sanvi.change_founder_ticker(founder_id, "JOSE", "JOS3")
+        self.assertFalse(ok)
+        self.assertIn("Fondos insuficientes", msg)
+
+        # Restaurar fondos con saldo adecuado para abonar los 500 Porros
+        with economia_core.ECONOMY_LOCK:
+            edata = economia_core.load_economy_data()
+            edata["users"][str(founder_id)]["cash"] = 2000
+            economia_core.save_economy_data(edata)
+
+        # Ejecución exitosa de cambio de ticker JOSE -> JOS3
+        ok, msg = bolsa_sanvi.change_founder_ticker(founder_id, "JOSE", "JOS3")
+        self.assertTrue(ok, f"Fallo al cambiar ticker: {msg}")
+        self.assertIn("JOS3", msg)
+
+        # 1. Comprobar deducción exacta de 500 Porros
+        bal_founder = economia_core.get_balance(founder_id)
+        self.assertEqual(bal_founder["cash"], 1500)
+
+        # 2. Comprobar bolsa_mercado.json
+        mdata = bolsa_sanvi.load_market_data()
+        self.assertNotIn("JOSE", mdata.get("tickers", {}))
+        self.assertIn("JOS3", mdata.get("tickers", {}))
+        self.assertEqual(mdata["tickers"]["JOS3"]["ticker"], "JOS3")
+        self.assertIn("last_ticker_change", mdata["tickers"]["JOS3"])
+
+        # 3. Comprobar migración de carteras en economia.json
+        with economia_core.ECONOMY_LOCK:
+            edata_after = economia_core.load_economy_data()
+            inv_port = edata_after["users"][str(investor_id)]["portfolio"]
+            self.assertNotIn("JOSE", inv_port)
+            self.assertEqual(inv_port.get("JOS3"), 25)
+
+        # 4. Comprobar memoria viva de TICKERS y TICKER_UI_META
+        self.assertNotIn("JOSE", bolsa_sanvi.TICKERS)
+        self.assertIn("JOS3", bolsa_sanvi.TICKERS)
+        self.assertNotIn("JOSE", comandos_bolsa.TICKER_UI_META)
+        self.assertIn("JOS3", comandos_bolsa.TICKER_UI_META)
+
+        # 5. Comprobar cooldown de 7 días ante intento inmediato
+        ok_cooldown, msg_cooldown = bolsa_sanvi.change_founder_ticker(founder_id, "JOS3", "JOSE")
+        self.assertFalse(ok_cooldown)
+        self.assertIn("Debes esperar 7 días", msg_cooldown)
+
+        # Reversión limpia para no afectar el resto del sistema
+        with bolsa_sanvi.BOLSA_LOCK:
+            # Forzar reseteo de last_ticker_change para permitir revertir
+            mdata = bolsa_sanvi.load_market_data()
+            mdata["tickers"]["JOS3"]["last_ticker_change"] = None
+            bolsa_sanvi.save_market_data(mdata)
+
+            # Revertir a JOSE
+            with economia_core.ECONOMY_LOCK:
+                edata = economia_core.load_economy_data()
+                edata["users"][str(founder_id)]["cash"] = 2000
+                economia_core.save_economy_data(edata)
+
+            ok_rev, msg_rev = bolsa_sanvi.change_founder_ticker(founder_id, "JOS3", "JOSE")
+            self.assertTrue(ok_rev, f"Fallo al revertir ticker a JOSE: {msg_rev}")
+
+            # Restaurar saldo original del fundador
+            edata = economia_core.load_economy_data()
+            edata["users"][str(founder_id)]["cash"] = prev_cash
+            # Limpiar portfolio de prueba del inversor
+            if str(investor_id) in edata["users"]:
+                edata["users"][str(investor_id)]["portfolio"].pop("JOSE", None)
+            economia_core.save_economy_data(edata)
+
+            # Limpiar last_ticker_change del ticker JOSE
+            mdata = bolsa_sanvi.load_market_data()
+            mdata["tickers"]["JOSE"]["last_ticker_change"] = None
+            bolsa_sanvi.save_market_data(mdata)
+
+    def test_17_bolsa_group_and_subcommands_structure(self):
+        """Valida que /bolsa esté registrado como app_commands.Group con subcomandos /ver y /ticker."""
+        from modulos.comandos_economia import ECONOMY_SLASH_COMMANDS
+        from discord import app_commands
+
+        # 1. Comprobar que cmd_bolsa es un Group
+        self.assertIsInstance(comandos_bolsa.cmd_bolsa, app_commands.Group)
+        self.assertEqual(comandos_bolsa.cmd_bolsa.name, "bolsa")
+
+        # 2. Comprobar presencia de subcomandos ver y ticker
+        subcommands = {c.name: c for c in comandos_bolsa.cmd_bolsa.commands}
+        self.assertIn("ver", subcommands)
+        self.assertIn("ticker", subcommands)
+
+        # 3. Comprobar parámetros de /bolsa ticker
+        cmd_ticker = subcommands["ticker"]
+        self.assertIn("nuevo", cmd_ticker._params)
+
+        # 4. Comprobar que cmd_bolsa está en ECONOMY_SLASH_COMMANDS
+        self.assertIn(comandos_bolsa.cmd_bolsa, ECONOMY_SLASH_COMMANDS)
+
 
 if __name__ == "__main__":
     unittest.main()
+

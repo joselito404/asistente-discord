@@ -39,6 +39,7 @@ from modulos.bolsa_sanvi import (
     is_market_halted,
     get_market_halt_reason,
     set_market_halt,
+    change_founder_ticker,
 )
 from modulos.bolsa_graficas import (
     TIMEFRAME_CONFIG,
@@ -526,8 +527,14 @@ async def build_bolsa_terminal(
 # DEFINICIÓN DE COMANDOS SLASH
 # ==========================================
 
-@app_commands.command(
+cmd_bolsa = app_commands.Group(
     name="bolsa",
+    description="Terminal bursátil y gestión de la Bolsa Sanvi",
+)
+
+
+@cmd_bolsa.command(
+    name="ver",
     description="Abre la terminal bursátil y gráfica HD estilo Trading 212 de un miembro cotizado",
 )
 @app_commands.describe(ticker="Selecciona la acción cotizada a consultar (por defecto $JOSE)")
@@ -539,7 +546,7 @@ async def build_bolsa_terminal(
         app_commands.Choice(name="🏎️ $RACER — Racer (Large Cap)", value="RACER"),
     ]
 )
-async def cmd_bolsa(interaction: discord.Interaction, ticker: Optional[str] = "JOSE"):
+async def cmd_bolsa_ver(interaction: discord.Interaction, ticker: Optional[str] = "JOSE"):
     t = (ticker or "JOSE").upper().replace("$", "").strip()
     if t not in TICKERS:
         valid_tickers = ", ".join([f"`${k}`" for k in TICKERS.keys()])
@@ -554,6 +561,38 @@ async def cmd_bolsa(interaction: discord.Interaction, ticker: Optional[str] = "J
         await interaction.followup.send(embed=embed, file=file, view=view)
     except Exception as e:
         await interaction.followup.send(f"❌ Error al abrir la terminal bursátil de ${t}: {e}", ephemeral=True)
+
+
+@cmd_bolsa.command(
+    name="ticker",
+    description="Cambia el ticker bursátil de tu acción cotizada (exclusivo para fundadores, coste: 500 Porros)",
+)
+@app_commands.describe(nuevo="Introduce el nuevo ticker bursátil (3 a 6 caracteres alfanuméricos, ej: JOS3, TERRE)")
+async def cmd_bolsa_ticker(interaction: discord.Interaction, nuevo: str):
+    await interaction.response.defer(ephemeral=True)
+    try:
+        success, msg = change_founder_ticker(interaction.user.id, new_ticker=nuevo)
+        if success:
+            embed = discord.Embed(
+                title="🏛️ Bolsa Sanvi — Cambio de Ticker Oficial",
+                description=f"✅ {msg}",
+                color=0x2ECC71,
+                timestamp=datetime.now(timezone.utc),
+            )
+            embed.set_footer(text="Bolsa Sanvi • Transacción Atómica y Deflación de 500 Porros")
+            await interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            embed = discord.Embed(
+                title="⛔ Operación Denegada — Cambio de Ticker",
+                description=f"❌ {msg}",
+                color=0xE74C3C,
+                timestamp=datetime.now(timezone.utc),
+            )
+            embed.set_footer(text="Bolsa Sanvi • Requisitos y Blindajes de Fundador")
+            await interaction.followup.send(embed=embed, ephemeral=True)
+    except Exception as e:
+        await interaction.followup.send(f"❌ Error al procesar el cambio de ticker: {e}", ephemeral=True)
+
 
 
 @app_commands.command(
