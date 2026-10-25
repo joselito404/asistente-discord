@@ -56,6 +56,7 @@ def get_bolsa_api_payload():
                 history_candles=history,
                 current_price=prices["market"],
                 timeframe=tf,
+                base_price=base_p,
             )
             formatted_candles = []
             formatted_volume = []

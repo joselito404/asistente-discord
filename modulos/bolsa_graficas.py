@@ -199,6 +199,7 @@ def _normalize_or_generate_candles(
     current_price: float,
     timeframe: str = "1D",
     target_count: Optional[int] = None,
+    base_price: Optional[float] = None,
 ) -> List[Dict[str, Any]]:
     """
     Normaliza el historial de velas u órdenes para garantizar una serie OHLCV completa y consistente.
@@ -327,15 +328,22 @@ def _normalize_or_generate_candles(
 
     start_period = now_utc - timedelta(seconds=period_sec)
 
-    # Determinar precio de referencia previo y último precio de trade real
-    prev_close = c_price
+    # Determinar precio de referencia previo cronológicamente
     prior_trades = [t for t in raw_trades if t["dt"] < start_period]
-    if prior_trades:
-        prev_close = prior_trades[-1]["price"]
-    elif raw_trades:
-        prev_close = raw_trades[0]["price"]
+    period_trades = [t for t in raw_trades if t["dt"] >= start_period]
 
-    last_trade_p = raw_trades[-1]["price"] if raw_trades else c_price
+    if prior_trades:
+        # Si hay trades previos, el precio de partida es el último trade anterior
+        # garantizado al menos por el valor fundamental (base_price) si existe
+        if base_price is not None:
+            prev_close = max(prior_trades[-1]["price"], base_price)
+        else:
+            prev_close = prior_trades[-1]["price"]
+    elif period_trades:
+        # Si no hay trades anteriores a la ventana pero sí dentro, arranca en el suelo base
+        prev_close = base_price if base_price is not None else period_trades[0]["price"]
+    else:
+        prev_close = base_price if base_price is not None else c_price
 
     bucket_candles: List[Dict[str, Any]] = []
 
@@ -346,6 +354,7 @@ def _normalize_or_generate_candles(
         b_trades = [t for t in raw_trades if b_start <= t["dt"] < b_end]
 
         if b_trades:
+            # Hubo compras/ventas reales en este intervalo: el precio salta instantáneamente
             prices = [t["price"] for t in b_trades]
             o_p = prev_close
             c_p = prices[-1]
@@ -354,19 +363,15 @@ def _normalize_or_generate_candles(
             vol = sum(t["shares"] for t in b_trades)
             prev_close = c_p
         else:
-            # Algoritmo Oficial Flujo Suave (Market Flow Anchor, [Confirmada · Jose · 25/10/2026]):
-            # En cubetas sin volumen no se dibuja una línea horizontal estática ni cortes bruscos.
-            # El precio evoluciona suavemente hacia la cotización viva (c_price) con micro-sombras orgánicas.
-            frac = (i + 1) / float(num_buckets)
-            anchor_p = last_trade_p + (c_price - last_trade_p) * (frac ** 1.3)
-            # Semilla pseudoaleatoria determinista por timestamp para consistencia gráfica exacta
-            bucket_seed = (int(b_end.timestamp()) ^ int(anchor_p * 100)) & 0xFFFFFFFF
+            # Cubeta sin órdenes: el precio se mantiene estrictamente fiel al mercado en prev_close.
+            # Queda prohibido interpolar hacia órdenes futuras para no falsear las subidas instantáneas.
+            bucket_seed = (int(b_end.timestamp()) ^ int(prev_close * 100)) & 0xFFFFFFFF
             pseudo_rnd = ((bucket_seed * 1103515245 + 12345) & 0x7FFFFFFF) / float(0x7FFFFFFF)
-            drift = (pseudo_rnd - 0.5) * 0.0012 * anchor_p
-            c_p = round(anchor_p + drift, 2)
+            micro_spread = 0.0003 * prev_close
             o_p = round(prev_close, 2)
-            h_p = round(max(o_p, c_p) + (pseudo_rnd * 0.0008 * anchor_p), 2)
-            l_p = round(min(o_p, c_p) - ((1.0 - pseudo_rnd) * 0.0008 * anchor_p), 2)
+            c_p = round(prev_close, 2)
+            h_p = round(prev_close + (pseudo_rnd * micro_spread), 2)
+            l_p = round(prev_close - ((1.0 - pseudo_rnd) * micro_spread), 2)
             vol = 0.0
             prev_close = c_p
 
@@ -436,11 +441,20 @@ def generate_candlestick_chart(
     sym = ticker.upper().lstrip("$")
     c_price = current_price if (current_price is not None and current_price > 0) else 79.52
 
+    # Obtener base_price fundamental si está disponible
+    base_p = None
+    try:
+        from modulos import bolsa_sanvi
+        base_p = bolsa_sanvi.calculate_base_price(sym)
+    except Exception:
+        pass
+
     candles = _normalize_or_generate_candles(
         history_candles=history_candles,
         current_price=c_price,
         timeframe=tf_key,
         target_count=tf_cfg.get("default_count", 30),
+        base_price=base_p,
     )
 
     last_close = candles[-1]["close"]

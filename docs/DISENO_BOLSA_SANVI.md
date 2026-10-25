@@ -111,6 +111,23 @@ En cuanto un miembro alcance el Nivel 20, el sistema anunciará automáticamente
 - `alexpro0812` (Nivel 10): **`$ALEX`**
 - `motor123...` (Nivel 6): **`$MOTOR`**
 
+### 6.4. Gestión Dinámica de Tickers para Fundadores (`/bolsa ticker`)
+> **Estado:** `Ratificado por Jose` `[Confirmada · Jose · 25/10/2026]`
+
+Los fundadores que posean un activo cotizando en la Bolsa Sanvi disponen de la capacidad de modificar su símbolo bursátil:
+1. **Comando Oficial**: Subcomando `/bolsa ticker nuevo:<TICKER>` dentro de la fachada unificada de la bolsa.
+2. **Autorización Estricta**: Solo el usuario fundador de la acción (`user_id` o `alt_user_id` registrado) puede solicitar el renombramiento de su propio activo.
+3. **Restricciones del Ticker**:
+   - Longitud de 3 a 6 caracteres alfanuméricos (`^[A-Z0-9]{3,6}$`).
+   - Mayúsculas obligatorias, sin símbolos (`$` no se incluye en el input, se antepone automáticamente en la UI).
+   - Unicidad absoluta: no puede coincidir con ningún ticker existente o reservado.
+4. **Tasa Económica y Deflación**: Coste fijo de **500 Porros** cobrado del balance del fundador y quemado inmediatamente (retirado de circulación para controlar la inflación).
+5. **Cooldown Anti-Spam**: Intervalo mínimo de **7 días naturales** entre cambios de ticker por fundador.
+6. **Migración Atómica Integral**:
+   - `datos/bolsa_mercado.json`: renombrado de la clave del ticker, manteniendo intacto el historial de órdenes, velas y métricas AMM.
+   - `datos/economia.json`: actualización automática de las carteras (`portfolio`) de todos los inversores que posean acciones del ticker antiguo al nuevo.
+   - UI de Terminal y TradingView: propagación inmediata del nuevo símbolo en menús `Select` y gráficos interactivos.
+
 ---
 
 ## 7. Estructura Accionarial, Suministro Fijo, Dividendos y Market Maker
@@ -308,6 +325,8 @@ Los indicadores cuantitativos se computan sobre la serie temporal de snapshots d
 - [x] Cooldown Anti-Spam ajustado a 15 segundos por ticker: dinamismo y agilidad durante rallies y sesiones de pique ([Confirmada · Jose · 25/10/2026]).
 - [x] Reapertura Formal de la Bolsa Sanvi en Producción: desactivado el paro de emergencia (emergency_halt = False) y desplegado en Render Cloud ([Confirmada · Jose · 25/10/2026]).
 - [x] Catálogo Inicial Exclusivo y Requisito Estricto de IPO: ratificado mantener exclusivamente los 4 tickers fundadores (`$JOSE`, `$TERRE`, `$OMEN`, `$RACER`) y exigir Nivel 20 (`@🔮Pendejo Veterano🔮` — Categoría PRO) para cualquier futura salida a bolsa (`[Confirmada · Jose · 25/10/2026]`).
+- [x] Gestión Dinámica de Tickers para Fundadores (`/bolsa ticker`): comando exclusivo para que los fundadores de un activo puedan cambiar su ticker bursátil. Requiere abonar una tasa de 500 Porros (quemada para deflación económica), cooldown de 7 días entre cambios, formato de 3 a 6 caracteres alfanuméricos en mayúsculas (`^[A-Z0-9]{3,6}$`) sin colisiones, migrando automáticamente carteras de inversores, históricos de velas y pools (`[Confirmada · Jose · 25/10/2026]`).
+
 
 
 
