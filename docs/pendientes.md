@@ -7,6 +7,14 @@
 
 ## 🏛️ Área 3: Dinámicas Sociales, Juicios y Entretenimiento
 
+### 3.1. Juicios Comunitarios en Discord (Minijuego de Litigios y Disputas entre Usuarios)
+- **Qué falta:** Diseñar con Jose mediante preguntas interactivas la mecánica completa del minijuego de juicio entre usuarios (acusar a otro miembro, jurado popular, deliberación, votación interactiva, consecuencias lúdicas y/o con Porros, roles temporales). **Completamente independiente y desvinculado de El Tribunal Gaming (web de videojuegos)**.
+- **Por qué importa:** Dinámica social tensa, interactiva y muy divertida en Discord sin confundir ni mezclar la marca de la web de análisis de videojuegos de Jose e Iván.
+- **Siguiente paso:** Jose responde a las preguntas interactivas para definir el nombre del comando, reglas de apuesta/fianza y duración.
+- **Responsable:** Chat 3 / Jose.
+- **Estado:** en espera de Jose.
+- **Detalle:** docs/pendientes.md.
+
 ### 3.2. El Periódico Semanal / The Sanvi Weekly
 - **Qué falta:** Crónica semanal automática publicada cada domingo a las 20:00 ES en `#📣anuncios📣` o `#🗨️la-shit-de-todos-los-dias🗨️`, resumiendo el post más votado de Starboard de la semana, el tiburón del casino/bolsa, el récord de horas de voz en Cakey y una columna de opinión satírica de Asistente.
 - **Por qué importa:** Crea cultura y cohesión comunitaria semanal destacando los mejores momentos del servidor.

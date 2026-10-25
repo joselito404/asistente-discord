@@ -321,94 +321,6 @@ async def cmd_tribunal(interaction: discord.Interaction, accion: app_commands.Ch
         return
 
 
-@app_commands.command(
-    name="juicio",
-    description="Sistema de Juicios Comunitarios de El Tribunal en Discord"
-)
-@app_commands.describe(
-    accion="Acción judicial a ejecutar",
-    acusado="Miembro del servidor demandado (requerido para 'demandar')",
-    motivo="Causa y alegatos de la acusación (máx. 250 caracteres)",
-    fianza="Fianza en Porros (mín: 100, máx: 2500, defecto: 300)",
-)
-@app_commands.choices(accion=[
-    app_commands.Choice(name="⚖️ demandar - Iniciar juicio contra un usuario", value="demandar"),
-    app_commands.Choice(name="📜 estado - Ver estado del juicio activo en este canal", value="estado"),
-])
-async def cmd_juicio(
-    interaction: discord.Interaction,
-    accion: app_commands.Choice[str],
-    acusado: Optional[discord.Member] = None,
-    motivo: Optional[str] = "",
-    fianza: Optional[int] = 300,
-):
-    from modulos.tribunal_discord import (
-        start_trial,
-        get_active_trial,
-        MIN_BAIL,
-        MAX_BAIL,
-        DEFAULT_BAIL,
-    )
-
-    act = accion.value
-    if act == "estado":
-        trial = get_active_trial(interaction.channel_id)
-        if not trial:
-            await interaction.response.send_message(
-                "ℹ️ No hay ningún juicio activo actualmente en este canal. Puedes abrir uno con `/juicio accion:demandar acusado:@usuario motivo:...`.",
-                ephemeral=True,
-            )
-            return
-
-        embed = trial.build_embed()
-        await interaction.response.send_message(embed=embed, ephemeral=True)
-        return
-
-    elif act == "demandar":
-        if not acusado:
-            await interaction.response.send_message(
-                "❌ Debes especificar el miembro al que deseas demandar en el parámetro `acusado`.",
-                ephemeral=True,
-            )
-            return
-
-        motivo_clean = (motivo or "").strip()
-        if not motivo_clean:
-            await interaction.response.send_message(
-                "❌ Debes indicar el motivo o alegatos de la acusación en el parámetro `motivo`.",
-                ephemeral=True,
-            )
-            return
-
-        bail_val = fianza if fianza is not None else DEFAULT_BAIL
-        if bail_val < MIN_BAIL or bail_val > MAX_BAIL:
-            await interaction.response.send_message(
-                f"❌ La fianza debe situarse entre {MIN_BAIL} y {MAX_BAIL} Porros.",
-                ephemeral=True,
-            )
-            return
-
-        await interaction.response.defer(thinking=False)
-        success, msg, trial = await start_trial(
-            interaction=interaction,
-            defendant=acusado,
-            reason=motivo_clean,
-            bail=bail_val,
-        )
-
-        if not success or not trial:
-            await interaction.followup.send(msg, ephemeral=True)
-            return
-
-        embed = trial.build_embed()
-        msg_obj = await interaction.followup.send(
-            content=f"🔔 {acusado.mention}, has sido llevado a juicio por {interaction.user.mention}.",
-            embed=embed,
-            view=trial.view,
-        )
-        trial.message = msg_obj
-
-
 # ==========================================
 # 3. ASISTENCIA Y LORE
 # ==========================================
@@ -1292,7 +1204,6 @@ GENERAL_SLASH_COMMANDS = [
     cmd_musica,
     cmd_steam,
     cmd_tribunal,
-    cmd_juicio,
     cmd_perfil,
     cmd_pregunta,
     cmd_voz,

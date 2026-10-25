@@ -196,7 +196,7 @@ class TestSlashCommandRegistration(unittest.TestCase):
         """Verifica que cmd_resumen_llamada esté definido y presente en GENERAL_SLASH_COMMANDS."""
         self.assertTrue(hasattr(comandos_generales, "cmd_resumen_llamada"))
         self.assertIn(comandos_generales.cmd_resumen_llamada, comandos_generales.GENERAL_SLASH_COMMANDS)
-        self.assertGreaterEqual(len(comandos_generales.GENERAL_SLASH_COMMANDS), 24)
+        self.assertEqual(len(comandos_generales.GENERAL_SLASH_COMMANDS), 24)
 
     def test_command_reexported_in_comandos(self):
         """Verifica que cmd_resumen_llamada esté reexportado en la fachada modulos/comandos.py."""
