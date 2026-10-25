@@ -98,8 +98,32 @@
 
 ---
 
+## 8. Ecosistema Social Enriquecido, Memoria de Grupo y Lurker Autónomo
+
+- **Scrapers Sociales Enriquecidos (YouTube, Twitter/X, Reddit, TikTok)**:
+  - Detección especializada de URLs de redes sociales principales:
+    * **YouTube / Shorts**: Extracción vía endpoint oEmbed (`youtube.com/oembed`) de título, canal y autor.
+    * **Twitter / X**: Extracción de tweets y multimedia vía `api.fxtwitter.com`.
+    * **Reddit**: Extracción de post, score, subreddit y selftext vía `.json`.
+    * **TikTok**: Extracción de metadatos del clip vía oEmbed.
+  - El bot opina sobre el contenido real del enlace sin tropezar con muros JavaScript vacíos o login screens.
+- **Memoria Social Dinámica y Grafo de Relaciones (`datos/social_graph.json`)**:
+  - Detección y registro de la dinámica interpersonal del servidor:
+    * Dúos frecuentes en salas de voz (minutos compartidos en llamada).
+    * Piques y rivalidades (duelos de `/coinflip`, juicios de El Tribunal Gaming, partidas de juegos).
+    * Apodos, afinidades y contexto de grupo inyectado en el prompt para comentar con salseo orgánico y conocimiento real de la comunidad.
+- **Búsqueda Histórica Profunda y Memoria Episódica (Mini-RAG)**:
+  - Búsqueda bajo demanda de hasta 50 mensajes en el canal actual o referenciado ante preguntas sobre el pasado (*"¿te acuerdas cuando...?", "¿quién dijo...?", "busca en el historial"*), complementada con momentos célebres del Starboard.
+- **Reacciones Autónomas de Baja Frecuencia (Drop-in Lurker)**:
+  - En canales de charla comunitaria (`#🗨️la-shit-de-todos-los-dias🗨️`, `#💩shit-post💩`, `#🎮gaming-general🎮`, `#🛠️apps-solo-mods🛠️`), el bot puede reaccionar de forma 100% autónoma con un emoji del servidor (`:absolutecinema:`, `:KEKWLaugh:`, `:bruh:`, `:cooked:`, `:Porro:`, etc.) ante rachas de risas o momentos destacados.
+  - **Cero spam de texto**: Nunca envía mensajes de texto por iniciativa propia.
+  - **Rate-limit estricto**: Cooldown de mínimo 45 minutos por canal (`_LAST_AUTONOMOUS_REACT`).
+
+---
+
 ## Registro de Decisiones y Estado Canónico
 
+- [x] **Scrapers Sociales Enriquecidos, Grafo de Relaciones, Mini-RAG y Lurker Autónomo**: Integración de resolutores para YouTube/Twitter/Reddit/TikTok, persistencia social en `datos/social_graph.json`, buscador de memoria profunda de hasta 50 mensajes y reacciones autónomas con rate-limit de 45m (`[Confirmada · Jose · 25/10/2026]`).
 - [x] **Lectura Nativa de Google Docs, Persistencia Multi-Turno y Búsqueda Transversal de Pins**: Extracción real vía `/export?format=txt` (con pestañas `tab=`), persistencia en memoria multi-turno, acceso transversal a pins/canales sin emojis y veto estricto a alucinación de documentos (`[Confirmada · Jose · 25/10/2026]`).
 - [x] **Reacciones Dinámicas con Emojis en Mensajes (`[ACTION_REACT: <emoji>]`)**: Activación natural y selectiva cuando le hablan/responden (sin forzar en consultas serias, 0 coste extra de cuota Gemini) con repertorio mixto (emojis del servidor + Unicode clásicos, máx. 1 reacción por mensaje) (`[Confirmada · Jose · 24/10/2026]`).
 - [x] **Roles Reales de Joselito e Iván**: Joselito figura como Administrador y Desarrollador (creador del 95% del servidor y sus sistemas); Iván figura como Administrador, Dueño del servidor (en nombre) y Magistrado de El Tribunal Gaming (`[Confirmada · Jose · 24/10/2026]`).

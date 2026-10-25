@@ -16,6 +16,7 @@ config_discord.json
 !datos/bolsa_mercado.json
 !datos/bolsa_pool.json
 !datos/cakey_history.json
+!datos/social_graph.json
 !.agents/skills.json
 /CHAT_RAW.md
 /HISTORIAL_CONVERSACION.md
@@ -47,6 +48,7 @@ herramientas/*
 !herramientas/test_chat_ia_intelligence.py
 !herramientas/test_chat_ia_reactions.py
 !herramientas/test_chat_ia_embeds.py
+!herramientas/test_social_scrapers_and_lurker.py
 !herramientas/update_discord_channels.py
 documentos_pdf/
 *.zip

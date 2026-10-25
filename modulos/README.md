@@ -96,6 +96,16 @@ Cualquier agente o desarrollador autorizado que trabaje en nuevas funcionalidade
     - Streaming de audios: `GET /audios`, `GET /audios/zip`, `GET /api/audios`.
     - **Terminal Web BursÃ¡til**: `GET /bolsa` con interfaz oscura interactiva basada en **TradingView Lightweight Charts v4.2.0** (velas, volumen, zoom, selector de 4 tickers y las 8 temporalidades `Trades, 15m, 1h, 4h, 1D, 1S, 1M, MAX`, mÃ©tricas en directo, libro de Ã³rdenes y dividendos).
     - **API BursÃ¡til en Tiempo Real**: `GET /api/bolsa/data` con cotizaciones, estadÃ­sticas, pool y series OHLCV monÃ³tonas en tiempo.
+17. **`social_scrapers.py`**: Scrapers enriquecidos para enlaces de redes sociales populares:
+    - YouTube oEmbed oficial (`fetch_youtube_info`): soporte completo para vídeos estándar, enlaces cortos `youtu.be/` y `youtube.com/shorts/`.
+    - Twitter / X vía FXTwitter API abierta (`fetch_twitter_info`): texto completo del tweet, autor, @handle, conteo de likes/retweets e indicador multimedia.
+    - Reddit JSON endpoint (`fetch_reddit_info`): título, autor, subreddit, score y selftext formateado con User-Agent seguro.
+    - TikTok oEmbed oficial (`fetch_tiktok_info`): título y autor.
+    - Despachador transversal `resolve_social_url(url)` integrado antes del scraping genérico con caché en `_URL_CONTENT_CACHE`.
+18. **`social_memory.py`**: Memoria social dinámica y grafo de relaciones:
+    - Persistencia thread-safe y atómica en `datos/social_graph.json` con claves de pares canónicos `user1:user2`.
+    - Registro de minutos en llamada conjunta (`record_voice_duo`), partidas/duelos compartidos (`record_duel_interaction`) y afinidad calculada (`get_affinity`).
+    - Generador de dinámica social contextual (`get_social_dynamics_ctx`) para enriquecer el System Prompt de Gemini identificando la complicidad entre participantes activos en el chat.
 
 ## CÃ³mo se usa e integra con `bot_service.py`
 - `bot_service.py` actÃºa como punto de entrada Ãºnico (`python bot_service.py`) y orquestador central bajo una **Arquitectura de Runner Dual**:

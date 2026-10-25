@@ -297,6 +297,20 @@ from modulos.chat_ia import (
     user_cooldowns,
     COOLDOWN_SECONDS,
     _handle_message_safe,
+    # Nuevos símbolos sociales, Mini-RAG y lurker
+    fetch_youtube_info,
+    fetch_twitter_info,
+    fetch_reddit_info,
+    fetch_tiktok_info,
+    resolve_social_url,
+    get_social_dynamics_ctx,
+    record_voice_duo,
+    record_duel_interaction,
+    search_deep_channel_history,
+    search_starboard_moments,
+    format_episodic_memory,
+    check_lurker_reaction,
+    LURKER_ALLOWED_CHANNELS,
 )
 
 from modulos.economia import (
@@ -771,8 +785,10 @@ async def on_ready():
                         save_cakey_history(history)
                         bot_log(f"📈 [Bolsa Sanvi] Snapshot diario de Cakey Bot registrado para {today_str} ({len(snap)} miembros).")
 
-                # 2. Reparto de dividendos semanales los domingos a las 23:50+ UTC
-                if now_utc.weekday() == 6 and now_utc.hour == 23 and now_utc.minute >= 50:
+                # 2. Reparto de dividendos semanales los domingos a las 22:00 (Hora Peninsular Española, [Confirmada · Jose · 25/10/2026])
+                from zoneinfo import ZoneInfo
+                now_es = datetime.now(ZoneInfo("Europe/Madrid"))
+                if now_es.weekday() == 6 and now_es.hour == 22 and now_es.minute < 15:
                     from modulos.bolsa_sanvi import distribute_weekly_dividends, load_pool_data, save_pool_data
                     p_data = load_pool_data()
                     last_dist = p_data.get("last_distribution_date")
@@ -780,7 +796,7 @@ async def on_ready():
                         dist_res = distribute_weekly_dividends()
                         p_data["last_distribution_date"] = today_str
                         save_pool_data(p_data)
-                        bot_log(f"🏆 [Bolsa Sanvi] Dividendos semanales repartidos: {dist_res.get('total_distributed', 0):,.2f} Porros.")
+                        bot_log(f"🏆 [Bolsa Sanvi] Dividendos dominicales (22:00 ES) repartidos: {dist_res.get('distributed_amount', 0):,.2f} Porros.")
             except Exception as e_bolsa_loop:
                 bot_log(f"Aviso en _bolsa_lifecycle_watcher: {e_bolsa_loop}")
             await asyncio.sleep(600.0)

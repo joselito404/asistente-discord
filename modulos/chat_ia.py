@@ -23,8 +23,21 @@ import socket
 import unicodedata
 import io
 import discord
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, List, Dict
 from datetime import datetime, timezone, timedelta
+
+from modulos.social_scrapers import (
+    fetch_youtube_info,
+    fetch_twitter_info,
+    fetch_reddit_info,
+    fetch_tiktok_info,
+    resolve_social_url,
+)
+from modulos.social_memory import (
+    get_social_dynamics_ctx,
+    record_voice_duo,
+    record_duel_interaction,
+)
 
 
 def _bs():
@@ -1142,6 +1155,12 @@ def fetch_url_content(url: str) -> str:
         if now < cached.get("expires_at", 0):
             return cached.get("content", "")
 
+    # 1.5. Resolutores sociales especializados (YouTube, Twitter/X, Reddit, TikTok)
+    social_res = resolve_social_url(url)
+    if social_res:
+        _URL_CONTENT_CACHE[url] = {"content": social_res, "expires_at": now + _URL_CACHE_TTL}
+        return social_res
+
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
     }
@@ -1619,6 +1638,247 @@ def extract_discord_message_text(msg: Any, max_len: int = 500) -> str:
 
 
 # ==========================================
+# MEMORIA EPISÓDICA E HISTORIAL PROFUNDO (MINI-RAG)
+# ==========================================
+
+HISTORICAL_KEYWORDS = [
+    "te acuerdas cuando", "te acuerdas de", "recuerdas cuando", "recuerdas que",
+    "quien dijo", "quién dijo", "que paso cuando", "qué pasó cuando",
+    "busca en el chat", "busca en el historial", "en el historial", "del historial",
+    "la semana pasada", "hace dias", "hace días", "el otro dia", "el otro día",
+    "mensajes viejos", "mensajes antiguos", "hall of fame", "muro de la fama",
+    "starboard", "mensaje mas votado", "mensaje más votado", "mensaje con mas estrellas",
+    "mensaje con más estrellas", "publicacion destacada", "publicación destacada"
+]
+
+STOPWORDS_SEARCH = {
+    "te", "acuerdas", "recuerdas", "cuando", "quien", "quién", "dijo", "que", "qué",
+    "paso", "pasó", "busca", "en", "el", "la", "los", "las", "un", "una", "de", "del",
+    "chat", "historial", "semana", "pasada", "hace", "dias", "días", "otro", "dia", "día",
+    "por", "para", "con", "como", "cómo", "y", "o", "a", "al", "asistente", "oye"
+}
+
+
+def search_starboard_moments(query: str, limit: int = 3) -> List[Dict[str, Any]]:
+    """Busca mensajes destacados en datos/starboard.json que coincidan con la consulta o con mayor número de estrellas."""
+    base_dir = _get_base_dir()
+    sb_path = os.path.join(base_dir, "datos", "starboard.json")
+    if not os.path.exists(sb_path):
+        return []
+
+    try:
+        with open(sb_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        return []
+
+    entries = list(data.get("entries", {}).values())
+    if not entries:
+        return []
+
+    q_lower = query.lower()
+    asks_top = any(w in q_lower for w in ["mas votado", "más votado", "mas estrellas", "más estrellas", "top", "destacado", "hall of fame", "muro de la fama"])
+
+    matches = []
+    tokens = [w for w in re.findall(r"\w+", q_lower) if len(w) >= 3 and w not in STOPWORDS_SEARCH]
+
+    for e in entries:
+        score = 0
+        author_name = str(e.get("author_name", "")).lower()
+        if any(t in author_name for t in tokens):
+            score += 3
+        if asks_top:
+            score += e.get("stars_count", 0)
+
+        if score > 0 or asks_top:
+            matches.append((score, e.get("stars_count", 0), e))
+
+    if not matches and asks_top:
+        matches = [(e.get("stars_count", 0), e.get("stars_count", 0), e) for e in entries]
+
+    matches.sort(key=lambda x: (x[0], x[1]), reverse=True)
+    return [item[2] for item in matches[:limit]]
+
+
+async def search_deep_channel_history(channel: Any, query: str, limit: int = 50) -> List[Dict[str, Any]]:
+    """Escanea hasta limit mensajes en el historial del canal filtrando por relevancia semántica."""
+    if not channel or not hasattr(channel, "history"):
+        return []
+
+    q_lower = query.lower()
+    tokens = [w for w in re.findall(r"\w+", q_lower) if len(w) >= 3 and w not in STOPWORDS_SEARCH]
+    if not tokens:
+        return []
+
+    scored_msgs = []
+    try:
+        async for m in channel.history(limit=limit):
+            if getattr(m.author, "bot", False):
+                continue
+            content = getattr(m, "clean_content", getattr(m, "content", "")) or ""
+            c_lower = content.lower()
+            author_lower = getattr(m.author, "display_name", "").lower()
+
+            score = 0
+            for t in tokens:
+                if t in c_lower:
+                    score += 2
+                if t in author_lower:
+                    score += 3
+
+            if score > 0:
+                t_str = m.created_at.strftime("%d/%m %H:%M")
+                scored_msgs.append((score, m.created_at, {
+                    "author": m.author.display_name,
+                    "content": content[:250],
+                    "time": t_str,
+                    "id": m.id,
+                }))
+    except Exception as e:
+        print(f"Aviso escaneo historial profundo: {e}")
+        return []
+
+    scored_msgs.sort(key=lambda x: x[0], reverse=True)
+    best_entries = [item[2] for item in scored_msgs[:5]]
+    best_entries.reverse()
+    return best_entries
+
+
+def format_episodic_memory(deep_msgs: List[Dict[str, Any]], sb_entries: List[Dict[str, Any]]) -> str:
+    """Formatea las coincidencias de memoria episódica e historial en una píldora de contexto."""
+    lines = []
+    if sb_entries:
+        lines.append("  * Entradas célebres de The Sanvi Daily (Starboard):")
+        for sb in sb_entries:
+            ed = sb.get("edition_number", "?")
+            auth = sb.get("author_name", "Desconocido")
+            stars = sb.get("stars_count", 0)
+            lines.append(f"    - Edición #{ed} por {auth} (⭐ {stars} estrellas)")
+
+    if deep_msgs:
+        lines.append("  * Mensajes relevantes recuperados del historial reciente del canal:")
+        for m in deep_msgs:
+            lines.append(f"    - [{m['time']}] {m['author']}: \"{m['content']}\"")
+
+    if not lines:
+        return ""
+
+    return "\n[MEMORIA EPISÓDICA E HISTORIAL PROFUNDO RESCATADO]:\n" + "\n".join(lines)
+
+
+# ==========================================
+# REACCIONES AUTÓNOMAS DE BAJA FRECUENCIA (DROP-IN LURKER)
+# ==========================================
+
+LURKER_ALLOWED_CHANNELS = {
+    "la-shit-de-todos-los-dias",
+    "shit-post",
+    "gaming-general",
+    "apps-solo-mods",
+}
+_LURKER_COOLDOWN_SECONDS = 2700  # 45 minutos por canal
+_LAST_LURKER_REACT: Dict[int, float] = {}
+
+LAUGHTER_PATTERNS = [
+    r"\bj+a+[ja]*\b",
+    r"\be+j+e+[je]*\b",
+    r"\bxd+\b",
+    r"\blmao\b",
+    r"\blol\b",
+    r":kekwlaugh:",
+    r"😂",
+    r"🤣",
+]
+
+KEYWORD_TRIGGERS = [
+    ("puro cine", ":absolutecinema:"),
+    ("estoy cooked", ":cooked:"),
+    ("cooked", ":cooked:"),
+    ("skill issue", ":skillissue:"),
+    ("porro", ":Porro:"),
+    ("fumada", ":Porro:"),
+    ("gigachad", ":gigachad:"),
+    ("sigma", ":gigachad:"),
+]
+
+
+async def check_lurker_reaction(
+    message: discord.Message,
+    raw_msgs: Optional[List[discord.Message]] = None,
+    force: bool = False,
+) -> Optional[str]:
+    """
+    Evalúa si el bot reacciona autónomamente con un emoji contextual al canal
+    respetando rate-limit de 45 minutos, canales permitidos y CERO respuestas de texto.
+    """
+    if not message or getattr(message.author, "bot", False):
+        return None
+
+    channel = getattr(message, "channel", None)
+    if not channel:
+        return None
+
+    # Verificar si el canal está entre los permitidos
+    c_name = getattr(channel, "name", "")
+    norm_name = normalize_channel_name(c_name)
+    if not force and norm_name not in LURKER_ALLOWED_CHANNELS:
+        return None
+
+    # Rate limit por canal (45 min = 2700s)
+    now = time.time()
+    cid = getattr(channel, "id", 0)
+    last_react = _LAST_LURKER_REACT.get(cid, 0)
+    if not force and (now - last_react < _LURKER_COOLDOWN_SECONDS):
+        return None
+
+    content = (getattr(message, "clean_content", getattr(message, "content", "")) or "").strip()
+    lowered = content.lower()
+
+    cand_emoji = None
+
+    # 1. Racha de risas
+    is_laughter = any(re.search(pat, lowered) for pat in LAUGHTER_PATTERNS)
+    if not is_laughter and raw_msgs:
+        recent_texts = [getattr(rm, "content", "").lower() for rm in raw_msgs[-3:]]
+        if sum(1 for t in recent_texts if any(re.search(pat, t) for pat in LAUGHTER_PATTERNS)) >= 2:
+            is_laughter = True
+
+    if is_laughter:
+        cand_emoji = ":KEKWLaugh:"
+
+    # 2. Expresiones clave de la comunidad
+    if not cand_emoji:
+        for kw, em in KEYWORD_TRIGGERS:
+            if kw in lowered:
+                cand_emoji = em
+                break
+
+    # 3. Mensaje aislado "f"
+    if not cand_emoji and lowered in ("f", "f en el chat", "press f"):
+        cand_emoji = "💀"
+
+    if not cand_emoji:
+        return None
+
+    # Factor de espontaneidad (~25-30% de probabilidad cuando se activa el trigger)
+    import random
+    if not force and random.random() > 0.30:
+        return None
+
+    resolved = resolve_reaction_emoji(cand_emoji, guild=getattr(message, "guild", None))
+    if not resolved:
+        resolved = "😂" if is_laughter else "💀"
+
+    try:
+        await message.add_reaction(resolved)
+        _LAST_LURKER_REACT[cid] = now
+        return str(resolved)
+    except Exception as e:
+        _bot_log(f"Aviso lurker add_reaction: {e}")
+        return None
+
+
+# ==========================================
 # PIPELINE CONVERSACIONAL Y ENRUTADOR SEGURO
 # ==========================================
 
@@ -1663,6 +1923,11 @@ async def _handle_message_safe(message: discord.Message):
     )
 
     if not is_mentioned:
+        # Reacción autónoma de baja frecuencia (Drop-in Lurker) a coste cero
+        try:
+            await check_lurker_reaction(message, raw_msgs=None)
+        except Exception as e:
+            _bot_log(f"Aviso check_lurker_reaction: {e}")
         return
 
     now = time.time()
@@ -2058,6 +2323,17 @@ async def _handle_message_safe(message: discord.Message):
         tribunal_ctx = get_tribunal_query_ctx(clean_text)
         steam_ctx = get_steam_query_ctx(clean_text)
 
+        # Memoria episódica e historial profundo (Mini-RAG)
+        episodic_ctx = ""
+        is_historical = any(k in lowered for k in HISTORICAL_KEYWORDS)
+        if is_historical and message.channel:
+            deep_msgs = await search_deep_channel_history(message.channel, clean_text, limit=50)
+            sb_entries = search_starboard_moments(clean_text)
+            episodic_ctx = format_episodic_memory(deep_msgs, sb_entries)
+
+        # Dinámica social y grafo de relaciones de los participantes activos
+        social_dynamics_ctx = get_social_dynamics_ctx(message.author, message.guild, raw_msgs)
+
         # Turno actual del usuario
         current_prompt_text = f"{message.author.display_name}: {clean_text}"
         if reply_ref_ctx:
@@ -2071,7 +2347,7 @@ async def _handle_message_safe(message: discord.Message):
 
         # Inyectar todo el paquete de contexto enriquecido
         user_memory_ctx = get_user_memory_ctx(message.author.id)
-        current_prompt_text += f"{user_memory_ctx}{server_live_ctx}{voice_radar_ctx}{user_live_ctx}{recent_channel_ctx}{music_ctx}{members_ctx}{dossier_context}{pins_context}{xp_calc_context}{web_search_context}{channel_lookup_ctx}{tribunal_ctx}{steam_ctx}"
+        current_prompt_text += f"{user_memory_ctx}{social_dynamics_ctx}{episodic_ctx}{server_live_ctx}{voice_radar_ctx}{user_live_ctx}{recent_channel_ctx}{music_ctx}{members_ctx}{dossier_context}{pins_context}{xp_calc_context}{web_search_context}{channel_lookup_ctx}{tribunal_ctx}{steam_ctx}"
 
         current_turn_parts = [{"text": current_prompt_text}] + attachment_parts
 
