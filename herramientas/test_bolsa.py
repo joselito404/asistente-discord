@@ -1,3 +1,4 @@
+import copy
 """
 Suite de Pruebas Unitarias para el Motor Bursátil Sanvi Exchange:
 - Valida cálculos matemáticos de Book Value, Earnings 30d y Base Price.
@@ -35,7 +36,10 @@ from modulos import web_server
 class TestBolsaSanvi(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        # Crear usuario de pruebas en economia y asegurar mercado temporalmente abierto para el runner
+        # Respaldar datos reales en memoria para restauración atómica al finalizar
+        cls.orig_market = copy.deepcopy(bolsa_sanvi.load_market_data())
+        cls.orig_pool = copy.deepcopy(bolsa_sanvi.load_pool_data())
+        cls.orig_eco = copy.deepcopy(economia_core.load_economy_data())
         cls.test_user_id = 999888777666
         cls.orig_halt = bolsa_sanvi.is_market_halted()
         cls.orig_reason = bolsa_sanvi.get_market_halt_reason()
@@ -44,7 +48,10 @@ class TestBolsaSanvi(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        # Restaurar estado de mercado original al terminar las pruebas
+        # Restaurar estado exacto de archivos de datos y mercado tras los tests
+        bolsa_sanvi.save_market_data(cls.orig_market)
+        bolsa_sanvi.save_pool_data(cls.orig_pool)
+        economia_core.save_economy_data(cls.orig_eco)
         bolsa_sanvi.set_market_halt(cls.orig_halt, cls.orig_reason)
 
     def test_01_book_value_canonical(self):
@@ -160,7 +167,7 @@ class TestBolsaSanvi(unittest.TestCase):
         bolsa_sanvi.execute_sell_order(user_id, "TERRE", 10, ignore_cooldown=True)
 
     def test_07_portfolio_synergy_and_buffs(self):
-        """Valida el cálculo de Aura en cartera y el multiplicador de bono para /trabajar."""
+        """Valida el cálculo de Aura en cartera y el multiplicador de bono para /trabajar (5 tramos)."""
         user_id = self.test_user_id
         # Cartera vacía -> buff 0.0
         buff_empty = bolsa_sanvi.get_user_portfolio_buff(user_id)
@@ -172,6 +179,24 @@ class TestBolsaSanvi(unittest.TestCase):
         self.assertGreaterEqual(aura, 1000.0)
         buff = bolsa_sanvi.get_user_portfolio_buff(user_id)
         self.assertEqual(buff, 0.05)
+
+        # Validar escalones directos mediante mock de aura
+        orig_fn = bolsa_sanvi.get_user_portfolio_aura
+        try:
+            bolsa_sanvi.get_user_portfolio_aura = lambda uid: 500.0
+            self.assertEqual(bolsa_sanvi.get_user_portfolio_buff(user_id), 0.0)
+            bolsa_sanvi.get_user_portfolio_aura = lambda uid: 2500.0
+            self.assertEqual(bolsa_sanvi.get_user_portfolio_buff(user_id), 0.05)
+            bolsa_sanvi.get_user_portfolio_aura = lambda uid: 10000.0
+            self.assertEqual(bolsa_sanvi.get_user_portfolio_buff(user_id), 0.10)
+            bolsa_sanvi.get_user_portfolio_aura = lambda uid: 25000.0
+            self.assertEqual(bolsa_sanvi.get_user_portfolio_buff(user_id), 0.15)
+            bolsa_sanvi.get_user_portfolio_aura = lambda uid: 40000.0
+            self.assertEqual(bolsa_sanvi.get_user_portfolio_buff(user_id), 0.20)
+            bolsa_sanvi.get_user_portfolio_aura = lambda uid: 60000.0
+            self.assertEqual(bolsa_sanvi.get_user_portfolio_buff(user_id), 0.25)
+        finally:
+            bolsa_sanvi.get_user_portfolio_aura = orig_fn
 
         # Limpiar
         bolsa_sanvi.execute_sell_order(user_id, "JOSE", 20, ignore_cooldown=True)
@@ -353,6 +378,14 @@ class TestBolsaSanvi(unittest.TestCase):
             self.assertIn("cross_signal", tech)
             self.assertGreaterEqual(tech["rsi"], 0.0)
             self.assertLessEqual(tech["rsi"], 100.0)
+
+            # Validar soporte de timeframe dinámico en get_ticker_technical_metrics
+            for tf in ["Trades", "15m", "1h", "4h", "1D", "1S", "1M", "MAX"]:
+                tf_tech = bolsa_sanvi.get_ticker_technical_metrics(sym, timeframe=tf)
+                self.assertIn("rsi", tf_tech)
+                self.assertIn("mas", tf_tech)
+                self.assertGreaterEqual(tf_tech["rsi"], 0.0)
+                self.assertLessEqual(tf_tech["rsi"], 100.0)
 
         # Validar sanitizador y conversor de emojis del servidor
         import re as _re

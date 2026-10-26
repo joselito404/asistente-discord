@@ -161,10 +161,11 @@ Queda erradicado cualquier impuesto o deducción forzada sobre los salarios pers
    - Poseer acciones de miembros con alto Aura transfiere pasivamente su influencia a la cuenta del accionista:
      $$\text{Aura Total Cartera} = \sum (\text{Acciones poseídas de } i \times \text{Aura fundamental de } i)$$
    - Otorga un bono multiplicador permanente sobre la recompensa del comando [`/trabajar`](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/economia.py):
-     - *Inversor Junior (1.000 a 5.000 Porros en Aura):* **$+5\%$** en `/trabajar`.
-     - *Inversor Senior (5.001 a 20.000 Porros en Aura):* **$+10\%$** en `/trabajar`.
-     - *Fondo de Inversión (20.001 a 50.000 Porros en Aura):* **$+15\%$** en `/trabajar`.
-     - *Ballena de Sanvi (>50.000 Porros en Aura):* **$+25\%$** en `/trabajar` (Tope máximo).
+     - *Inversor Junior (1.000 a 4.999 Porros en Aura):* **$+5\%$** en `/trabajar`.
+     - *Inversor Senior (5.000 a 14.999 Porros en Aura):* **$+10\%$** en `/trabajar`.
+     - *Fondo de Inversión (15.000 a 29.999 Porros en Aura):* **$+15\%$** en `/trabajar`.
+     - *Gran Inversor / Ballena Emergente (30.000 a 49.999 Porros en Aura):* **$+20\%$** en `/trabajar`.
+     - *Ballena de Sanvi ($\ge 50.000$ Porros en Aura):* **$+25\%$** en `/trabajar` (Tope máximo) `[Confirmada · Jose · 25/10/2026]`.
    - Vender acciones para especular reduce de inmediato el Aura en cartera y el multiplicador, desincentivando las ventas masivas de pánico.
 
 3. **Pilar 3: Fondo Real de Dividendos (*Yield Pool Semanal en Efectivo*)**:
@@ -300,7 +301,7 @@ Los indicadores cuantitativos se computan sobre la serie temporal de snapshots d
 - [x] Blindaje anti-ballenas: tope de 500 acciones/orden y cooldown de 30s (`[Aprobado · Jose · 22/10/2026]`).
 - [x] Tríada Financiera de Incentivos ratificada: Plusvalía de Mercado (AMM), Sinergia de Cartera por Aura (+5% a +25% en /trabajar) y Fondo Real de Dividendos semanal (50% spread Bolsa + 1% rake slots) (`[Aprobado · Jose · 22/10/2026]`).
 - [x] Indicadores técnicos institucionales ratificados: Medias móviles (SMA/EMA 14, 50, 100 y 200 días), RSI a 14 días (100% informativos) e informes narrativos de Asistente IA (`[Aprobado · Jose · 22/10/2026]`).
-- [x] Ponderación de Earnings 30d ratificada al 50/50: 1h voz = +0,50 Porros, 10 msgs = +0,50 Porros (`[Aprobado · Jose · 22/10/2026]`).
+- [x] Ponderación de Earnings 30d ratificada al 50/50: 1h voz = +1,00 Porro, 10 msgs = +1,00 Porro (0,10/msg) ([Confirmada · Jose · 25/10/2026]).
 - [x] Régimen Operativo Continuo 24/7 ratificado: negociación ininterrumpida los 7 días de la semana (`[Confirmada · Jose · 22/10/2026]`).
 - [x] Paro de Emergencia y Mantenimiento Técnico: el mercado solo se suspende manualmente ante contingencias o ajustes críticos mediante el interruptor administrativo `emergency_halt` (`[Confirmada · Jose · 22/10/2026]`).
 - [x] Temporalidades Intradía Reales para fases tempranas ratificadas: `[Trades]` (vela por orden), `[15m]` (velas 1 min), `[1h]` (velas 2 min), `[4h]` (velas 10 min) y `[1D]` (velas 30 min), con indicación explícita de resolución de vela en la cabecera/footer (`[Confirmada · Jose · 22/10/2026]`).

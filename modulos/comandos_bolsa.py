@@ -408,7 +408,7 @@ async def build_bolsa_terminal(
     bv = calculate_book_value(stats["level"], stats["voice_hours"], stats["messages"])
     e30 = calculate_earnings_30d(stats["delta_voice_hours"], stats["delta_messages"])
 
-    tech = get_ticker_technical_metrics(t)
+    tech = get_ticker_technical_metrics(t, timeframe=canon_tf)
     base_p = tech["base_price"]
     market_p = prices["market"]
     rsi = tech["rsi"]

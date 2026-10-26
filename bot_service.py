@@ -815,7 +815,7 @@ async def on_ready():
                 # 2. Reparto de dividendos semanales los domingos a las 22:00 (Hora Peninsular Española, [Confirmada · Jose · 25/10/2026])
                 from zoneinfo import ZoneInfo
                 now_es = datetime.now(ZoneInfo("Europe/Madrid"))
-                if now_es.weekday() == 6 and now_es.hour == 22 and now_es.minute < 15:
+                if now_es.weekday() == 6 and now_es.hour >= 22:
                     from modulos.bolsa_sanvi import distribute_weekly_dividends, load_pool_data, save_pool_data
                     p_data = load_pool_data()
                     last_dist = p_data.get("last_distribution_date")

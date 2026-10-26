@@ -559,13 +559,13 @@ def calculate_earnings_30d(delta_voice_hours: float, delta_messages: int) -> flo
 
     Calcula el rendimiento de actividad en la ventana móvil de 30 días (50% voz / 50% chat):
 
-    E_30d = (0.50 * delta_voice_hours) + (0.05 * delta_messages)
+    E_30d = (1.00 * delta_voice_hours) + (0.10 * delta_messages)
 
-    1h de voz = +0.50 Porros
+    1h de voz = +1.00 Porro
 
-    10 msgs = +0.50 Porros (0.05/msg)
+    10 msgs = +1.00 Porro (0.10/msg)
 
-    docs/DISENO_BOLSA_SANVI.md (§9.2)
+    docs/DISENO_BOLSA_SANVI.md (§9.2, [Confirmada · Jose · 25/10/2026])
 
     """
 
@@ -1530,19 +1530,21 @@ def get_user_portfolio_buff(user_id: Union[int, str]) -> float:
 
     """
 
-    Determina el multiplicador de bono pasivo para el comando /trabajar:
+    Determina el multiplicador de bono pasivo para el comando /trabajar (5 tramos progresivos):
 
     - Aura < 1000: +0% (0.0)
 
-    - 1000 <= Aura <= 5000: +5% (0.05) [Inversor Junior]
+    - 1000 <= Aura < 5000: +5% (0.05) [Inversor Junior]
 
-    - 5001 <= Aura <= 20000: +10% (0.10) [Inversor Senior]
+    - 5000 <= Aura < 15000: +10% (0.10) [Inversor Senior]
 
-    - 20001 <= Aura <= 50000: +15% (0.15) [Fondo de Inversión]
+    - 15000 <= Aura < 30000: +15% (0.15) [Fondo de Inversión]
 
-    - Aura > 50000: +25% (0.25) [Ballena de Sanvi - Tope máximo]
+    - 30000 <= Aura < 50000: +20% (0.20) [Gran Inversor / Ballena Emergente]
 
-    docs/DISENO_BOLSA_SANVI.md (§7.2 Pilar 2)
+    - Aura >= 50000: +25% (0.25) [Ballena de Sanvi - Tope máximo]
+
+    docs/DISENO_BOLSA_SANVI.md (§7.2 Pilar 2, [Confirmada · Jose · 25/10/2026])
 
     """
 
@@ -1552,17 +1554,21 @@ def get_user_portfolio_buff(user_id: Union[int, str]) -> float:
 
         return 0.0
 
-    elif 1000.0 <= aura <= 5000.0:
+    elif 1000.0 <= aura < 5000.0:
 
         return 0.05
 
-    elif 5001.0 <= aura <= 20000.0:
+    elif 5000.0 <= aura < 15000.0:
 
         return 0.10
 
-    elif 20001.0 <= aura <= 50000.0:
+    elif 15000.0 <= aura < 30000.0:
 
         return 0.15
+
+    elif 30000.0 <= aura < 50000.0:
+
+        return 0.20
 
     else:
 
@@ -1974,11 +1980,13 @@ def detect_crosses(ema_short: Optional[float], sma_long: Optional[float]) -> str
 
 
 
-def get_ticker_technical_metrics(ticker: str) -> Dict[str, Any]:
+def get_ticker_technical_metrics(ticker: str, timeframe: Optional[str] = None) -> Dict[str, Any]:
     """
     Calcula y devuelve las métricas técnicas canónicas y unificadas de un ticker
     (serie real de precios, RSI 14, medias móviles y señal de cruce), garantizando
     consistencia del 100% entre el Embed de /bolsa, la Web Terminal y el Informe IA.
+    Si timeframe está especificado ('Trades', '15m', '1h', '4h', '1D', '1S', '1M', 'MAX'),
+    computa los indicadores sobre los cierres de las velas de ese marco temporal.
     """
     sym = ticker.upper().lstrip("$")
     base_price = calculate_base_price(sym)
@@ -1987,19 +1995,26 @@ def get_ticker_technical_metrics(ticker: str) -> Dict[str, Any]:
     t_data = mercado.get("tickers", {}).get(sym, {})
     history = t_data.get("order_history", [])
 
-    raw_prices = [
-        float(o.get("market_price") or o.get("price") or base_price)
-        for o in history
-        if isinstance(o, dict)
-    ]
-
-    if len(raw_prices) < 5:
-        price_series = [base_price] + raw_prices
+    if timeframe:
+        from modulos import bolsa_graficas
+        candles = bolsa_graficas._normalize_or_generate_candles(
+            history, market_price, timeframe=timeframe, base_price=base_price
+        )
+        price_series = [float(c["close"]) for c in candles]
     else:
-        price_series = list(raw_prices)
+        raw_prices = [
+            float(o.get("market_price") or o.get("price") or base_price)
+            for o in history
+            if isinstance(o, dict)
+        ]
 
-    if not price_series or abs(price_series[-1] - market_price) > 1e-4:
-        price_series.append(market_price)
+        if len(raw_prices) < 5:
+            price_series = [base_price] + raw_prices
+        else:
+            price_series = list(raw_prices)
+
+        if not price_series or abs(price_series[-1] - market_price) > 1e-4:
+            price_series.append(market_price)
 
     rsi = calculate_rsi(price_series, period=14)
     mas = calculate_moving_averages(price_series)
