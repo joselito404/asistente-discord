@@ -523,7 +523,7 @@ async def on_ready():
     except Exception as e:
         bot_log(f"Aviso sincronización comandos slash generales: {e}")
 
-    activity = discord.Activity(type=discord.ActivityType.listening, name="Gemini Live en voz (/unete)")
+    activity = discord.Activity(type=discord.ActivityType.listening, name="/help | Gemini Live (/unete)")
     await bot.change_presence(activity=activity)
 
     # Tarea de vigilancia para canales de voz
@@ -736,7 +736,7 @@ async def on_ready():
     except Exception as e:
         bot_log(f"Aviso sincronización comandos de economía: {e}")
 
-    activity = discord.Activity(type=discord.ActivityType.watching, name="Casino y Porros (/slots)")
+    activity = discord.Activity(type=discord.ActivityType.watching, name="/help | Casino & Bolsa (/bolsa)")
     await economy_bot.change_presence(activity=activity)
 
     async def _xp_passes_expiration_watcher():

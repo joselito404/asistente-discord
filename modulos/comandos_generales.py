@@ -1,12 +1,13 @@
 """
 Módulo de Comandos Slash Nativos para los bots 'Asistente' y 'Economia Asistente' en Discord:
-Contiene los 43 comandos interactivos oficiales (@app_commands.command) divididos en Runner Dual:
-- Comandos Generales del Asistente (23):
+Contiene los 46 comandos interactivos oficiales (@app_commands.command) divididos en Runner Dual:
+- Comandos Generales del Asistente (26):
+  * Guía y Ayuda: /help
   * Multimedia y Arte: /dibuja, /musica
   * Gaming y Catálogo: /steam, /tribunal
   * Asistencia y Lore: /perfil, /pregunta, /voz, /recuerda, /xp
-  * Voz Neuronal y Gemini Live: /habla, /geminilive, /cambiar_voz, /unete, /desconecta, /para_audio
-  * Minijuegos del Servidor: /trivial, /ranking_trivial, /tres_en_raya, /conecta4, /ajedrez
+  * Voz Neuronal y Gemini Live: /habla, /geminilive, /cambiar_voz, /unete, /desconecta, /para_audio, /resumen_llamada
+  * Minijuegos del Servidor: /trivial, /ranking_trivial, /tres_en_raya, /conecta4, /ajedrez, /juicio
   * Moderación y Reemplazo de Carl-bot: /autoroles, /sugerencia, /panel_sugerencias
 - Comandos de Economía y Casino de Economia Asistente (20):
   * Economía de Porros y Casino: /slots, /balance, /trabajar, /transferir, /depositar, /retirar, /robar, /tienda, /salario, /blackjack, /bj, /ruleta, /coinflip, /casino, /crimen, /ranking, /inventario, /usar, /admin_dinero, /ajustes_dinero
@@ -1197,10 +1198,219 @@ async def cmd_resumen_llamada(interaction: discord.Interaction, horas: Optional[
 
 
 # ==========================================
-# 24 COMANDOS GENERALES (BOT 'ASISTENTE')
+# 7. SISTEMA DE AYUDA Y GUÍA INTERACTIVA (/help)
 # ==========================================
-# 25 Comandos Generales para el Bot 'Asistente'
+
+HELP_CATEGORIES_INFO = {
+    "ia": {
+        "title": "🤖 IA Conversacional y Creatividad",
+        "description": "Herramientas inteligentes impulsadas por Gemini 2.5 Flash y generación visual con FLUX.1:",
+        "color": 0x3B82F6,
+        "commands": [
+            ("`/chat` (o mención `@Asistente`)", "Conversación fluida con Gemini 2.5 Flash / Flash Lite, lectura de Docs/Sheets, memoria persistente de usuario y búsqueda web en vivo."),
+            ("`/dibuja [prompt] [estilo]`", "Generación de imágenes en alta definición (1024x1024) a coste 0€ mediante clúster FLUX.1 con botón interactivo de re-roll."),
+            ("`/musica [cancion]`", "Búsqueda y recomendación musical contextual con portadas y enlaces directos."),
+            ("`/pregunta [duda]`", "Consulta rápida directa a la IA sin abrir hilo de conversación."),
+            ("`/perfil [@usuario]`", "Ficha técnica de actividad, nivel, XP, recuerdos y afinidad con el servidor."),
+            ("`/recuerda [dato]`", "Almacena un recuerdo o preferencia personal en la memoria a largo plazo del bot."),
+            ("`/xp [@usuario]`", "Consulta detallada de progreso de nivel Cakey y cálculo cuadrático del tramo restante."),
+        ],
+    },
+    "voz": {
+        "title": "🎙️ Voz Neuronal y Gemini Live",
+        "description": "Comunicación por voz en tiempo real de baja latencia con Gemini Live y locución Edge-TTS:",
+        "color": 0x8B5CF6,
+        "commands": [
+            ("`/unete`", "Conecta a Asistente a tu canal de voz actual e inicia la sesión bidireccional interactiva de voz con Gemini Live Audio en tiempo real (baja latencia)."),
+            ("`/desconecta`", "Finaliza la sesión de voz y desconecta al bot limpiamente del canal."),
+            ("`/habla [texto] [voz]`", "Síntesis de voz neuronal Edge-TTS en el canal de voz actual."),
+            ("`/cambiar_voz [voz]`", "Configura tu voz TTS preferida por defecto entre las disponibles."),
+            ("`/para_audio`", "Detiene cualquier reproducción de audio o locución en curso de inmediato."),
+            ("`/resumen_llamada [horas]`", "Genera un informe y crónica estructurada con IA de los temas tratados en el canal de voz durante el periodo seleccionado."),
+        ],
+    },
+    "bolsa": {
+        "title": "🏛️ Bolsa Sanvi y Finanzas",
+        "description": "Mercado bursátil en tiempo real, valoración por Aura, dividendos y carteras de inversión:",
+        "color": 0xF59E0B,
+        "commands": [
+            ("`/bolsa ver`", "Terminal interactiva bursátil con cotizaciones, libro de órdenes, capitalización y selector de velas dinámicas por timeframe (15m, 1h, 4h, 1D)."),
+            ("`/bolsa ticker [TICKER]`", "Ficha técnica detallada de una empresa o usuario cotizante (RSI, medias, Book Value y dividendos)."),
+            ("`/cartera`", "Consulta tus acciones en propiedad, precio medio de compra, ganancias no realizadas y tramo de sinergia activo."),
+            ("`/aura [@usuario]`", "Análisis del Baremo de Aura, Book Value y desglose de Earnings 30d que determinan el precio fundamental."),
+            ("`/trabajar`", "Turno laboral con remuneración en Porros (`¢`), multiplicado por tu rol de nivel Cakey y con hasta +25% de sinergia si posees cartera bursátil."),
+            ("`/salario`", "Reclama el dividendo básico diario del servidor (con decaimiento del 5% si no se cobra)."),
+            ("`/balance [@usuario]`", "Consulta tu saldo disponible en mano, en el banco y patrimonio neto."),
+        ],
+    },
+    "casino": {
+        "title": "🎲 Casino y Minijuegos",
+        "description": "Minijuegos de azar, duelos competitivos 1v1 y economía clandestina:",
+        "color": 0x10B981,
+        "commands": [
+            ("`/slots [apuesta]`", "Tragaperras 5x3 exclusiva Sanvi con 9 líneas de pago reales, símbolos de Brawl Stars Ranked, comodines WILD y bote progresivo."),
+            ("`/blackjack [apuesta] (o /bj)`", "Mesa de Blackjack 21 contra el crupier con reglas de casino, seguro, split y Double Down interactivo."),
+            ("`/ruleta [apuesta] [tipo]`", "Ruleta Europea de 37 casillas con suertes sencillas, plenos (35:1), docenas y smart argument swap."),
+            ("`/coinflip [apuesta] [@rival]`", "Cara o cruz 50/50 contra la casa o duelo 1v1 PvP con fianza retenida."),
+            ("`/casino`", "Hub central interactivo con catálogo de juegos, telemetría del Jackpot del servidor y probabilidades oficiales."),
+            ("`/crimen`", "Actividad ilegal de alto riesgo: gran recompensa o arresto con multa económica."),
+            ("`/robar [@victima]`", "Intento de hurto sobre el saldo en mano de otro usuario (bloqueado si posee escudo activo)."),
+            ("`/tienda / /inventario`", "Catálogo de compras comunitarias (roles cosméticos, pases de doble XP, Monster Blanco) y gestión de inventario."),
+            ("`/trivial [categoria]`", "Preguntas de conocimiento interactivo con botones y ranking comunitario (/ranking_trivial)."),
+            ("`/tres_en_raya / /conecta4 / /ajedrez`", "Duelos clásicos por turnos con tablero visual contra la IA o amigos."),
+            ("`/steam [juego] / /tribunal [juego]`", "Búsqueda de videojuegos y juicios satíricos de El Tribunal Gaming."),
+            ("`/juicio [@acusado] [motivo]`", "Inicia un juicio comunitario con jurado popular y rol temporal de Skill Issue."),
+        ],
+    },
+    "comunidad": {
+        "title": "💡 Comunidad y Servidor",
+        "description": "Gestión comunitaria, participación, buzón formal de sugerencias y rankings globales:",
+        "color": 0x06B6D4,
+        "commands": [
+            ("`/sugerencia`", "Envía una propuesta formal para el servidor mediante un modal estructurado con hilo de debate automático y veredicto satírico por IA."),
+            ("`/panel_sugerencias`", "Panel administrativo para evaluar, aprobar o descartar sugerencias comunitarias (mods/admins)."),
+            ("`/autoroles`", "Menú interactivo para auto-asignarse o retirarse roles temáticos de notificación, juegos y canales privados."),
+            ("`/ranking`", "Tabla de líderes de riqueza, nivel, actividad y patrimonio del servidor."),
+        ],
+    },
+}
+
+
+def build_help_embed(categoria: Optional[str] = None) -> discord.Embed:
+    """Construye el embed de ayuda general o el específico de una de las 5 categorías."""
+    if not categoria or categoria not in HELP_CATEGORIES_INFO:
+        embed = discord.Embed(
+            title="📖 Centro de Comandos y Asistencia — Asistente",
+            description=(
+                "¡Bienvenido a la guía interactiva oficial del servidor! Aquí encontrarás todos los comandos "
+                "y herramientas disponibles para exprimir al máximo la comunidad.\n\n"
+                "El ecosistema opera con dos bots sincronizados (**Asistente** y **Economia Asistente**) y "
+                "más de 45 comandos slash interactivos.\n\n"
+                "📌 **Selecciona una categoría en el menú desplegable inferior para explorar sus comandos:**"
+            ),
+            color=0x5865F2,
+        )
+        embed.add_field(
+            name="🤖 IA y Creatividad",
+            value="Chat inteligente con Gemini, imágenes FLUX.1 en HD, perfiles y memoria persistente.",
+            inline=False,
+        )
+        embed.add_field(
+            name="🎙️ Voz y Gemini Live",
+            value="Gemini Live interactivo por voz, locución neuronal Edge-TTS y resúmenes estructurados.",
+            inline=False,
+        )
+        embed.add_field(
+            name="🏛️ Bolsa y Finanzas",
+            value="Bolsa Sanvi en tiempo real, gráficos de velas, carteras bursátiles, dividendos y trabajo.",
+            inline=False,
+        )
+        embed.add_field(
+            name="🎲 Casino y Minijuegos",
+            value="Tragaperras 5x3 Brawl Stars, Blackjack, Ruleta Europea, Coinflip, Trivial y duelos PvP.",
+            inline=False,
+        )
+        embed.add_field(
+            name="💡 Comunidad y Servidor",
+            value="Buzón formal de sugerencias 2.0, asignación de autoroles, rankings globales y moderación.",
+            inline=False,
+        )
+        embed.set_footer(text="Usa el menú desplegable inferior para navegar • Interacción privada (efímera)")
+        return embed
+
+    data = HELP_CATEGORIES_INFO[categoria]
+    embed = discord.Embed(
+        title=data["title"],
+        description=data["description"],
+        color=data["color"],
+    )
+    for cmd_syntax, desc in data["commands"]:
+        embed.add_field(
+            name=cmd_syntax,
+            value=desc,
+            inline=False,
+        )
+    embed.set_footer(text="Usa el menú desplegable inferior para cambiar de categoría • Interacción privada (efímera)")
+    return embed
+
+
+class HelpSelect(discord.ui.Select):
+    """Menú desplegable con las 5 opciones de categorías para /help."""
+
+    def __init__(self):
+        options = [
+            discord.SelectOption(
+                label="🤖 IA y Creatividad",
+                value="ia",
+                description="Chat inteligente, imágenes FLUX, recuerdos y perfiles",
+                emoji="🤖",
+            ),
+            discord.SelectOption(
+                label="🎙️ Voz y Gemini Live",
+                value="voz",
+                description="Gemini Live en vivo, TTS neuronal, audios y resúmenes",
+                emoji="🎙️",
+            ),
+            discord.SelectOption(
+                label="🏛️ Bolsa y Finanzas",
+                value="bolsa",
+                description="Bolsa Sanvi, cotizaciones, cartera, dividendos y trabajo",
+                emoji="🏛️",
+            ),
+            discord.SelectOption(
+                label="🎲 Casino y Minijuegos",
+                value="casino",
+                description="Slots 5x3, Blackjack, Ruleta, Coinflip, Trivial y juegos",
+                emoji="🎲",
+            ),
+            discord.SelectOption(
+                label="💡 Comunidad y Servidor",
+                value="comunidad",
+                description="Sugerencias 2.0, Autoroles, rankings y moderación",
+                emoji="💡",
+            ),
+        ]
+        super().__init__(
+            placeholder="📖 Selecciona una categoría para ver sus comandos...",
+            min_values=1,
+            max_values=1,
+            options=options,
+            row=0,
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        categoria = self.values[0]
+        embed = build_help_embed(categoria)
+        await interaction.response.edit_message(embed=embed, view=self.view)
+
+
+class HelpView(discord.ui.View):
+    """Vista interactiva con el menú selector de categorías para /help."""
+
+    def __init__(self, timeout: float = 180.0):
+        super().__init__(timeout=timeout)
+        self.select_menu = HelpSelect()
+        self.add_item(self.select_menu)
+
+    @classmethod
+    def build_embed(cls, categoria: Optional[str] = None) -> discord.Embed:
+        return build_help_embed(categoria)
+
+
+@app_commands.command(name="help", description="Guía interactiva completa de comandos del servidor")
+async def cmd_help(interaction: discord.Interaction):
+    """Muestra la guía interactiva y centralizada de comandos del servidor."""
+    embed = build_help_embed(None)
+    view = HelpView(timeout=180.0)
+    await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+
+
+# ==========================================
+# 26 COMANDOS GENERALES (BOT 'ASISTENTE')
+# ==========================================
+# 26 Comandos Generales para el Bot 'Asistente'
 GENERAL_SLASH_COMMANDS = [
+    cmd_help,
     cmd_dibuja,
     cmd_musica,
     cmd_steam,
@@ -1230,7 +1440,7 @@ GENERAL_SLASH_COMMANDS = [
 
 
 def register_general_commands(tree: app_commands.CommandTree):
-    """Registra los 23 comandos slash generales en el árbol del bot Asistente."""
+    """Registra los 26 comandos slash generales en el árbol del bot Asistente."""
     for cmd in GENERAL_SLASH_COMMANDS:
         try:
             tree.add_command(cmd)
