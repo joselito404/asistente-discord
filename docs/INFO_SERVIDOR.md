@@ -8,8 +8,8 @@
 ## 🏛️ Datos Generales del Servidor
 - **Nombre**: LOS MONGOLOS DEL SANVI Y SUS AMIGOS
 - **Server ID**: `1446143936891715616`
-- **Total Miembros**: **23 miembros** (17 usuarios humanos + 6 bots integrados)
-- **Total Canales**: **49 canales** (9 categorías, 31 canales de texto/anuncios, 9 canales de voz)
+- **Total Miembros**: **24 miembros** (17 usuarios humanos + 7 bots integrados)
+- **Total Canales**: **54 canales** (10 categorías, 35 canales de texto/anuncios, 9 canales de voz)
 - **Total Roles**: **74 roles configurados**
 - **Administración Principal**:
   - Joselito (`joselito3499` / `Joselito 🪦 RIP` — ID: `857923274771136522`) — Creador, Administrador Principal y Top 1.
@@ -346,6 +346,12 @@
   - *Topic*: `🛠️ Utilidades de Staff: Comandos técnicos, configuración de integraciones y bots del servidor | 📦 Almacén de Recursos: Registro de emojis, assets visuales, identificadores y credenciales | 🛡️ Gestión & Moderación: Espacio de trabajo técnico reservado para el equipo de control`.
 - `#🔒backup-datos` (`1562178146596290591` | Texto): Canal privado de respaldo persistente 24/7 de economía (`economia.json`) y memoria (`user_memory.json`).
   - *Topic*: `Canal privado de respaldo persistente 24/7 de economía y memoria de Antigravity Asistente.`.
+
+### 10. 📚・ZONA DE ESTUDIO・📚 (`1564744334354415626`)
+*(Exclusivo para Nivel 10+ `@🔷Pendejo de Rango Medio🔷`)*
+- `#📚estudio📚` (`1564744336573333524` | Texto): Espacio para compartir apuntes, dudas académicas y recursos de concentración.
+  - *Topic*: `📚 Zona de Estudio & Trabajo: Espacio para compartir apuntes, esquemas, recursos académicos y resolver dudas | 🧠 Enfoque: Organización de sesiones de estudio y productividad | 🔒 Exclusivo: Nivel 10+ (@🔷Pendejo de Rango Medio🔷)`.
+- `🎧estudio-y-enfoque🎧` (`1564744339614081104` | Voz): Sala de voz para sesiones de estudio conjunto y llamadas de concentración/pomodoro.
 
 ---
 
