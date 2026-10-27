@@ -1,7 +1,7 @@
 # Información y Estructura Completa del Servidor de Discord
 
 > **Documento Maestro de Referencia**: Este archivo recopila y organiza de forma exhaustiva toda la información, canales, normas, roles, sistema de progresión y experiencia, economía, bots y la cronología completa de anuncios del servidor *"LOS MONGOLOS DEL SANVI Y SUS AMIGOS"*. Sincronizado automáticamente en OneDrive.  
-> **Última auditoría integral**: 18 de Octubre de 2026 (Chat 3 — Telemetría en tiempo real vía API v10 de Discord).
+> **Última auditoría integral**: 27 de Octubre de 2026 (Sincronización determinista vía API v10 de Discord).
 
 ---
 
@@ -117,6 +117,7 @@
       `Co-op` (`1537577153862967366` | 5), `Shooters` (`1537591932010766367` | 3), `Survival` (`1537592360291008612` | 4), `Extraction` (`1537592390142132396` | 3), `Roguelike` (`1537592856380706906` | 3), `Indie` (`1537592919815360632` | 3), `Peleas` (`1537594274093465683` | 3), `Deportes` (`1537594961837428776` | 3), `RPG` (`1537595229627224124` | 4), `Soulslike` (`1537595250695209000` | 3), `Estrategia` (`1537595282190237706` | 1), `Cartas` (`1537595303346053221` | 1), `incremental` (`1537934178283290664` | 2).
     - *🕹️ Juegos Específicos (Pos 34, 9-5, 3, 1)*:
       `Brawl Stars` (`1537591875656224820` | 3), `ARC Raiders` (`1537914271483297812` | 2), `Fornite` (`1537914329167302718` | 2), `The finals` (`1537914381277462719` | 1), `R.E.P.O` (`1537914482724970576` | 3), `PVZ GW2` (`1537914562823594024` | 1), `PEAK` (`1537914820223828038` | 3), `Big Walk` (`1548716906213543986` | 2).
+- `Pos 1`: `Sirvienta` (`1563338619723186369` | Bot Gestionado) — Rol sincronizado vía API v10.
 38. **Pos 0**: `@everyone` (`1446143936891715616`).
 
 ---
@@ -340,6 +341,7 @@
 - `#torneos-general` (`1533942342069784697` | Texto): Chat general para participantes y espectadores de torneos.
 
 ### 9. 🔒・ADMINISTRACIÓN・🔒 (`1543735118928285706`)
+- `⚒️CREACIÓN🛠️` (`1563341861567860876` | Voz): Canal sincronizado automáticamente vía API v10.
 - `#📣anuncios-privado📣` (`1537597535152115720` | Texto): Maquetación, borradores de comunicados y pruebas de Asistente antes de su publicación general.
   - *Topic*: `📝 Borradores Oficiales: Maquetación, pruebas de formato nativo y revisión de comunicados | 🤖 Pruebas de Asistente: Entorno de testeo para anuncios automáticos del bot antes de lanzarlos | 🔒 Solo Administración: Área interna de redacción y notas de parche de Joselito`.
 - `#🛠️apps-solo-mods🛠️` (`1535676349451341885` | Texto): Banco de pruebas técnicas, almacén de emojis y credenciales del staff.

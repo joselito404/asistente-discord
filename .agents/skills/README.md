@@ -10,6 +10,7 @@
 | Skill | Versión | Tipo | Descripción |
 | :--- | :---: | :---: | :--- |
 | [`revision-reglas`](./revision-reglas/SKILL.md) | `1.2.0` | Puntero Híbrido `@` | Triaje técnico estandarizado para auditar, sanear y mantener reglas locales en cualquier proyecto. Enlace a la skill maestra de OneDrive. |
+| [`sync-info-servidor`](./sync-info-servidor/SKILL.md) | `1.0.0` | Local de Proyecto | Auditoría en tiempo real de canales, categorías, roles y censos de Discord contra la API v10 y sincronización determinista de `docs/INFO_SERVIDOR.md`. |
 
 ---
 
