@@ -34,3 +34,11 @@
 - **Responsable:** Chat 3 / Jose.
 - **Estado:** `por hacer`.
 - **Detalle:** [docs/INFO_SERVIDOR.md](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/INFO_SERVIDOR.md), [docs/PERSONALIDAD_BOT.md](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/docs/PERSONALIDAD_BOT.md) y [modulos/chat_ia.py](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/chat_ia.py).
+
+### 4.2. Soporte de Conversación por Mensaje Directo (DMs / Privado)
+- **Qué falta:** Habilitar el manejador de eventos de mensajes en `bot_service.py` y `modulos/chat_ia.py` para que el bot `Asistente` detecte y responda automáticamente en mensajes privados (DMs) sin necesidad de mención explícita (`@Asistente`), manteniendo historial conversacional privado independiente por usuario con soporte multimodal y búsqueda web.
+- **Por qué importa:** Permite a los usuarios consultar al bot de forma privada (dudas personales, generación de imágenes, asistencia confidencial) sin saturar los canales públicos del servidor.
+- **Siguiente paso:** Adaptar el enrutador en `_handle_message_safe` para aceptar `discord.DMChannel` (`message.guild is None`), verificar los intents requeridos (`dm_messages`) y aislar la memoria/cooldowns de DMs.
+- **Responsable:** Chat 1 / Especialista de Código.
+- **Estado:** `por hacer`.
+- **Detalle:** [bot_service.py](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/bot_service.py) y [modulos/chat_ia.py](file:///c:/Users/jose/OneDrive/Antigravity-general/Antigravity-discord/modulos/chat_ia.py).
