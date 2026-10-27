@@ -78,7 +78,6 @@
 3. **Pos 71**: `Asistente` (`1549789822191935561` | Bot Gestionado | 1 miembro: Asistente) — Bot oficial de IA y utilidades Antigravity.
 4. **Pos 70**: `Economia Asistente` (`1561760781077446820` | Bot Gestionado | 1 miembro: Economia Asistente) — Bot nativo dedicado de economía y casino.
 5. **Pos 69**: `Cakey Bot` (`1543253460164812853` | Bot Gestionado | 1 miembro: Cakey Bot) — Niveles y cumpleaños.
-6. **Pos 68**: `UnbelievaBoat` (`1549498527191666770` | Bot Gestionado | 1 miembro: UnbelievaBoat) — Economía, casino y tienda.
 6. **Pos 67**: `Pendejo con poderes` (`1446145803432235120` | Color: `#2ecc71` | 2 miembros: Joselito, Omen2042) — Moderación activa.
 7. **Pos 66**: `carl-bot` (`1537575009453609032` | Bot Gestionado | 1 miembro: Carl-bot) — Sugerencias comunitarias (provisional).
 8. **Pos 65**: `💠Pendejo Supremo💠` (`1543021165491257344` | Color: `#75033e` | 0 miembros) `[HOIST]` — Nivel 100.
@@ -256,7 +255,7 @@
 
 ---
 
-## 📁 Categorías y Canales del Servidor (Censo Real de 49 Canales)
+## 📁 Categorías y Canales del Servidor (Censo Real de 54 Canales)
 
 ### 1. 🏛️・GENERAL & COMUNIDAD・🏛️ (`1446143938044887050`)
 - `🔊general🔊` (`1466131851365191874` | Voz): Canal de voz comunitario principal.
@@ -341,7 +340,7 @@
 - `#torneos-general` (`1533942342069784697` | Texto): Chat general para participantes y espectadores de torneos.
 
 ### 9. 🔒・ADMINISTRACIÓN・🔒 (`1543735118928285706`)
-- `⚒️CREACIÓN🛠️` (`1563341861567860876` | Voz): Canal sincronizado automáticamente vía API v10.
+- `⚒️CREACIÓN🛠️` (`1563341861567860876` | Voz): Sala de voz reservada para sesiones de desarrollo y configuración administrativa del staff.
 - `#📣anuncios-privado📣` (`1537597535152115720` | Texto): Maquetación, borradores de comunicados y pruebas de Asistente antes de su publicación general.
   - *Topic*: `📝 Borradores Oficiales: Maquetación, pruebas de formato nativo y revisión de comunicados | 🤖 Pruebas de Asistente: Entorno de testeo para anuncios automáticos del bot antes de lanzarlos | 🔒 Solo Administración: Área interna de redacción y notas de parche de Joselito`.
 - `#🛠️apps-solo-mods🛠️` (`1535676349451341885` | Texto): Banco de pruebas técnicas, almacén de emojis y credenciales del staff.
